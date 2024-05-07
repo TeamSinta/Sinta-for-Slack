@@ -25,7 +25,6 @@ You can now build and run the application using the provided npm scripts. For de
 
 ```bash
 npm run dev
-```bash
 ```
 
 ### For production mode, run:
@@ -34,3 +33,47 @@ npm run dev
 npm run build
 npm start
 ``` 
+
+**Linting and Formatting**
+
+**ESLint**
+
+ESLint is a static code analysis tool for identifying problematic patterns found in JavaScript code. It helps ensure code quality and consistency.
+
+**Linting**
+
+To lint your code using ESLint, run the following command:
+
+```
+npm run lint
+```
+
+This command will check your code for any ESLint errors according to the ESLint configuration in your project.
+
+**Fixing ESLint Errors**
+
+To automatically fix ESLint errors where possible, run the following command:
+
+```
+npm run lint-fix
+```
+
+This command will attempt to fix ESLint errors automatically and update your code accordingly.
+
+**Prettier**
+
+Prettier is a code formatter that helps maintain a consistent coding style across your project.
+
+**Formatting**
+
+To format your code using Prettier, run the following command:
+
+```
+npm run prettier
+```
+
+This command will format your code according to the Prettier configuration specified in your project.
+
+---
+
+Let me know if there's anything else you need!
