@@ -1,4 +1,4 @@
-![Sinta Logo](https://assets-global.website-files.com/6457f112b965721ffc2b0777/6457f2617575798a80fbb8d5_Pasted%20Graphic%201.png=50x50 )
+![Sinta Logo](https://assets-global.website-files.com/6457f112b965721ffc2b0777/6457f2617575798a80fbb8d5_Pasted%20Graphic%201.png =50x50 )
 
 # Sinta Slack App Onboarding Guide
 
