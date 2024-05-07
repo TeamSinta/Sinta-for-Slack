@@ -18,12 +18,11 @@ export type WorkflowData = {
     status: string;
     createdAt: Date;
     receipient: JSON;
-    conditions: JSON;  // Ensure this aligns with the actual data type
+    conditions: JSON; // Ensure this aligns with the actual data type
     alertType: string;
     objectField: string;
     ownerId: string; // Optionally display owner related details
     triggerConfig: JSON; // Ensure it's added to the interface
-
 };
 
 // Function to generate columns based on WorkflowData

@@ -46,13 +46,12 @@ export function WorkflowsTable({ workflowsPromise }: WorkflowsTableProps) {
             name: workflow.name,
             status: workflow.status,
             createdAt: workflow.createdAt,
-            receipient: workflow.receipient as JSON,  // Cast to JSON
+            receipient: workflow.receipient as JSON, // Cast to JSON
             alertType: workflow.alertType,
-            conditions: workflow.conditions as JSON,  // Cast to JSON
+            conditions: workflow.conditions as JSON, // Cast to JSON
             objectField: workflow.objectField,
             ownerId: workflow.ownerId,
-            triggerConfig: workflow.triggerConfig as JSON,  // Cast to JSON
-
+            triggerConfig: workflow.triggerConfig as JSON, // Cast to JSON
         };
     });
 

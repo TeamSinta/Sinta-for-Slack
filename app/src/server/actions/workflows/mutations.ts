@@ -42,39 +42,38 @@ export async function createWorkflowMutation(props: CreateWorkflowProps) {
     }
     console.log(workflowParse.data);
 
-
     await db
-      .insert(workflows)
-      .values({
-        name: workflowParse.data.name,
-        objectField: workflowParse.data.objectField,
-        alertType: workflowParse.data.alertType,
-        conditions: workflowParse.data.conditions,  // Add this property
-        receipient: workflowParse.data.receipient,  // Add this property
-        organizationId: workflowParse.data.organizationId,
-        ownerId: user.id,  // Ensure this property is included
-        triggerConfig: workflowParse.data.triggerConfig,  // Add this property
-        createdAt: new Date(),
-        modifiedAt: new Date(),
-      })
-      .execute();
-      const url = 'https://slack.com/api/chat.postMessage';
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${currentOrg.slack_access_token}`
-      };
-      const body = JSON.stringify({
-        channel: "U06URRX3V0S",  // Direct message to the user who submitted the modal
-        text: `New ${workflowParse.data.name} Workflow Created :sparkles:`
-      });
+        .insert(workflows)
+        .values({
+            name: workflowParse.data.name,
+            objectField: workflowParse.data.objectField,
+            alertType: workflowParse.data.alertType,
+            conditions: workflowParse.data.conditions, // Add this property
+            receipient: workflowParse.data.receipient, // Add this property
+            organizationId: workflowParse.data.organizationId,
+            ownerId: user.id, // Ensure this property is included
+            triggerConfig: workflowParse.data.triggerConfig, // Add this property
+            createdAt: new Date(),
+            modifiedAt: new Date(),
+        })
+        .execute();
+    const url = "https://slack.com/api/chat.postMessage";
+    const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentOrg.slack_access_token}`,
+    };
+    const body = JSON.stringify({
+        channel: "U06URRX3V0S", // Direct message to the user who submitted the modal
+        text: `New ${workflowParse.data.name} Workflow Created :sparkles:`,
+    });
 
-      const response = await fetch(url, {
-        method: 'POST',
+    const response = await fetch(url, {
+        method: "POST",
         headers: headers,
-        body: body
-      });
+        body: body,
+    });
 
-      return response.json();
+    return response.json();
 }
 
 /**
@@ -109,7 +108,6 @@ export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
  * Delete a workflow
  */
 export async function deleteWorkflowMutation({ id }: { id: string }) {
-
     if (!id) throw new Error("Invalid workflow ID");
 
     return await db.delete(workflows).where(eq(workflows.id, id)).execute();

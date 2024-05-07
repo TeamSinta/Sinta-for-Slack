@@ -23,16 +23,13 @@ type GetPaginatedWorkflowsQueryProps = z.infer<
 >;
 
 export async function getWorkflows() {
-  const { data } = await db.transaction(async (tx) => {
-      const data = await tx
-          .select()
-          .from(workflows)
-          .execute();
+    const { data } = await db.transaction(async (tx) => {
+        const data = await tx.select().from(workflows).execute();
 
-      return { data };
-  });
+        return { data };
+    });
 
-  return data;
+    return data;
 }
 export async function getPaginatedWorkflowsQuery(
     input: GetPaginatedWorkflowsQueryProps,

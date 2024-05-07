@@ -184,91 +184,89 @@ export async function sendSlackMessage(interviewData: InterviewData) {
 }
 
 export const configureBlocks = ({
-  interviewer,
-  interviewStep,
-  overallRecommendation,
-  scorecard_id,
+    interviewer,
+    interviewStep,
+    overallRecommendation,
+    scorecard_id,
 }: SlackData) => {
-  const blocks: SlackBlock[] = [
-      {
-          type: "header",
-          text: {
-              type: "plain_text",
-              text: ":star2: Interview Wrap-Up Reminder :star2:",
-              emoji: true,
-          },
-      },
-      {
-        "type": "context",
-        "elements": [
-          {
-            "text": "Indicate your hiring recommendation (e.g., Proceed, On Hold, or Do Not Proceed).",
-            "type": "mrkdwn"
-          }
-        ]
-      },
-
-
-    {
-      "type": "divider"
-    },
-      {
-          type: "section",
-          text: {
-              type: "mrkdwn",
-              text: `*:bell: Action Required* \n \nHello ${interviewer.name}, thank you for completing your interview session for the Sales Development role. We hope it was an insightful conversation! Please complete your interview feedback to help us make an informed hiring decision.`,
-          },
-      },
-      {
-          type: "divider",
-      },
-
-      {
-          type: "section",
-          text: {
-              type: "mrkdwn",
-              text: "*:memo: Scorecard* \n\n Please review the scorecard and submit your detailed feedback, highlighting the candidate's strengths and areas for improvement. Your insights are crucial for our hiring process.",
-          },
-      },
-      {
-        type: "section",
-        text: {
-            type: "mrkdwn",
-            text: `*Interview Step*: ${interviewStep}`,
-        },
-    },
-      {
-        type: "section",
-        text: {
-            type: "mrkdwn",
-            text: "*Click here to submit your feedback*:",
-        },
-        accessory: {
-            type: "button",
+    const blocks: SlackBlock[] = [
+        {
+            type: "header",
             text: {
                 type: "plain_text",
-                text: "Complete Feedback",  // Changed the button text to match the action_id previously used
-                emoji: true
+                text: ":star2: Interview Wrap-Up Reminder :star2:",
+                emoji: true,
             },
-            value: `${scorecard_id}`,  // Using dynamic value passed from the function parameters
-            action_id: "feedback_button"  // Consistent with your previous usage
-        }
-    },
+        },
+        {
+            type: "context",
+            elements: [
+                {
+                    text: "Indicate your hiring recommendation (e.g., Proceed, On Hold, or Do Not Proceed).",
+                    type: "mrkdwn",
+                },
+            ],
+        },
 
-      {
-          type: "context",
-          elements: [
-              {
-                  type: "mrkdwn",
-                  text: ":pushpin: Thank you for your contribution! Please ensure to submit your feedback within 24 hours.",
-              },
-          ],
-      },
-  ];
+        {
+            type: "divider",
+        },
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: `*:bell: Action Required* \n \nHello ${interviewer.name}, thank you for completing your interview session for the Sales Development role. We hope it was an insightful conversation! Please complete your interview feedback to help us make an informed hiring decision.`,
+            },
+        },
+        {
+            type: "divider",
+        },
 
-  return blocks;
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: "*:memo: Scorecard* \n\n Please review the scorecard and submit your detailed feedback, highlighting the candidate's strengths and areas for improvement. Your insights are crucial for our hiring process.",
+            },
+        },
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: `*Interview Step*: ${interviewStep}`,
+            },
+        },
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: "*Click here to submit your feedback*:",
+            },
+            accessory: {
+                type: "button",
+                text: {
+                    type: "plain_text",
+                    text: "Complete Feedback", // Changed the button text to match the action_id previously used
+                    emoji: true,
+                },
+                value: `${scorecard_id}`, // Using dynamic value passed from the function parameters
+                action_id: "feedback_button", // Consistent with your previous usage
+            },
+        },
+
+        {
+            type: "context",
+            elements: [
+                {
+                    type: "mrkdwn",
+                    text: ":pushpin: Thank you for your contribution! Please ensure to submit your feedback within 24 hours.",
+                },
+            ],
+        },
+    ];
+
+    return blocks;
 };
-
 
 // export async function respondToSlack(
 //   res: NextApiResponse,
