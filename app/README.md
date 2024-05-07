@@ -25,9 +25,12 @@ You can now build and run the application using the provided npm scripts. For de
 
 ```bash
 npm run dev
+```bash
+```
 
 ### For production mode, run:
 
 ```bash
 npm run build
 npm start
+``` 
