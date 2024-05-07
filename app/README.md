@@ -1,29 +1,33 @@
-# Create T3 App
+## Running the Sinta Slack App Locally
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+To run the Sinta Slack app locally on your machine, follow these steps:
 
-## What's next? How do I make an app with this?
+### Prerequisites
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+1. Install Docker on your machine. You can find the installation guide [here](https://docs.docker.com/engine/install/).
+2. Clone the Sinta repository to your local machine.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### Instructions
 
--   [Next.js](https://nextjs.org)
--   [NextAuth.js](https://next-auth.js.org)
--   [Prisma](https://prisma.io)
--   [Drizzle](https://orm.drizzle.team)
--   [Tailwind CSS](https://tailwindcss.com)
--   [tRPC](https://trpc.io)
+1. **Start the Database Container:**
 
-## Learn More
+   Run the following script in your terminal to start a Docker container for the local development database:
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+   ```bash
+   ./start-database.sh
+### Set up Environment Variables:
 
--   [Documentation](https://create.t3.gg/)
--   [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+Copy the contents of the `.env.example` file into a new file named `.env` in the root directory of the project. Update the necessary environment variables with your own values. These variables include database URL, Next Auth secrets, Slack client ID, Slack client secret, etc.
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Build and Run the Application:
 
-## How do I deploy this?
+You can now build and run the application using the provided npm scripts. For development mode, run:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+```bash
+npm run dev
+
+### For production mode, run:
+
+```bash
+npm run build
+npm start
