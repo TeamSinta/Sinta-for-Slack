@@ -2,7 +2,7 @@ Certainly! Here's the revised version using a link tag for the picture:
 
 **Sinta Slack App Onboarding Guide**
 
-[![Sinta Logo](https://assets-global.website-files.com/660df2204356cc0ae58476a5/66103735cbac916c3c9b60ae_brandbird%20(13)-p-800.jpg)
+[![Sinta Logo](https://media.licdn.com/dms/image/D560BAQFlgridiDxucg/company-logo_200_200/0/1712599930744/teamsinta_logo?e=2147483647&v=beta&t=svQBisORZQxmLvtckuyUsPUPCfTImzV2cT5WNEMbfqQ)
 
 **Running the Sinta Slack App Locally**
 
