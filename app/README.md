@@ -1,8 +1,8 @@
-Certainly! Here's the revised version using a link tag for the picture:
+![Sinta Logo](https://assets-global.website-files.com/6457f112b965721ffc2b0777/6457f2617575798a80fbb8d5_Pasted%20Graphic%201.png)
+
 
 **Sinta Slack App Onboarding Guide**
 
-[![Sinta Logo](https://assets-global.website-files.com/6457f112b965721ffc2b0777/6457f2617575798a80fbb8d5_Pasted%20Graphic%201.png)
 
 **Running the Sinta Slack App Locally**
 
