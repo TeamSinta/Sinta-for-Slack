@@ -1,36 +1,35 @@
-import React, { useState } from "react";
+
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
-import { FancyBox } from "@/components/ui/fancy.box";
+import { FancyBox } from '@/components/ui/fancy.box';
+
+
 
 const recipientOptions = [
-    { value: "general", label: "#general" },
-    { value: "random", label: "#random" },
-    { value: "hr", label: "#hr" },
-    { value: "it_support", label: "#it_support" },
-    { value: "marketing", label: "#marketing" },
-    { value: "sales", label: "#sales-hiring-team" },
-    { value: "dev_ops", label: "#dev_ops" },
-    { value: "product", label: "#product" },
-    { value: "customer_support", label: "#customer_support" },
-    { value: "finance", label: "#finance" },
-    { value: "john_doe", label: "@Chris Wu" },
-    { value: "jane_smith", label: "@Jane Smith" },
-    { value: "alice_johnson", label: "@Alice Johnson" },
-    { value: "bob_brown", label: "@Bob Brown" },
-    { value: "natalie_white", label: "@Natalie White" },
-    { value: "david_wilson", label: "@David Wilson" },
-    { value: "emma_taylor", label: "@Emma Taylor" },
+  { value: "general", label: "#general" },
+  { value: "random", label: "#random" },
+  { value: "hr", label: "#hr" },
+  { value: "it_support", label: "#it_support" },
+  { value: "marketing", label: "#marketing" },
+  { value: "sales", label: "#sales-hiring-team" },
+  { value: "dev_ops", label: "#dev_ops" },
+  { value: "product", label: "#product" },
+  { value: "customer_support", label: "#customer_support" },
+  { value: "finance", label: "#finance" },
+  { value: "john_doe", label: "@Chris Wu" },
+  { value: "jane_smith", label: "@Jane Smith" },
+  { value: "alice_johnson", label: "@Alice Johnson" },
+  { value: "bob_brown", label: "@Bob Brown" },
+  { value: "natalie_white", label: "@Natalie White" },
+  { value: "david_wilson", label: "@David Wilson" },
+  { value: "emma_taylor", label: "@Emma Taylor" },
 ];
 const deliveryOptions = ["Group DM", "Direct Message", "Channels"];
 
-interface RecipientOption {
-    value: string;
-    label: string;
-}
 
 interface MessageButton {
     label: string;
@@ -50,7 +49,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onFieldsSelect,
     onButtonsChange,
     onDeliveryOptionChange,
-    onRecipientsChange,
+    onRecipientsChange
 }) => {
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -58,9 +57,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     const [deliveryOption, setDeliveryOption] = useState("");
     const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
 
-    const handleOpeningTextChange = (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
+    const handleOpeningTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setOpeningText(e.target.value);
         onOpeningTextChange(e.target.value);
     };
@@ -90,11 +87,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         handleButtonsChange(newButtons);
     };
 
-    const updateButton = (
-        index: number,
-        key: keyof MessageButton,
-        value: string,
-    ) => {
+    const updateButton = (index: number, key: keyof MessageButton, value: string) => {
         const newButtons = [...buttons];
         newButtons[index][key] = value;
         handleButtonsChange(newButtons);
@@ -126,23 +119,14 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     selectedOptions={selectedFields}
                     onOptionChange={handleFieldsSelect}
                     fields={[
-                        { value: "full_name", label: "Full name", color: "" },
-                        { value: "email", label: "Email", color: "" },
+                        { value: "full_name", label: "Full name", color: '' },
+                        { value: "email", label: "Email" , color: ''},
                         {
-                            value: "website",
-                            label: "Website",
-                            color: "",
+                          value: "website", label: "Website",
+                          color: ''
                         },
-                        {
-                            value: "lead_source",
-                            label: "Lead source",
-                            color: "",
-                        },
-                        {
-                            value: "owner_name",
-                            label: "Owner's name",
-                            color: "",
-                        },
+                        { value: "lead_source", label: "Lead source", color: '' },
+                        { value: "owner_name", label: "Owner's name", color: '' }
                     ]}
                 />
             </div>
@@ -154,16 +138,12 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     <div key={idx} className="mt-4 flex items-center gap-2">
                         <Input
                             value={button.label}
-                            onChange={(e) =>
-                                updateButton(idx, "label", e.target.value)
-                            }
+                            onChange={(e) => updateButton(idx, "label", e.target.value)}
                             placeholder="Button label"
                         />
                         <Input
                             value={button.action}
-                            onChange={(e) =>
-                                updateButton(idx, "action", e.target.value)
-                            }
+                            onChange={(e) => updateButton(idx, "action", e.target.value)}
                             placeholder="Link To"
                         />
                         <Button
@@ -194,7 +174,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     onValueChange={handleDeliveryOptionChange}
                     className="mt-3 flex flex-col gap-4"
                 >
-                    {deliveryOptions.map((option, idx) => (
+                  {deliveryOptions.map((option, idx) => (
                         <div key={idx} className="flex items-center gap-2">
                             <RadioGroupItem
                                 value={option}
@@ -204,7 +184,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                                 {option}
                             </Label>
                         </div>
-                    ))}
+                      ))}
                 </RadioGroup>
             </div>
 
@@ -219,6 +199,6 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
             </div>
         </div>
     );
-};
+}
 
 export default SlackWorkflow;
