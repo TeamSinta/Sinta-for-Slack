@@ -29,68 +29,83 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { getOrganizations } from "@/server/actions/organization/queries";
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackWorkflow from "./slack-workflow";
+import ConditionComponent from "./conditions";
 
-// Define the form schema using Zod
+const messageButtonSchema = z.object({
+    name: z.string(),
+    label: z.string(),
+});
+
+const recipientSchema = z.object({
+    openingText: z.string(),
+    messageFields: z.array(z.string()), // Assuming strings correspond to field values like 'full_name'
+    messageButtons: z.array(messageButtonSchema),
+    messageDelivery: z.enum(["Group DM", "Direct Message", "Channels"]),
+    recipients: z.array(z.string()), // Assuming strings are recipient identifiers
+});
+
 const workflowFormSchema = z.object({
     name: z.string(),
     objectField: z.string(),
     alertType: z.string(),
-    conditions: z.string(),
-    receipient: z.string(), // Ensure this matches everywhere it's used
+    conditions: z.array(
+        z.object({
+            field: z.string(),
+            condition: z.string(),
+            value: z.string(),
+            greenhouseObject: z.string().optional(), // Optional for conditions other than 'stuck-in-stage'
+        }),
+    ),
+    triggerConfig: z.object({
+        apiUrl: z.string(),
+        processor: z.string(),
+    }),
+    recipient: recipientSchema,
     status: z.string(),
     organizationId: z.string(),
 });
 
 const createFeedbackFormSchema = workflowFormSchema.omit({
-    // Assuming 'status' is the only field not to be included if necessary
+    status: true,
+    recipient: true,
+    triggerConfig: true,
 });
-
-interface Organization {
-    name: string;
-    id: string;
-    createdAt: Date;
-    ownerId: string;
-    image: string | null;
-    slack_team_id: string | null;
-    access_token: string | null;
-    slack_access_token: string | null;
-    incoming_webhook_url: string | null;
-}
 
 interface Condition {
     field: string;
     condition: string;
     value: string;
-    timeUnit: "closed" | "open";
+    greenhouseObject?: string;
 }
 
 function CreateWorkflowSheet() {
     const [conditions, setConditions] = useState<Condition[]>([]);
+    const [recipientConfig, setRecipientConfig] = useState({
+        openingText: "",
+        messageFields: [],
+        messageButtons: [],
+        messageDelivery: "",
+        recipients: [],
+    });
     const [selectedAlertType, setSelectedAlertType] = useState("create/update");
-
-    const conditionOptions = [
-        { value: "equal", label: "Equal To" },
-        { value: "notEqual", label: "Not equal To" },
-        { value: "one", label: "Is one of" },
-        { value: "notOne", label: "Is not one of" },
-        { value: "notBlank", label: "Is not blank" },
-        { value: "blank", label: "Is blank " },
-    ];
-
-    const timeConditionOptions = [
-        { value: "before", label: "Before" },
-        { value: "after", label: "After" },
-        { value: "same", label: "Same Day" },
-    ];
+    const [selectedValue, setSelectedValue] = useState("");
+    const [selectedRecipient, setSelectedRecipient] = useState("");
+    const [selectedOrganization, setSelectedOrganization] = useState("");
+    const router = useRouter();
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         // Set default conditions based on selected alert type
         if (selectedAlertType === "timebased") {
             setConditions([
-                { field: "", condition: "", value: "", timeUnit: "hours" },
+                {
+                    field: "",
+                    condition: "",
+                    value: "",
+                    greenhouseObject: "open",
+                },
             ]);
         } else if (selectedAlertType === "stuck-in-stage") {
             setConditions([
@@ -98,7 +113,7 @@ function CreateWorkflowSheet() {
                     field: "when stuck-in-stage in",
                     condition: "",
                     value: "for",
-                    timeUnit: "days",
+                    greenhouseObject: "open",
                 },
             ]);
         } else {
@@ -115,102 +130,132 @@ function CreateWorkflowSheet() {
         const newConditions = [...conditions];
         const condition = newConditions[index];
         if (!condition) return;
-        if (key === "timeUnit" && (value === "open" || value === "closed")) {
-            condition[key] = value;
-        } else if (key !== "timeUnit") {
-            condition[key] = value;
-        }
+        condition[key] = value;
         setConditions(newConditions);
     };
-
     const addCondition = () => {
         setConditions([
             ...conditions,
-            { field: "", condition: "", value: "", timeUnit: "hours" },
+            { field: "", condition: "", value: "", greenhouseObject: "open" },
         ]);
     };
 
     const removeCondition = (index: number) => {
-        const newConditions = conditions.filter((_, i) => i !== index);
+        const newConditions = [...conditions];
+        newConditions.splice(index, 1);
         setConditions(newConditions);
     };
 
-    const [organizations, setOrganizations] = useState<Organization[]>([]);
-    const [selectedValue, setSelectedValue] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [selectedRecipient, setSelectedRecipient] = useState("");
-    const [selectedOrganization, setSelectedOrganization] = useState("");
-
-    const handleOrganizationChange = (value: string) => {
-        setSelectedOrganization(value);
-        form.setValue("organizationId", value);
-    };
-
-    const handleRecipientChange = (value: string) => {
-        setSelectedRecipient(value);
-        form.setValue("receipient", value);
-    };
-
-    const handleSelectChange = (value: string) => {
-        setSelectedValue(value);
-        form.setValue("objectField", value); // Assuming 'objectField' is the name in the form
-    };
-
-    const router = useRouter();
-    const [isOpen, setIsOpen] = useState(false);
-
-    const fetchOrganizations = async () => {
-        setLoading(true);
-        try {
-            const { userOrgs } = await getOrganizations();
-            setOrganizations(userOrgs);
-        } catch (error) {
-            console.error("Error fetching organizations:", error);
-            setOrganizations([]);
+    const handleSelectChange = (
+        value: string,
+        field: "objectField" | "alertType" | "organizationId",
+    ) => {
+        switch (field) {
+            case "objectField":
+                setSelectedValue(value);
+                const selectedObject = objectFieldOptions.find(
+                    (obj) => obj.name === value,
+                );
+                if (selectedObject) {
+                    form.setValue("objectField", value); // Set the objectField value
+                    form.setValue("triggerConfig", {
+                        apiUrl: selectedObject.apiUrl,
+                        processor: "",
+                    });
+                }
+                break;
+            case "alertType":
+                if (alertTypeOptions.some((option) => option.value === value)) {
+                    setSelectedAlertType(value);
+                    form.setValue("alertType", value);
+                }
+                break;
+            case "organizationId":
+                setSelectedOrganization(value);
+                form.setValue("organizationId", value);
+                break;
+            default:
+                // Handle default case or invalid field
+                break;
         }
-        setLoading(false);
+    };
+    const handleOpeningTextChange = (text: string) => {
+        updateRecipient("openingText", text);
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            await fetchOrganizations();
-        };
-        fetchData().catch((error) => {
-            console.error("Unhandled error during fetchOrganizations:", error);
-        });
-    }, []);
+    const handleFieldsSelect = (fields: string[]) => {
+        updateRecipient("messageFields", fields);
+    };
 
+    const handleButtonsChange = (buttons: any[]) => {
+        updateRecipient("messageButtons", buttons);
+    };
+
+    const handleDeliveryOptionChange = (option: string) => {
+        updateRecipient("messageDelivery", option);
+    };
+
+    const handleRecipientsChange = (recipients: string[]) => {
+        updateRecipient("recipients", recipients);
+    };
+
+    const updateRecipient = (key: keyof typeof recipientConfig, value: any) => {
+        const newRecipient = { ...recipientConfig, [key]: value };
+        setRecipientConfig(newRecipient);
+        form.setValue("recipient", newRecipient);
+    };
     const form = useForm({
         resolver: zodResolver(createFeedbackFormSchema),
         defaultValues: {
             name: "",
             objectField: "",
             alertType: "",
-            receipient: "",
-            conditions: "",
-            status: "Active",
+            recipient: recipientConfig, // Initialize with the state
+            conditions: [],
             organizationId: "",
-            triggerConfig: "",
+            triggerConfig: { apiUrl: "", processor: "" },
         },
     });
 
+    useEffect(() => {
+        form.setValue("conditions", conditions);
+    }, [conditions, form]);
+
+    useEffect(() => {
+        form.setValue("recipient", recipientConfig);
+    }, [recipientConfig, form]);
+
+    // Assuming createWorkflowMutation expects a type that conforms to the Zod schema
     const {
-        isPending: isMutatePending,
         mutateAsync,
+        isPending: isMutatePending,
         reset,
     } = useMutation({
-        mutationFn: () => createWorkflowMutation(form.getValues()),
+        mutationFn: createWorkflowMutation,
+        onSuccess: () => {
+            // Code to execute on success, e.g., navigating or showing a success message
+            router.refresh();
+            reset();
+            setIsOpen(false);
+        },
+        onError: (error) => {
+            // Code to execute on error, e.g., showing an error message
+            toast.error(
+                (error as { message?: string })?.message ??
+                    "Failed to submit Workflow",
+            );
+        },
     });
 
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
         try {
-            await mutateAsync();
+            const formData = form.getValues();
+            await mutateAsync(formData);
             await startAwaitableTransition(() => {
                 router.refresh();
             });
-
             reset();
             setIsOpen(false);
             toast.success("Workflow created successfully");
@@ -227,6 +272,103 @@ function CreateWorkflowSheet() {
         { value: "create/update", label: "Create/Update" },
         { value: "stuck-in-stage", label: "Stuck-in-Stage" },
     ];
+
+    const objectFieldOptions = [
+        {
+            name: "Activity Feed",
+            apiUrl: "https://api.greenhouse.io/v1/activity_feed",
+        },
+        {
+            name: "Applications",
+            apiUrl: "https://api.greenhouse.io/v1/applications",
+        },
+        { name: "Approvals", apiUrl: "https://api.greenhouse.io/v1/approvals" },
+        {
+            name: "Candidates",
+            apiUrl: "https://api.greenhouse.io/v1/candidates",
+        },
+        {
+            name: "Close Reasons",
+            apiUrl: "https://api.greenhouse.io/v1/close_reasons",
+        },
+        {
+            name: "Custom Fields",
+            apiUrl: "https://api.greenhouse.io/v1/custom_fields",
+        },
+        {
+            name: "Demographic Data",
+            apiUrl: "https://api.greenhouse.io/v1/demographic_data",
+        },
+        {
+            name: "Departments",
+            apiUrl: "https://api.greenhouse.io/v1/departments",
+        },
+        { name: "Education", apiUrl: "https://api.greenhouse.io/v1/education" },
+        { name: "EEOC", apiUrl: "https://api.greenhouse.io/v1/eeoc" },
+        {
+            name: "Email Templates",
+            apiUrl: "https://api.greenhouse.io/v1/email_templates",
+        },
+        {
+            name: "Job Openings",
+            apiUrl: "https://api.greenhouse.io/v1/job_openings",
+        },
+        { name: "Job Posts", apiUrl: "https://api.greenhouse.io/v1/job_posts" },
+        {
+            name: "Job Stages",
+            apiUrl: "https://api.greenhouse.io/v1/job_stages",
+        },
+        { name: "Jobs", apiUrl: "https://api.greenhouse.io/v1/jobs" },
+        { name: "Offers", apiUrl: "https://api.greenhouse.io/v1/offers" },
+        { name: "Offices", apiUrl: "https://api.greenhouse.io/v1/offices" },
+        {
+            name: "Prospect Pools",
+            apiUrl: "https://api.greenhouse.io/v1/prospect_pools",
+        },
+        {
+            name: "Rejection Reasons",
+            apiUrl: "https://api.greenhouse.io/v1/rejection_reasons",
+        },
+        {
+            name: "Scheduled Interviews",
+            apiUrl: "https://api.greenhouse.io/v1/scheduled_interviews",
+        },
+        {
+            name: "Scorecards",
+            apiUrl: "https://api.greenhouse.io/v1/scorecards",
+        },
+        { name: "Sources", apiUrl: "https://api.greenhouse.io/v1/sources" },
+        { name: "Tags", apiUrl: "https://api.greenhouse.io/v1/tags" },
+        {
+            name: "Tracking Links",
+            apiUrl: "https://api.greenhouse.io/v1/tracking_links",
+        },
+        { name: "Users", apiUrl: "https://api.greenhouse.io/v1/users" },
+        {
+            name: "User Permissions",
+            apiUrl: "https://api.greenhouse.io/v1/user_permissions",
+        },
+        {
+            name: "User Roles",
+            apiUrl: "https://api.greenhouse.io/v1/user_roles",
+        },
+    ];
+
+    const conditionOptions = [
+        { value: "equal", label: "Equal To" },
+        { value: "notEqual", label: "Not equal To" },
+        { value: "one", label: "Is one of" },
+        { value: "notOne", label: "Is not one of" },
+        { value: "notBlank", label: "Is not blank" },
+        { value: "blank", label: "Is blank " },
+    ];
+
+    const timeConditionOptions = [
+        { value: "before", label: "Before" },
+        { value: "after", label: "After" },
+        { value: "same", label: "Same Day" },
+    ];
+
     const dateFieldOptions = [
         "Created at",
         "Closed at ",
@@ -234,38 +376,8 @@ function CreateWorkflowSheet() {
         "Last activity",
     ];
 
-    const objectFieldOptions = [
-        "Activity Feed",
-        "Applications",
-        "Approvals",
-        "Candidates",
-        "Close Reasons",
-        "Custom Fields",
-        "Demographic Data",
-        "Departments",
-        "Education",
-        "EEOC",
-        "Email Templates",
-        "Job Openings",
-        "Job Posts",
-        "Job Stages",
-        "Jobs",
-        "Offers",
-        "Offices",
-        "Prospect Pools",
-        "Rejection Reasons",
-        "Scheduled Interviews",
-        "Scorecards",
-        "Sources",
-        "Tags",
-        "Tracking Links",
-        "Users",
-        "User Permissions",
-        "User Roles",
-    ];
-
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
                     Create Workflow
@@ -330,7 +442,12 @@ function CreateWorkflowSheet() {
                                     </Label>
                                     <Select
                                         value={selectedValue}
-                                        onValueChange={handleSelectChange}
+                                        onValueChange={(value) =>
+                                            handleSelectChange(
+                                                value,
+                                                "objectField",
+                                            )
+                                        }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
                                             <SelectValue placeholder="Select Greenhouse Object" />
@@ -340,10 +457,10 @@ function CreateWorkflowSheet() {
                                                 {objectFieldOptions.map(
                                                     (option) => (
                                                         <SelectItem
-                                                            key={option}
-                                                            value={option.toString()}
+                                                            key={option.name}
+                                                            value={option.name}
                                                         >
-                                                            {option}
+                                                            {option.name}
                                                         </SelectItem>
                                                     ),
                                                 )}
@@ -371,7 +488,9 @@ function CreateWorkflowSheet() {
                                 </Label>
                                 <RadioGroup
                                     defaultValue={selectedAlertType}
-                                    onValueChange={setSelectedAlertType}
+                                    onValueChange={(value) =>
+                                        handleSelectChange(value, "alertType")
+                                    }
                                     className="flex flex-row space-x-4"
                                 >
                                     {alertTypeOptions.map((option) => (
@@ -404,19 +523,19 @@ function CreateWorkflowSheet() {
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
-
-                        {/* Conditions */}
                         <div className="flex items-start gap-8">
                             <div className="w-1/3">
                                 <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                                     Conditions
                                 </Label>
+
                                 <p className="mt-2 text-sm text-gray-500">
                                     Specify conditions for triggering the
                                     workflow.
                                 </p>
                             </div>
                             <div className="flex-1 space-y-4">
+                                {/* Conditional rendering based on selected alert type */}
                                 {selectedAlertType === "timebased" && (
                                     <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
                                         <div className="flex-1">
@@ -507,41 +626,13 @@ function CreateWorkflowSheet() {
                                                 }
                                             />
                                         </div>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Day/Hours
-                                            </Label>
-                                            <Select
-                                                onValueChange={(value) =>
-                                                    handleConditionChange(
-                                                        0,
-                                                        "timeUnit",
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Time Unit" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        <SelectItem value="hours">
-                                                            Hours
-                                                        </SelectItem>
-                                                        <SelectItem value="days">
-                                                            Days
-                                                        </SelectItem>
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
                                     </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
                                     <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
                                         <div className="flex-1">
                                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                When Stuck-in-Stage In
+                                                Stage
                                             </Label>
                                             <Select
                                                 onValueChange={(value) =>
@@ -560,12 +651,16 @@ function CreateWorkflowSheet() {
                                                         {objectFieldOptions.map(
                                                             (option) => (
                                                                 <SelectItem
-                                                                    key={option}
+                                                                    key={
+                                                                        option.name
+                                                                    }
                                                                     value={
-                                                                        option
+                                                                        option.name
                                                                     }
                                                                 >
-                                                                    {option}
+                                                                    {
+                                                                        option.name
+                                                                    }
                                                                 </SelectItem>
                                                             ),
                                                         )}
@@ -594,165 +689,28 @@ function CreateWorkflowSheet() {
                                         </div>
                                     </div>
                                 )}
-                                {/* Existing conditions will appear below */}
+
+                                {/* Display additional conditions dynamically added */}
                                 {conditions.slice(1).map((condition, index) => (
-                                    <div key={index + 1}>
-                                        {index > 0 && (
-                                            <div className="my-2 flex justify-center">
-                                                <span className="text-gray-500">
-                                                    AND
-                                                </span>
-                                            </div>
-                                        )}
-                                        <div className="mb-4 flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4">
-                                            <div className="flex flex-row gap-4">
-                                                <div className="flex-1">
-                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Field
-                                                    </Label>
-                                                    <Select
-                                                        value={condition.field}
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            handleConditionChange(
-                                                                index + 1,
-                                                                "field",
-                                                                value,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                            <SelectValue placeholder="Select Field" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                {objectFieldOptions.map(
-                                                                    (
-                                                                        option,
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                option
-                                                                            }
-                                                                            value={
-                                                                                option
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                option
-                                                                            }
-                                                                        </SelectItem>
-                                                                    ),
-                                                                )}
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="flex-1">
-                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Condition
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            condition.condition
-                                                        }
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            handleConditionChange(
-                                                                index + 1,
-                                                                "condition",
-                                                                value,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                            <SelectValue placeholder="Select Condition" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                {conditionOptions.map(
-                                                                    (
-                                                                        option,
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                option.value
-                                                                            }
-                                                                            value={
-                                                                                option.value
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                option.label
-                                                                            }
-                                                                        </SelectItem>
-                                                                    ),
-                                                                )}
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-row items-center gap-4">
-                                                <div className="flex-1">
-                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Value
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            condition.timeUnit
-                                                        }
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            handleConditionChange(
-                                                                index + 1,
-                                                                "timeUnit",
-                                                                value,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                            <SelectValue placeholder="Select Time Unit" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                <SelectItem value="hours">
-                                                                    Hours
-                                                                </SelectItem>
-                                                                <SelectItem value="days">
-                                                                    Days
-                                                                </SelectItem>
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        removeCondition(
-                                                            index + 1,
-                                                        )
-                                                    }
-                                                    type="button"
-                                                    className="self-end"
-                                                >
-                                                    Delete
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <ConditionComponent
+                                        key={index}
+                                        index={index + 1} // Adjust index for zero-based array
+                                        condition={condition}
+                                        onChange={handleConditionChange}
+                                        onRemove={removeCondition}
+                                        objectFieldOptions={objectFieldOptions}
+                                        conditionOptions={conditionOptions}
+                                    />
                                 ))}
+
+                                {/* Button to add new conditions */}
                                 <Button
                                     variant="outline"
                                     className="mt-2 w-full hover:bg-indigo-100 hover:text-indigo-800"
                                     onClick={addCondition}
                                     type="button"
                                 >
-                                    + Add condition
+                                    + Add Condition
                                 </Button>
                             </div>
                         </div>
@@ -770,7 +728,17 @@ function CreateWorkflowSheet() {
                                 </p>
                             </div>
                             <div className="flex-1">
-                                <SlackWorkflow />
+                                <SlackWorkflow
+                                    onOpeningTextChange={
+                                        handleOpeningTextChange
+                                    }
+                                    onFieldsSelect={handleFieldsSelect}
+                                    onButtonsChange={handleButtonsChange}
+                                    onDeliveryOptionChange={
+                                        handleDeliveryOptionChange
+                                    }
+                                    onRecipientsChange={handleRecipientsChange}
+                                />
                             </div>
                         </div>
 

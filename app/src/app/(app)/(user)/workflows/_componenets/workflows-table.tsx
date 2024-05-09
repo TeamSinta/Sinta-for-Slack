@@ -46,7 +46,7 @@ export function WorkflowsTable({ workflowsPromise }: WorkflowsTableProps) {
             name: workflow.name,
             status: workflow.status,
             createdAt: workflow.createdAt,
-            receipient: workflow.receipient as JSON, // Cast to JSON
+            recipient: workflow.recipient as JSON, // Cast to JSON
             alertType: workflow.alertType,
             conditions: workflow.conditions as JSON, // Cast to JSON
             objectField: workflow.objectField,

@@ -42,7 +42,7 @@ export const workflows = createTable("workflow", {
     alertType: varchar("alertType", { length: 255 }).notNull(),
     conditions: jsonb("conditions").notNull(), // Updated to JSONB
     triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
-    receipient: jsonb("receipient").notNull(),
+    recipient: jsonb("recipient").notNull(),
     status: workflowStatusEnum("status").default("Active").notNull(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     modifiedAt: timestamp("modifiedAt", { mode: "date" }),

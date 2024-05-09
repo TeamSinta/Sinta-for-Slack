@@ -1,8 +1,5 @@
-"use client";
-
 import * as React from "react";
 import { X } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
@@ -13,18 +10,28 @@ type Option = { value: string; label: string };
 
 interface FancyMultiSelectProps {
     options?: Option[]; // Mark the prop as optional
+    selectedOptions: string[]; // Selected options
+    onOptionChange: (selectedOptions: string[]) => void; // Function to handle option change
 }
 
-export function FancyMultiSelect({ options = [] }: FancyMultiSelectProps) {
-    // Provide a default value
+export function FancyMultiSelect({
+    options = [],
+    selectedOptions,
+    onOptionChange,
+}: FancyMultiSelectProps) {
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [open, setOpen] = React.useState(false);
-    const [selected, setSelected] = React.useState<Option[]>([]);
     const [inputValue, setInputValue] = React.useState("");
 
-    const handleUnselect = React.useCallback((option: Option) => {
-        setSelected((prev) => prev.filter((s) => s.value !== option.value));
-    }, []);
+    const handleUnselect = React.useCallback(
+        (option: Option) => {
+            const updatedOptions = selectedOptions.filter(
+                (opt) => opt !== option.value,
+            );
+            onOptionChange(updatedOptions);
+        },
+        [selectedOptions, onOptionChange],
+    );
 
     const handleKeyDown = React.useCallback(
         (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -32,23 +39,25 @@ export function FancyMultiSelect({ options = [] }: FancyMultiSelectProps) {
             if (input) {
                 if (e.key === "Delete" || e.key === "Backspace") {
                     if (input.value === "") {
-                        setSelected((prev) => {
-                            const newSelected = [...prev];
-                            newSelected.pop();
-                            return newSelected;
-                        });
+                        const lastSelectedOption = options.find((opt) =>
+                            selectedOptions.includes(opt.value),
+                        );
+                        if (lastSelectedOption) {
+                            handleUnselect(lastSelectedOption);
+                        }
                     }
                 }
-                // This is not a default behaviour of the <input /> field
                 if (e.key === "Escape") {
                     input.blur();
                 }
             }
         },
-        [],
+        [options, selectedOptions, handleUnselect],
     );
 
-    const selectables = options.filter((option) => !selected.includes(option));
+    const selectables = options.filter(
+        (option) => !selectedOptions.includes(option.value),
+    );
 
     return (
         <Command
@@ -57,33 +66,39 @@ export function FancyMultiSelect({ options = [] }: FancyMultiSelectProps) {
         >
             <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <div className="flex flex-wrap gap-1">
-                    {selected.map((option) => {
-                        return (
-                            <Badge key={option.value} variant="secondary">
-                                <Image
-                                    src={slackLogo}
-                                    alt="slack-logo"
-                                    className="mr-1 h-4 w-4"
-                                />
-                                {option.label}
-
-                                <button
-                                    className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleUnselect(option);
-                                        }
-                                    }}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    onClick={() => handleUnselect(option)}
-                                >
-                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                </button>
-                            </Badge>
+                    {selectedOptions.map((optionValue) => {
+                        const option = options.find(
+                            (opt) => opt.value === optionValue,
                         );
+                        if (option) {
+                            return (
+                                <Badge key={option.value} variant="secondary">
+                                    <Image
+                                        src={slackLogo}
+                                        alt="slack-logo"
+                                        className="mr-1 h-4 w-4"
+                                    />
+                                    {option.label}
+
+                                    <button
+                                        className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                handleUnselect(option);
+                                            }
+                                        }}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onClick={() => handleUnselect(option)}
+                                    >
+                                        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                    </button>
+                                </Badge>
+                            );
+                        }
+                        return null;
                     })}
                     <CommandPrimitive.Input
                         ref={inputRef}
@@ -108,11 +123,11 @@ export function FancyMultiSelect({ options = [] }: FancyMultiSelectProps) {
                                             e.preventDefault();
                                             e.stopPropagation();
                                         }}
-                                        onSelect={(value) => {
+                                        onSelect={() => {
                                             setInputValue("");
-                                            setSelected((prev) => [
-                                                ...prev,
-                                                option,
+                                            onOptionChange([
+                                                ...selectedOptions,
+                                                option.value,
                                             ]);
                                         }}
                                         className={"cursor-pointer"}

@@ -17,7 +17,7 @@ export type WorkflowData = {
     name: string;
     status: string;
     createdAt: Date;
-    receipient: JSON;
+    recipient: JSON;
     conditions: JSON; // Ensure this aligns with the actual data type
     alertType: string;
     objectField: string;
@@ -63,8 +63,8 @@ export const columns: ColumnDef<WorkflowData>[] = [
         ),
     },
     {
-        accessorKey: "receipient",
-        header: "Receipient",
+        accessorKey: "recipient",
+        header: "Recipient",
         cell: ({ row }) => (
             <Badge variant="secondary" className="capitalize ">
                 <Image
@@ -72,7 +72,7 @@ export const columns: ColumnDef<WorkflowData>[] = [
                     alt="slack-logo"
                     className="mr-1 h-4 w-4"
                 />
-                {/* {row.original.receipient} */}
+                {/* {row.original.recipient} */}
             </Badge>
         ),
     },

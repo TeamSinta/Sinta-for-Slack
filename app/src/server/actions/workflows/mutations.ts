@@ -22,7 +22,7 @@ const workflowFormSchema = workflowInsertSchema.pick({
     alertType: true,
     organizationId: true,
     triggerConfig: true,
-    receipient: true,
+    recipient: true,
     conditions: true,
 });
 
@@ -30,52 +30,36 @@ type CreateWorkflowProps = z.infer<typeof workflowFormSchema>;
 
 export async function createWorkflowMutation(props: CreateWorkflowProps) {
     const { user } = await protectedProcedure();
-
     const { currentOrg } = await getOrganizations();
+    const orgID = currentOrg.id;
 
-    const workflowParse = await workflowFormSchema.safeParseAsync(props);
+    const workflowParse = workflowFormSchema.safeParse(props);
 
     if (!workflowParse.success) {
-        throw new Error("Invalid workflow data", {
-            cause: workflowParse.error.errors,
-        });
+        throw new Error(
+            "Invalid workflow data: " +
+                JSON.stringify(workflowParse.error.errors),
+        );
     }
-    console.log(workflowParse.data);
 
-    await db
+    const workflowData = workflowParse.data;
+
+    return await db
         .insert(workflows)
         .values({
-            name: workflowParse.data.name,
-            objectField: workflowParse.data.objectField,
-            alertType: workflowParse.data.alertType,
-            conditions: workflowParse.data.conditions, // Add this property
-            receipient: workflowParse.data.receipient, // Add this property
-            organizationId: workflowParse.data.organizationId,
-            ownerId: user.id, // Ensure this property is included
-            triggerConfig: workflowParse.data.triggerConfig, // Add this property
+            name: workflowData.name,
+            objectField: workflowData.objectField,
+            alertType: workflowData.alertType,
+            conditions: JSON.stringify(workflowData.conditions),
+            recipient: JSON.stringify(workflowData.recipient),
+            organizationId: orgID,
+            ownerId: user.id,
+            triggerConfig: JSON.stringify(workflowData.triggerConfig),
             createdAt: new Date(),
             modifiedAt: new Date(),
         })
         .execute();
-    const url = "https://slack.com/api/chat.postMessage";
-    const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${currentOrg.slack_access_token}`,
-    };
-    const body = JSON.stringify({
-        channel: "U06URRX3V0S", // Direct message to the user who submitted the modal
-        text: `New ${workflowParse.data.name} Workflow Created :sparkles:`,
-    });
-
-    const response = await fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: body,
-    });
-
-    return response.json();
 }
-
 /**
  * Update a workflow
  */
