@@ -39,7 +39,6 @@ export function WorkflowsTable({ workflowsPromise }: WorkflowsTableProps) {
         [],
     );
 
-    console.log(data);
     const workflowsData: WorkflowData[] = data.map((workflow) => {
         return {
             id: workflow.id,

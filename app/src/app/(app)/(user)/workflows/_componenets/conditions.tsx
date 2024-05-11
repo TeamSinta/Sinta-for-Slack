@@ -110,30 +110,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 />
             </div>
 
-            {/* Greenhouse Object Selector (if needed) */}
-            {condition.greenhouseObject && (
-                <div className="flex-1">
-                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Greenhouse Object
-                    </Label>
-                    <Select
-                        value={condition.greenhouseObject}
-                        onValueChange={(value) =>
-                            onChange(index, "greenhouseObject", value)
-                        }
-                    >
-                        <SelectTrigger className="w-full border border-gray-300 bg-white">
-                            <SelectValue placeholder="Select Greenhouse Object" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="hours">Hours</SelectItem>
-                                <SelectItem value="days">Days</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
-            )}
+
 
             {/* Remove Button */}
             <Button

@@ -44,21 +44,6 @@ export async function getAccessToken(teamId: string) {
 
 export async function setAccessToken(accessToken: string, teamId: string) {
     const { currentOrg } = await getOrganizations();
-
-    const response = await fetch("https://slack.com/api/team.info", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    const slackResponse = (await response.json()) as SlackTeamInfoResponse;
-
-    if (!slackResponse.ok) {
-        throw new Error(`Failed to fetch team info: ${slackResponse.error}`);
-    }
-
-    if (!slackResponse.team) {
-        throw new Error("Team data is missing in the response.");
-    }
-    console.log(accessToken);
     const result = await db
         .update(organizations)
         .set({
@@ -70,6 +55,8 @@ export async function setAccessToken(accessToken: string, teamId: string) {
 
     return result ? "OK" : "Failed to update access token";
 }
+
+
 
 // export async function getChannel(teamId: string) {
 //   // Assuming the slack_team_id uniquely identifies the team and slack_channel_id is stored in the same table

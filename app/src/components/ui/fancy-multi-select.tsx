@@ -5,19 +5,22 @@ import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
 import Image from "next/image";
 import slackLogo from "../../../public/slack-logo.png";
+import { Icons } from "./icons";
 
 type Option = { value: string; label: string };
 
 interface FancyMultiSelectProps {
-    options?: Option[]; // Mark the prop as optional
-    selectedOptions: string[]; // Selected options
-    onOptionChange: (selectedOptions: string[]) => void; // Function to handle option change
+  options?: Option[];
+  selectedOptions: string[];
+  onOptionChange: (selectedOptions: string[]) => void;
+  loading?: boolean; // Added loading flag
 }
 
 export function FancyMultiSelect({
     options = [],
     selectedOptions,
     onOptionChange,
+    loading = false, // Default loading to false if not specified
 }: FancyMultiSelectProps) {
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [open, setOpen] = React.useState(false);
@@ -79,7 +82,6 @@ export function FancyMultiSelect({
                                         className="mr-1 h-4 w-4"
                                     />
                                     {option.label}
-
                                     <button
                                         className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                         onKeyDown={(e) => {
@@ -110,36 +112,36 @@ export function FancyMultiSelect({
                         className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
                     />
                 </div>
+                {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Icons.loader className="h-4 w-4" />
+                    </div>
+                )}
             </div>
-            <div className="relative mt-2">
-                {open && selectables.length > 0 ? (
+            {open && selectables.length > 0 && (
+                <div className="relative mt-2">
                     <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
                         <CommandGroup className="h-full overflow-auto">
-                            {selectables.map((option) => {
-                                return (
-                                    <CommandItem
-                                        key={option.value}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        onSelect={() => {
-                                            setInputValue("");
-                                            onOptionChange([
-                                                ...selectedOptions,
-                                                option.value,
-                                            ]);
-                                        }}
-                                        className={"cursor-pointer"}
-                                    >
-                                        {option.label}
-                                    </CommandItem>
-                                );
-                            })}
+                            {selectables.map((option) => (
+                                <CommandItem
+                                    key={option.value}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onSelect={() => {
+                                        setInputValue("");
+                                        onOptionChange([...selectedOptions, option.value]);
+                                    }}
+                                    className={"cursor-pointer"}
+                                >
+                                    {option.label}
+                                </CommandItem>
+                            ))}
                         </CommandGroup>
                     </div>
-                ) : null}
-            </div>
+                </div>
+            )}
         </Command>
     );
 }

@@ -1,35 +1,29 @@
+"use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from '@/components/ui/fancy.box';
+import { getOrganizations } from '@/server/actions/organization/queries';
+import { getActiveUsers, getChannels } from '@/server/slack/core';
 
 
 
-const recipientOptions = [
-  { value: "general", label: "#general" },
-  { value: "random", label: "#random" },
-  { value: "hr", label: "#hr" },
-  { value: "it_support", label: "#it_support" },
-  { value: "marketing", label: "#marketing" },
-  { value: "sales", label: "#sales-hiring-team" },
-  { value: "dev_ops", label: "#dev_ops" },
-  { value: "product", label: "#product" },
-  { value: "customer_support", label: "#customer_support" },
-  { value: "finance", label: "#finance" },
-  { value: "john_doe", label: "@Chris Wu" },
-  { value: "jane_smith", label: "@Jane Smith" },
-  { value: "alice_johnson", label: "@Alice Johnson" },
-  { value: "bob_brown", label: "@Bob Brown" },
-  { value: "natalie_white", label: "@Natalie White" },
-  { value: "david_wilson", label: "@David Wilson" },
-  { value: "emma_taylor", label: "@Emma Taylor" },
-];
 const deliveryOptions = ["Group DM", "Direct Message", "Channels"];
 
+const fields = [
+  { value: "name", label: "Candidate Name", color: '' },
+  { value: "title", label: "Job Title", color: '' },
+  { value: "company", label: "Company", color: '' },
+  { value: "email", label: "Email Address", color: '' }, // Assuming you will parse to get primary email
+  { value: "phone", label: "Phone Number", color: '' }, // Assuming parsing for primary phone
+  { value: "social_media", label: "Social Media", color: '' }, // Need to handle parsing
+  { value: "recruiter_name", label: "Recruiter Name", color: '' },
+  { value: "coordinator_name", label: "Coordinator Name", color: '' }
+];
 
 interface MessageButton {
     label: string;
@@ -51,11 +45,14 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onDeliveryOptionChange,
     onRecipientsChange
 }) => {
+    const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<MessageButton[]>([]);
     const [deliveryOption, setDeliveryOption] = useState("");
     const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+    const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
+
 
     const handleOpeningTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setOpeningText(e.target.value);
@@ -98,6 +95,30 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         handleButtonsChange(newButtons);
     };
 
+    useEffect(() => {
+      setIsLoading(true);
+      const fetchData = async () => {
+          try {
+              // Fetch both sets of data in parallel
+              const [channelsData, usersData] = await Promise.all([
+                  getChannels(),
+                  getActiveUsers()
+              ]);
+
+              // Combine the data into a single array
+              const combinedOptions = [...channelsData, ...usersData];
+              setOptions(combinedOptions);
+          } catch (error) {
+              console.error('Failed to fetch data:', error);
+          }
+          setIsLoading(false);
+      };
+
+      fetchData();
+  }, []);
+
+
+
     return (
         <div className="workflow-container mt-4">
             <Label className="text-lg font-bold">Configure Slack Alert</Label>
@@ -118,16 +139,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                 <FancyBox
                     selectedOptions={selectedFields}
                     onOptionChange={handleFieldsSelect}
-                    fields={[
-                        { value: "full_name", label: "Full name", color: '' },
-                        { value: "email", label: "Email" , color: ''},
-                        {
-                          value: "website", label: "Website",
-                          color: ''
-                        },
-                        { value: "lead_source", label: "Lead source", color: '' },
-                        { value: "owner_name", label: "Owner's name", color: '' }
-                    ]}
+                    fields={fields}
                 />
             </div>
 
@@ -194,7 +206,9 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                 <FancyMultiSelect
                     selectedOptions={selectedRecipients}
                     onOptionChange={handleRecipientsChange}
-                    options={recipientOptions}
+                    options={options}
+                    loading={isLoading}
+
                 />
             </div>
         </div>

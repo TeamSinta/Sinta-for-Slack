@@ -77,11 +77,11 @@ export function ColumnDropdown({ id }: WorkflowData) {
                 await removeWorkflowMutate({ workflowId: id });
                 await startAwaitableRemoveWorkflowTransition(() => {
                     router.refresh();
+                    toast.success("Workflow removed successfully!");
                 });
             },
             {
                 loading: "Removing workflow...",
-                success: "Workflow removed successfully!",
                 error: "Failed to remove workflow.",
             },
         );

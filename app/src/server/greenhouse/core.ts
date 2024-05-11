@@ -7,12 +7,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+import { parseISO, differenceInCalendarDays } from 'date-fns';
+import { isDate, isValid } from 'date-fns';
+
 
 interface Condition {
-    field: string;
-    condition: string;
-    value: string;
+  field: string;
+  condition: string;
+  value: string | number; // Assuming the value could be a number when the condition is about dates
 }
+
 
 export function mapWebhookActionToObjectField(action: string): string {
     switch (action) {
@@ -87,63 +91,7 @@ export function processData(data: any[], processor: string): any[] {
     return filteredData;
 }
 
-export function filterDataWithConditions(
-    data: any[],
-    conditions: Condition[],
-): any[] {
-    return data.filter((candidate) => {
-        return conditions.every((condition) => {
-            const { field, condition: cond, value } = condition;
-            const candidateFieldValue = getField(candidate, field);
-            return evaluateCondition(candidateFieldValue, cond, value);
-        });
-    });
-}
 
-function getField(candidate: any, field: string): any {
-    const fields = field.split(".");
-    let value = candidate;
-
-    for (const f of fields) {
-        // Use optional chaining here to handle null or undefined values
-        value = value?.[f];
-        if (value === undefined) {
-            return undefined;
-        }
-    }
-
-    return value;
-}
-
-function evaluateCondition(
-    candidateFieldValue: any,
-    condition: string,
-    value: string,
-): boolean {
-    switch (condition) {
-        case "equal":
-            return candidateFieldValue === value;
-        case "notEqual":
-            return candidateFieldValue !== value;
-        case "one":
-            return (
-                Array.isArray(candidateFieldValue) &&
-                candidateFieldValue.includes(value)
-            );
-        case "notOne":
-            return !(
-                Array.isArray(candidateFieldValue) &&
-                candidateFieldValue.includes(value)
-            );
-        case "notBlank":
-            return candidateFieldValue !== "";
-        case "blank":
-            return candidateFieldValue === "";
-        default:
-            // Handle other conditions if needed
-            return false;
-    }
-}
 
 // Function to send a Slack notification
 export async function sendSlackNotification(
@@ -158,9 +106,70 @@ export async function sendSlackNotification(
     // Placeholder, replace with actual logic
 }
 
-// Function to filter processed data before sending Slack notification
-export function filterProcessedData(processedData: any): any {
-    // Implement data filtering logic here
-    // Return filtered data prepared for Slack notification
-    return processedData; // Placeholder, replace with actual logic
+
+/**
+ * Determines if a string is a valid ISO date.
+ * @param dateStr The string to check.
+ * @returns true if the string is a valid ISO date, false otherwise.
+ */
+function isISODate(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const date = parseISO(dateStr);
+  return isValid(date);
 }
+
+
+/**
+ * Filters data based on a list of conditions, including dynamic date comparisons.
+ *
+ * @param data - The array of data objects fetched from an API.
+ * @param conditions - The conditions to apply for filtering.
+ * @returns - The filtered array of data objects.
+ */
+export const filterDataWithConditions = (data: any[], conditions: Condition[]): any[] => {
+  return data.filter(item => {
+      return conditions.every(condition => {
+          const { field, condition: operator, value } = condition;
+          const itemValue = item[field];
+
+          // Check if the field's value is a date
+          if (isISODate(itemValue)) {
+              const fieldValueAsDate = parseISO(itemValue);
+              const today = new Date();
+              const valueAsNumber = Number(value); // Ensure the value is treated as a number for date comparisons
+
+              switch (operator) {
+                  case "greaterThan":
+                      return differenceInCalendarDays(today, fieldValueAsDate) > valueAsNumber;
+                  case "lessThan":
+                      return differenceInCalendarDays(today, fieldValueAsDate) < valueAsNumber;
+                  case "greaterThanOrEqual":
+                      return differenceInCalendarDays(today, fieldValueAsDate) >= valueAsNumber;
+                  case "lessThanOrEqual":
+                      return differenceInCalendarDays(today, fieldValueAsDate) <= valueAsNumber;
+                  // Add more cases if there are other date-based operators
+              }
+          }
+
+          // Handling non-date values or if the date check does not pass
+          switch (operator) {
+              case "equals":
+                  return itemValue === value;
+              case "notEqual":
+                  return itemValue !== value;
+              case "greaterThan":
+                  return itemValue > value;
+              case "lessThan":
+                  return itemValue < value;
+              case "greaterThanOrEqual":
+                  return itemValue >= value;
+              case "lessThanOrEqual":
+                  return itemValue <= value;
+              case "contains":
+                  return typeof itemValue === 'string' && itemValue.includes(value as string);
+              default:
+                  return false;
+          }
+      });
+  });
+};

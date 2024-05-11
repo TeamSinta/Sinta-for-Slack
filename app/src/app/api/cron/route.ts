@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
-    filterProcessedData,
     processData,
 } from "@/server/greenhouse/core";
 import { env } from "@/env";
+import { filterProcessedForSlack } from "@/lib/slack";
+import { sendSlackNotification } from "@/server/slack/core";
 
 // Define your API token
 const API_TOKEN = env.GREENHOUSE_API_HARVEST;
@@ -33,26 +34,26 @@ export async function POST() {
         const workflows = await getWorkflows(); // Retrieve workflows from the database
         for (const workflow of workflows) {
             if (workflow.alertType === "stuck-in-stage") {
-                const { apiUrl, processor } = workflow.triggerConfig as {
-                    apiUrl: string;
-                    processor: string;
-                };
-                const { conditions, recipient } = workflow as {
-                    recipient: string;
-                    conditions: string;
-                };
+              const { apiUrl, processor } = workflow.triggerConfig;  // Now using the parsed object
+
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
-                console.log("Data from Greenhouse API:", data); // Log the data to verify it has arrived
+                // console.log("Data from Greenhouse API:", data); // Log the data to verify it has arrived
+
                 const filteredConditionsData = filterDataWithConditions(
                     data,
-                    conditions,
+                    workflow.conditions,
                 );
-                const processedData = processData(
-                    filteredConditionsData,
-                    processor,
-                ); // Implement this function to process data
-                const filteredSlackData = filterProcessedData(processedData); // Filter data for Slack notification
-                await sendSlackNotification(filteredSlackData, recipient);
+                // const processedData = processData(
+                //     filteredConditionsData,
+                //     processor,
+                // );
+
+                // Implement this function to process data
+
+
+                const filteredSlackData = filterProcessedForSlack(filteredConditionsData, workflow.recipient);
+
+                await sendSlackNotification(filteredSlackData, workflow.recipient);
             } else if (workflow.alertType === "time-based") {
                 // Placeholder for time-based condition
             } else if (workflow.alertType === "create-update") {
