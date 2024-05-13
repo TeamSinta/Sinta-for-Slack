@@ -37,12 +37,15 @@ export async function POST() {
               const { apiUrl, processor } = workflow.triggerConfig;  // Now using the parsed object
 
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
-                // console.log("Data from Greenhouse API:", data); // Log the data to verify it has arrived
+                console.log("Data from Greenhouse API:", data); // Log the data to verify it has arrived
 
                 const filteredConditionsData = filterDataWithConditions(
                     data,
                     workflow.conditions,
                 );
+
+                console.log("Data from Conditions API:", filteredConditionsData); // Log the data to verify it has arrived
+
                 // const processedData = processData(
                 //     filteredConditionsData,
                 //     processor,
@@ -52,6 +55,8 @@ export async function POST() {
 
 
                 const filteredSlackData = filterProcessedForSlack(filteredConditionsData, workflow.recipient);
+                console.log("Filtered from Slack API:", filteredSlackData); // Log the data to verify it has arrived
+
 
                 await sendSlackNotification(filteredSlackData, workflow.recipient);
             } else if (workflow.alertType === "time-based") {

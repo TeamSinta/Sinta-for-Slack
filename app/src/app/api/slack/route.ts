@@ -46,71 +46,76 @@ interface SlackOAuthResponse {
 }
 
 export async function GET(req: NextRequest) {
-    const url = new URL(req.url);
-    const code = url.searchParams.get("code");
+  const url = new URL(req.url);
+  const code = url.searchParams.get("code");
 
-    if (!code) {
-        return new NextResponse(
-            JSON.stringify({ message: "Code parameter is missing." }),
-            { status: 400 },
-        );
-    }
+  if (!code) {
+      return new NextResponse(
+          JSON.stringify({ message: "Code parameter is missing." }),
+          { status: 400 },
+      );
+  }
 
-    const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
-    const clientSecret = env.SLACK_CLIENT_SECRET;
+  const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
+  const clientSecret = process.env.SLACK_CLIENT_SECRET;
 
-    if (!clientId || !clientSecret) {
-        return new NextResponse(
-            JSON.stringify({
-                message: "Slack client ID or secret is undefined.",
-            }),
-            { status: 500 },
-        );
-    }
+  if (!clientId || !clientSecret) {
+      return new NextResponse(
+          JSON.stringify({
+              message: "Slack client ID or secret is undefined.",
+          }),
+          { status: 500 },
+      );
+  }
 
-    try {
-        const response = await fetch(
-            `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`,
-            { method: "POST", headers: new Headers(headers()) },
-        );
-        const json = (await response.json()) as SlackOAuthResponse;
-        console.log(json);
-        if (json.access_token && json.team?.id) {
-            const updateResponse = await setAccessToken(
-                json.access_token,
-                json.team.id,
-            );
-            console.log( json.access_token,);
+  try {
+      const response = await fetch(
+          `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`,
+          { method: "POST" },
+      );
+      const json = await response.json();
+      console.log(json);
 
-            if (updateResponse === "OK") {
-                siteUrls;
-                const url = `${siteUrls.publicUrl}/success/${json.team.id}`;
-                return NextResponse.redirect(url);
-            } else {
-                return new NextResponse(
-                    JSON.stringify({
-                        message: "Failed to update access token.",
-                    }),
-                    { status: 500 },
-                );
-            }
-        } else {
-            return new NextResponse(
-                JSON.stringify({
-                    message:
-                        "No access token or team id found in response from Slack's OAuth.",
-                }),
-                { status: 500 },
-            );
-        }
-    } catch (err) {
-        console.error(err);
-        return new NextResponse(
-            JSON.stringify({ message: "An unknown error occurred." }),
-            { status: 500 },
-        );
-    }
+      if (json.access_token && json.refresh_token && json.expires_in && json.team?.id) {
+          // Calculate the expiry timestamp
+          const expiresAt = Math.floor(Date.now() / 1000) + json.expires_in;
+
+          // Store access token, refresh token, and expiry time securely
+          const updateResponse = await setAccessToken(
+              json.access_token,
+              json.team.id,
+              json.refresh_token,
+              expiresAt,
+          );
+
+          if (updateResponse === "OK") {
+            const url = `${siteUrls.publicUrl}/success/${json.team.id}`;
+            return NextResponse.redirect(url);
+          } else {
+              return new NextResponse(
+                  JSON.stringify({
+                      message: "Failed to update access token.",
+                  }),
+                  { status: 500 },
+              );
+          }
+      } else {
+          return new NextResponse(
+              JSON.stringify({
+                  message: "No access token, refresh token, or team id found in response from Slack's OAuth.",
+              }),
+              { status: 500 },
+          );
+      }
+  } catch (err) {
+      console.error(err);
+      return new NextResponse(
+          JSON.stringify({ message: "An unknown error occurred." }),
+          { status: 500 },
+      );
+  }
 }
+
 
 async function handleJsonPost(data:JSON) {
   console.log('Handling JSON POST', data);
@@ -123,7 +128,7 @@ async function handleJsonPost(data:JSON) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
   console.log('Handling Slack Interaction', payload);
-  const { type, actions, trigger_id, team } = payload;
+  const { type, actions, trigger_id, team   } = payload;
 
   if (type === 'block_actions') {
       const action = actions.find(action => action.action_id === 'feedback_button');
@@ -176,7 +181,7 @@ async function openModal(modalPayload: any, accessToken: string | null | undefin
 // Function to handle modal submission
 async function handleModalSubmission(payload:any) {
   const { team, user } = payload;
-  const accessToken = await getAccessToken(team.id);  // Assuming a function to get access tokens
+  const accessToken = await getAccessToken();  // Assuming a function to get access tokens
 
   // Log for debugging
   console.log('Attempting to post submission acknowledgment message.');

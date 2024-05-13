@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { fetchScheduledInterviews, fetchScorecard } from "@/hooks/mock-data";
-import { sendSlackMessage } from "@/lib/slack";
 import { checkSlackTeamIdFilled } from "@/server/actions/organization/queries";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +38,7 @@ export async function GET() {
                         scorecard_id: scorecard.id,
                     };
                     // Send Slack message
-                    await sendSlackMessage(interviewData); // Assume interview ID is the post ID
+                    // await sendSlackMessage(interviewData); // Assume interview ID is the post ID
                     responseMessage = "Scorecard notification sent.";
                 }
             }
