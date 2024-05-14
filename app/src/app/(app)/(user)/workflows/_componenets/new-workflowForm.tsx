@@ -143,7 +143,8 @@ function CreateWorkflowSheet() {
     const addCondition = () => {
         setConditions([
             ...conditions,
-            { field: "", condition: "", value: "", unit: "" },
+            { field: "", condition: "", value: "",
+            unit: "" },
         ]);
     };
 
