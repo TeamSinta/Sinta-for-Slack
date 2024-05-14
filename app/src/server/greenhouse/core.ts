@@ -113,7 +113,6 @@ export async function sendSlackNotification(
  * @returns true if the string is a valid ISO date, false otherwise.
  */
 function isISODate(dateStr: string): boolean {
-  if (!dateStr) return false;
   const date = parseISO(dateStr);
   return isValid(date);
 }
@@ -129,28 +128,26 @@ function isISODate(dateStr: string): boolean {
 export const filterDataWithConditions = (data: any[], conditions: Condition[]): any[] => {
   return data.filter(item => {
       return conditions.every(condition => {
-          const { field, condition: operator, value } = condition;
+          const { field, condition: operator, value, unit } = condition;
           const itemValue = item[field];
 
-          // Check if the field's value is a date
-          if (isISODate(itemValue)) {
+          // Check if the field's value is a date and the condition involves time units
+          if (isISODate(itemValue) && unit === "Days") {
               const fieldValueAsDate = parseISO(itemValue);
               const today = new Date();
               const valueAsNumber = Number(value); // Ensure the value is treated as a number for date comparisons
 
+              // Applying different logic based on the operator
               switch (operator) {
-                  case "greaterThan":
-                      return differenceInCalendarDays(today, fieldValueAsDate) > valueAsNumber;
-                  case "lessThan":
-                      return differenceInCalendarDays(today, fieldValueAsDate) < valueAsNumber;
-                  case "greaterThanOrEqual":
-                      return differenceInCalendarDays(today, fieldValueAsDate) >= valueAsNumber;
-                  case "lessThanOrEqual":
-                      return differenceInCalendarDays(today, fieldValueAsDate) <= valueAsNumber;
+                  case "after":
+                      return differenceInCalendarDays(fieldValueAsDate, today) > valueAsNumber;
+                  case "before":
+                      return differenceInCalendarDays(fieldValueAsDate, today) < -valueAsNumber;
+                  case "sameDay":
+                      return differenceInCalendarDays(fieldValueAsDate, today) === 0;
                   // Add more cases if there are other date-based operators
               }
           }
-
           // Handling non-date values or if the date check does not pass
           switch (operator) {
               case "equals":

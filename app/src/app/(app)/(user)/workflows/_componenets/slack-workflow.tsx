@@ -9,6 +9,7 @@ import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from '@/components/ui/fancy.box';
 import { getOrganizations } from '@/server/actions/organization/queries';
 import { getActiveUsers, getChannels } from '@/server/slack/core';
+import { Option } from '@/types/data-table';
 
 
 
@@ -35,7 +36,7 @@ interface SlackWorkflowProps {
     onFieldsSelect: (fields: string[]) => void;
     onButtonsChange: (buttons: MessageButton[]) => void;
     onDeliveryOptionChange: (option: string) => void;
-    onRecipientsChange: (recipients: string[]) => void;
+    onRecipientsChange: (recipients: Option[]) => void;
 }
 
 const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
@@ -50,7 +51,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<MessageButton[]>([]);
     const [deliveryOption, setDeliveryOption] = useState("");
-    const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+    const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
 
 
@@ -74,11 +75,10 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         onDeliveryOptionChange(option);
     };
 
-    const handleRecipientsChange = (selectedOptions: string[]) => {
-        setSelectedRecipients(selectedOptions);
-        onRecipientsChange(selectedOptions);
-    };
-
+    const handleRecipientsChange = (selectedOptions: Option[]) => {
+      setSelectedRecipients(selectedOptions);
+      onRecipientsChange(selectedOptions); // Directly passing the array of objects
+  };
     const addButton = () => {
         const newButtons = [...buttons, { label: "", action: "" }];
         handleButtonsChange(newButtons);
@@ -108,6 +108,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
               // Combine the data into a single array
               const combinedOptions = [...channelsData, ...usersData];
               setOptions(combinedOptions);
+
           } catch (error) {
               console.error('Failed to fetch data:', error);
           }

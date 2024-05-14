@@ -33,7 +33,7 @@ export async function POST() {
     try {
         const workflows = await getWorkflows(); // Retrieve workflows from the database
         for (const workflow of workflows) {
-            if (workflow.alertType === "stuck-in-stage") {
+            if (workflow.alertType === "time-based") {
               const { apiUrl, processor } = workflow.triggerConfig;  // Now using the parsed object
 
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
@@ -59,7 +59,7 @@ export async function POST() {
 
 
                 await sendSlackNotification(filteredSlackData, workflow.recipient);
-            } else if (workflow.alertType === "time-based") {
+            } else if (workflow.alertType === "stuck-in-stage") {
                 // Placeholder for time-based condition
             } else if (workflow.alertType === "create-update") {
                 // Placeholder for create/update condition

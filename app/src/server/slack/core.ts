@@ -124,7 +124,9 @@ export async function sendSlackNotification(filteredSlackData: any[], workflowRe
                       value: "click_me_123",
                       action_id: "button_action"
                   }]
-              }))
+              })),
+              ,
+
           ]
       }];
 
@@ -142,7 +144,7 @@ export async function sendSlackNotification(filteredSlackData: any[], workflowRe
               // text: workflowRecipient.openingText, // Fallback text for notifications
           }),
       });
-
+      console.log(response)
       if (!response.ok) {
           const errorResponse = await response.text(); // Get error details if not OK
           console.error(`Failed to post message to channel ${channel}: ${errorResponse}`);

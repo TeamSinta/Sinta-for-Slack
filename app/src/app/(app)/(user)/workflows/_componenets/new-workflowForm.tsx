@@ -39,11 +39,14 @@ const messageButtonSchema = z.object({
 });
 
 const recipientSchema = z.object({
-    openingText: z.string(),
-    messageFields: z.array(z.string()), // Assuming strings correspond to field values like 'full_name'
-    messageButtons: z.array(messageButtonSchema),
-    messageDelivery: z.enum(["Group DM", "Direct Message", "Channels"]),
-    recipients: z.array(z.string()), // Assuming strings are recipient identifiers
+  openingText: z.string(),
+  messageFields: z.array(z.string()),
+  messageButtons: z.array(messageButtonSchema),
+  messageDelivery: z.enum(["Group DM", "Direct Message", "Channels"]),
+  recipients: z.array(z.object({
+      label: z.string(),
+      value: z.string(),
+  })),
 });
 
 const workflowFormSchema = z.object({
@@ -55,7 +58,7 @@ const workflowFormSchema = z.object({
             field: z.string(),
             condition: z.string(),
             value: z.string(),
-            greenhouseObject: z.string().optional(), // Optional for conditions other than 'stuck-in-stage'
+            unit: z.string().optional(), // Optional for conditions other than 'stuck-in-stage'
         }),
     ),
     triggerConfig: z.object({
@@ -73,11 +76,16 @@ const createFeedbackFormSchema = workflowFormSchema.omit({
     triggerConfig: true,
 });
 
-interface Condition {
+export interface Condition {
     field: string;
     condition: string;
     value: string;
-    greenhouseObject?: string;
+    unit?: string;
+}
+
+interface DateFieldOption {
+  value: string;
+  label: string;
 }
 
 function CreateWorkflowSheet() {
@@ -104,16 +112,15 @@ function CreateWorkflowSheet() {
                     field: "",
                     condition: "",
                     value: "",
-                    greenhouseObject: "open",
-                },
+                    unit: "Days",
+                  },
             ]);
         } else if (selectedAlertType === "stuck-in-stage") {
             setConditions([
                 {
                     field: "when stuck-in-stage in",
-                    condition: "",
+                    condition: "greaterThan",
                     value: "for",
-                    greenhouseObject: "open",
                 },
             ]);
         } else {
@@ -123,20 +130,20 @@ function CreateWorkflowSheet() {
     }, [selectedAlertType]);
 
     const handleConditionChange = (
-        index: number,
-        key: keyof Condition,
-        value: string,
-    ) => {
-        const newConditions = [...conditions];
-        const condition = newConditions[index];
-        if (!condition) return;
-        condition[key] = value;
-        setConditions(newConditions);
-    };
+      index: number,
+      key: keyof Condition,
+      value: string,
+  ) => {
+      const newConditions = [...conditions];
+      const condition = newConditions[index];
+      if (!condition) return;
+      condition[key] = value;
+      setConditions(newConditions);
+  };
     const addCondition = () => {
         setConditions([
             ...conditions,
-            { field: "", condition: "", value: "", greenhouseObject: "open" },
+            { field: "", condition: "", value: "", unit: "" },
         ]);
     };
 
@@ -195,8 +202,8 @@ function CreateWorkflowSheet() {
         updateRecipient("messageDelivery", option);
     };
 
-    const handleRecipientsChange = (recipients: string[]) => {
-        updateRecipient("recipients", recipients);
+    const handleRecipientsChange = (recipientObjects: Object) => {
+      updateRecipient("recipients", recipientObjects);
     };
 
     const updateRecipient = (key: keyof typeof recipientConfig, value: any) => {
@@ -252,6 +259,7 @@ function CreateWorkflowSheet() {
     const onSubmit = async () => {
         try {
             const formData = form.getValues();
+            console.log("Form Data before submission:", formData);
             await mutateAsync(formData);
             await startAwaitableTransition(() => {
                 router.refresh();
@@ -274,85 +282,46 @@ function CreateWorkflowSheet() {
     ];
 
     const objectFieldOptions = [
-        {
-            name: "Activity Feed",
-            apiUrl: "https://api.greenhouse.io/v1/activity_feed",
-        },
-        {
-            name: "Applications",
-            apiUrl: "https://api.greenhouse.io/v1/applications",
-        },
-        { name: "Approvals", apiUrl: "https://api.greenhouse.io/v1/approvals" },
-        {
-            name: "Candidates",
-            apiUrl: "https://api.greenhouse.io/v1/candidates",
-        },
-        {
-            name: "Close Reasons",
-            apiUrl: "https://api.greenhouse.io/v1/close_reasons",
-        },
-        {
-            name: "Custom Fields",
-            apiUrl: "https://api.greenhouse.io/v1/custom_fields",
-        },
-        {
-            name: "Demographic Data",
-            apiUrl: "https://api.greenhouse.io/v1/demographic_data",
-        },
-        {
-            name: "Departments",
-            apiUrl: "https://api.greenhouse.io/v1/departments",
-        },
-        { name: "Education", apiUrl: "https://api.greenhouse.io/v1/education" },
-        { name: "EEOC", apiUrl: "https://api.greenhouse.io/v1/eeoc" },
-        {
-            name: "Email Templates",
-            apiUrl: "https://api.greenhouse.io/v1/email_templates",
-        },
-        {
-            name: "Job Openings",
-            apiUrl: "https://api.greenhouse.io/v1/job_openings",
-        },
-        { name: "Job Posts", apiUrl: "https://api.greenhouse.io/v1/job_posts" },
-        {
-            name: "Job Stages",
-            apiUrl: "https://api.greenhouse.io/v1/job_stages",
-        },
-        { name: "Jobs", apiUrl: "https://api.greenhouse.io/v1/jobs" },
-        { name: "Offers", apiUrl: "https://api.greenhouse.io/v1/offers" },
-        { name: "Offices", apiUrl: "https://api.greenhouse.io/v1/offices" },
-        {
-            name: "Prospect Pools",
-            apiUrl: "https://api.greenhouse.io/v1/prospect_pools",
-        },
-        {
-            name: "Rejection Reasons",
-            apiUrl: "https://api.greenhouse.io/v1/rejection_reasons",
-        },
-        {
-            name: "Scheduled Interviews",
-            apiUrl: "https://api.greenhouse.io/v1/scheduled_interviews",
-        },
-        {
-            name: "Scorecards",
-            apiUrl: "https://api.greenhouse.io/v1/scorecards",
-        },
-        { name: "Sources", apiUrl: "https://api.greenhouse.io/v1/sources" },
-        { name: "Tags", apiUrl: "https://api.greenhouse.io/v1/tags" },
-        {
-            name: "Tracking Links",
-            apiUrl: "https://api.greenhouse.io/v1/tracking_links",
-        },
-        { name: "Users", apiUrl: "https://api.greenhouse.io/v1/users" },
-        {
-            name: "User Permissions",
-            apiUrl: "https://api.greenhouse.io/v1/user_permissions",
-        },
-        {
-            name: "User Roles",
-            apiUrl: "https://api.greenhouse.io/v1/user_roles",
-        },
-    ];
+      { name: "Activity Feed", apiUrl: "https://harvest.greenhouse.io/v1/activity_feed" },  // Verify if correct
+      { name: "Applications", apiUrl: "https://harvest.greenhouse.io/v1/applications" },
+      { name: "Approvals", apiUrl: "https://harvest.greenhouse.io/v1/approvals" }, // Verify if correct
+      { name: "Candidates", apiUrl: "https://harvest.greenhouse.io/v1/candidates" },
+      { name: "Close Reasons", apiUrl: "https://harvest.greenhouse.io/v1/close_reasons" }, // Verify if correct
+      { name: "Custom Fields", apiUrl: "https://harvest.greenhouse.io/v1/custom_fields" }, // Verify if correct
+      { name: "Demographic Data", apiUrl: "https://harvest.greenhouse.io/v1/demographic_data" }, // Verify if correct
+      { name: "Departments", apiUrl: "https://harvest.greenhouse.io/v1/departments" },
+      { name: "Education", apiUrl: "https://harvest.greenhouse.io/v1/education" }, // Verify if correct
+      { name: "EEOC", apiUrl: "https://harvest.greenhouse.io/v1/eeoc" }, // Verify if correct
+      { name: "Email Templates", apiUrl: "https://harvest.greenhouse.io/v1/email_templates" }, // Verify if correct
+      { name: "Job Openings", apiUrl: "https://harvest.greenhouse.io/v1/job_openings" }, // Verify if correct
+      { name: "Job Posts", apiUrl: "https://harvest.greenhouse.io/v1/job_posts" },
+      { name: "Job Stages", apiUrl: "https://harvest.greenhouse.io/v1/job_stages" },
+      { name: "Jobs", apiUrl: "https://harvest.greenhouse.io/v1/jobs" },
+      { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
+      { name: "Offices", apiUrl: "https://harvest.greenhouse.io/v1/offices" },
+      { name: "Prospect Pools", apiUrl: "https://harvest.greenhouse.io/v1/prospect_pools" }, // Verify if correct
+      { name: "Rejection Reasons", apiUrl: "https://harvest.greenhouse.io/v1/rejection_reasons" },
+      { name: "Scheduled Interviews", apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews" },
+      { name: "Scorecards", apiUrl: "https://harvest.greenhouse.io/v1/scorecards" },
+      { name: "Sources", apiUrl: "https://harvest.greenhouse.io/v1/sources" }, // Verify if correct
+      { name: "Tags", apiUrl: "https://harvest.greenhouse.io/v1/tags" }, // Verify if correct
+      { name: "Tracking Links", apiUrl: "https://harvest.greenhouse.io/v1/tracking_links" }, // Verify if correct
+      { name: "Users", apiUrl: "https://harvest.greenhouse.io/v1/users" },
+      { name: "User Permissions", apiUrl: "https://harvest.greenhouse.io/v1/user_permissions" }, // Verify if correct
+      { name: "User Roles", apiUrl: "https://harvest.greenhouse.io/v1/user_roles" }, // Verify if correct
+  ];
+
+  const jobStageOptions = [
+    { value: "application_review", label: "Application Review" },
+    { value: "preliminary_screening_call", label: "Preliminary Screening Call" },
+    { value: "behavioral_phone_interview", label: "Behavioral Phone Interview" },
+    { value: "cultural_add_interview", label: "Cultural Add Interview" },
+    { value: "peer_panel_interview", label: "Peer Panel Interview" },
+    { value: "case_study", label: "Case Study" },
+    { value: "executive_interview", label: "Executive Interview" },
+    { value: "reference_check", label: "Reference Check" }
+];
+
 
     const conditionOptions = [
         { value: "equal", label: "Equal To" },
@@ -369,13 +338,12 @@ function CreateWorkflowSheet() {
         { value: "same", label: "Same Day" },
     ];
 
-    const dateFieldOptions = [
-        "Created at",
-        "Closed at ",
-        "Updated at",
-        "Last activity",
-    ];
-
+    const dateFieldOptions: DateFieldOption[] = [
+      { label: "Created at", value: "created_at" },
+      { label: "Closed at", value: "closed_at" },
+      { label: "Updated at", value: "updated_at" },
+      { label: "Last activity", value: "last_activity" },
+  ];
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -559,12 +527,12 @@ function CreateWorkflowSheet() {
                                                         {dateFieldOptions.map(
                                                             (option) => (
                                                                 <SelectItem
-                                                                    key={option}
+                                                                    key={option.label}
                                                                     value={
-                                                                        option
+                                                                        option.value
                                                                     }
                                                                 >
-                                                                    {option}
+                                                                    {option.label}
                                                                 </SelectItem>
                                                             ),
                                                         )}
@@ -626,6 +594,25 @@ function CreateWorkflowSheet() {
                                                 }
                                             />
                                         </div>
+                                        <div className="flex-1">
+    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        Time Unit
+    </Label>
+    <Select
+        value={conditions[0]?.unit}
+        onValueChange={(value) => handleConditionChange(0, "unit", value)}
+    >
+        <SelectTrigger className="w-full border border-gray-300 bg-white">
+            <SelectValue placeholder="Select Unit" />
+        </SelectTrigger>
+        <SelectContent>
+            <SelectGroup>
+                <SelectItem value="Days">Days</SelectItem>
+                <SelectItem value="Hours">Hours</SelectItem>
+            </SelectGroup>
+        </SelectContent>
+    </Select>
+</div>
                                     </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
@@ -648,18 +635,18 @@ function CreateWorkflowSheet() {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectGroup>
-                                                        {objectFieldOptions.map(
+                                                        {jobStageOptions.map(
                                                             (option) => (
                                                                 <SelectItem
                                                                     key={
-                                                                        option.name
+                                                                        option.label
                                                                     }
                                                                     value={
-                                                                        option.name
+                                                                        option.label
                                                                     }
                                                                 >
                                                                     {
-                                                                        option.name
+                                                                        option.label
                                                                     }
                                                                 </SelectItem>
                                                             ),
