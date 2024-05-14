@@ -72,7 +72,7 @@ export const columns: ColumnDef<WorkflowData>[] = [
                     alt="slack-logo"
                     className="mr-1 h-4 w-4"
                 />
-                {/* {row.original.recipient} */}
+                {row.original.recipient.recipients}
             </Badge>
         ),
     },
