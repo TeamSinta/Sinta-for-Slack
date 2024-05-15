@@ -6,14 +6,12 @@ import { getAccessToken } from "../actions/slack/query";
 export async function getChannels(): Promise<{value: string, label: string}[]> {
   try {
       const { currentOrg = {} } = await getOrganizations() || {};
-      console.log(currentOrg)
       if (!currentOrg.slack_team_id) {
           console.error("No Slack team ID available.");
           return [];
       }
 
       const accessToken = await getAccessToken(currentOrg.slack_team_id);
-      console.log(accessToken)
       const response = await fetch('https://slack.com/api/conversations.list', {
           method: 'GET',
           headers: {
@@ -58,7 +56,6 @@ export async function getActiveUsers(): Promise<{value: string, label: string}[]
             'Content-Type': 'application/json'
         }
     });
-
     if (!response.ok) {
         throw new Error('Failed to fetch users');
     }
@@ -84,51 +81,59 @@ export async function getActiveUsers(): Promise<{value: string, label: string}[]
 export async function sendSlackNotification(filteredSlackData: any[], workflowRecipient: any) {
   const accessToken = await getAccessToken("T04C82XCPRU");
 
-  for (const channel of workflowRecipient.recipients) {
+  for (const recipient of workflowRecipient.recipients) {
+      const channel = recipient.value;  // Extract the channel (Slack ID) from the recipient object
+
       // Creating attachments instead of using blocks directly
+      const blocks = [
+        {
+            type: "header",
+            text: {
+                type: "plain_text",
+                text: workflowRecipient.openingText, // Ensure this is a string
+                emoji: true,
+            },
+        },]
+
       const attachments = [{
-          color: "#384ab4", // Your desired color
-          blocks: [
+        color: "#384ab4", // Your desired color
+        blocks: [
+
+          {
+            type: "divider"
+        },
+          ...filteredSlackData.flatMap(data => [
               {
-                  type: "header",
-                  text: {
-                      type: "plain_text",
-                      text: workflowRecipient.openingText, // Ensure this is a string
-                      emoji: true,
-                  },
-              },
-              ...filteredSlackData.map((data: any) => ({
                   type: "section",
                   text: {
                       type: "mrkdwn",
-                      text: workflowRecipient.messageFields.map((field: string) => {
+                      text: workflowRecipient.messageFields.map(field => {
                           const fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ');
                           const fieldValue = data[field] || 'Not provided'; // Handle missing data gracefully
                           return `*${fieldName}*: ${fieldValue}`;
                       }).join("\n")
                   },
-              })),
-              {
-                  type: "divider",
               },
-              ...workflowRecipient.messageButtons.map((button: any) => ({
-                  type: "actions",
-                  elements: [{
-                      type: "button",
-                      text: {
-                          type: "plain_text",
-                          text: button.label,
-                          emoji: true,
-                      },
-                      url: button.action,
-                      value: "click_me_123",
-                      action_id: "button_action"
-                  }]
-              })),
-              ,
+              ...(workflowRecipient.messageButtons.length > 0 ? [
+                  {
+                      type: "actions",
+                      elements: workflowRecipient.messageButtons.map(button => ({
+                          type: "button",
+                          text: {
+                              type: "plain_text",
+                              text: button.label,
+                              emoji: true,
+                          },
+                          url: button.action,
+                          value: "click_me_123",
+                          action_id: "button_action"
+                      }))
+                  }
+              ] : []), // Append buttons after each section if there are any
 
-          ]
-      }];
+          ])
+      ]
+    }];
 
       console.log(JSON.stringify(attachments, null, 2)); // Log the attachments structure to debug
 
@@ -141,6 +146,7 @@ export async function sendSlackNotification(filteredSlackData: any[], workflowRe
           body: JSON.stringify({
               channel: channel,
               attachments: attachments, // Use attachments instead of blocks
+              blocks: blocks
               // text: workflowRecipient.openingText, // Fallback text for notifications
           }),
       });

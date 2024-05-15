@@ -53,9 +53,11 @@ export async function refreshTokenIfNeeded(teamId: string, token_expiry: number,
           body: `client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&refresh_token=${encodeURIComponent(slack_refresh_token)}&grant_type=refresh_token`
       });
       const data: { ok: boolean; access_token?: string; refresh_token?: string; expires_in?: number; error?: string } = await response.json();
+      console.log("REFRESHING", data)
 
       if (data.ok && data.access_token && data.refresh_token && data.expires_in) {
-          await setAccessToken(teamId, data.access_token, data.refresh_token, data.expires_in);
+          const expiresAt = Math.floor(Date.now() / 1000) + data.expires_in;
+          await setAccessToken(teamId, data.access_token, data.refresh_token, expiresAt);
           return data.access_token;
       } else {
           throw new Error('Failed to refresh access token' + (data.error ? `: ${data.error}` : ''));
@@ -68,8 +70,8 @@ export async function refreshTokenIfNeeded(teamId: string, token_expiry: number,
 }
 
 export async function setAccessToken(accessToken: string, teamId: string, refreshToken: string, expiration: number,) {
-  const { currentOrg } = await getOrganizations();
-  const result = await db
+
+    const result = await db
       .update(organizations)
       .set({
           slack_team_id: teamId,
@@ -77,7 +79,7 @@ export async function setAccessToken(accessToken: string, teamId: string, refres
           slack_refresh_token: refreshToken,
           token_expiry: expiration,
       })
-      .where(eq(organizations.id, currentOrg.id))
+      .where(eq(organizations.slack_team_id, teamId))
       .execute();
 
   return result ? "OK" : "Failed to update access token";

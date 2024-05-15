@@ -7,10 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
 import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
+import greenhouse from "../../../../../../public/greenhouse-logo.png";
+
 import Image from "next/image";
 import { Condition } from "./new-workflowForm";
 
 // This type is used to define the shape of our data.
+
+const logoMap = {
+  slack: slackLogo,  // Path to your Slack logo
+  greenhouse: greenhouse  // Path to your Greenhouse logo
+};
+
 // You can use a Zod schema here if you want.
 
 export type WorkflowData = {
@@ -47,6 +55,8 @@ function formatCondition(condition: Condition): string {
       "before": "before" // Ensure all relevant conditions are mapped
   };
 
+
+
   // Map the condition keyword to a more readable format, or use it as-is if not found in the mappings
   const readableCondition = conditionMappings[condition.condition] || condition.condition;
 
@@ -60,6 +70,7 @@ function formatCondition(condition: Condition): string {
 }
 // Define columns for workflows
 export const columns: ColumnDef<WorkflowData>[] = [
+
     {
         accessorKey: "name",
         header: () => <span className="pl-2">Name</span>,
@@ -94,14 +105,14 @@ export const columns: ColumnDef<WorkflowData>[] = [
       accessorKey: "recipient",
       header: "Recipient",
       cell: ({ row }) => (
+
           <div className="flex flex-wrap gap-2">
               {row.original.recipient.recipients.map((rec) => (
                   <Badge key={rec.value} variant="secondary" className="capitalize">
-                      <Image
-                          src={slackLogo}
-                          alt="slack-logo"
-                          className="mr-1 h-4 w-4"
-                      />
+                       <Image
+                      src={logoMap[rec.source] ?? slackLogo}
+                      alt={`${rec.source}-logo`}
+                      className="mr-1 h-3.5 w-3"        />
                       {rec.label}
                   </Badge>
               ))}

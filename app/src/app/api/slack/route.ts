@@ -11,20 +11,12 @@
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
 import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
-import { env } from "@/env";
-import { headers } from "next/headers";
+
 import { siteUrls } from "@/config/urls";
 import { fetchScorecard } from "@/hooks/mock-data";
 
 // Define the type for the response from Slack's OAuth endpoint
-interface SlackOAuthResponse {
-    access_token?: string;
-    team?: {
-        id?: string;
-        name?: string;
-    };
-    error?: string;
-}
+
 interface SlackInteraction {
   type: string;
   actions: SlackAction[];

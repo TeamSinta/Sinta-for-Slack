@@ -5,9 +5,12 @@ import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
 import Image from "next/image";
 import slackLogo from "../../../public/slack-logo.png";
+import greenhouse from "../../../public/greenhouse-logo.png";
 import { Icons } from "./icons";
 
-type Option = { value: string; label: string };
+type Option = {
+  source: any; value: string; label: string
+};
 
 interface FancyMultiSelectProps {
   options?: Option[];
@@ -15,6 +18,7 @@ interface FancyMultiSelectProps {
   onOptionChange: (selectedOptions: Option[]) => void;  // Update parameter type to array of Option
   loading?: boolean;
 }
+
 
 export function FancyMultiSelect({
     options = [],
@@ -26,6 +30,10 @@ export function FancyMultiSelect({
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState("");
 
+    const logoMap = {
+      slack: slackLogo,  // Path to your Slack logo
+      greenhouse: greenhouse  // Path to your Greenhouse logo
+    };
 
     const handleUnselect = React.useCallback(
       (option: Option) => {
@@ -76,10 +84,9 @@ export function FancyMultiSelect({
                 {selectedOptions.map((option) => (
     <Badge key={option.value} variant="secondary">
         <Image
-            src={slackLogo}
-            alt="slack-logo"
-            className="mr-1 h-4 w-4"
-        />
+            src={logoMap[option.source]}
+            alt={`${option.source}-logo`}
+            className="mr-1 h-4 w-3"        />
         {option.label}
         <button
             className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -133,10 +140,10 @@ export function FancyMultiSelect({
         className={"cursor-pointer"}
     >
       <Image
-            src={slackLogo}
-            alt="slack-logo"
-            className="mr-1 h-4 w-4"
-        />  {option.label}
+            src={logoMap[option.source]}
+            alt={`${option.source}-logo`}
+            className="mr-1 h-4 w-3"
+        /> {option.label}
     </CommandItem>
 ))}
                         </CommandGroup>

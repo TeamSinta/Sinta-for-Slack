@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+import { customFetch } from '@/app/api/cron/route';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { isDate, isValid } from 'date-fns';
 
@@ -16,6 +17,55 @@ interface Condition {
   condition: string;
   value: string | number; // Assuming the value could be a number when the condition is about dates
 }
+
+export async function getMockGreenhouseData(): Promise<{
+  owner: any; recruiter: string, coordinator: string, hiringTeam: string, admin: string
+}> {
+  try {
+    // Simulated delay to mimic API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Mock data without image tags
+    const mockData = {
+      recruiter: "{ Recruiter }",
+      coordinator: "{ Coordinator }",
+      hiringTeam: "{ Hiring_Team }",
+      admin: "{ Admin }",
+      owner: "{ Record_Owner }"
+    };
+
+    return mockData;
+  } catch (error) {
+    console.error('Error fetching data from Greenhouse:', error);
+    return null; // Returning null in case of error for clearer error handling
+  }
+}
+
+export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
+  try {
+      const jobs = await customFetch('https://harvest.greenhouse.io/v1/jobs');
+      return jobs.map((job: any) => ({
+          id: job.id,
+          name: job.name,
+      }));
+  } catch (error) {
+      console.error("Error fetching jobs: ", error);
+      return [];
+  }
+};
+
+export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
+  try {
+      const stages = await customFetch(`https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`);
+      return stages.map((stage: any) => ({
+          id: stage.id,
+          name: stage.name,
+      }));
+  } catch (error) {
+      console.error("Error fetching stages: ", error);
+      return [];
+  }
+};
 
 
 export function mapWebhookActionToObjectField(action: string): string {
@@ -66,6 +116,7 @@ export async function fetchData(apiUrl: string): Promise<any> {
     }
 }
 
+
 // Function to process data based on the provided processor
 export function processData(data: any[], processor: string): any[] {
     if (!data.length) {
@@ -91,22 +142,6 @@ export function processData(data: any[], processor: string): any[] {
     return filteredData;
 }
 
-
-
-// Function to send a Slack notification
-export async function sendSlackNotification(
-    data: any,
-    recipient: any,
-): Promise<void> {
-    // Implement Slack notification sending logic
-    // Use the recipient information to send the notification
-    // Example: Send Slack message to recipient using Slack API
-    console.log("Sending Slack notification to:", recipient);
-    console.log("Notification Data:", data);
-    // Placeholder, replace with actual logic
-}
-
-
 /**
  * Determines if a string is a valid ISO date.
  * @param dateStr The string to check.
@@ -126,47 +161,52 @@ function isISODate(dateStr: string): boolean {
  * @returns - The filtered array of data objects.
  */
 export const filterDataWithConditions = (data: any[], conditions: Condition[]): any[] => {
+  const today = new Date();
+
   return data.filter(item => {
-      return conditions.every(condition => {
-          const { field, condition: operator, value, unit } = condition;
-          const itemValue = item[field];
+    return conditions.every(condition => {
+      const { field, condition: operator, value, unit } = condition;
+      const itemValue = item[field];
 
-          // Check if the field's value is a date and the condition involves time units
-          if (isISODate(itemValue) && unit === "Days") {
-              const fieldValueAsDate = parseISO(itemValue);
-              const today = new Date();
-              const valueAsNumber = Number(value); // Ensure the value is treated as a number for date comparisons
+      // Date conditions processing
+      if (isISODate(itemValue) && unit === "Days") {
+        const fieldValueAsDate = parseISO(itemValue);
+        const valueAsNumber = parseInt(value as string, 10); // Ensure the value is treated as a number for date comparisons
 
-              // Applying different logic based on the operator
-              switch (operator) {
-                  case "after":
-                      return differenceInCalendarDays(fieldValueAsDate, today) > valueAsNumber;
-                  case "before":
-                      return differenceInCalendarDays(fieldValueAsDate, today) < -valueAsNumber;
-                  case "sameDay":
-                      return differenceInCalendarDays(fieldValueAsDate, today) === 0;
-                  // Add more cases if there are other date-based operators
-              }
-          }
-          // Handling non-date values or if the date check does not pass
-          switch (operator) {
-              case "equals":
-                  return itemValue === value;
-              case "notEqual":
-                  return itemValue !== value;
-              case "greaterThan":
-                  return itemValue > value;
-              case "lessThan":
-                  return itemValue < value;
-              case "greaterThanOrEqual":
-                  return itemValue >= value;
-              case "lessThanOrEqual":
-                  return itemValue <= value;
-              case "contains":
-                  return typeof itemValue === 'string' && itemValue.includes(value as string);
-              default:
-                  return false;
-          }
-      });
+        switch (operator) {
+          case "before":
+            // Field value date should be more than 'value' days ago from today
+            // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be less than -1
+            return differenceInCalendarDays(today, fieldValueAsDate) < -valueAsNumber;
+          case "after":
+            // Field value date should be less than 'value' days ago from today
+            // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be greater than -1
+            return differenceInCalendarDays(today, fieldValueAsDate) > -valueAsNumber;
+          case "sameDay":
+            // Field value date should be exactly 'value' days ago from today
+            return differenceInCalendarDays(today, fieldValueAsDate) === -valueAsNumber;
+        }
+      }
+
+      // Non-date values or if the date check does not pass
+      switch (operator) {
+        case "equals":
+          return itemValue === value;
+        case "notEqual":
+          return itemValue !== value;
+        case "greaterThan":
+          return itemValue > value;
+        case "lessThan":
+          return itemValue < value;
+        case "greaterThanOrEqual":
+          return itemValue >= value;
+        case "lessThanOrEqual":
+          return itemValue <= value;
+        case "contains":
+          return typeof itemValue === 'string' && itemValue.includes(value as string);
+        default:
+          return false;
+      }
+    });
   });
 };

@@ -9,7 +9,7 @@ import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from '@/components/ui/fancy.box';
 import { getOrganizations } from '@/server/actions/organization/queries';
 import { getActiveUsers, getChannels } from '@/server/slack/core';
-import { Option } from '@/types/data-table';
+import { getMockGreenhouseData } from '@/server/greenhouse/core';
 
 
 
@@ -30,6 +30,12 @@ interface MessageButton {
     label: string;
     action: string;
 }
+
+type Option = {
+  value: string;
+  label: string;
+  source: 'slack' | 'greenhouse'; // Define possible sources here
+};
 
 interface SlackWorkflowProps {
     onOpeningTextChange: (text: string) => void;
@@ -100,13 +106,22 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
       const fetchData = async () => {
           try {
               // Fetch both sets of data in parallel
-              const [channelsData, usersData] = await Promise.all([
+              const [channelsData, usersData, greenhouseData] = await Promise.all([
                   getChannels(),
-                  getActiveUsers()
+                  getActiveUsers(),
+                  getMockGreenhouseData()
               ]);
 
-              // Combine the data into a single array
-              const combinedOptions = [...channelsData, ...usersData];
+              // Combine the data into a single array, incorporating greenhouseData
+              const combinedOptions = [
+                ...channelsData.map(channel => ({ ...channel, source: 'slack' })),
+                ...usersData.map(user => ({ ...user, source: 'slack' })),
+                { label: ` ${greenhouseData.recruiter}`, value: greenhouseData.recruiter, source: 'greenhouse' },
+                { label: ` ${greenhouseData.coordinator}`, value: greenhouseData.coordinator, source: 'greenhouse' },
+                { label: ` ${greenhouseData.hiringTeam}`, value: greenhouseData.hiringTeam, source: 'greenhouse' },
+                { label: ` ${greenhouseData.admin}`, value: greenhouseData.admin, source: 'greenhouse' },
+                { label: ` ${greenhouseData.owner}`, value: greenhouseData.owner, source: 'greenhouse' }
+              ];
               setOptions(combinedOptions);
 
           } catch (error) {
@@ -116,7 +131,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
       };
 
       fetchData();
-  }, []);
+    }, []);
 
 
 

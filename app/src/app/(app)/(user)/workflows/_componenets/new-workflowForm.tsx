@@ -32,6 +32,9 @@ import {
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackWorkflow from "./slack-workflow";
 import ConditionComponent from "./conditions";
+import { fetchJobsFromGreenhouse, fetchStagesForJob } from "@/server/greenhouse/core";
+import StagesDropdown from "./stages-dropdown";
+import JobsDropdown from "./job-select";
 
 const messageButtonSchema = z.object({
     name: z.string(),
@@ -88,6 +91,17 @@ interface DateFieldOption {
   label: string;
 }
 
+interface Job {
+  id: number;
+  name: string;
+}
+
+interface Stage {
+  id: number;
+  name: string;
+}
+
+
 function CreateWorkflowSheet() {
     const [conditions, setConditions] = useState<Condition[]>([]);
     const [recipientConfig, setRecipientConfig] = useState({
@@ -98,11 +112,21 @@ function CreateWorkflowSheet() {
         recipients: [],
     });
     const [selectedAlertType, setSelectedAlertType] = useState("create/update");
-    const [selectedValue, setSelectedValue] = useState("");
-    const [selectedRecipient, setSelectedRecipient] = useState("");
-    const [selectedOrganization, setSelectedOrganization] = useState("");
+    const [, setSelectedOrganization] = useState("");
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [isCandidateSelected, setIsCandidateSelected] = useState<boolean>(false);
+    const [selectedValue, setSelectedValue] = useState<string>("");
+    const [selectedJobId, setSelectedJobId] = useState<string>("");
+
+    useEffect(() => {
+      const fetchJobs = async () => {
+          const jobs = await fetchJobsFromGreenhouse();
+          setJobs(jobs);
+      };
+      fetchJobs();
+  }, []);
 
     useEffect(() => {
         // Set default conditions based on selected alert type
@@ -153,39 +177,45 @@ function CreateWorkflowSheet() {
         setConditions(newConditions);
     };
 
-    const handleSelectChange = (
-        value: string,
-        field: "objectField" | "alertType" | "organizationId",
-    ) => {
-        switch (field) {
-            case "objectField":
-                setSelectedValue(value);
-                const selectedObject = objectFieldOptions.find(
-                    (obj) => obj.name === value,
-                );
-                if (selectedObject) {
-                    form.setValue("objectField", value); // Set the objectField value
-                    form.setValue("triggerConfig", {
-                        apiUrl: selectedObject.apiUrl,
-                        processor: "",
-                    });
-                }
-                break;
-            case "alertType":
-                if (alertTypeOptions.some((option) => option.value === value)) {
-                    setSelectedAlertType(value);
-                    form.setValue("alertType", value);
-                }
-                break;
-            case "organizationId":
-                setSelectedOrganization(value);
-                form.setValue("organizationId", value);
-                break;
-            default:
-                // Handle default case or invalid field
-                break;
-        }
-    };
+    const handleSelectChange = (value: string, field: "objectField" | "alertType" | "organizationId" | "jobId") => {
+      switch (field) {
+          case "objectField":
+              setSelectedValue(value);
+              const selectedObject = objectFieldOptions.find(
+                  (obj) => obj.name === value,
+              );
+              if (selectedObject) {
+                  form.setValue("objectField", value);
+                  form.setValue("triggerConfig", {
+                      apiUrl: selectedObject.apiUrl,
+                      processor: "",
+                  });
+              }
+              if (value === "Candidates") {
+                  setIsCandidateSelected(true);
+              } else {
+                  setIsCandidateSelected(false);
+              }
+              break;
+          case "alertType":
+              if (alertTypeOptions.some((option) => option.value === value)) {
+                  setSelectedAlertType(value);
+                  form.setValue("alertType", value);
+              }
+              break;
+          case "organizationId":
+              setSelectedOrganization(value);
+              form.setValue("organizationId", value);
+              break;
+          case "jobId":
+              setSelectedJobId(value);
+              form.setValue("triggerConfig.processor", value); // Store Job ID
+              break;
+          default:
+              break;
+      }
+  };
+
     const handleOpeningTextChange = (text: string) => {
         updateRecipient("openingText", text);
     };
@@ -436,6 +466,8 @@ function CreateWorkflowSheet() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <JobsDropdown onJobSelect={(jobId) => handleSelectChange(jobId, "jobId")} />
+
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
@@ -455,40 +487,37 @@ function CreateWorkflowSheet() {
                                     Alert Type Options
                                 </Label>
                                 <RadioGroup
-                                    defaultValue={selectedAlertType}
-                                    onValueChange={(value) =>
-                                        handleSelectChange(value, "alertType")
-                                    }
-                                    className="flex flex-row space-x-4"
-                                >
-                                    {alertTypeOptions.map((option) => (
-                                        <div
-                                            key={option.value}
-                                            className="flex w-full items-center gap-3"
-                                        >
-                                            <RadioGroupItem
-                                                value={option.value}
-                                                id={option.value}
-                                                className="peer sr-only"
-                                            />
-                                            <Label
-                                                htmlFor={option.value}
-                                                className={`flex w-full flex-col items-center justify-center rounded-md border border-gray-300 bg-popover p-4 ${
-                                                    selectedAlertType ===
-                                                    option.value
-                                                        ? "bg-indigo-500 text-white"
-                                                        : "hover:bg-indigo-100 hover:text-indigo-800"
-                                                }`}
-                                                style={{ height: "40px" }}
-                                            >
-                                                <h2 className="mb-0">
-                                                    {option.label}
-                                                </h2>
-                                            </Label>
-                                        </div>
-                                    ))}
-                                </RadioGroup>
-                            </div>
+    defaultValue={selectedAlertType}
+    onValueChange={(value) => handleSelectChange(value, "alertType")}
+    className="flex flex-row space-x-4"
+>
+    {alertTypeOptions.map((option) => (
+        <div
+            key={option.value}
+            className="flex w-full items-center gap-3"
+        >
+            <RadioGroupItem
+                value={option.value}
+                id={option.value}
+                className="peer sr-only"
+                disabled={option.value === "stuck-in-stage" && !isCandidateSelected} // Disable "Stuck in Stage" if "Candidates" is not selected
+            />
+            <Label
+                htmlFor={option.value}
+                className={`flex w-full flex-col items-center justify-center rounded-md border border-gray-300 bg-popover p-4 ${
+                    selectedAlertType === option.value
+                        ? "bg-indigo-500 text-white"
+                        : option.value === "stuck-in-stage" && !isCandidateSelected
+                        ? "bg-gray-300 text-opacity-50 cursor-not-allowed"
+                        : "hover:bg-indigo-100 hover:text-indigo-800"
+                }`} // Apply styles for disabled state
+                style={{ height: "40px" }}
+            >
+                <h2 className="mb-0">{option.label}</h2>
+            </Label>
+        </div>
+    ))}
+</RadioGroup>             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
                         <div className="flex items-start gap-8">
@@ -617,45 +646,9 @@ function CreateWorkflowSheet() {
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
                                     <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Stage
-                                            </Label>
-                                            <Select
-                                                onValueChange={(value) =>
-                                                    handleConditionChange(
-                                                        0,
-                                                        "field",
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Stage" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {jobStageOptions.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        option.label
-                                                                    }
-                                                                    value={
-                                                                        option.label
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <h1 className="mt-4 self-center text-gray-700 dark:text-gray-300">
+                                <StagesDropdown jobId={selectedJobId} onStageSelect={(stageId) => handleConditionChange(0, "field", stageId)} />
+
+        <h1 className="mt-4 self-center text-gray-700 dark:text-gray-300">
                                             For
                                         </h1>
                                         <div className="flex-1">
