@@ -89,7 +89,12 @@ export async function sendSlackNotification(
     filteredSlackData: any[],
     workflowRecipient: any,
 ) {
-    const accessToken = await getAccessToken("T04C82XCPRU");
+    const { currentOrg = {} } = (await getOrganizations()) || {};
+    if (!currentOrg.slack_team_id) {
+        console.error("No Slack team ID available.");
+        return [];
+    }
+    const accessToken = await getAccessToken(currentOrg.slack_team_id);
 
     for (const recipient of workflowRecipient.recipients) {
         const channel = recipient.value; // Extract the channel (Slack ID) from the recipient object
@@ -217,7 +222,12 @@ export async function sendSlackButtonNotification(
     filteredSlackData: any[],
     workflowRecipient: any,
 ) {
-    const accessToken = await getAccessToken("T04C82XCPRU");
+  const { currentOrg = {} } = (await getOrganizations()) || {};
+  if (!currentOrg.slack_team_id) {
+      console.error("No Slack team ID available.");
+      return [];
+  }
+    const accessToken = await getAccessToken(currentOrg.slack_team_id);
 
     for (const recipient of workflowRecipient.recipients) {
         const channel = recipient.value; // Extract the channel (Slack ID) from the recipient object
