@@ -1,29 +1,40 @@
-# Create T3 App
+![Sinta Logo](https://assets-global.website-files.com/6457f112b965721ffc2b0777/6457f2617575798a80fbb8d5_Pasted%20Graphic%201.png)
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+# Sinta Slack App Onboarding Guide
 
-## What's next? How do I make an app with this?
+**Running the Sinta Slack App Locally**
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+**Prerequisites:**
+- Install Docker on your machine.
+- Clone the Sinta repository to your local machine.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+**Instructions:**
+1. **Start the Database Container:**
+   - Run `./start-database.sh` in your terminal to initiate a Docker container for the local development database.
 
--   [Next.js](https://nextjs.org)
--   [NextAuth.js](https://next-auth.js.org)
--   [Prisma](https://prisma.io)
--   [Drizzle](https://orm.drizzle.team)
--   [Tailwind CSS](https://tailwindcss.com)
--   [tRPC](https://trpc.io)
+2. **Set up Environment Variables:**
+   - Copy the contents of `.env.example` into a new file named `.env` in the project's root directory.
+   - Update the environment variables with your values (e.g., database URL, Next Auth secrets, Slack client ID, Slack client secret).
 
-## Learn More
+3. **Build and Run the Application:**
+   - For development mode, execute `npm run dev`.
+   - For production mode, execute:
+     ```
+     npm run build
+     npm start
+     ```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+**Linting and Formatting**
 
--   [Documentation](https://create.t3.gg/)
--   [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+**ESLint:**
+- Use ESLint for static code analysis to identify problematic patterns in JavaScript code, ensuring code quality and consistency.
+- To lint your code, run `npm run lint`.
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+**Fixing ESLint Errors:**
+- Automatically fix ESLint errors with `npm run lint-fix`.
 
-## How do I deploy this?
+**Prettier:**
+- Prettier is a code formatter that maintains a consistent coding style.
+- Format your code using `npm run prettier`.
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+This streamlined guide aims to facilitate a quick and smooth onboarding process for developers joining the Sinta Slack app project. Let me know if you need further assistance!
