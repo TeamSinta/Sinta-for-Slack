@@ -1,22 +1,44 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+
 import { customFetch } from '@/app/api/cron/route';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { isDate, isValid } from 'date-fns';
 
 
-interface Condition {
-  field: string;
-  condition: string;
-  value: string | number; // Assuming the value could be a number when the condition is about dates
+interface Candidate {
+  id: number;
+  first_name: string;
+  last_name: string;
+  applications: Application[];
+  // other fields...
 }
+
+interface Application {
+  id: number;
+  // other fields...
+}
+
+interface Condition {
+  field: ConditionField;
+  condition: string;
+  value: string;
+}
+
+interface ConditionField {
+  value: string;
+  label: string;
+}
+
+interface ActivityFeed {
+  activities: Activity[];
+}
+
+interface Activity {
+  id: number;
+  created_at: string;
+  body: string;
+  // other fields...
+}
+
 
 export async function getMockGreenhouseData(): Promise<{
   owner: any; recruiter: string, coordinator: string, hiringTeam: string, admin: string
@@ -37,7 +59,7 @@ export async function getMockGreenhouseData(): Promise<{
     return mockData;
   } catch (error) {
     console.error('Error fetching data from Greenhouse:', error);
-    return null; // Returning null in case of error for clearer error handling
+    return; // Returning null in case of error for clearer error handling
   }
 }
 
@@ -166,7 +188,9 @@ export const filterDataWithConditions = (data: any[], conditions: Condition[]): 
   return data.filter(item => {
     return conditions.every(condition => {
       const { field, condition: operator, value, unit } = condition;
-      const itemValue = item[field];
+      const itemValue = item[field.label] ? item[field.label] :  item[field];
+
+
 
       // Date conditions processing
       if (isISODate(itemValue) && unit === "Days") {
@@ -210,3 +234,75 @@ export const filterDataWithConditions = (data: any[], conditions: Condition[]): 
     });
   });
 };
+
+
+
+async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
+  const response = await customFetch(`https://harvest.greenhouse.io/v1/candidates/${candidateId}/activity_feed`, {});
+  return response;  // Directly use the response as JSON
+}
+
+
+function calculateTimeInStages(activities: Activity[]): Record<string, number> {
+  let stageDurations: Record<string, number> = {};
+  let currentStage: string = "Initial Stage";  // Starting stage name
+  let stageStartDate: Date | null = null;
+
+  console.log()
+  activities.forEach(activity => {
+      console.log(activity.body)
+      const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
+      if (stageChangeMatch) {
+          const newStage = stageChangeMatch[1];
+          const createdAt = new Date(activity.created_at);
+
+          if (stageStartDate) {
+              const duration = Math.floor((createdAt.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24));  // in days
+              if (!stageDurations[currentStage]) {
+                  stageDurations[currentStage] = 0;
+              }
+              stageDurations[currentStage] += duration;
+          }
+
+          currentStage = newStage;
+          stageStartDate = createdAt;
+      }
+  });
+
+  // Calculate time in the last stage till today if necessary
+  if (stageStartDate) {
+      const now = new Date();
+      const duration = Math.floor((now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24));  // in days
+      if (!stageDurations[currentStage]) {
+          stageDurations[currentStage] = 0;
+      }
+      stageDurations[currentStage] += duration;
+  }
+
+  console.log(stageDurations)
+
+
+  return stageDurations;
+}
+
+export async function filterStuckinStageDataConditions(candidates: Candidate[], conditions: Condition[]): Promise<Candidate[]> {
+  let matchedCandidates: Candidate[] = [];
+
+
+  const condition = conditions[0];
+  const stageName = condition.field.label;
+  const thresholdDays = parseInt(condition.value, 10);
+
+  for (const candidate of candidates) {
+      const candidateId = candidate.id;
+      const activityFeed = await fetchActivityFeed(candidateId);
+      const stageDurations = calculateTimeInStages(activityFeed.activities);
+      console.log(thresholdDays)
+      if (stageDurations[stageName] && stageDurations[stageName] > thresholdDays) {
+          matchedCandidates.push(candidate);
+
+      }
+  }
+
+  return matchedCandidates;
+}

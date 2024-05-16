@@ -101,7 +101,7 @@ export async function sendSlackNotification(filteredSlackData: any[], workflowRe
 
           {
             type: "divider"
-        },
+          },
           ...filteredSlackData.flatMap(data => [
               {
                   type: "section",
@@ -129,9 +129,40 @@ export async function sendSlackNotification(filteredSlackData: any[], workflowRe
                           action_id: "button_action"
                       }))
                   }
-              ] : []), // Append buttons after each section if there are any
+              ] : []),
 
-          ])
+
+          ]),
+          // {
+          //   "type": "actions",
+          //   "block_id": "Sc16L",
+          //   "elements": [
+          //     {
+          //       "type": "button",
+          //       "action_id": "move_to_next_stage_action",
+          //       "text": {
+          //         "type": "plain_text",
+          //         "text": "Move to Next Stage",
+          //         "emoji": true
+          //       },
+          //       "style": "primary",
+          //       "value": "move_to_next_stage",
+          //       "url": "https://app.greenhouse.io"
+          //     },
+          //     {
+          //       "type": "button",
+          //       "action_id": "reject_candidate_action",
+          //       "text": {
+          //         "type": "plain_text",
+          //         "text": "Reject Candidate",
+          //         "emoji": true
+          //       },
+          //       "style": "danger",
+          //       "value": "reject_candidate",
+          //       "url": "https://app.greenhouse.io"
+          //     }
+          //   ]
+          // }
       ]
     }];
 

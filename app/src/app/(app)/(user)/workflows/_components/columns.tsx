@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
@@ -7,38 +5,31 @@ import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
 import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
-import greenhouse from "../../../../../../public/greenhouse-logo.png";
-
+import greenhouse from "../../../../../../public/greenhouselogo.png";
 import Image from "next/image";
 import { Condition } from "./new-workflowForm";
-
-// This type is used to define the shape of our data.
 
 const logoMap = {
   slack: slackLogo,  // Path to your Slack logo
   greenhouse: greenhouse  // Path to your Greenhouse logo
 };
 
-// You can use a Zod schema here if you want.
-
+// This type is used to define the shape of our data.
 export type WorkflowData = {
     id: string;
     name: string;
     status: string;
     createdAt: Date;
-    recipient: JSON;
-    conditions: JSON; // Ensure this aligns with the actual data type
+    recipient: any; // Adjust to actual type
+    conditions: Condition[];
     alertType: string;
     objectField: string;
-    ownerId: string; // Optionally display owner related details
-    triggerConfig: JSON; // Ensure it's added to the interface
+    ownerId: string; // Optionally display owner-related details
+    triggerConfig: any; // Adjust to actual type
 };
 
-// Function to generate columns based on WorkflowData
 export function getColumns(): ColumnDef<WorkflowData>[] {
     return columns;
-
-
 }
 
 function formatCondition(condition: Condition): string {
@@ -55,22 +46,14 @@ function formatCondition(condition: Condition): string {
       "before": "before" // Ensure all relevant conditions are mapped
   };
 
-
-
-  // Map the condition keyword to a more readable format, or use it as-is if not found in the mappings
   const readableCondition = conditionMappings[condition.condition] || condition.condition;
-
-  // Include the unit in the formatted string if it exists
-  const unit = condition.unit ? ` ${condition.unit}` : '';
-
-  // Replace underscores in the field names with spaces for better readability
-  const readableField = condition.field.replace(/_/g, ' ');
+  const unit = condition.unit ? ` ${condition.unit}` : ' days';
+  const readableField = condition.field.label || condition.field;
 
   return `${readableField} is ${readableCondition} ${condition.value}${unit}`;
 }
-// Define columns for workflows
-export const columns: ColumnDef<WorkflowData>[] = [
 
+export const columns: ColumnDef<WorkflowData>[] = [
     {
         accessorKey: "name",
         header: () => <span className="pl-2">Name</span>,
@@ -102,45 +85,41 @@ export const columns: ColumnDef<WorkflowData>[] = [
         ),
     },
     {
-      accessorKey: "recipient",
-      header: "Recipient",
-      cell: ({ row }) => (
-
-          <div className="flex flex-wrap gap-2">
-              {row.original.recipient.recipients.map((rec) => (
-                  <Badge key={rec.value} variant="secondary" className="capitalize">
-                       <Image
-                      src={logoMap[rec.source] ?? slackLogo}
-                      alt={`${rec.source}-logo`}
-                      className="mr-1 h-3.5 w-3"        />
-                      {rec.label}
-                  </Badge>
-              ))}
-          </div>
-      ),
-  }
-  ,
-
-  {
-    accessorKey: "conditions",
-    header: "Conditions",
-    cell: ({ row }) => {
-        const conditionTexts = row.original.conditions.map(formatCondition);
-        return (
-            <div
-                className="cursor-pointer hover:underline"
-                title={conditionTexts.join("; ")}
-                onClick={() => console.log("Conditions Clicked:", row.original.conditions)}
-            >
-                {conditionTexts.length > 1
-                    ? `${conditionTexts[0]} + ${conditionTexts.length - 1} more`
-                    : conditionTexts[0]}
+        accessorKey: "recipient",
+        header: "Recipient",
+        cell: ({ row }) => (
+            <div className="flex flex-wrap gap-2">
+                {row.original.recipient.recipients.map((rec) => (
+                    <Badge key={rec.value} variant="secondary" className="capitalize">
+                        <Image
+                            src={logoMap[rec.source] ?? slackLogo}
+                            alt={`${rec.source}-logo`}
+                            className="mr-1 h-4 w-4"
+                        />
+                        {rec.label}
+                    </Badge>
+                ))}
             </div>
-        );
+        ),
     },
-}
-,
-
+    {
+        accessorKey: "conditions",
+        header: "Conditions",
+        cell: ({ row }) => {
+            const conditionTexts = row.original.conditions.map(formatCondition);
+            return (
+                <div
+                    className="cursor-pointer hover:underline"
+                    title={conditionTexts.join("; ")}
+                    onClick={() => console.log("Conditions Clicked:", row.original.conditions)}
+                >
+                    {conditionTexts.length > 1
+                        ? `${conditionTexts[0]} + ${conditionTexts.length - 1} more`
+                        : conditionTexts[0]}
+                </div>
+            );
+        },
+    },
     {
         header: "Actions",
         id: "actions",

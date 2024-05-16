@@ -5,7 +5,7 @@ import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
 import Image from "next/image";
 import slackLogo from "../../../public/slack-logo.png";
-import greenhouse from "../../../public/greenhouse-logo.png";
+import greenhouse from "../../../public/greenhouselogo.png";
 import { Icons } from "./icons";
 
 type Option = {
@@ -86,7 +86,7 @@ export function FancyMultiSelect({
         <Image
             src={logoMap[option.source]}
             alt={`${option.source}-logo`}
-            className="mr-1 h-4 w-3"        />
+            className="mr-1 h-4 w-4"        />
         {option.label}
         <button
             className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -142,7 +142,7 @@ export function FancyMultiSelect({
       <Image
             src={logoMap[option.source]}
             alt={`${option.source}-logo`}
-            className="mr-1 h-4 w-3"
+            className="mr-1 h-4 w-4"
         /> {option.label}
     </CommandItem>
 ))}

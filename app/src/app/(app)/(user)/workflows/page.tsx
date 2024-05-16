@@ -3,10 +3,10 @@ import { WorkflowsPageConfig } from "./_constants/page-config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { SearchParams } from "@/types/data-table";
-import { WorkflowsTable } from "./_componenets/workflows-table";
 import { z } from "zod";
-import CreateWorkflowSheet from "./_componenets/new-workflowForm";
-import { getPaginatedWorkflowsQuery } from "@/server/actions/workflows/queries";
+import CreateWorkflowSheet from "./_components/new-workflowForm";
+import { getPaginatedWorkflowsByOrgQuery, getPaginatedWorkflowsExcludingUserQuery, getPaginatedWorkflowsQuery } from "@/server/actions/workflows/queries";
+import { WorkflowsTable } from "./_components/workflows-table";
 
 type UsersPageProps = {
     searchParams: SearchParams;
@@ -27,6 +27,10 @@ export default function Workflows({ searchParams }: UsersPageProps) {
 
     const workflowPromise = getPaginatedWorkflowsQuery(search);
 
+    const workflowAllPromise = getPaginatedWorkflowsByOrgQuery(search);
+
+    const workflowOrgPromise = getPaginatedWorkflowsExcludingUserQuery(search);
+
     return (
         <>
             <AppPageShell
@@ -37,10 +41,10 @@ export default function Workflows({ searchParams }: UsersPageProps) {
                     <div className={"flex justify-between "}>
                         <TabsList className="grid w-[450px] grid-cols-3">
                             <TabsTrigger value="all">All</TabsTrigger>
-                            <TabsTrigger value="created_team">
+                            <TabsTrigger value="created_me">
                                 Created by me
                             </TabsTrigger>
-                            <TabsTrigger value="created_me">
+                            <TabsTrigger value="created_team">
                                 Created by team
                             </TabsTrigger>
                         </TabsList>
@@ -49,15 +53,19 @@ export default function Workflows({ searchParams }: UsersPageProps) {
                     <TabsContent value="all">
                         <div className="w-full space-y-5">
                             <WorkflowsTable
-                                workflowsPromise={workflowPromise}
+                                workflowsPromise={workflowAllPromise}
                             />
                         </div>
                     </TabsContent>
                     <TabsContent value="created_team">
-                        Change your password here.
+                    <WorkflowsTable
+                                workflowsPromise={workflowOrgPromise}
+                            />
                     </TabsContent>
                     <TabsContent value="created_me">
-                        Change your password here.
+                    <WorkflowsTable
+                                workflowsPromise={workflowPromise}
+                            />
                     </TabsContent>
                 </Tabs>
             </AppPageShell>

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
+    filterStuckinStageDataConditions,
     processData,
 } from "@/server/greenhouse/core";
 import { env } from "@/env";
@@ -36,27 +37,38 @@ export async function POST() {
       let shouldReturnNull = false; // Flag to determine whether to return null
 
       for (const workflow of workflows) {
-          if (workflow.alertType === "timebased") {
-              const { apiUrl, processor } = workflow.triggerConfig;  // Now using the parsed object
+          if (workflow.alertType === "time-based") {
+              const { apiUrl } = workflow.triggerConfig;  // Now using the parsed object
 
               const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
-              console.log("Data from Greenhouse API:", data); // Log the data to verify it has arrived
+              // console.log("Data from Greenhouse API:", data); // Log the data to verify it has arrived
 
               const filteredConditionsData = filterDataWithConditions(data, workflow.conditions);
-              console.log("Data from Greenhouse API:", workflow.conditions);
-              console.log("Data from Conditions API:", filteredConditionsData); // Log the data to verify it has arrived
+              // console.log("Data from Greenhouse API:", workflow.conditions);
+              // console.log("Data from Conditions API:", filteredConditionsData); // Log the data to verify it has arrived
 
               if (filteredConditionsData.length === 0) {
-                  console.log("No data found for conditions in one of the workflows.");
+                  // console.log("No data found for conditions in one of the workflows.");
                   shouldReturnNull = true; // Set flag to true
               } else {
 
                   const filteredSlackData = filterProcessedForSlack(filteredConditionsData, workflow.recipient);
-                  console.log("Filtered from Slack API:", filteredSlackData); // Log the data to verify it has arrived
+                  // console.log("Filtered from Slack API:", filteredSlackData); // Log the data to verify it has arrived
                   await sendSlackNotification(filteredSlackData, workflow.recipient);
               }
           } else if (workflow.alertType === "stuck-in-stage") {
-              // Logic for "stuck-in-stage" conditions
+            const { apiUrl, processor } = workflow.triggerConfig;  // Now using the parsed object
+
+            const data = await customFetch(apiUrl, processor); // Fetch data using custom fetch wrapper
+            // console.log("Greenhouse  Data:", data); // Log the data to verify it has arrived
+
+            // Filter data based on the "stuck-in-stage" conditions
+            const filteredConditionsData = await filterStuckinStageDataConditions(data, workflow.conditions);
+            console.log("Filtered Conditions Data:", filteredConditionsData); // Log the data to verify it has arrived
+
+            const filteredSlackData = filterProcessedForSlack(filteredConditionsData, workflow.recipient);
+                console.log("Filtered from Slack API:", filteredSlackData); // Log the data to verify it has arrived
+                await sendSlackNotification(filteredSlackData, workflow.recipient);
           } else if (workflow.alertType === "create-update") {
               // Logic for "create-update" conditions
           }
