@@ -93,12 +93,24 @@ export interface SlackMessage {
 }
 
 export interface Candidate {
-  id: number;
-  first_name: string;
-  last_name: string;
-  company: string;
-  title: string;
-  recruiter: { id: number; first_name: string; last_name: string; name: string; employee_id: number | null; };
-  coordinator: { id: number; first_name: string; last_name: string; name: string; employee_id: number | null; };
-  [key: string]: any;  // To handle dynamic properties like custom fields
+    id: number;
+    first_name: string;
+    last_name: string;
+    company: string;
+    title: string;
+    recruiter: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        name: string;
+        employee_id: number | null;
+    };
+    coordinator: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        name: string;
+        employee_id: number | null;
+    };
+    [key: string]: any; // To handle dynamic properties like custom fields
 }

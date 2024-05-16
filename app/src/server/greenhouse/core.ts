@@ -1,94 +1,96 @@
-
-import { customFetch } from '@/app/api/cron/route';
-import { parseISO, differenceInCalendarDays } from 'date-fns';
-import { isDate, isValid } from 'date-fns';
-
+import { customFetch } from "@/app/api/cron/route";
+import { parseISO, differenceInCalendarDays } from "date-fns";
+import { isDate, isValid } from "date-fns";
 
 interface Candidate {
-  id: number;
-  first_name: string;
-  last_name: string;
-  applications: Application[];
-  // other fields...
+    id: number;
+    first_name: string;
+    last_name: string;
+    applications: Application[];
+    // other fields...
 }
 
 interface Application {
-  id: number;
-  // other fields...
+    id: number;
+    // other fields...
 }
 
 interface Condition {
-  field: ConditionField;
-  condition: string;
-  value: string;
+    field: ConditionField;
+    condition: string;
+    value: string;
 }
 
 interface ConditionField {
-  value: string;
-  label: string;
+    value: string;
+    label: string;
 }
 
 interface ActivityFeed {
-  activities: Activity[];
+    activities: Activity[];
 }
 
 interface Activity {
-  id: number;
-  created_at: string;
-  body: string;
-  // other fields...
+    id: number;
+    created_at: string;
+    body: string;
+    // other fields...
 }
 
-
 export async function getMockGreenhouseData(): Promise<{
-  owner: any; recruiter: string, coordinator: string, hiringTeam: string, admin: string
+    owner: any;
+    recruiter: string;
+    coordinator: string;
+    hiringTeam: string;
+    admin: string;
 }> {
-  try {
-    // Simulated delay to mimic API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+        // Simulated delay to mimic API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Mock data without image tags
-    const mockData = {
-      recruiter: "{ Recruiter }",
-      coordinator: "{ Coordinator }",
-      hiringTeam: "{ Hiring_Team }",
-      admin: "{ Admin }",
-      owner: "{ Record_Owner }"
-    };
+        // Mock data without image tags
+        const mockData = {
+            recruiter: "{ Recruiter }",
+            coordinator: "{ Coordinator }",
+            hiringTeam: "{ Hiring_Team }",
+            admin: "{ Admin }",
+            owner: "{ Record_Owner }",
+        };
 
-    return mockData;
-  } catch (error) {
-    console.error('Error fetching data from Greenhouse:', error);
-    return; // Returning null in case of error for clearer error handling
-  }
+        return mockData;
+    } catch (error) {
+        console.error("Error fetching data from Greenhouse:", error);
+        return; // Returning null in case of error for clearer error handling
+    }
 }
 
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
-  try {
-      const jobs = await customFetch('https://harvest.greenhouse.io/v1/jobs');
-      return jobs.map((job: any) => ({
-          id: job.id,
-          name: job.name,
-      }));
-  } catch (error) {
-      console.error("Error fetching jobs: ", error);
-      return [];
-  }
+    try {
+        const jobs = await customFetch("https://harvest.greenhouse.io/v1/jobs");
+        return jobs.map((job: any) => ({
+            id: job.id,
+            name: job.name,
+        }));
+    } catch (error) {
+        console.error("Error fetching jobs: ", error);
+        return [];
+    }
 };
 
 export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
-  try {
-      const stages = await customFetch(`https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`);
-      return stages.map((stage: any) => ({
-          id: stage.id,
-          name: stage.name,
-      }));
-  } catch (error) {
-      console.error("Error fetching stages: ", error);
-      return [];
-  }
+    try {
+        const stages = await customFetch(
+            `https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`,
+        );
+        return stages.map((stage: any) => ({
+            id: stage.id,
+            name: stage.name,
+        }));
+    } catch (error) {
+        console.error("Error fetching stages: ", error);
+        return [];
+    }
 };
-
 
 export function mapWebhookActionToObjectField(action: string): string {
     switch (action) {
@@ -138,7 +140,6 @@ export async function fetchData(apiUrl: string): Promise<any> {
     }
 }
 
-
 // Function to process data based on the provided processor
 export function processData(data: any[], processor: string): any[] {
     if (!data.length) {
@@ -170,10 +171,9 @@ export function processData(data: any[], processor: string): any[] {
  * @returns true if the string is a valid ISO date, false otherwise.
  */
 function isISODate(dateStr: string): boolean {
-  const date = parseISO(dateStr);
-  return isValid(date);
+    const date = parseISO(dateStr);
+    return isValid(date);
 }
-
 
 /**
  * Filters data based on a list of conditions, including dynamic date comparisons.
@@ -182,127 +182,152 @@ function isISODate(dateStr: string): boolean {
  * @param conditions - The conditions to apply for filtering.
  * @returns - The filtered array of data objects.
  */
-export const filterDataWithConditions = (data: any[], conditions: Condition[]): any[] => {
-  const today = new Date();
+export const filterDataWithConditions = (
+    data: any[],
+    conditions: Condition[],
+): any[] => {
+    const today = new Date();
 
-  return data.filter(item => {
-    return conditions.every(condition => {
-      const { field, condition: operator, value, unit } = condition;
-      const itemValue = item[field.label] ? item[field.label] :  item[field];
+    return data.filter((item) => {
+        return conditions.every((condition) => {
+            const { field, condition: operator, value, unit } = condition;
+            const itemValue = item[field.label]
+                ? item[field.label]
+                : item[field];
 
+            // Date conditions processing
+            if (isISODate(itemValue) && unit === "Days") {
+                const fieldValueAsDate = parseISO(itemValue);
+                const valueAsNumber = parseInt(value as string, 10); // Ensure the value is treated as a number for date comparisons
 
+                switch (operator) {
+                    case "before":
+                        // Field value date should be more than 'value' days ago from today
+                        // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be less than -1
+                        return (
+                            differenceInCalendarDays(today, fieldValueAsDate) <
+                            -valueAsNumber
+                        );
+                    case "after":
+                        // Field value date should be less than 'value' days ago from today
+                        // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be greater than -1
+                        return (
+                            differenceInCalendarDays(today, fieldValueAsDate) >
+                            -valueAsNumber
+                        );
+                    case "sameDay":
+                        // Field value date should be exactly 'value' days ago from today
+                        return (
+                            differenceInCalendarDays(
+                                today,
+                                fieldValueAsDate,
+                            ) === -valueAsNumber
+                        );
+                }
+            }
 
-      // Date conditions processing
-      if (isISODate(itemValue) && unit === "Days") {
-        const fieldValueAsDate = parseISO(itemValue);
-        const valueAsNumber = parseInt(value as string, 10); // Ensure the value is treated as a number for date comparisons
-
-        switch (operator) {
-          case "before":
-            // Field value date should be more than 'value' days ago from today
-            // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be less than -1
-            return differenceInCalendarDays(today, fieldValueAsDate) < -valueAsNumber;
-          case "after":
-            // Field value date should be less than 'value' days ago from today
-            // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be greater than -1
-            return differenceInCalendarDays(today, fieldValueAsDate) > -valueAsNumber;
-          case "sameDay":
-            // Field value date should be exactly 'value' days ago from today
-            return differenceInCalendarDays(today, fieldValueAsDate) === -valueAsNumber;
-        }
-      }
-
-      // Non-date values or if the date check does not pass
-      switch (operator) {
-        case "equals":
-          return itemValue === value;
-        case "notEqual":
-          return itemValue !== value;
-        case "greaterThan":
-          return itemValue > value;
-        case "lessThan":
-          return itemValue < value;
-        case "greaterThanOrEqual":
-          return itemValue >= value;
-        case "lessThanOrEqual":
-          return itemValue <= value;
-        case "contains":
-          return typeof itemValue === 'string' && itemValue.includes(value as string);
-        default:
-          return false;
-      }
+            // Non-date values or if the date check does not pass
+            switch (operator) {
+                case "equals":
+                    return itemValue === value;
+                case "notEqual":
+                    return itemValue !== value;
+                case "greaterThan":
+                    return itemValue > value;
+                case "lessThan":
+                    return itemValue < value;
+                case "greaterThanOrEqual":
+                    return itemValue >= value;
+                case "lessThanOrEqual":
+                    return itemValue <= value;
+                case "contains":
+                    return (
+                        typeof itemValue === "string" &&
+                        itemValue.includes(value as string)
+                    );
+                default:
+                    return false;
+            }
+        });
     });
-  });
 };
 
-
-
 async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
-  const response = await customFetch(`https://harvest.greenhouse.io/v1/candidates/${candidateId}/activity_feed`, {});
-  return response;  // Directly use the response as JSON
+    const response = await customFetch(
+        `https://harvest.greenhouse.io/v1/candidates/${candidateId}/activity_feed`,
+        {},
+    );
+    return response; // Directly use the response as JSON
 }
-
 
 function calculateTimeInStages(activities: Activity[]): Record<string, number> {
-  let stageDurations: Record<string, number> = {};
-  let currentStage: string = "Initial Stage";  // Starting stage name
-  let stageStartDate: Date | null = null;
+    let stageDurations: Record<string, number> = {};
+    let currentStage: string = "Initial Stage"; // Starting stage name
+    let stageStartDate: Date | null = null;
 
-  console.log()
-  activities.forEach(activity => {
-      console.log(activity.body)
-      const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
-      if (stageChangeMatch) {
-          const newStage = stageChangeMatch[1];
-          const createdAt = new Date(activity.created_at);
+    console.log();
+    activities.forEach((activity) => {
+        console.log(activity.body);
+        const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
+        if (stageChangeMatch) {
+            const newStage = stageChangeMatch[1];
+            const createdAt = new Date(activity.created_at);
 
-          if (stageStartDate) {
-              const duration = Math.floor((createdAt.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24));  // in days
-              if (!stageDurations[currentStage]) {
-                  stageDurations[currentStage] = 0;
-              }
-              stageDurations[currentStage] += duration;
-          }
+            if (stageStartDate) {
+                const duration = Math.floor(
+                    (createdAt.getTime() - stageStartDate.getTime()) /
+                        (1000 * 60 * 60 * 24),
+                ); // in days
+                if (!stageDurations[currentStage]) {
+                    stageDurations[currentStage] = 0;
+                }
+                stageDurations[currentStage] += duration;
+            }
 
-          currentStage = newStage;
-          stageStartDate = createdAt;
-      }
-  });
+            currentStage = newStage;
+            stageStartDate = createdAt;
+        }
+    });
 
-  // Calculate time in the last stage till today if necessary
-  if (stageStartDate) {
-      const now = new Date();
-      const duration = Math.floor((now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24));  // in days
-      if (!stageDurations[currentStage]) {
-          stageDurations[currentStage] = 0;
-      }
-      stageDurations[currentStage] += duration;
-  }
+    // Calculate time in the last stage till today if necessary
+    if (stageStartDate) {
+        const now = new Date();
+        const duration = Math.floor(
+            (now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
+        ); // in days
+        if (!stageDurations[currentStage]) {
+            stageDurations[currentStage] = 0;
+        }
+        stageDurations[currentStage] += duration;
+    }
 
-  console.log(stageDurations)
+    console.log(stageDurations);
 
-
-  return stageDurations;
+    return stageDurations;
 }
 
-export async function filterStuckinStageDataConditions(candidates: Candidate[], conditions: Condition[]): Promise<Candidate[]> {
-  let matchedCandidates: Candidate[] = [];
+export async function filterStuckinStageDataConditions(
+    candidates: Candidate[],
+    conditions: Condition[],
+): Promise<Candidate[]> {
+    let matchedCandidates: Candidate[] = [];
 
+    const condition = conditions[0];
+    const stageName = condition.field.label;
+    const thresholdDays = parseInt(condition.value, 10);
 
-  const condition = conditions[0];
-  const stageName = condition.field.label;
-  const thresholdDays = parseInt(condition.value, 10);
+    for (const candidate of candidates) {
+        const candidateId = candidate.id;
+        const activityFeed = await fetchActivityFeed(candidateId);
+        const stageDurations = calculateTimeInStages(activityFeed.activities);
+        console.log(thresholdDays);
+        if (
+            stageDurations[stageName] &&
+            stageDurations[stageName] > thresholdDays
+        ) {
+            matchedCandidates.push(candidate);
+        }
+    }
 
-  for (const candidate of candidates) {
-      const candidateId = candidate.id;
-      const activityFeed = await fetchActivityFeed(candidateId);
-      const stageDurations = calculateTimeInStages(activityFeed.activities);
-      console.log(thresholdDays)
-      if (stageDurations[stageName] && stageDurations[stageName] > thresholdDays) {
-          matchedCandidates.push(candidate);
-
-      }
-  }
-
-  return matchedCandidates;
+    return matchedCandidates;
 }

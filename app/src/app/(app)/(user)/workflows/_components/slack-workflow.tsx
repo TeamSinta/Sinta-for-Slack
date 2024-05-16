@@ -1,29 +1,27 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
-import { FancyBox } from '@/components/ui/fancy.box';
-import { getOrganizations } from '@/server/actions/organization/queries';
-import { getActiveUsers, getChannels } from '@/server/slack/core';
-import { getMockGreenhouseData } from '@/server/greenhouse/core';
-
-
+import { FancyBox } from "@/components/ui/fancy.box";
+import { getOrganizations } from "@/server/actions/organization/queries";
+import { getActiveUsers, getChannels } from "@/server/slack/core";
+import { getMockGreenhouseData } from "@/server/greenhouse/core";
 
 const deliveryOptions = ["Group DM", "Direct Message", "Channels"];
 
 const fields = [
-  { value: "name", label: "Candidate Name", color: '' },
-  { value: "title", label: "Job Title", color: '' },
-  { value: "company", label: "Company", color: '' },
-  { value: "email", label: "Email Address", color: '' }, // Assuming you will parse to get primary email
-  { value: "phone", label: "Phone Number", color: '' }, // Assuming parsing for primary phone
-  { value: "social_media", label: "Social Media", color: '' }, // Need to handle parsing
-  { value: "recruiter_name", label: "Recruiter Name", color: '' },
-  { value: "coordinator_name", label: "Coordinator Name", color: '' }
+    { value: "name", label: "Candidate Name", color: "" },
+    { value: "title", label: "Job Title", color: "" },
+    { value: "company", label: "Company", color: "" },
+    { value: "email", label: "Email Address", color: "" }, // Assuming you will parse to get primary email
+    { value: "phone", label: "Phone Number", color: "" }, // Assuming parsing for primary phone
+    { value: "social_media", label: "Social Media", color: "" }, // Need to handle parsing
+    { value: "recruiter_name", label: "Recruiter Name", color: "" },
+    { value: "coordinator_name", label: "Coordinator Name", color: "" },
 ];
 
 interface MessageButton {
@@ -32,9 +30,9 @@ interface MessageButton {
 }
 
 type Option = {
-  value: string;
-  label: string;
-  source: 'slack' | 'greenhouse'; // Define possible sources here
+    value: string;
+    label: string;
+    source: "slack" | "greenhouse"; // Define possible sources here
 };
 
 interface SlackWorkflowProps {
@@ -50,7 +48,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onFieldsSelect,
     onButtonsChange,
     onDeliveryOptionChange,
-    onRecipientsChange
+    onRecipientsChange,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
@@ -58,10 +56,13 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     const [buttons, setButtons] = useState<MessageButton[]>([]);
     const [deliveryOption, setDeliveryOption] = useState("");
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
-    const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
+    const [options, setOptions] = useState<{ value: string; label: string }[]>(
+        [],
+    );
 
-
-    const handleOpeningTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleOpeningTextChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
         setOpeningText(e.target.value);
         onOpeningTextChange(e.target.value);
     };
@@ -82,15 +83,19 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     };
 
     const handleRecipientsChange = (selectedOptions: Option[]) => {
-      setSelectedRecipients(selectedOptions);
-      onRecipientsChange(selectedOptions); // Directly passing the array of objects
-  };
+        setSelectedRecipients(selectedOptions);
+        onRecipientsChange(selectedOptions); // Directly passing the array of objects
+    };
     const addButton = () => {
         const newButtons = [...buttons, { label: "", action: "" }];
         handleButtonsChange(newButtons);
     };
 
-    const updateButton = (index: number, key: keyof MessageButton, value: string) => {
+    const updateButton = (
+        index: number,
+        key: keyof MessageButton,
+        value: string,
+    ) => {
         const newButtons = [...buttons];
         newButtons[index][key] = value;
         handleButtonsChange(newButtons);
@@ -102,38 +107,59 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     };
 
     useEffect(() => {
-      setIsLoading(true);
-      const fetchData = async () => {
-          try {
-              // Fetch both sets of data in parallel
-              const [channelsData, usersData, greenhouseData] = await Promise.all([
-                  getChannels(),
-                  getActiveUsers(),
-                  getMockGreenhouseData()
-              ]);
+        setIsLoading(true);
+        const fetchData = async () => {
+            try {
+                // Fetch both sets of data in parallel
+                const [channelsData, usersData, greenhouseData] =
+                    await Promise.all([
+                        getChannels(),
+                        getActiveUsers(),
+                        getMockGreenhouseData(),
+                    ]);
 
-              // Combine the data into a single array, incorporating greenhouseData
-              const combinedOptions = [
-                ...channelsData.map(channel => ({ ...channel, source: 'slack' })),
-                ...usersData.map(user => ({ ...user, source: 'slack' })),
-                { label: ` ${greenhouseData.recruiter}`, value: greenhouseData.recruiter, source: 'greenhouse' },
-                { label: ` ${greenhouseData.coordinator}`, value: greenhouseData.coordinator, source: 'greenhouse' },
-                { label: ` ${greenhouseData.hiringTeam}`, value: greenhouseData.hiringTeam, source: 'greenhouse' },
-                { label: ` ${greenhouseData.admin}`, value: greenhouseData.admin, source: 'greenhouse' },
-                { label: ` ${greenhouseData.owner}`, value: greenhouseData.owner, source: 'greenhouse' }
-              ];
-              setOptions(combinedOptions);
+                // Combine the data into a single array, incorporating greenhouseData
+                const combinedOptions = [
+                    ...channelsData.map((channel) => ({
+                        ...channel,
+                        source: "slack",
+                    })),
+                    ...usersData.map((user) => ({ ...user, source: "slack" })),
+                    {
+                        label: ` ${greenhouseData.recruiter}`,
+                        value: greenhouseData.recruiter,
+                        source: "greenhouse",
+                    },
+                    {
+                        label: ` ${greenhouseData.coordinator}`,
+                        value: greenhouseData.coordinator,
+                        source: "greenhouse",
+                    },
+                    {
+                        label: ` ${greenhouseData.hiringTeam}`,
+                        value: greenhouseData.hiringTeam,
+                        source: "greenhouse",
+                    },
+                    {
+                        label: ` ${greenhouseData.admin}`,
+                        value: greenhouseData.admin,
+                        source: "greenhouse",
+                    },
+                    {
+                        label: ` ${greenhouseData.owner}`,
+                        value: greenhouseData.owner,
+                        source: "greenhouse",
+                    },
+                ];
+                setOptions(combinedOptions);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            }
+            setIsLoading(false);
+        };
 
-          } catch (error) {
-              console.error('Failed to fetch data:', error);
-          }
-          setIsLoading(false);
-      };
-
-      fetchData();
+        fetchData();
     }, []);
-
-
 
     return (
         <div className="workflow-container mt-4">
@@ -166,12 +192,16 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     <div key={idx} className="mt-4 flex items-center gap-2">
                         <Input
                             value={button.label}
-                            onChange={(e) => updateButton(idx, "label", e.target.value)}
+                            onChange={(e) =>
+                                updateButton(idx, "label", e.target.value)
+                            }
                             placeholder="Button label"
                         />
                         <Input
                             value={button.action}
-                            onChange={(e) => updateButton(idx, "action", e.target.value)}
+                            onChange={(e) =>
+                                updateButton(idx, "action", e.target.value)
+                            }
                             placeholder="Link To"
                         />
                         <Button
@@ -202,7 +232,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     onValueChange={handleDeliveryOptionChange}
                     className="mt-3 flex flex-col gap-4"
                 >
-                  {deliveryOptions.map((option, idx) => (
+                    {deliveryOptions.map((option, idx) => (
                         <div key={idx} className="flex items-center gap-2">
                             <RadioGroupItem
                                 value={option}
@@ -212,7 +242,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                                 {option}
                             </Label>
                         </div>
-                      ))}
+                    ))}
                 </RadioGroup>
             </div>
 
@@ -224,11 +254,10 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     onOptionChange={handleRecipientsChange}
                     options={options}
                     loading={isLoading}
-
                 />
             </div>
         </div>
     );
-}
+};
 
 export default SlackWorkflow;

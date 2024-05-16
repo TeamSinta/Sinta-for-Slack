@@ -5,7 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SearchParams } from "@/types/data-table";
 import { z } from "zod";
 import CreateWorkflowSheet from "./_components/new-workflowForm";
-import { getPaginatedWorkflowsByOrgQuery, getPaginatedWorkflowsExcludingUserQuery, getPaginatedWorkflowsQuery } from "@/server/actions/workflows/queries";
+import {
+    getPaginatedWorkflowsByOrgQuery,
+    getPaginatedWorkflowsExcludingUserQuery,
+    getPaginatedWorkflowsQuery,
+} from "@/server/actions/workflows/queries";
 import { WorkflowsTable } from "./_components/workflows-table";
 
 type UsersPageProps = {
@@ -58,14 +62,10 @@ export default function Workflows({ searchParams }: UsersPageProps) {
                         </div>
                     </TabsContent>
                     <TabsContent value="created_team">
-                    <WorkflowsTable
-                                workflowsPromise={workflowOrgPromise}
-                            />
+                        <WorkflowsTable workflowsPromise={workflowOrgPromise} />
                     </TabsContent>
                     <TabsContent value="created_me">
-                    <WorkflowsTable
-                                workflowsPromise={workflowPromise}
-                            />
+                        <WorkflowsTable workflowsPromise={workflowPromise} />
                     </TabsContent>
                 </Tabs>
             </AppPageShell>

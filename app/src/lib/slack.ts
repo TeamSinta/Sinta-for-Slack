@@ -144,35 +144,42 @@ interface Question {
     answer: string;
 }
 
+export function filterProcessedForSlack(
+    candidates: Candidate[],
+    workflow: WorkflowRecipient,
+): any[] {
+    return candidates.map((candidate) => {
+        const result: any = {};
 
-export function filterProcessedForSlack(candidates: Candidate[], workflow: WorkflowRecipient): any[] {
-  return candidates.map(candidate => {
-    const result: any = {};
+        // Extract the fields specified in the workflow
+        workflow.messageFields.forEach((field) => {
+            switch (field) {
+                case "name":
+                    result[field] =
+                        `${candidate.first_name} ${candidate.last_name}`;
+                    break;
+                case "title":
+                    result[field] = candidate.title || "Not provided";
+                    break;
+                case "recruiter_name":
+                    result[field] = candidate.recruiter
+                        ? candidate.recruiter.name
+                        : "No recruiter";
+                    break;
+                case "coordinator_name":
+                    result[field] = candidate.coordinator
+                        ? candidate.coordinator.name
+                        : "No coordinator";
+                    break;
+                default:
+                    // Handle custom or dynamically named fields
+                    result[field] = candidate[field] || "Not available";
+                    break;
+            }
+        });
 
-    // Extract the fields specified in the workflow
-    workflow.messageFields.forEach(field => {
-      switch (field) {
-        case 'name':
-          result[field] = `${candidate.first_name} ${candidate.last_name}`;
-          break;
-        case 'title':
-          result[field] = candidate.title || 'Not provided';
-          break;
-        case 'recruiter_name':
-          result[field] = candidate.recruiter ? candidate.recruiter.name : 'No recruiter';
-          break;
-        case 'coordinator_name':
-          result[field] = candidate.coordinator ? candidate.coordinator.name : 'No coordinator';
-          break;
-        default:
-          // Handle custom or dynamically named fields
-          result[field] = candidate[field] || 'Not available';
-          break;
-      }
+        return result;
     });
-
-    return result;
-  });
 }
 // export async function respondToSlack(
 //   res: NextApiResponse,

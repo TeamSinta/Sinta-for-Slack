@@ -9,16 +9,17 @@ import greenhouse from "../../../public/greenhouselogo.png";
 import { Icons } from "./icons";
 
 type Option = {
-  source: any; value: string; label: string
+    source: any;
+    value: string;
+    label: string;
 };
 
 interface FancyMultiSelectProps {
-  options?: Option[];
-  selectedOptions: Option[];  // Update to array of Option
-  onOptionChange: (selectedOptions: Option[]) => void;  // Update parameter type to array of Option
-  loading?: boolean;
+    options?: Option[];
+    selectedOptions: Option[]; // Update to array of Option
+    onOptionChange: (selectedOptions: Option[]) => void; // Update parameter type to array of Option
+    loading?: boolean;
 }
-
 
 export function FancyMultiSelect({
     options = [],
@@ -31,48 +32,48 @@ export function FancyMultiSelect({
     const [inputValue, setInputValue] = React.useState("");
 
     const logoMap = {
-      slack: slackLogo,  // Path to your Slack logo
-      greenhouse: greenhouse  // Path to your Greenhouse logo
+        slack: slackLogo, // Path to your Slack logo
+        greenhouse: greenhouse, // Path to your Greenhouse logo
     };
 
     const handleUnselect = React.useCallback(
-      (option: Option) => {
-          const updatedOptions = selectedOptions.filter(
-              (opt) => opt.value !== option.value,
-          );
-          onOptionChange(updatedOptions);
-      },
-      [selectedOptions, onOptionChange],
-  );
+        (option: Option) => {
+            const updatedOptions = selectedOptions.filter(
+                (opt) => opt.value !== option.value,
+            );
+            onOptionChange(updatedOptions);
+        },
+        [selectedOptions, onOptionChange],
+    );
 
-  const selectables = options.filter(
-      (option) => !selectedOptions.some((selectedOption) => selectedOption.value === option.value),
-  );
+    const selectables = options.filter(
+        (option) =>
+            !selectedOptions.some(
+                (selectedOption) => selectedOption.value === option.value,
+            ),
+    );
 
-
-
-  const handleKeyDown = React.useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-        const input = inputRef.current;
-        if (input) {
-            if (e.key === "Delete" || e.key === "Backspace") {
-                if (input.value === "") {
-                    // Remove the last item from the selected options if input is empty
-                    const lastSelectedOption = selectedOptions[selectedOptions.length - 1];
-                    if (lastSelectedOption) {
-                        handleUnselect(lastSelectedOption);
+    const handleKeyDown = React.useCallback(
+        (e: React.KeyboardEvent<HTMLDivElement>) => {
+            const input = inputRef.current;
+            if (input) {
+                if (e.key === "Delete" || e.key === "Backspace") {
+                    if (input.value === "") {
+                        // Remove the last item from the selected options if input is empty
+                        const lastSelectedOption =
+                            selectedOptions[selectedOptions.length - 1];
+                        if (lastSelectedOption) {
+                            handleUnselect(lastSelectedOption);
+                        }
                     }
                 }
+                if (e.key === "Escape") {
+                    input.blur();
+                }
             }
-            if (e.key === "Escape") {
-                input.blur();
-            }
-        }
-    },
-    [selectedOptions, handleUnselect],
-);
-
-
+        },
+        [selectedOptions, handleUnselect],
+    );
 
     return (
         <Command
@@ -81,30 +82,31 @@ export function FancyMultiSelect({
         >
             <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <div className="flex flex-wrap gap-1">
-                {selectedOptions.map((option) => (
-    <Badge key={option.value} variant="secondary">
-        <Image
-            src={logoMap[option.source]}
-            alt={`${option.source}-logo`}
-            className="mr-1 h-4 w-4"        />
-        {option.label}
-        <button
-            className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    handleUnselect(option);
-                }
-            }}
-            onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            }}
-            onClick={() => handleUnselect(option)}
-        >
-            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-        </button>
-    </Badge>
-))}
+                    {selectedOptions.map((option) => (
+                        <Badge key={option.value} variant="secondary">
+                            <Image
+                                src={logoMap[option.source]}
+                                alt={`${option.source}-logo`}
+                                className="mr-1 h-4 w-4"
+                            />
+                            {option.label}
+                            <button
+                                className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        handleUnselect(option);
+                                    }
+                                }}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                onClick={() => handleUnselect(option)}
+                            >
+                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                            </button>
+                        </Badge>
+                    ))}
 
                     <CommandPrimitive.Input
                         ref={inputRef}
@@ -126,26 +128,30 @@ export function FancyMultiSelect({
                 <div className="relative mt-2">
                     <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
                         <CommandGroup className="h-full overflow-auto">
-                        {selectables.map((option) => (
-    <CommandItem
-        key={option.value}
-        onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        }}
-        onSelect={() => {
-            setInputValue("");
-            onOptionChange([...selectedOptions, option]);
-        }}
-        className={"cursor-pointer"}
-    >
-      <Image
-            src={logoMap[option.source]}
-            alt={`${option.source}-logo`}
-            className="mr-1 h-4 w-4"
-        /> {option.label}
-    </CommandItem>
-))}
+                            {selectables.map((option) => (
+                                <CommandItem
+                                    key={option.value}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onSelect={() => {
+                                        setInputValue("");
+                                        onOptionChange([
+                                            ...selectedOptions,
+                                            option,
+                                        ]);
+                                    }}
+                                    className={"cursor-pointer"}
+                                >
+                                    <Image
+                                        src={logoMap[option.source]}
+                                        alt={`${option.source}-logo`}
+                                        className="mr-1 h-4 w-4"
+                                    />{" "}
+                                    {option.label}
+                                </CommandItem>
+                            ))}
                         </CommandGroup>
                     </div>
                 </div>

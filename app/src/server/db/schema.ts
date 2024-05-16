@@ -176,21 +176,21 @@ export const verificationTokens = createTable(
 );
 
 export const organizations = createTable("organization", {
-  id: varchar("id", { length: 255 })
-      .notNull()
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-  name: varchar("name", { length: 255 }).notNull(),
-  image: varchar("image", { length: 255 }),
-  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
-  ownerId: varchar("ownerId", { length: 255 })
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-  slack_team_id: varchar("slack_team_id", { length: 255 }),
-  slack_access_token: varchar("slack_access_token", { length: 1024 }),
-  slack_refresh_token: varchar("slack_refresh_token", { length: 1024 }),
-  token_expiry: integer("token_expiry"), // Stores UNIX timestamp of token expiry
-  incoming_webhook_url: varchar("incoming_webhook_url", { length: 1024 }),
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    image: varchar("image", { length: 255 }),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    ownerId: varchar("ownerId", { length: 255 })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    slack_team_id: varchar("slack_team_id", { length: 255 }),
+    slack_access_token: varchar("slack_access_token", { length: 1024 }),
+    slack_refresh_token: varchar("slack_refresh_token", { length: 1024 }),
+    token_expiry: integer("token_expiry"), // Stores UNIX timestamp of token expiry
+    incoming_webhook_url: varchar("incoming_webhook_url", { length: 1024 }),
 });
 
 export const organizationsInsertSchema = createInsertSchema(organizations);

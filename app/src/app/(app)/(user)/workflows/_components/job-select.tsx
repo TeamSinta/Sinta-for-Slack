@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
 
@@ -34,10 +41,8 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({ onJobSelect }) => {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                    <SelectItem value={'All Jobs'}>
-                               All Jobs
-                            </SelectItem>
-                        {jobs.map(job => (
+                        <SelectItem value={"All Jobs"}>All Jobs</SelectItem>
+                        {jobs.map((job) => (
                             <SelectItem key={job.id} value={job.id.toString()}>
                                 {job.name}
                             </SelectItem>

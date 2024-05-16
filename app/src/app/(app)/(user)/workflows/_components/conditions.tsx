@@ -110,8 +110,6 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 />
             </div>
 
-
-
             {/* Remove Button */}
             <Button
                 variant="destructive"
