@@ -5,7 +5,6 @@ import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
-    processData,
 } from "@/server/greenhouse/core";
 import { env } from "@/env";
 import { filterProcessedForSlack } from "@/lib/slack";

@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from "@/components/ui/fancy.box";
-import { getOrganizations } from "@/server/actions/organization/queries";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
 

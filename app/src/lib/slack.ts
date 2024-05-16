@@ -1,11 +1,8 @@
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
-import { getAccessToken } from "@/server/actions/slack/query";
 import { env } from "@/env";
-import { getOrganizations } from "@/server/actions/organization/queries";
-import { ConsoleLogWriter } from "drizzle-orm";
-import { Candidate } from "@/types/greenhouse";
-import { WorkflowRecipient } from "@/types/workflows";
+import { type Candidate } from "@/types/greenhouse";
+import { type WorkflowRecipient } from "@/types/workflows";
 
 export async function log(message: string) {
     console.log(message);

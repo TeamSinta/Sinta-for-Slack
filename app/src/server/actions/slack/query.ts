@@ -3,7 +3,6 @@
 import { db } from "@/server/db";
 import { organizations } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
-import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {
     if (!teamId) {

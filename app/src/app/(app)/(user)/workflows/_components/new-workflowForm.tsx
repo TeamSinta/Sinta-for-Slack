@@ -34,7 +34,6 @@ import SlackWorkflow from "./slack-workflow";
 import ConditionComponent from "./conditions";
 import {
     fetchJobsFromGreenhouse,
-    fetchStagesForJob,
 } from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";

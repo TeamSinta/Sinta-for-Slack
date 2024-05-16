@@ -5,7 +5,7 @@ import { workflows } from "@/server/db/schema"; // Assuming WorkflowStatus is th
 import { asc, desc, eq, count, and, ilike, or, ne } from "drizzle-orm";
 import { z } from "zod";
 import { unstable_noStore as noStore } from "next/cache";
-import { adminProcedure, protectedProcedure } from "@/server/procedures";
+import { protectedProcedure } from "@/server/procedures";
 import { getOrganizations } from "../organization/queries";
 
 // Define a Zod schema with the specific enum values

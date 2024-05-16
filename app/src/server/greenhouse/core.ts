@@ -1,6 +1,6 @@
 import { customFetch } from "@/app/api/cron/route";
 import { parseISO, differenceInCalendarDays } from "date-fns";
-import { isDate, isValid } from "date-fns";
+import { isValid } from "date-fns";
 
 interface Candidate {
     id: number;
@@ -198,7 +198,7 @@ export const filterDataWithConditions = (
             // Date conditions processing
             if (isISODate(itemValue) && unit === "Days") {
                 const fieldValueAsDate = parseISO(itemValue);
-                const valueAsNumber = parseInt(value as string, 10); // Ensure the value is treated as a number for date comparisons
+                const valueAsNumber = parseInt(value, 10); // Ensure the value is treated as a number for date comparisons
 
                 switch (operator) {
                     case "before":
@@ -243,7 +243,7 @@ export const filterDataWithConditions = (
                 case "contains":
                     return (
                         typeof itemValue === "string" &&
-                        itemValue.includes(value as string)
+                        itemValue.includes(value)
                     );
                 default:
                     return false;
@@ -261,8 +261,8 @@ async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
 }
 
 function calculateTimeInStages(activities: Activity[]): Record<string, number> {
-    let stageDurations: Record<string, number> = {};
-    let currentStage: string = "Initial Stage"; // Starting stage name
+    const stageDurations: Record<string, number> = {};
+    let currentStage = "Initial Stage"; // Starting stage name
     let stageStartDate: Date | null = null;
 
     console.log();
@@ -310,7 +310,7 @@ export async function filterStuckinStageDataConditions(
     candidates: Candidate[],
     conditions: Condition[],
 ): Promise<Candidate[]> {
-    let matchedCandidates: Candidate[] = [];
+    const matchedCandidates: Candidate[] = [];
 
     const condition = conditions[0];
     const stageName = condition.field.label;

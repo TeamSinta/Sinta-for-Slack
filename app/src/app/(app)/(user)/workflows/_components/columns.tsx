@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouse from "../../../../../../public/greenhouselogo.png";
 import Image from "next/image";
-import { Condition } from "./new-workflowForm";
+import { type Condition } from "./new-workflowForm";
 
 const logoMap = {
     slack: slackLogo, // Path to your Slack logo
