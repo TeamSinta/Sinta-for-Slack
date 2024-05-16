@@ -9,7 +9,7 @@ import {
 } from "@/server/greenhouse/core";
 import { env } from "@/env";
 import { filterProcessedForSlack } from "@/lib/slack";
-import { sendSlackNotification } from "@/server/slack/core";
+import { sendSlackButtonNotification, sendSlackNotification } from "@/server/slack/core";
 
 // Define your API token
 const API_TOKEN = env.GREENHOUSE_API_HARVEST;
@@ -37,7 +37,7 @@ export async function POST() {
       let shouldReturnNull = false; // Flag to determine whether to return null
 
       for (const workflow of workflows) {
-          if (workflow.alertType === "time-based") {
+          if (workflow.alertType === "timebased") {
               const { apiUrl } = workflow.triggerConfig;  // Now using the parsed object
 
               const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
@@ -68,7 +68,7 @@ export async function POST() {
 
             const filteredSlackData = filterProcessedForSlack(filteredConditionsData, workflow.recipient);
                 console.log("Filtered from Slack API:", filteredSlackData); // Log the data to verify it has arrived
-                await sendSlackNotification(filteredSlackData, workflow.recipient);
+                await sendSlackButtonNotification(filteredSlackData, workflow.recipient);
           } else if (workflow.alertType === "create-update") {
               // Logic for "create-update" conditions
           }
