@@ -17,7 +17,6 @@ import { getOrganizations } from "../organization/queries";
  */
 const workflowFormSchema = workflowInsertSchema.pick({
     name: true,
-    description: true,
     objectField: true,
     alertType: true,
     organizationId: true,
