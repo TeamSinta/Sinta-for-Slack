@@ -83,7 +83,7 @@ const MessageButtons: React.FC<MessageButtonsProps> = ({ buttons, addButton, upd
                             <div className="flex flex-col w-full">
                                 <Label className="text-sm text-gray-600">Update Action</Label>
                                 <Select
-                                    value={button.updateType || ""}
+                                    value={button.updateType ?? ""}
                                     onValueChange={(value) => updateButton(idx, "updateType", value as UpdateActionType)}
                                 >
                                     <SelectTrigger className="w-full border-gray-300 mt-1">
@@ -104,7 +104,7 @@ const MessageButtons: React.FC<MessageButtonsProps> = ({ buttons, addButton, upd
                             <div className="flex flex-col w-full">
                                 <Label className="text-sm text-gray-600">Link Type</Label>
                                 <Select
-                                    value={button.linkType || ""}
+                                    value={button.linkType ?? ""}
                                     onValueChange={(value) => updateButton(idx, "linkType", value as LinkActionType)}
                                 >
                                     <SelectTrigger className="w-full border-gray-300 mt-1">

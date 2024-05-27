@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
@@ -10,47 +13,13 @@ import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import { env } from "@/env";
 import { filterProcessedForSlack } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
     sendSlackNotification,
 } from "@/server/slack/core";
-import { type z } from "zod";
-import { type workflowFormSchema } from "@/app/(app)/(user)/workflows/_components/new-workflowForm";
+import { customFetch } from "@/utils/fetch";
 
-// Define your API token
-const API_TOKEN = env.GREENHOUSE_API_HARVEST;
-
-export type Workflow = z.infer<typeof workflowFormSchema>;
-
-interface CustomFetchOptions extends RequestInit {
-    headers?: HeadersInit;
-}
-
-// Custom fetch wrapper function with authorization header
-export const customFetch = async (
-  url: string,
-  options: CustomFetchOptions = {}
-): Promise<Record<string, unknown>[]> => {
-  const headers: HeadersInit = {
-    Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
-
-  if (options.query) {
-      const queryParams = new URLSearchParams(options.query as Record<string, string>).toString();
-      url = `${url}?${queryParams}`;
-  }
-
-  const response = await fetch(url, { ...options, headers });
-  if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-  }
-  const responseData = (await response.json()) as Record<string, unknown>[];
-  return responseData;
-};
 
 export async function POST() {
     try {
@@ -60,7 +29,6 @@ export async function POST() {
         for (const workflow of workflows) {
             if (workflow.alertType === "timebased") {
                 const { apiUrl } = workflow.triggerConfig;
-
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
                 console.log(data)
 
@@ -83,10 +51,8 @@ export async function POST() {
                 }
             } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
-
                 const data = await customFetch(apiUrl, processor ? { query: processor } : {});
                 console.log(data)
-
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData = await filterStuckinStageDataConditions(
                     data,

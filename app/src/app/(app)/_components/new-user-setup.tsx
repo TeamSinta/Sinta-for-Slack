@@ -20,7 +20,7 @@ export async function NewUserSetup() {
     console.log("Current step:", currentStep);
 
     // Define the forms for each step
-    const forms: { [key: number]: JSX.Element } = {
+    const forms: Record<number, JSX.Element> = {
         1: <NewUserProfileForm user={user} currentStep={currentStep} />,
         2: <NewUserOrgForm currentStep={currentStep} userId={user?.id} />,
     };

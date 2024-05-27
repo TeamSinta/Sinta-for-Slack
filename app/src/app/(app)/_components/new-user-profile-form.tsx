@@ -49,7 +49,6 @@ type NewUserProfileFormProps = {
 
 export function NewUserProfileForm({
     user,
-    currentStep,
 }: NewUserProfileFormProps) {
     const router = useRouter();
 
