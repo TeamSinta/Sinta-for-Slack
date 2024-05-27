@@ -97,7 +97,6 @@ export async function getPaginatedWorkflowsByOrgQuery(
 ) {
     noStore();
 
-    const { user } = await protectedProcedure();
     const { currentOrg } = await getOrganizations();
 
     const offset = (input.page - 1) * input.per_page;

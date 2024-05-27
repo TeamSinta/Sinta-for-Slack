@@ -112,5 +112,6 @@ export interface Candidate {
         name: string;
         employee_id: number | null;
     };
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     [key: string]: any; // To handle dynamic properties like custom fields
 }

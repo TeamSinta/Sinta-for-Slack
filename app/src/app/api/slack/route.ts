@@ -30,13 +30,6 @@ interface SlackAction {
     value?: string;
 }
 
-// Define the type for the response from Slack's OAuth endpoint
-interface SlackOAuthResponse {
-    access_token?: string;
-    team?: { id?: string; name?: string };
-    error?: string;
-}
-
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
@@ -189,7 +182,7 @@ async function openModal(
 // Function to handle modal submission
 async function handleModalSubmission(payload: any) {
     const { team, user } = payload;
-    const accessToken = await getAccessToken(); // Assuming a function to get access tokens
+    const accessToken = await getAccessToken(team.id); // Assuming a function to get access tokens
 
     // Log for debugging
     console.log("Attempting to post submission acknowledgment message.");

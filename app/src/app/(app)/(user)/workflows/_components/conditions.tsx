@@ -11,11 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-interface Condition {
-    field: string;
-    condition: string;
-    value: string;
-    greenhouseObject: string;
+export interface Condition {
+  field: { value: string; label: string; } | string;
+  condition: string;
+  value: string;
+  unit?: string;
 }
 
 interface ConditionProps {
@@ -35,6 +35,13 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     objectFieldOptions,
     conditionOptions,
 }) => {
+    const handleFieldChange = (value: string) => {
+        const selectedOption = objectFieldOptions.find(option => option.name === value);
+        onChange(index, 'field', selectedOption ? JSON.stringify({ value: selectedOption.name, label: selectedOption.name }) : value);
+    };
+
+    const fieldValue = typeof condition.field === 'string' ? condition.field : condition.field.value;
+
     return (
         <div className="mb-4 flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4">
             <div className="flex flex-row gap-4">
@@ -44,10 +51,8 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                         Field
                     </Label>
                     <Select
-                        value={condition.field}
-                        onValueChange={(value) =>
-                            onChange(index, "field", value)
-                        }
+                        value={fieldValue}
+                        onValueChange={handleFieldChange}
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Field" />

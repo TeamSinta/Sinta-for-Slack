@@ -5,53 +5,78 @@ import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
 import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
-import greenhouse from "../../../../../../public/greenhouselogo.png";
-import Image from "next/image";
-import { type Condition } from "./new-workflowForm";
+import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
+import Image, { type StaticImageData } from "next/image";
 
-const logoMap = {
-    slack: slackLogo, // Path to your Slack logo
-    greenhouse: greenhouse, // Path to your Greenhouse logo
+const logoMap: Record<string, StaticImageData> = {
+    slack: slackLogo,
+    greenhouse: greenhouseLogo,
 };
 
-// This type is used to define the shape of our data.
+type Recipient = {
+    source: string;
+    value: string;
+    label: string;
+};
+
+type TriggerConfig = {
+    type: string;
+    details: Record<string, unknown>;
+};
+
 export type WorkflowData = {
     id: string;
     name: string;
     status: string;
     createdAt: Date;
-    recipient: any; // Adjust to actual type
+    recipient: {
+        recipients: Recipient[];
+    };
     conditions: Condition[];
     alertType: string;
     objectField: string;
-    ownerId: string; // Optionally display owner-related details
-    triggerConfig: any; // Adjust to actual type
+    ownerId: string;
+    triggerConfig: TriggerConfig;
 };
+
+type Field = {
+  label: string;
+  value: string;
+};
+
+// Update the Condition type to use the Field type
+export type Condition = {
+  condition: string;
+  value: string | number;
+  unit?: string;
+  field: Field | string; // Field can be either an object with label or a string
+};
+
+
 
 export function getColumns(): ColumnDef<WorkflowData>[] {
     return columns;
 }
 
 function formatCondition(condition: Condition): string {
-    const conditionMappings: Record<string, string> = {
-        greaterThan: "greater than",
-        lessThan: "less than",
-        equalTo: "equal to",
-        notEqualTo: "not equal to",
-        contains: "contains",
-        doesNotContain: "does not contain",
-        beginsWith: "begins with",
-        endsWith: "ends with",
-        after: "after",
-        before: "before", // Ensure all relevant conditions are mapped
-    };
+  const conditionMappings: Record<string, string> = {
+      greaterThan: "greater than",
+      lessThan: "less than",
+      equalTo: "equal to",
+      notEqualTo: "not equal to",
+      contains: "contains",
+      doesNotContain: "does not contain",
+      beginsWith: "begins with",
+      endsWith: "ends with",
+      after: "after",
+      before: "before",
+  };
 
-    const readableCondition =
-        conditionMappings[condition.condition] || condition.condition;
-    const unit = condition.unit ? ` ${condition.unit}` : " days";
-    const readableField = condition.field.label || condition.field;
+  const readableCondition = conditionMappings[condition.condition] ?? condition.condition;
+  const unit = condition.unit ? ` ${condition.unit}` : " days";
+  const readableField = typeof condition.field === 'object' ? condition.field.label : condition.field;
 
-    return `${readableField} is ${readableCondition} ${condition.value}${unit}`;
+  return `${readableField} is ${readableCondition} ${condition.value}${unit}`;
 }
 
 export const columns: ColumnDef<WorkflowData>[] = [
@@ -117,10 +142,7 @@ export const columns: ColumnDef<WorkflowData>[] = [
                     className="cursor-pointer hover:underline"
                     title={conditionTexts.join("; ")}
                     onClick={() =>
-                        console.log(
-                            "Conditions Clicked:",
-                            row.original.conditions,
-                        )
+                        console.log("Conditions Clicked:", row.original.conditions)
                     }
                 >
                     {conditionTexts.length > 1
@@ -133,6 +155,6 @@ export const columns: ColumnDef<WorkflowData>[] = [
     {
         header: "Actions",
         id: "actions",
-        cell: ({ row }) => <ColumnDropdown {...row.original} />, // Make sure ColumnDropdown supports workflow operations
+        cell: ({ row }) => <ColumnDropdown {...row.original} />,
     },
 ];

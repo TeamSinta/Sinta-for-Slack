@@ -1,6 +1,6 @@
 import { orgConfig } from "@/config/organization";
-import { env } from "@/env";
 import { type ClassValue, clsx } from "clsx";
+import { env } from "process";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,3 +19,6 @@ export function setOrgCookie(orgId: string) {
 export function getAbsoluteUrl(path: string) {
     return `${env.NEXTAUTH_URL}${path}`;
 }
+
+
+// Custom fetch wrapper function with authorization header

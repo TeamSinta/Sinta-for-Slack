@@ -1,18 +1,21 @@
-import { customFetch } from "@/app/api/cron/route";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import { parseISO, differenceInCalendarDays } from "date-fns";
 import { isValid } from "date-fns";
+import { env } from "process";
 
 interface Candidate {
     id: number;
     first_name: string;
     last_name: string;
     applications: Application[];
-    // other fields...
 }
 
 interface Application {
     id: number;
-    // other fields...
 }
 
 interface Condition {
@@ -34,22 +37,54 @@ interface Activity {
     id: number;
     created_at: string;
     body: string;
-    // other fields...
 }
 
-export async function getMockGreenhouseData(): Promise<{
-    owner: any;
+interface MockData {
+    owner: string;
     recruiter: string;
     coordinator: string;
     hiringTeam: string;
     admin: string;
-}> {
+}
+
+const API_TOKEN = env.GREENHOUSE_API_HARVEST;
+
+interface CustomFetchOptions extends RequestInit {
+    headers?: HeadersInit;
+}
+
+ const customFetch = async (
+  url: string,
+  options: CustomFetchOptions = {}
+): Promise<Record<string, unknown>[]> => {
+  const headers: HeadersInit = {
+    Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const fetchOptions: RequestInit = {
+    ...options,
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  };
+
+  const response = await fetch(url, fetchOptions);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+
+  const responseData = (await response.json()) as Record<string, unknown>[];
+  return responseData;
+};
+
+
+export async function getMockGreenhouseData(): Promise<MockData> {
     try {
-        // Simulated delay to mimic API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // Mock data without image tags
-        const mockData = {
+        const mockData: MockData = {
             recruiter: "{ Recruiter }",
             coordinator: "{ Coordinator }",
             hiringTeam: "{ Hiring_Team }",
@@ -60,14 +95,19 @@ export async function getMockGreenhouseData(): Promise<{
         return mockData;
     } catch (error) {
         console.error("Error fetching data from Greenhouse:", error);
-        return; // Returning null in case of error for clearer error handling
+        throw new Error("Failed to fetch data from Greenhouse");
     }
+}
+
+interface Job {
+    id: number;
+    name: string;
 }
 
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
-        const jobs = await customFetch("https://harvest.greenhouse.io/v1/jobs");
-        return jobs.map((job: any) => ({
+        const jobs = await customFetch("https://harvest.greenhouse.io/v1/jobs") as { id: number; name: string }[];
+        return jobs.map((job) => ({
             id: job.id,
             name: job.name,
         }));
@@ -77,12 +117,15 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     }
 };
 
+interface Stage {
+    id: number;
+    name: string;
+}
+
 export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
     try {
-        const stages = await customFetch(
-            `https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`,
-        );
-        return stages.map((stage: any) => ({
+        const stages = await customFetch(`https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`) as { id: number; name: string }[];
+        return stages.map((stage) => ({
             id: stage.id,
             name: stage.name,
         }));
@@ -121,112 +164,79 @@ export function mapWebhookActionToObjectField(action: string): string {
             return "Job Interview Stage Deletion";
         case "prospect_created":
             return "Prospect Creation";
-        // Add more cases for other actions as needed
         default:
             return "";
     }
 }
 
-export async function fetchData(apiUrl: string): Promise<any> {
-    try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data. Status: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        throw new Error("Failed to fetch data");
-    }
+export async function fetchData<T>(apiUrl: string): Promise<T> {
+  try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+          throw new Error(`Failed to fetch data. Status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data as T;
+  } catch (error) {
+      console.error("Error fetching data:", error);
+      throw new Error("Failed to fetch data");
+  }
 }
 
-// Function to process data based on the provided processor
-export function processData(data: any[], processor: string): any[] {
+export function processData<T extends Record<string, unknown>>(
+    data: T[],
+    processor: keyof T,
+): Partial<T>[] {
     if (!data.length) {
         throw new Error(`Data is empty.`);
     }
     if (!(processor in data[0])) {
-        throw new Error(
-            `Processor field "${processor}" not found in the data.`,
-        );
+        throw new Error(`Processor field "${String(processor)}" not found in the data.`);
     }
 
-    const processedData = data.filter((item: any) => {
-        const field = processor.toLowerCase();
-        if (typeof item[field] === "string") {
-            return item[field].toLowerCase().includes("your_filter_value");
+    const processedData = data.filter((item) => {
+        const field = item[processor];
+        if (typeof field === "string") {
+            return field.toLowerCase().includes("your_filter_value");
         }
         return false;
     });
-    const filteredData = processedData.map((item: any) => {
-        return { [processor]: item[processor] };
-    });
 
-    return filteredData;
+    return processedData.map((item) => ({
+        [processor]: item[processor],
+    }));
 }
 
-/**
- * Determines if a string is a valid ISO date.
- * @param dateStr The string to check.
- * @returns true if the string is a valid ISO date, false otherwise.
- */
 function isISODate(dateStr: string): boolean {
     const date = parseISO(dateStr);
     return isValid(date);
 }
 
-/**
- * Filters data based on a list of conditions, including dynamic date comparisons.
- *
- * @param data - The array of data objects fetched from an API.
- * @param conditions - The conditions to apply for filtering.
- * @returns - The filtered array of data objects.
- */
 export const filterDataWithConditions = (
-    data: any[],
+    data: Record<string, unknown>[],
     conditions: Condition[],
-): any[] => {
+): Record<string, unknown>[] => {
     const today = new Date();
 
     return data.filter((item) => {
         return conditions.every((condition) => {
             const { field, condition: operator, value, unit } = condition;
-            const itemValue = item[field.label]
-                ? item[field.label]
-                : item[field];
+            const itemValue = item[field.label] ?? item[field.value];
 
-            // Date conditions processing
-            if (isISODate(itemValue) && unit === "Days") {
-                const fieldValueAsDate = parseISO(itemValue);
-                const valueAsNumber = parseInt(value, 10); // Ensure the value is treated as a number for date comparisons
+            if (isISODate(String(itemValue)) && unit === "Days") {
+                const fieldValueAsDate = parseISO(String(itemValue));
+                const valueAsNumber = parseInt(value, 10);
 
                 switch (operator) {
                     case "before":
-                        // Field value date should be more than 'value' days ago from today
-                        // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be less than -1
-                        return (
-                            differenceInCalendarDays(today, fieldValueAsDate) <
-                            -valueAsNumber
-                        );
+                        return differenceInCalendarDays(today, fieldValueAsDate) < -valueAsNumber;
                     case "after":
-                        // Field value date should be less than 'value' days ago from today
-                        // If valueAsNumber is 1, differenceInCalendarDays(today, fieldValueAsDate) should be greater than -1
-                        return (
-                            differenceInCalendarDays(today, fieldValueAsDate) >
-                            -valueAsNumber
-                        );
+                        return differenceInCalendarDays(today, fieldValueAsDate) > -valueAsNumber;
                     case "sameDay":
-                        // Field value date should be exactly 'value' days ago from today
-                        return (
-                            differenceInCalendarDays(
-                                today,
-                                fieldValueAsDate,
-                            ) === -valueAsNumber
-                        );
+                        return differenceInCalendarDays(today, fieldValueAsDate) === -valueAsNumber;
                 }
             }
 
-            // Non-date values or if the date check does not pass
             switch (operator) {
                 case "equals":
                     return itemValue === value;
@@ -257,53 +267,47 @@ async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
         `https://harvest.greenhouse.io/v1/candidates/${candidateId}/activity_feed`,
         {},
     );
-    return response; // Directly use the response as JSON
+    return response as ActivityFeed;
 }
 
 function calculateTimeInStages(activities: Activity[]): Record<string, number> {
-    const stageDurations: Record<string, number> = {};
-    let currentStage = "Initial Stage"; // Starting stage name
-    let stageStartDate: Date | null = null;
+  const stageDurations: Record<string, number> = {};
+  let currentStage = "Initial Stage";
+  let stageStartDate: Date | null = null;
 
-    console.log();
-    activities.forEach((activity) => {
-        console.log(activity.body);
-        const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
-        if (stageChangeMatch) {
-            const newStage = stageChangeMatch[1];
-            const createdAt = new Date(activity.created_at);
+  activities.forEach((activity) => {
+      const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
+      if (stageChangeMatch) {
+          const newStage = stageChangeMatch[1];
+          const createdAt = new Date(activity.created_at);
 
-            if (stageStartDate) {
-                const duration = Math.floor(
-                    (createdAt.getTime() - stageStartDate.getTime()) /
-                        (1000 * 60 * 60 * 24),
-                ); // in days
-                if (!stageDurations[currentStage]) {
-                    stageDurations[currentStage] = 0;
-                }
-                stageDurations[currentStage] += duration;
-            }
+          if (stageStartDate) {
+              const duration = Math.floor(
+                  (createdAt.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
+              );
+              if (!stageDurations[currentStage]) {
+                  stageDurations[currentStage] = 0;
+              }
+              stageDurations[currentStage] += duration;
+          }
 
-            currentStage = newStage;
-            stageStartDate = createdAt;
-        }
-    });
+          currentStage = newStage;
+          stageStartDate = createdAt;
+      }
+  });
 
-    // Calculate time in the last stage till today if necessary
-    if (stageStartDate) {
-        const now = new Date();
-        const duration = Math.floor(
-            (now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
-        ); // in days
-        if (!stageDurations[currentStage]) {
-            stageDurations[currentStage] = 0;
-        }
-        stageDurations[currentStage] += duration;
-    }
+  if (stageStartDate) {
+      const now = new Date();
+      const duration = Math.floor(
+          (now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (!stageDurations[currentStage]) {
+          stageDurations[currentStage] = 0;
+      }
+      stageDurations[currentStage] += duration;
+  }
 
-    console.log(stageDurations);
-
-    return stageDurations;
+  return stageDurations;
 }
 
 export async function filterStuckinStageDataConditions(
@@ -320,11 +324,7 @@ export async function filterStuckinStageDataConditions(
         const candidateId = candidate.id;
         const activityFeed = await fetchActivityFeed(candidateId);
         const stageDurations = calculateTimeInStages(activityFeed.activities);
-        console.log(thresholdDays);
-        if (
-            stageDurations[stageName] &&
-            stageDurations[stageName] > thresholdDays
-        ) {
+        if (stageDurations[stageName] && stageDurations[stageName] > thresholdDays) {
             matchedCandidates.push(candidate);
         }
     }

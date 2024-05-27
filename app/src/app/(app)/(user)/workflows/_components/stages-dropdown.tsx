@@ -33,7 +33,7 @@ const StagesDropdown: React.FC<StagesDropdownProps> = ({
                 setStages(stages);
             }
         };
-        fetchStages();
+        void fetchStages();
     }, [jobId]);
 
     return (

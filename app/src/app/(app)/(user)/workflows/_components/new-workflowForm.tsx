@@ -37,13 +37,14 @@ import {
 } from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
+import Image from "next/image";
 
 const messageButtonSchema = z.object({
     name: z.string(),
     label: z.string(),
 });
 
-const recipientSchema = z.object({
+export const recipientSchema = z.object({
     openingText: z.string(),
     messageFields: z.array(z.string()),
     messageButtons: z.array(messageButtonSchema),
@@ -56,7 +57,7 @@ const recipientSchema = z.object({
     ),
 });
 
-const workflowFormSchema = z.object({
+export const workflowFormSchema = z.object({
     name: z.string(),
     objectField: z.string(),
     alertType: z.string(),
@@ -68,7 +69,7 @@ const workflowFormSchema = z.object({
             }),
             condition: z.string(),
             value: z.string(),
-            unit: z.string().optional(), // Optional for conditions other than 'stuck-in-stage'
+            unit: z.string().optional(),
         }),
     ),
     triggerConfig: z.object({
@@ -87,11 +88,12 @@ const createFeedbackFormSchema = workflowFormSchema.omit({
 });
 
 export interface Condition {
-    field: object;
-    condition: string;
-    value: string;
-    unit?: string;
+  field: { value: string; label: string; } | string;
+  condition: string;
+  value: string;
+  unit?: string;
 }
+
 
 interface DateFieldOption {
     value: string;
@@ -99,11 +101,6 @@ interface DateFieldOption {
 }
 
 interface Job {
-    id: number;
-    name: string;
-}
-
-interface Stage {
     id: number;
     name: string;
 }
@@ -121,19 +118,23 @@ function CreateWorkflowSheet() {
     const [, setSelectedOrganization] = useState("");
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
-    const [jobs, setJobs] = useState<Job[]>([]);
+    const [, setJobs] = useState<Job[]>([]);
     const [isCandidateSelected, setIsCandidateSelected] =
         useState<boolean>(false);
     const [selectedValue, setSelectedValue] = useState<string>("");
     const [selectedJobId, setSelectedJobId] = useState<string>("");
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            const jobs = await fetchJobsFromGreenhouse();
-            setJobs(jobs);
-        };
-        fetchJobs();
-    }, []);
+      const fetchJobs = async () => {
+          try {
+              const jobs = await fetchJobsFromGreenhouse();
+              setJobs(jobs);
+          } catch (error) {
+              console.error("Failed to fetch jobs:", error);
+          }
+      };
+      void fetchJobs();
+  }, []);
 
     useEffect(() => {
         if (selectedAlertType === "timebased") {
@@ -143,6 +144,7 @@ function CreateWorkflowSheet() {
                     condition: "", // Set a default condition
                     value: "",
                     unit: "Days",
+
                 },
             ]);
         } else if (selectedAlertType === "stuck-in-stage") {
@@ -164,12 +166,12 @@ function CreateWorkflowSheet() {
     const handleConditionChange = (
         index: number,
         key: keyof Condition,
-        value: any,
+        value: unknown,
     ) => {
         const newConditions = [...conditions];
         const condition = newConditions[index];
         if (!condition) return;
-        condition[key] = value;
+        condition[key] = value as string; // Cast value to the appropriate type
         setConditions(newConditions);
     };
 
@@ -235,10 +237,11 @@ function CreateWorkflowSheet() {
                 form.setValue("triggerConfig.processor", value);
                 break;
             case "stage":
-                const conditionIndex = conditions.findIndex(
-                    (condition) =>
-                        condition.field.value === "when stuck-in-stage in",
-                );
+              const conditionIndex = conditions.findIndex(
+                (condition) =>
+                  typeof condition.field !== "string" &&
+                  condition.field.value === "when stuck-in-stage in",
+              );
                 handleConditionChange(conditionIndex, "field", {
                     value: value,
                     label,
@@ -257,7 +260,7 @@ function CreateWorkflowSheet() {
         updateRecipient("messageFields", fields);
     };
 
-    const handleButtonsChange = (buttons: any[]) => {
+    const handleButtonsChange = (buttons: { action: string; label: string }[]) => {
         updateRecipient("messageButtons", buttons);
     };
 
@@ -265,27 +268,41 @@ function CreateWorkflowSheet() {
         updateRecipient("messageDelivery", option);
     };
 
-    const handleRecipientsChange = (recipientObjects: Object) => {
+    const handleRecipientsChange = (recipientObjects: { label: string; value: string }[]) => {
         updateRecipient("recipients", recipientObjects);
     };
 
-    const updateRecipient = (key: keyof typeof recipientConfig, value: any) => {
+    const updateRecipient = (key: keyof typeof recipientConfig, value: unknown) => {
         const newRecipient = { ...recipientConfig, [key]: value };
         setRecipientConfig(newRecipient);
         form.setValue("recipient", newRecipient);
     };
 
-    const form = useForm({
-        resolver: zodResolver(createFeedbackFormSchema),
-        defaultValues: {
-            name: "",
-            objectField: "",
-            alertType: "",
-            recipient: recipientConfig,
-            conditions: [],
-            organizationId: "",
-            triggerConfig: { apiUrl: "", processor: "" },
-        },
+    interface FormValues {
+      name: string;
+      objectField: string;
+      alertType: string;
+      recipient: typeof recipientConfig;
+      conditions: Condition[]; // Ensure conditions is of type Condition[]
+      organizationId: string;
+      triggerConfig: {
+        apiUrl: string;
+        processor: string;
+      };
+    }
+
+    // Initialize the form with correct types
+    const form = useForm<FormValues>({
+      resolver: zodResolver(createFeedbackFormSchema),
+      defaultValues: {
+        name: "",
+        objectField: "",
+        alertType: "",
+        recipient: recipientConfig,
+        conditions: [], // Initialize with an empty array of Condition[]
+        organizationId: "",
+        triggerConfig: { apiUrl: "", processor: "" },
+      },
     });
 
     useEffect(() => {
@@ -318,23 +335,33 @@ function CreateWorkflowSheet() {
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
-        try {
-            const formData = form.getValues();
-            console.log("Form Data before submission:", formData);
-            await mutateAsync(formData);
-            await startAwaitableTransition(() => {
-                router.refresh();
-            });
-            reset();
-            setIsOpen(false);
-            toast.success("Workflow created successfully");
-        } catch (error) {
-            toast.error(
-                (error as { message?: string })?.message ??
-                    "Failed to submit Workflow",
-            );
-        }
+      try {
+        const formData = form.getValues();
+        console.log("Form Data before submission:", formData);
+
+        // Transform conditions if necessary
+        const transformedData = {
+          ...formData,
+          conditions: formData.conditions.map(condition => ({
+            ...condition,
+            field: typeof condition.field === "string" ? { value: condition.field, label: "" } : condition.field
+          }))
+        };
+
+        await mutateAsync(transformedData);
+        await startAwaitableTransition(() => {
+          router.refresh();
+        });
+        reset();
+        setIsOpen(false);
+        toast.success("Workflow created successfully");
+      } catch (error) {
+        toast.error(
+          (error as { message?: string })?.message ?? "Failed to submit Workflow",
+        );
+      }
     };
+
 
     const alertTypeOptions = [
         { value: "timebased", label: "Time-based" },
@@ -462,9 +489,11 @@ function CreateWorkflowSheet() {
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
                 <DialogHeader className="flex flex-row justify-between">
-                    <img
+                    <Image
                         src="https://assets-global.website-files.com/6457f112b965721ffc2b0777/653e865d87d06c306e2b5147_Group%201321316944.png"
                         alt="Logo_sinta"
+                        width={48}
+                        height={48}
                         className="h-12 w-12"
                     />
                     <DialogTitle className=" flex flex-col items-center dark:text-white">
@@ -650,7 +679,7 @@ function CreateWorkflowSheet() {
                                                                     (opt) =>
                                                                         opt.value ===
                                                                         value,
-                                                                )?.label ||
+                                                                )?.label ??
                                                                 value,
                                                         },
                                                     )
@@ -742,7 +771,7 @@ function CreateWorkflowSheet() {
                                             </Label>
                                             <Select
                                                 value={
-                                                    conditions[0]?.unit ||
+                                                    conditions[0]?.unit ??
                                                     "Days"
                                                 }
                                                 onValueChange={(value) =>

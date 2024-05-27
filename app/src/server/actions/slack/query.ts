@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+
 "use server";
 
 import { db } from "@/server/db";

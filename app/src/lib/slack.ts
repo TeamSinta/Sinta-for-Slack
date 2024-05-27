@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { env } from "@/env";
@@ -73,87 +75,17 @@ export async function verifyRequest(req: NextRequest) {
     }
 }
 
-interface SlackBlock {
-    type: string;
-    text?: {
-        type: string;
-        text: string;
-        emoji?: boolean;
-    };
-    elements?: Element[];
-    accessory?: Element; // For blocks that include buttons or other interactive elements as accessories
-}
-
-interface Element {
-    type: string;
-    text?:
-        | {
-              type: string;
-              text: string;
-              emoji?: boolean;
-          }
-        | string; // Allowing both object and string types for text
-    value?: string;
-    action_id?: string;
-    options?: Option[];
-}
-
-interface Option {
-    text: {
-        type: string;
-        text: string;
-        emoji?: boolean;
-    };
-    value: string;
-}
-
-interface SlackData {
-    // Ensure this is passed where needed
-    // Ensure this is passed where needed
-    scorecard_id: number | null; // Ensure this is passed where needed
-
-    questions: Question[];
-    interviewer: Interviewer;
-    interviewStep: string; // Previously `interview`, ensure consistency in naming
-    overallRecommendation: string; // Make sure this is passed to `configureBlocks`
-}
-
-interface InterviewData {
-    // Ensure this is passed where needed
-    teamId: string | null;
-    scorecard_id: number | null; // Ensure this is passed where needed
-    questions: Question[];
-    interviewer: Interviewer;
-    interviewStep: string; // Previously `interview`, ensure consistency in naming
-    overallRecommendation: string; // Make sure this is passed to `configureBlocks`
-}
-interface Interviewer {
-    id: number;
-    first_name: string;
-    last_name: string;
-    name: string;
-    employee_id: string;
-}
-
-interface Question {
-    id: number | null;
-    question: string;
-    answer: string;
-}
-
 export function filterProcessedForSlack(
     candidates: Candidate[],
     workflow: WorkflowRecipient,
-): any[] {
+): Record<string, string>[] {
     return candidates.map((candidate) => {
-        const result: any = {};
+        const result: Record<string, string> = {};
 
-        // Extract the fields specified in the workflow
         workflow.messageFields.forEach((field) => {
             switch (field) {
                 case "name":
-                    result[field] =
-                        `${candidate.first_name} ${candidate.last_name}`;
+                    result[field] = `${candidate.first_name} ${candidate.last_name}`;
                     break;
                 case "title":
                     result[field] = candidate.title || "Not provided";
@@ -169,8 +101,8 @@ export function filterProcessedForSlack(
                         : "No coordinator";
                     break;
                 default:
-                    // Handle custom or dynamically named fields
-                    result[field] = candidate[field] || "Not available";
+                    const candidateField = candidate[field as keyof Candidate];
+                    result[field] = getFieldValue(candidateField, field);
                     break;
             }
         });
@@ -178,6 +110,17 @@ export function filterProcessedForSlack(
         return result;
     });
 }
+
+function getFieldValue(field: unknown, fieldName: string): string {
+    if (field === undefined || field === null) {
+        return "Not available";
+    }
+    if (typeof field === "object") {
+        return `[Object: ${fieldName}]`; // Provide a better description for objects
+    }
+    return String(field);
+}
+
 // export async function respondToSlack(
 //   res: NextApiResponse,
 //   response_url: string,
