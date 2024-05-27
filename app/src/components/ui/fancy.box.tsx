@@ -26,6 +26,8 @@ interface Framework {
 
 interface FancyBoxProps {
     fields: Framework[]; // User-provided fields
+    selectedOptions: string[]; // Currently selected options
+    onOptionChange: (selectedOptions: string[]) => void; // Callback function for option change
 }
 
 const badgeStyle = (color: string) => ({
@@ -44,24 +46,45 @@ const generateRandomColor = () => {
     return color;
 };
 
-export function FancyBox({ fields }: FancyBoxProps) {
+export function FancyBox({
+    fields,
+    selectedOptions,
+    onOptionChange,
+}: FancyBoxProps) {
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [openCombobox, setOpenCombobox] = React.useState(false);
     const [inputValue, setInputValue] = React.useState<string>("");
     const [selectedValues, setSelectedValues] = React.useState<Framework[]>([]);
 
+    // Set selectedValues initially based on the selectedOptions passed from props
+    React.useEffect(() => {
+        const initialSelectedValues = fields.filter((field) =>
+            selectedOptions.includes(field.value),
+        );
+        setSelectedValues(initialSelectedValues);
+    }, [fields, selectedOptions]);
+
     const toggleFramework = (framework: Framework) => {
         const isAlreadySelected = selectedValues.some(
             (f) => f.value === framework.value,
         );
+        let updatedSelectedValues = [...selectedValues];
         if (!isAlreadySelected) {
             framework.color = generateRandomColor(); // Assign random color
-            setSelectedValues((prev) => [...prev, framework]);
+            updatedSelectedValues.push(framework);
         } else {
-            setSelectedValues((prev) =>
-                prev.filter((l) => l.value !== framework.value),
+            updatedSelectedValues = updatedSelectedValues.filter(
+                (l) => l.value !== framework.value,
             );
         }
+        setSelectedValues(updatedSelectedValues);
+
+        // Update selectedOptions by extracting values from updatedSelectedValues
+        const updatedSelectedOptions = updatedSelectedValues.map(
+            (value) => value.value,
+        );
+        onOptionChange(updatedSelectedOptions);
+
         inputRef?.current?.focus();
     };
 
@@ -69,10 +92,6 @@ export function FancyBox({ fields }: FancyBoxProps) {
         inputRef.current?.blur(); // HACK: otherwise, would scroll automatically to the bottom of the page
         setOpenCombobox(value);
     };
-
-    const selectables = fields.filter(
-        (field) => !selectedValues.includes(field),
-    );
 
     return (
         <div className="flex ">
@@ -91,7 +110,7 @@ export function FancyBox({ fields }: FancyBoxProps) {
                             <span className="truncate">
                                 {selectedValues.length === 0 && "Select labels"}
                                 {selectedValues.length === 1 &&
-                                    selectedValues[0].label}
+                                    selectedValues[0]?.label}
                                 {selectedValues.length === 2 &&
                                     selectedValues
                                         .map(({ label }) => label)
