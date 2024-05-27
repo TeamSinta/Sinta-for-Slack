@@ -81,6 +81,27 @@ export async function checkSlackTeamIdFilled() {
 }
 
 /**
+ * Check if the slack_team_id is filled for the current organization.
+ * @returns A boolean indicating if the slack_team_id is set.
+ */
+export async function checkGreenhouseTeamIdFilled() {
+  const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+
+  if (!currentOrg) {
+      throw new Error("No current organization found.");
+  }
+
+  const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, currentOrg.id), // Properly use 'eq' for condition
+      columns: {
+        greenhouse_api_token: true, // We only need to fetch the slack_team_id
+      },
+  });
+
+  return org ? org.greenhouse_api_token : null; // Return the slack_team_id or null if not found
+}
+
+/**
  * @purpose Get organization by id
  * @param orgId
  * @returns organization
