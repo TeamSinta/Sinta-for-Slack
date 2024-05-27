@@ -29,20 +29,27 @@ interface CustomFetchOptions extends RequestInit {
 }
 
 // Custom fetch wrapper function with authorization header
-const customFetch = async (
-    url: string,
-    options: CustomFetchOptions = {}
+export const customFetch = async (
+  url: string,
+  options: CustomFetchOptions = {}
 ): Promise<Record<string, unknown>[]> => {
-    const headers: HeadersInit = {
-        Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
-        ...options.headers,
-    };
-    const response = await fetch(url, { ...options, headers });
-    if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const responseData = (await response.json()) as Record<string, unknown>[];
-    return responseData;
+  const headers: HeadersInit = {
+    Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  if (options.query) {
+      const queryParams = new URLSearchParams(options.query as Record<string, string>).toString();
+      url = `${url}?${queryParams}`;
+  }
+
+  const response = await fetch(url, { ...options, headers });
+  if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+  const responseData = (await response.json()) as Record<string, unknown>[];
+  return responseData;
 };
 
 export async function POST() {
@@ -55,6 +62,7 @@ export async function POST() {
                 const { apiUrl } = workflow.triggerConfig;
 
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
+                console.log(data)
 
                 const filteredConditionsData = filterDataWithConditions(
                     data,
@@ -76,7 +84,8 @@ export async function POST() {
             } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
 
-                const data = await customFetch(apiUrl, processor ? { body: processor } : {}); // Fetch data using custom fetch wrapper
+                const data = await customFetch(apiUrl, processor ? { query: processor } : {});
+                console.log(data)
 
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData = await filterStuckinStageDataConditions(

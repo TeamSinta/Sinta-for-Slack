@@ -3,6 +3,8 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
+
+import { customFetch } from "@/app/api/cron/route";
 import { parseISO, differenceInCalendarDays } from "date-fns";
 import { isValid } from "date-fns";
 import { env } from "process";
@@ -53,31 +55,31 @@ interface CustomFetchOptions extends RequestInit {
     headers?: HeadersInit;
 }
 
- const customFetch = async (
-  url: string,
-  options: CustomFetchOptions = {}
-): Promise<Record<string, unknown>[]> => {
-  const headers: HeadersInit = {
-    Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
+// const customFetch = async (
+//   url: string,
+//   options: CustomFetchOptions = {}
+// ): Promise<Record<string, unknown>[]> => {
+//   const headers: HeadersInit = {
+//     Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
+//     'Content-Type': 'application/json',
+//     ...options.headers,
+//   };
 
-  const fetchOptions: RequestInit = {
-    ...options,
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  };
+//   const fetchOptions: RequestInit = {
+//     ...options,
+//     headers,
+//     body: options.body ? JSON.stringify(options.body) : undefined,
+//   };
 
-  const response = await fetch(url, fetchOptions);
+//   const response = await fetch(url, fetchOptions);
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`);
-  }
+//   if (!response.ok) {
+//     throw new Error(`HTTP error! Status: ${response.status}`);
+//   }
 
-  const responseData = (await response.json()) as Record<string, unknown>[];
-  return responseData;
-};
+//   const responseData = (await response.json()) as Record<string, unknown>[];
+//   return responseData;
+// };
 
 
 export async function getMockGreenhouseData(): Promise<MockData> {

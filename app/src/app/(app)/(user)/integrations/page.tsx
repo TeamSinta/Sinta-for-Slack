@@ -24,7 +24,7 @@ export default async function Integrations() {
                     />
                     <IntegrationCard
                         name="Greenhouse"
-                        imageUrl="https://assets-global.website-files.com/62fe5b9ef9e612fe4fed7ff1/63bf412289101209d218c1b1_g-icon-evergreen.png"
+                        imageUrl="https://pbs.twimg.com/profile_images/1544425861893558272/V7s98SAp_400x400.jpg"
                         isConnected={slackIntegration}
                         buttonText="Integrate"
                         integrationUrl="https://slack.com/oauth/v2/authorize?client_id=4416099431878.6969999702627&scope=commands,incoming-webhook,channels:manage,chat:write,channels:write.invites,im:write&user_scope=channels:write"
