@@ -11,20 +11,12 @@
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
 import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
-import { env } from "@/env";
-import { headers } from "next/headers";
+
 import { siteUrls } from "@/config/urls";
 import { fetchScorecard } from "@/hooks/mock-data";
 
 // Define the type for the response from Slack's OAuth endpoint
-interface SlackOAuthResponse {
-    access_token?: string;
-    team?: {
-        id?: string;
-        name?: string;
-    };
-    error?: string;
-}
+
 interface SlackInteraction {
     type: string;
     actions: SlackAction[];
@@ -36,13 +28,6 @@ interface SlackInteraction {
 interface SlackAction {
     action_id: string;
     value?: string;
-}
-
-// Define the type for the response from Slack's OAuth endpoint
-interface SlackOAuthResponse {
-    access_token?: string;
-    team?: { id?: string; name?: string };
-    error?: string;
 }
 
 export async function GET(req: NextRequest) {
@@ -57,7 +42,7 @@ export async function GET(req: NextRequest) {
     }
 
     const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
-    const clientSecret = env.SLACK_CLIENT_SECRET;
+    const clientSecret = process.env.SLACK_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
         return new NextResponse(
@@ -71,19 +56,29 @@ export async function GET(req: NextRequest) {
     try {
         const response = await fetch(
             `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`,
-            { method: "POST", headers: new Headers(headers()) },
+            { method: "POST" },
         );
-        const json = (await response.json()) as SlackOAuthResponse;
+        const json = await response.json();
         console.log(json);
-        if (json.access_token && json.team?.id) {
+
+        if (
+            json.access_token &&
+            json.refresh_token &&
+            json.expires_in &&
+            json.team?.id
+        ) {
+            // Calculate the expiry timestamp
+            const expiresAt = Math.floor(Date.now() / 1000) + json.expires_in;
+
+            // Store access token, refresh token, and expiry time securely
             const updateResponse = await setAccessToken(
                 json.access_token,
                 json.team.id,
+                json.refresh_token,
+                expiresAt,
             );
-            console.log(json.access_token);
 
             if (updateResponse === "OK") {
-                siteUrls;
                 const url = `${siteUrls.publicUrl}/success/${json.team.id}`;
                 return NextResponse.redirect(url);
             } else {
@@ -98,7 +93,7 @@ export async function GET(req: NextRequest) {
             return new NextResponse(
                 JSON.stringify({
                     message:
-                        "No access token or team id found in response from Slack's OAuth.",
+                        "No access token, refresh token, or team id found in response from Slack's OAuth.",
                 }),
                 { status: 500 },
             );

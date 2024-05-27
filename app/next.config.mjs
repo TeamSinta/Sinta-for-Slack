@@ -7,10 +7,15 @@ await import("./src/env.js");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Optionally, add any other Next.js config below
-    experimental: {
-        optimizePackageImports: ["lucide-react"],
-    },
+  // Optionally, add any other Next.js config below
+  experimental: {
+      optimizePackageImports: ["lucide-react"],
+  },
+  images: {
+      domains: ['assets-global.website-files.com'],
+  },
 };
+
+
 
 export default nextConfig;

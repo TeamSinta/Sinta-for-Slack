@@ -42,7 +42,7 @@ export const workflows = createTable("workflow", {
     alertType: varchar("alertType", { length: 255 }).notNull(),
     conditions: jsonb("conditions").notNull(), // Updated to JSONB
     triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
-    receipient: jsonb("receipient").notNull(),
+    recipient: jsonb("recipient").notNull(),
     status: workflowStatusEnum("status").default("Active").notNull(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     modifiedAt: timestamp("modifiedAt", { mode: "date" }),
@@ -187,8 +187,9 @@ export const organizations = createTable("organization", {
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
     slack_team_id: varchar("slack_team_id", { length: 255 }),
-    access_token: varchar("access_token", { length: 1024 }),
     slack_access_token: varchar("slack_access_token", { length: 1024 }),
+    slack_refresh_token: varchar("slack_refresh_token", { length: 1024 }),
+    token_expiry: integer("token_expiry"), // Stores UNIX timestamp of token expiry
     incoming_webhook_url: varchar("incoming_webhook_url", { length: 1024 }),
 });
 

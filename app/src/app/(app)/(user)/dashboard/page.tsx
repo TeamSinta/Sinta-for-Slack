@@ -2,7 +2,7 @@ import { AppPageShell } from "@/app/(app)/_components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import homepageicon from "../../../../../public/fistbump.png";
 import slackLogo from "../../../../../public/slack-logo.png";
-import greenhouse from "../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../public/greenhouseLogo.png";
 
 import {
     CheckCircleIcon,
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                                     text="Connected"
                                 />
                                 <StatusIndicator
-                                    icon={greenhouse}
+                                    icon={greenhouseLogo}
                                     color="green-500 dark:text-green-400"
                                     text="Connected"
                                 />

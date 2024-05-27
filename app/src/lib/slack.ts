@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
-import { getAccessToken } from "@/server/actions/slack/query";
 import { env } from "@/env";
+import { type Candidate } from "@/types/greenhouse";
+import { type WorkflowRecipient } from "@/types/workflows";
 
 export async function log(message: string) {
     console.log(message);
@@ -72,201 +75,51 @@ export async function verifyRequest(req: NextRequest) {
     }
 }
 
-interface SlackBlock {
-    type: string;
-    text?: {
-        type: string;
-        text: string;
-        emoji?: boolean;
-    };
-    elements?: Element[];
-    accessory?: Element; // For blocks that include buttons or other interactive elements as accessories
+export function filterProcessedForSlack(
+    candidates: Candidate[],
+    workflow: WorkflowRecipient,
+): Record<string, string>[] {
+    return candidates.map((candidate) => {
+        const result: Record<string, string> = {};
+
+        workflow.messageFields.forEach((field) => {
+            switch (field) {
+                case "name":
+                    result[field] = `${candidate.first_name} ${candidate.last_name}`;
+                    break;
+                case "title":
+                    result[field] = candidate.title || "Not provided";
+                    break;
+                case "recruiter_name":
+                    result[field] = candidate.recruiter
+                        ? candidate.recruiter.name
+                        : "No recruiter";
+                    break;
+                case "coordinator_name":
+                    result[field] = candidate.coordinator
+                        ? candidate.coordinator.name
+                        : "No coordinator";
+                    break;
+                default:
+                    const candidateField = candidate[field as keyof Candidate];
+                    result[field] = getFieldValue(candidateField, field);
+                    break;
+            }
+        });
+
+        return result;
+    });
 }
 
-interface Element {
-    type: string;
-    text?:
-        | {
-              type: string;
-              text: string;
-              emoji?: boolean;
-          }
-        | string; // Allowing both object and string types for text
-    value?: string;
-    action_id?: string;
-    options?: Option[];
-}
-
-interface Option {
-    text: {
-        type: string;
-        text: string;
-        emoji?: boolean;
-    };
-    value: string;
-}
-
-interface SlackData {
-    // Ensure this is passed where needed
-    // Ensure this is passed where needed
-    scorecard_id: number | null; // Ensure this is passed where needed
-
-    questions: Question[];
-    interviewer: Interviewer;
-    interviewStep: string; // Previously `interview`, ensure consistency in naming
-    overallRecommendation: string; // Make sure this is passed to `configureBlocks`
-}
-
-interface InterviewData {
-    // Ensure this is passed where needed
-    teamId: string | null;
-    scorecard_id: number | null; // Ensure this is passed where needed
-    questions: Question[];
-    interviewer: Interviewer;
-    interviewStep: string; // Previously `interview`, ensure consistency in naming
-    overallRecommendation: string; // Make sure this is passed to `configureBlocks`
-}
-interface Interviewer {
-    id: number;
-    first_name: string;
-    last_name: string;
-    name: string;
-    employee_id: string;
-}
-
-interface Question {
-    id: number | null;
-    question: string;
-    answer: string;
-}
-export async function sendSlackMessage(interviewData: InterviewData) {
-    const {
-        teamId,
-        questions,
-        interviewer,
-        interviewStep,
-        overallRecommendation,
-        scorecard_id,
-    } = interviewData;
-
-    if (!teamId) {
-        console.error("No team ID provided, unable to send Slack message.");
-        return; // Exit the function or throw an error, depending on your error handling strategy
+function getFieldValue(field: unknown, fieldName: string): string {
+    if (field === undefined || field === null) {
+        return "Not available";
     }
-
-    const accessToken = await getAccessToken(teamId);
-    console.log(`Sending message to team ${teamId}`);
-    console.log(scorecard_id);
-
-    // Prepare blocks for the Slack message
-    const blocks = configureBlocks({
-        questions,
-        interviewer,
-        interviewStep, // Make sure `interviewStep` is being passed correctly
-        overallRecommendation,
-        scorecard_id, // Ensure this is correctly included
-    });
-
-    const response = await fetch("https://slack.com/api/chat.postMessage", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-            blocks: blocks,
-            channel: "U06URRX3V0S", // Update with actual channel ID
-        }),
-    });
-    console.log(response);
-
-    return { response };
+    if (typeof field === "object") {
+        return `[Object: ${fieldName}]`; // Provide a better description for objects
+    }
+    return String(field);
 }
-
-export const configureBlocks = ({
-    interviewer,
-    interviewStep,
-    overallRecommendation,
-    scorecard_id,
-}: SlackData) => {
-    const blocks: SlackBlock[] = [
-        {
-            type: "header",
-            text: {
-                type: "plain_text",
-                text: ":star2: Interview Wrap-Up Reminder :star2:",
-                emoji: true,
-            },
-        },
-        {
-            type: "context",
-            elements: [
-                {
-                    text: "Indicate your hiring recommendation (e.g., Proceed, On Hold, or Do Not Proceed).",
-                    type: "mrkdwn",
-                },
-            ],
-        },
-
-        {
-            type: "divider",
-        },
-        {
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: `*:bell: Action Required* \n \nHello ${interviewer.name}, thank you for completing your interview session for the Sales Development role. We hope it was an insightful conversation! Please complete your interview feedback to help us make an informed hiring decision.`,
-            },
-        },
-        {
-            type: "divider",
-        },
-
-        {
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: "*:memo: Scorecard* \n\n Please review the scorecard and submit your detailed feedback, highlighting the candidate's strengths and areas for improvement. Your insights are crucial for our hiring process.",
-            },
-        },
-        {
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: `*Interview Step*: ${interviewStep}`,
-            },
-        },
-        {
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: "*Click here to submit your feedback*:",
-            },
-            accessory: {
-                type: "button",
-                text: {
-                    type: "plain_text",
-                    text: "Complete Feedback", // Changed the button text to match the action_id previously used
-                    emoji: true,
-                },
-                value: `${scorecard_id}`, // Using dynamic value passed from the function parameters
-                action_id: "feedback_button", // Consistent with your previous usage
-            },
-        },
-
-        {
-            type: "context",
-            elements: [
-                {
-                    type: "mrkdwn",
-                    text: ":pushpin: Thank you for your contribution! Please ensure to submit your feedback within 24 hours.",
-                },
-            ],
-        },
-    ];
-
-    return blocks;
-};
 
 // export async function respondToSlack(
 //   res: NextApiResponse,

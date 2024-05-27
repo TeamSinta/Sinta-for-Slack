@@ -91,3 +91,27 @@ export interface Accessory {
 export interface SlackMessage {
     blocks: Block[];
 }
+
+export interface Candidate {
+    id: number;
+    first_name: string;
+    last_name: string;
+    company: string;
+    title: string;
+    recruiter: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        name: string;
+        employee_id: number | null;
+    };
+    coordinator: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        name: string;
+        employee_id: number | null;
+    };
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    [key: string]: any; // To handle dynamic properties like custom fields
+}
