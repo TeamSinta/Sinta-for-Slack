@@ -12,7 +12,7 @@
         "lint": "next lint",
         "lint-fix": "next lint . --fix",
         "start": "next start",
-        "prettier": "prettier --write --ignore-path .gitignore "
+        "prettier": "prettier --write --ignore-path .gitignore ."
     },
     "dependencies": {
         "@auth/drizzle-adapter": "^0.7.0",
