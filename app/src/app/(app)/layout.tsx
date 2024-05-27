@@ -16,9 +16,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <Suspense fallback={null}>
                 <NewUserSetup />
             </Suspense>
-            <Suspense fallback={null}>
+            {/* <Suspense fallback={null}>
                 <CreateFirstOrgForm />
-            </Suspense>
+            </Suspense> */}
         </Fragment>
     );
 }

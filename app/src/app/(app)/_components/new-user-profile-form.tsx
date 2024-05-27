@@ -71,7 +71,7 @@ export function NewUserProfileForm({
             await mutateAsync();
 
             await startAwaitableTransition(() => {
-                document.cookie = `${new_user_setup_step_cookie}${user.id}=${currentStep + 1}; path=/`;
+                document.cookie = `${new_user_setup_step_cookie}${user.id}=2; path=/`;
                 router.refresh();
             });
 
@@ -106,7 +106,7 @@ export function NewUserProfileForm({
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="alidotm"
+                                            placeholder="Erlich Bachman"
                                             {...field}
                                         />
                                     </FormControl>

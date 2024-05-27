@@ -11,23 +11,27 @@ export async function NewUserSetup() {
         return null;
     }
 
-    const currentStep =
-        cookies().get(`${new_user_setup_step_cookie}${user.id}`)?.value ?? 1;
+    // Retrieve the current step from cookies or default to 1 if not set
+    const cookieValue = cookies().get(`${new_user_setup_step_cookie}${user.id}`)?.value;
+    const currentStep = cookieValue ? parseInt(cookieValue, 10) : 1;
 
-    const forms = {
-        1: <NewUserProfileForm user={user} currentStep={Number(currentStep)} />,
-        2: (
-            <NewUserOrgForm
-                currentStep={Number(currentStep)}
-                userId={user?.id}
-            />
-        ),
+    // Debugging logs
+    console.log("Cookie value:", cookieValue);
+    console.log("Current step:", currentStep);
+
+    // Define the forms for each step
+    const forms: { [key: number]: JSX.Element } = {
+        1: <NewUserProfileForm user={user} currentStep={currentStep} />,
+        2: <NewUserOrgForm currentStep={currentStep} userId={user?.id} />,
     };
+
+    // Ensure the currentStep is valid (either 1 or 2)
+    const stepToShow = forms[currentStep] ? currentStep : 1;
 
     return (
         <div className="fixed inset-0 flex h-screen w-screen flex-col items-center justify-center bg-black/80">
             <div className="w-full max-w-xl">
-                {forms[currentStep as keyof typeof forms]}
+                {forms[stepToShow]}
             </div>
         </div>
     );
