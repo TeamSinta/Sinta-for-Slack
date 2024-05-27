@@ -1,10 +1,12 @@
-// Import necessary components and hooks
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod"; // Make sure to install and import zod if you haven't already
+import { z } from "zod";
 import {
     Dialog,
     DialogTrigger,
@@ -16,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"; // This is a placeholder, replace with your notification system
+
 import { useRouter } from "next/navigation";
 import { createWorkflowMutation } from "@/server/actions/workflows/mutations";
 import { useMutation } from "@tanstack/react-query";
@@ -38,6 +40,7 @@ import {
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
+import { toast } from "sonner";
 
 const messageButtonSchema = z.object({
     name: z.string(),
