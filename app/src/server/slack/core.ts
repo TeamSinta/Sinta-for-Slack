@@ -127,7 +127,6 @@ export async function getEmailsfromSlack(
         }
 
         const accessToken = await getAccessToken(slackTeamId);
-        console.log(accessToken);
         const response = await fetch("https://slack.com/api/users.list", {
             method: "GET",
             headers: {
@@ -135,7 +134,6 @@ export async function getEmailsfromSlack(
                 "Content-Type": "application/json",
             },
         });
-        console.log(response);
 
         if (!response.ok) {
             throw new Error("Failed to fetch users");
@@ -270,8 +268,6 @@ export async function sendSlackNotification(
             console.error(
                 `Failed to post message to channel ${channel}: ${errorResponse}`,
             );
-        } else {
-            console.log(`Message posted to channel ${channel}`);
         }
     }
 }
@@ -417,14 +413,10 @@ export async function sendSlackButtonNotification(
         });
 
         if (!response.ok) {
-          const errorResponse = await response.text();
-          console.error(
-              `Failed to post message to channel ${channel}: ${errorResponse}`,
-          );
-      } else {
-          console.log(`Message posted to channel ${channel}`);
-      }
-
-        console.log(JSON.stringify(attachments, null, 2));
+            const errorResponse = await response.text();
+            console.error(
+                `Failed to post message to channel ${channel}: ${errorResponse}`,
+            );
+        }
     }
 }

@@ -76,7 +76,6 @@ export async function GET(req: NextRequest) {
             { method: "POST" },
         );
         const json = await response.json();
-        console.log(json);
 
         if (
             json.access_token &&
@@ -169,7 +168,6 @@ async function updateSlackMessage(
 async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
     try {
         const { view, user, team } = payload;
-        console.log("View State:", JSON.stringify(view.state, null, 2));
 
         // Decode private_metadata
         const { response_url, message_blocks, attachments, candidate_id } =
@@ -192,8 +190,6 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
             slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
-
-        console.log(greenhouseUserId);
 
         let statusMessage = "";
         let emoji = "✅";
@@ -251,9 +247,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
 
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
-    console.log("Handling Slack Interaction", payload);
-    const { type, actions, trigger_id, team, response_url, message } =
-        payload;
+    const { type, actions, trigger_id, team, response_url, message } = payload;
 
     if (type === "block_actions") {
         const action = actions[0];
@@ -336,7 +330,6 @@ async function openModal(
         body: JSON.stringify(modalPayload),
     });
     const responseData = await response.json();
-    console.log("Modal open response:", responseData);
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },
@@ -560,7 +553,6 @@ async function createRejectCandidateModal(
 async function handleRejectCandidateSubmission(payload: SlackInteraction) {
     try {
         const { view, user, team } = payload;
-        console.log("View State:", JSON.stringify(view.state, null, 2));
 
         // Decode private_metadata
         const { response_url, message_blocks, attachments, candidate_id } =
@@ -588,8 +580,6 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
             slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
-
-        console.log(greenhouseUserId);
 
         let statusMessage = "";
         let emoji = "✅";

@@ -60,12 +60,10 @@ export async function POST() {
                         data,
                         workflow.conditions,
                     );
-                console.log(filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
                     filteredConditionsData,
                     workflow.recipient,
                 );
-                console.log(filteredSlackData);
 
                 await sendSlackButtonNotification(
                     filteredSlackData,

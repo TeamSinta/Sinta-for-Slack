@@ -90,17 +90,17 @@ async function matchUsers(
     );
 
     const userMapping: Record<string, string> = {};
-for (const greenhouseUserId in greenhouseUsers) {
-    const greenhouseUser = greenhouseUsers[greenhouseUserId];
-    if (greenhouseUser) {
-        const email = greenhouseUser.email;
-        const slackId = slackUserMap[email];
-        if (slackId) {
-            userMapping[greenhouseUser.id] = slackId; // Use Greenhouse user ID as the key
+    for (const greenhouseUserId in greenhouseUsers) {
+        const greenhouseUser = greenhouseUsers[greenhouseUserId];
+        if (greenhouseUser) {
+            const email = greenhouseUser.email;
+            const slackId = slackUserMap[email];
+            if (slackId) {
+                userMapping[greenhouseUser.id] = slackId; // Use Greenhouse user ID as the key
+            }
         }
     }
-}
-return userMapping;
+    return userMapping;
 }
 
 export async function filterProcessedForSlack(

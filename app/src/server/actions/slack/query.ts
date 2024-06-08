@@ -66,8 +66,6 @@ export async function refreshTokenIfNeeded(
             expires_in?: number;
             error?: string;
         } = await response.json();
-        console.log("REFRESHING", data);
-
         if (
             data.ok &&
             data.access_token &&
