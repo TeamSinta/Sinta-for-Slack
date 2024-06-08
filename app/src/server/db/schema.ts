@@ -191,6 +191,7 @@ export const organizations = createTable("organization", {
     slack_refresh_token: varchar("slack_refresh_token", { length: 1024 }),
     token_expiry: integer("token_expiry"), // Stores UNIX timestamp of token expiry
     incoming_webhook_url: varchar("incoming_webhook_url", { length: 1024 }),
+    greenhouse_api_token: varchar("greenhouse_api_token", { length: 255 }),
 });
 
 export const organizationsInsertSchema = createInsertSchema(organizations);

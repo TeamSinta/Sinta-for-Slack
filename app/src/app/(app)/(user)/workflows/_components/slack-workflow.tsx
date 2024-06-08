@@ -5,13 +5,18 @@
 
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from "@/components/ui/fancy.box";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
+import MessageButtons, {
+    type ButtonAction,
+    ButtonType,
+} from "./message-buttons";
+import slackLogo from "../../../../../../public/slack-logo.png";
+import Image from "next/image";
 
 const deliveryOptions = ["Group DM", "Direct Message", "Channels"];
 
@@ -26,9 +31,12 @@ const fields = [
     { value: "coordinator_name", label: "Coordinator Name", color: "" },
 ];
 
-interface MessageButton {
-    label: string;
-    action: string;
+interface SlackWorkflowProps {
+    onOpeningTextChange: (text: string) => void;
+    onFieldsSelect: (fields: string[]) => void;
+    onButtonsChange: (buttons: ButtonAction[]) => void;
+    onDeliveryOptionChange: (option: string) => void;
+    onRecipientsChange: (recipients: Option[]) => void;
 }
 
 type Option = {
@@ -36,14 +44,6 @@ type Option = {
     label: string;
     source: "slack" | "greenhouse"; // Define possible sources here
 };
-
-interface SlackWorkflowProps {
-    onOpeningTextChange: (text: string) => void;
-    onFieldsSelect: (fields: string[]) => void;
-    onButtonsChange: (buttons: MessageButton[]) => void;
-    onDeliveryOptionChange: (option: string) => void;
-    onRecipientsChange: (recipients: Option[]) => void;
-}
 
 const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onOpeningTextChange,
@@ -55,7 +55,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
-    const [buttons, setButtons] = useState<MessageButton[]>([]);
+    const [buttons, setButtons] = useState<ButtonAction[]>([]);
     const [deliveryOption, setDeliveryOption] = useState("");
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
@@ -74,7 +74,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         onFieldsSelect(selectedOptions);
     };
 
-    const handleButtonsChange = (newButtons: MessageButton[]) => {
+    const handleButtonsChange = (newButtons: ButtonAction[]) => {
         setButtons(newButtons);
         onButtonsChange(newButtons);
     };
@@ -88,14 +88,18 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         setSelectedRecipients(selectedOptions);
         onRecipientsChange(selectedOptions); // Directly passing the array of objects
     };
+
     const addButton = () => {
-        const newButtons = [...buttons, { label: "", action: "" }];
+        const newButtons = [
+            ...buttons,
+            { label: "", action: "", type: ButtonType.UpdateButton },
+        ];
         handleButtonsChange(newButtons);
     };
 
     const updateButton = (
         index: number,
-        key: keyof MessageButton,
+        key: keyof ButtonAction,
         value: string,
     ) => {
         const newButtons = [...buttons];
@@ -165,8 +169,16 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
 
     return (
         <div className="workflow-container mt-4">
-            <Label className="text-lg font-bold">Configure Slack Alert</Label>
-
+            <div className="flex ">
+                <Label className="text-xl font-bold">
+                    Configure Slack Alert{" "}
+                </Label>
+                <Image
+                    src={slackLogo}
+                    alt={`slack-logo`}
+                    className="ml-2 h-7 w-7"
+                />{" "}
+            </div>
             {/* Opening Text */}
             <div className="my-4">
                 <Label>Opening Text</Label>
@@ -188,43 +200,12 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
             </div>
 
             {/* Message Buttons */}
-            <div className="my-4 flex flex-col">
-                <Label>Message Buttons</Label>
-                {buttons.map((button, idx) => (
-                    <div key={idx} className="mt-4 flex items-center gap-2">
-                        <Input
-                            value={button.label}
-                            onChange={(e) =>
-                                updateButton(idx, "label", e.target.value)
-                            }
-                            placeholder="Button label"
-                        />
-                        <Input
-                            value={button.action}
-                            onChange={(e) =>
-                                updateButton(idx, "action", e.target.value)
-                            }
-                            placeholder="Link To"
-                        />
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeButton(idx)}
-                        >
-                            Remove
-                        </Button>
-                    </div>
-                ))}
-                <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    onClick={addButton}
-                    className="my-4"
-                >
-                    + Add button
-                </Button>
-            </div>
+            <MessageButtons
+                buttons={buttons}
+                addButton={addButton}
+                updateButton={updateButton}
+                removeButton={removeButton}
+            />
 
             {/* Message Delivery */}
             <div className="my-4">

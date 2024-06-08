@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-
 
 "use server";
 
@@ -27,7 +31,9 @@ interface SlackApiResponse<T> {
     members?: T[];
 }
 
-export async function getChannels(): Promise<{ value: string; label: string }[]> {
+export async function getChannels(): Promise<
+    { value: string; label: string }[]
+> {
     try {
         const { currentOrg = {} } = (await getOrganizations()) || {};
         if (!currentOrg.slack_team_id) {
@@ -36,13 +42,16 @@ export async function getChannels(): Promise<{ value: string; label: string }[]>
         }
 
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
-        const response = await fetch("https://slack.com/api/conversations.list", {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
+        const response = await fetch(
+            "https://slack.com/api/conversations.list",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
             },
-        });
+        );
 
         if (!response.ok) {
             throw new Error("Failed to fetch channels");
@@ -63,7 +72,9 @@ export async function getChannels(): Promise<{ value: string; label: string }[]>
     }
 }
 
-export async function getActiveUsers(): Promise<{ value: string; label: string }[]> {
+export async function getActiveUsers(): Promise<
+    { value: string; label: string }[]
+> {
     try {
         const { currentOrg = {} } = (await getOrganizations()) || {};
         if (!currentOrg.slack_team_id) {
@@ -90,6 +101,53 @@ export async function getActiveUsers(): Promise<{ value: string; label: string }
                 .map((member) => ({
                     value: member.id,
                     label: `@${member.real_name}`,
+                }));
+        } else {
+            throw new Error(data.error ?? "Error fetching users");
+        }
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        return [];
+    }
+}
+
+export async function getEmailsfromSlack(
+    teamId?: string,
+): Promise<{ value: string; label: string; email: string }[]> {
+    try {
+        let slackTeamId = teamId;
+
+        if (!slackTeamId) {
+            const { currentOrg = {} } = (await getOrganizations()) || {};
+            if (!currentOrg.slack_team_id) {
+                console.error("No Slack team ID available.");
+                return [];
+            }
+            slackTeamId = currentOrg.slack_team_id;
+        }
+
+        const accessToken = await getAccessToken(slackTeamId);
+        const response = await fetch("https://slack.com/api/users.list", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch users");
+        }
+
+        const data: SlackApiResponse<SlackUser> = await response.json();
+
+        if (data.ok && data.members) {
+            return data.members
+                .filter((member) => !member.deleted && member.profile.email)
+                .map((member) => ({
+                    value: member.id,
+                    label: `@${member.real_name}`,
+                    email: member.profile.email,
                 }));
         } else {
             throw new Error(data.error ?? "Error fetching users");
@@ -139,44 +197,58 @@ export async function sendSlackNotification(
                     {
                         type: "divider",
                     },
-                    ...filteredSlackData.flatMap((data) => [
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: workflowRecipient.messageFields
-                                    .map((field: string) => {
-                                        const fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, " ");
-                                        const fieldValue = data[field] ?? "Not provided";
-                                        return `*${fieldName}*: ${String(fieldValue)}`;
-                                    })
-                                    .join("\n"),
-                            },
-                        },
-                        ...(workflowRecipient.messageButtons.length > 0
-                            ? [
-                                  {
-                                      type: "actions",
-                                      elements: workflowRecipient.messageButtons.map((button) => ({
-                                          type: "button",
-                                          text: {
-                                              type: "plain_text",
-                                              text: button.label,
-                                              emoji: true,
+                    ...filteredSlackData
+                        .map((data) => {
+                            return [
+                                {
+                                    type: "section",
+                                    text: {
+                                        type: "mrkdwn",
+                                        text: workflowRecipient.messageFields
+                                            .map((field: string) => {
+                                                const fieldName =
+                                                    field
+                                                        .charAt(0)
+                                                        .toUpperCase() +
+                                                    field
+                                                        .slice(1)
+                                                        .replace(/_/g, " ");
+                                                const fieldValue =
+                                                    data[field] ??
+                                                    "Not provided";
+                                                return `*${fieldName}*: ${String(fieldValue)}`;
+                                            })
+                                            .join("\n"),
+                                    },
+                                },
+                                ...(workflowRecipient.messageButtons.length > 0
+                                    ? [
+                                          {
+                                              type: "actions",
+                                              elements:
+                                                  workflowRecipient.messageButtons.map(
+                                                      (button) => ({
+                                                          type: "button",
+                                                          text: {
+                                                              type: "plain_text",
+                                                              text: button.label,
+                                                              emoji: true,
+                                                          },
+                                                          url: button.action,
+                                                          value: "click_me_123",
+                                                          action_id:
+                                                              "button_action",
+                                                      }),
+                                                  ),
                                           },
-                                          url: button.action,
-                                          value: "click_me_123",
-                                          action_id: "button_action",
-                                      })),
-                                  },
-                              ]
-                            : []),
-                    ]),
+                                      ]
+                                    : []),
+                            ];
+                        })
+                        .flat(), // Flatten the array of arrays
                 ],
             },
         ];
-
-        console.log(JSON.stringify(attachments, null, 2));
 
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
@@ -190,12 +262,12 @@ export async function sendSlackNotification(
                 blocks: blocks,
             }),
         });
-        console.log(response);
+
         if (!response.ok) {
             const errorResponse = await response.text();
-            console.error(`Failed to post message to channel ${channel}: ${errorResponse}`);
-        } else {
-            console.log(`Message posted to channel ${channel}`);
+            console.error(
+                `Failed to post message to channel ${channel}: ${errorResponse}`,
+            );
         }
     }
 }
@@ -232,56 +304,100 @@ export async function sendSlackButtonNotification(
                     {
                         type: "divider",
                     },
-                    ...filteredSlackData.flatMap((data) => [
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: workflowRecipient.messageFields
-                                    .map((field: string) => {
-                                        const fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, " ");
-                                        const fieldValue = data[field] ?? "Not provided";
-                                        return `*${fieldName}*: ${String(fieldValue)}`;
-                                    })
-                                    .join("\n"),
-                            },
-                        },
-                    ]),
-                    {
-                        type: "actions",
-                        block_id: "Sc16L",
-                        elements: [
-                            {
-                                type: "button",
-                                action_id: "move_to_next_stage_action",
-                                text: {
-                                    type: "plain_text",
-                                    text: "Move to Next Stage",
-                                    emoji: true,
+                    ...filteredSlackData
+                        .map((data) => {
+                            const candidateId = data.candidate_id;
+                            return [
+                                {
+                                    type: "section",
+                                    text: {
+                                        type: "mrkdwn",
+                                        text: workflowRecipient.messageFields
+                                            .map((field: string) => {
+                                                if (field === "candidate_id")
+                                                    return ""; // Skip candidate_id in the message
+                                                let fieldName: string;
+                                                switch (field) {
+                                                    case "name":
+                                                        fieldName =
+                                                            "Candidate's Name";
+                                                        break;
+                                                    case "title":
+                                                        fieldName = "Role";
+                                                        break;
+                                                    default:
+                                                        fieldName =
+                                                            field
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                            field
+                                                                .slice(1)
+                                                                .replace(
+                                                                    /_/g,
+                                                                    " ",
+                                                                );
+                                                        break;
+                                                }
+                                                const fieldValue =
+                                                    data[field] ??
+                                                    "Not provided";
+                                                return `*${fieldName}*: ${String(fieldValue)}`;
+                                            })
+                                            .filter(Boolean)
+                                            .join("\n"),
+                                    },
                                 },
-                                style: "primary",
-                                value: "move_to_next_stage",
-                                url: "https://app.greenhouse.io",
-                            },
-                            {
-                                type: "button",
-                                action_id: "reject_candidate_action",
-                                text: {
-                                    type: "plain_text",
-                                    text: "Reject Candidate",
-                                    emoji: true,
+                                {
+                                    type: "actions",
+                                    block_id: "Sc16L",
+                                    elements:
+                                        workflowRecipient.messageButtons.map(
+                                            (button) => {
+                                                const buttonElement: any = {
+                                                    type: "button",
+                                                    text: {
+                                                        type: "plain_text",
+                                                        text: button.label,
+                                                        emoji: true,
+                                                    },
+                                                    value: `${button.updateType ?? button.type}_${candidateId}`, // Include candidateId in the value
+                                                };
+
+                                                if (
+                                                    button.type ===
+                                                    "UpdateButton"
+                                                ) {
+                                                    if (
+                                                        button.updateType ===
+                                                        "MoveToNextStage"
+                                                    ) {
+                                                        buttonElement.style =
+                                                            "primary";
+                                                        buttonElement.action_id = `move_to_next_stage_${candidateId}`;
+                                                    } else if (
+                                                        button.updateType ===
+                                                        "RejectCandidate"
+                                                    ) {
+                                                        buttonElement.style =
+                                                            "danger";
+                                                        buttonElement.action_id = `reject_candidate_${candidateId}`;
+                                                    }
+                                                } else {
+                                                    buttonElement.action_id =
+                                                        button.action ||
+                                                        `${button.type.toLowerCase()}_action_${candidateId}`;
+                                                }
+
+                                                return buttonElement;
+                                            },
+                                        ),
                                 },
-                                style: "danger",
-                                value: "reject_candidate",
-                                url: "https://app.greenhouse.io",
-                            },
-                        ],
-                    },
+                            ];
+                        })
+                        .flat(), // Flatten the array of arrays
                 ],
             },
         ];
-
-        console.log(JSON.stringify(attachments, null, 2));
 
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
@@ -295,12 +411,12 @@ export async function sendSlackButtonNotification(
                 blocks: blocks,
             }),
         });
-        console.log(response);
+
         if (!response.ok) {
             const errorResponse = await response.text();
-            console.error(`Failed to post message to channel ${channel}: ${errorResponse}`);
-        } else {
-            console.log(`Message posted to channel ${channel}`);
+            console.error(
+                `Failed to post message to channel ${channel}: ${errorResponse}`,
+            );
         }
     }
 }

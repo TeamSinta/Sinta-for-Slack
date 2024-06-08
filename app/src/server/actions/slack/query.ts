@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-
 "use server";
 
 import { db } from "@/server/db";
@@ -67,8 +66,6 @@ export async function refreshTokenIfNeeded(
             expires_in?: number;
             error?: string;
         } = await response.json();
-        console.log("REFRESHING", data);
-
         if (
             data.ok &&
             data.access_token &&

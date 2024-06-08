@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
@@ -10,40 +13,12 @@ import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import { env } from "@/env";
 import { filterProcessedForSlack } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
     sendSlackNotification,
 } from "@/server/slack/core";
-import { type z } from "zod";
-import { type workflowFormSchema } from "@/app/(app)/(user)/workflows/_components/new-workflowForm";
-
-// Define your API token
-const API_TOKEN = env.GREENHOUSE_API_HARVEST;
-
-export type Workflow = z.infer<typeof workflowFormSchema>;
-
-interface CustomFetchOptions extends RequestInit {
-    headers?: HeadersInit;
-}
-
-// Custom fetch wrapper function with authorization header
-const customFetch = async (
-    url: string,
-    options: CustomFetchOptions = {}
-): Promise<Record<string, unknown>[]> => {
-    const headers: HeadersInit = {
-        Authorization: `Basic ${btoa(API_TOKEN + ":")}`, // Encode API token for Basic Auth
-        ...options.headers,
-    };
-    const response = await fetch(url, { ...options, headers });
-    if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const responseData = (await response.json()) as Record<string, unknown>[];
-    return responseData;
-};
+import { customFetch } from "@/utils/fetch";
 
 export async function POST() {
     try {
@@ -51,14 +26,13 @@ export async function POST() {
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
-            if (workflow.alertType === "timebased") {
+            if (workflow.alertType === "time-based") {
                 const { apiUrl } = workflow.triggerConfig;
-
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
 
                 const filteredConditionsData = filterDataWithConditions(
                     data,
-                    workflow.conditions
+                    workflow.conditions,
                 );
 
                 if (filteredConditionsData.length === 0) {
@@ -66,31 +40,34 @@ export async function POST() {
                 } else {
                     const filteredSlackData = filterProcessedForSlack(
                         filteredConditionsData,
-                        workflow.recipient
+                        workflow.recipient,
                     );
                     await sendSlackNotification(
                         filteredSlackData,
-                        workflow.recipient
+                        workflow.recipient,
                     );
                 }
             } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
-
-                const data = await customFetch(apiUrl, processor ? { body: processor } : {}); // Fetch data using custom fetch wrapper
+                const data = await customFetch(
+                    apiUrl,
+                    processor ? { query: processor } : {},
+                );
 
                 // Filter data based on the "stuck-in-stage" conditions
-                const filteredConditionsData = await filterStuckinStageDataConditions(
-                    data,
-                    workflow.conditions
+                const filteredConditionsData =
+                    await filterStuckinStageDataConditions(
+                        data,
+                        workflow.conditions,
+                    );
+                const filteredSlackData = await filterProcessedForSlack(
+                    filteredConditionsData,
+                    workflow.recipient,
                 );
 
-                const filteredSlackData = filterProcessedForSlack(
-                    filteredConditionsData,
-                    workflow.recipient
-                );
                 await sendSlackButtonNotification(
                     filteredSlackData,
-                    workflow.recipient
+                    workflow.recipient,
                 );
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
@@ -100,7 +77,7 @@ export async function POST() {
         if (shouldReturnNull) {
             return new NextResponse(
                 JSON.stringify({ message: "No workflows to process" }),
-                { status: 200 }
+                { status: 200 },
             );
         }
 
@@ -108,7 +85,7 @@ export async function POST() {
             JSON.stringify({ message: "Workflows processed successfully" }),
             {
                 status: 200,
-            }
+            },
         );
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
@@ -119,7 +96,7 @@ export async function POST() {
             }),
             {
                 status: 500,
-            }
+            },
         );
     }
 }

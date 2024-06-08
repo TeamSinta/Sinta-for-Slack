@@ -8,20 +8,37 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 // src/pages/api/slack/oauth.ts
+
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
 import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
-import { fetchScorecard } from "@/hooks/mock-data";
+import {
+    fetchCandidateDetails,
+    fetchGreenhouseUsers,
+    fetchRejectReasons,
+    fetchStagesForJob,
+    matchSlackToGreenhouseUsers,
+    moveToNextStageInGreenhouse,
+} from "@/server/greenhouse/core";
+import { getEmailsfromSlack } from "@/server/slack/core";
 
 // Define the type for the response from Slack's OAuth endpoint
-
 interface SlackInteraction {
     type: string;
     actions: SlackAction[];
     trigger_id: string;
     team: { id: string };
+    message?: {
+        blocks: any[];
+        attachments: any[];
+    };
+    response_url: string;
+    view?: {
+        state: any;
+        private_metadata: string;
+    };
 }
 
 // Define the type for a Slack action
@@ -59,7 +76,6 @@ export async function GET(req: NextRequest) {
             { method: "POST" },
         );
         const json = await response.json();
-        console.log(json);
 
         if (
             json.access_token &&
@@ -107,8 +123,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-async function handleJsonPost(data: JSON) {
-    console.log("Handling JSON POST", data);
+async function handleJsonPost(_data: JSON) {
     return new NextResponse(
         JSON.stringify({ message: "JSON POST handled successfully" }),
         {
@@ -118,35 +133,178 @@ async function handleJsonPost(data: JSON) {
     );
 }
 
+async function updateSlackMessage(
+    responseUrl: string,
+    blocks: any,
+    attachments: any,
+) {
+    try {
+        if (!responseUrl) {
+            throw new Error("Invalid response URL.");
+        }
+
+        const response = await fetch(responseUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                replace_original: true,
+                blocks: blocks,
+                attachments: attachments,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update Slack message.");
+        }
+
+        console.log("Slack message updated successfully.");
+    } catch (error) {
+        console.error("Error updating Slack message:", error);
+    }
+}
+
+async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
+    try {
+        const { view, user, team } = payload;
+
+        // Decode private_metadata
+        const { response_url, message_blocks, attachments, candidate_id } =
+            JSON.parse(view.private_metadata);
+
+        const selectedStageId =
+            view.state.values.stage_select_block.stage_select.selected_option
+                .value;
+
+        // Acknowledge the modal submission to close the modal
+        const acknowledgmentResponse = NextResponse.json({}, { status: 200 });
+
+        // Fetch Slack users based on the team ID from the payload
+        const slackUsers = await getEmailsfromSlack(team.id);
+
+        // Match Slack user to Greenhouse user
+        const greenhouseUsers = await fetchGreenhouseUsers();
+        const userMapping = await matchSlackToGreenhouseUsers(
+            greenhouseUsers,
+            slackUsers,
+        );
+        const greenhouseUserId = userMapping[user.id];
+
+        let statusMessage = "";
+        let emoji = "✅";
+        if (!greenhouseUserId) {
+            statusMessage =
+                "Failed to find corresponding Greenhouse user for the Slack user. This has been submitted.";
+            emoji = "❌";
+        } else {
+            const result = await moveToNextStageInGreenhouse(
+                candidate_id,
+                selectedStageId,
+                greenhouseUserId,
+            );
+            if (result.success) {
+                statusMessage =
+                    "Candidate moved to the next stage successfully.";
+            } else {
+                statusMessage = `Failed to move candidate to the next stage: ${result.error}.`;
+                emoji = "❌";
+            }
+        }
+
+        // Add the new text message as a context block below the text and above the action buttons
+        const contextBlock = {
+            type: "context",
+            elements: [
+                {
+                    type: "mrkdwn",
+                    text: `${emoji} ${statusMessage}`,
+                },
+            ],
+        };
+
+        // Find the index of the first actions block
+        const actionBlockIndex = attachments[0].blocks.findIndex(
+            (block: any) => block.type === "actions",
+        );
+
+        if (actionBlockIndex !== -1) {
+            // Insert the context block before the actions block
+            attachments[0].blocks.splice(actionBlockIndex, 0, contextBlock);
+        } else {
+            // Add the context block to the end if no actions block is found
+            attachments[0].blocks.push(contextBlock);
+        }
+
+        await updateSlackMessage(response_url, message_blocks, attachments);
+
+        return acknowledgmentResponse;
+    } catch (error) {
+        console.error("Error handling submission:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
-    console.log("Handling Slack Interaction", payload);
-    const { type, actions, trigger_id, team } = payload;
+    const { type, actions, trigger_id, team, response_url, message } = payload;
 
     if (type === "block_actions") {
-        const action = actions.find(
-            (action) => action.action_id === "feedback_button",
-        );
-        const actionValue = actions[0];
-        if (!actionValue) {
+        const action = actions[0];
+        if (!action?.value) {
             console.error("No value found in the action");
-            // Handle this situation appropriately, maybe return or throw an error
-            return;
+            return new NextResponse(
+                JSON.stringify({ error: "No value found in the action" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
-        const value = actionValue.value;
+        const { action_id } = action;
+        const accessToken = await getAccessToken(team.id);
 
-        if (!value) {
-            console.error("No value found in the action");
-            // Handle this situation appropriately, maybe return or throw an error
-            return;
-        }
-        if (action) {
-            const accessToken = await getAccessToken(team.id);
-            const modalPayload = await createModalPayload(trigger_id, value);
+        // Parse candidate ID from action_id
+        const candidateIdMatch = action_id.match(/_(\d+)$/);
+        const candidateId = candidateIdMatch ? candidateIdMatch[1] : null;
+
+        if (action_id.startsWith("move_to_next_stage_")) {
+            // Encode necessary information in private_metadata
+            const privateMetadata = JSON.stringify({
+                response_url,
+                message_blocks: message.blocks,
+                attachments: message.attachments,
+                candidate_id: candidateId,
+            });
+
+            const modalPayload = await createMoveToNextStageModal(
+                trigger_id,
+                candidateId,
+                privateMetadata,
+            );
+            return openModal(modalPayload, accessToken);
+        } else if (action_id.startsWith("reject_candidate_")) {
+            // Encode necessary information in private_metadata
+            const privateMetadata = JSON.stringify({
+                response_url,
+                message_blocks: message.blocks,
+                attachments: message.attachments,
+                candidate_id: candidateId,
+            });
+
+            const modalPayload = await createRejectCandidateModal(
+                trigger_id,
+                candidateId,
+                privateMetadata,
+            );
             return openModal(modalPayload, accessToken);
         }
     } else if (type === "view_submission") {
-        return handleModalSubmission(payload);
+        if (payload.view.callback_id === "submit_move_to_next_stage") {
+            return handleMoveToNextStageSubmission(payload);
+        } else if (payload.view.callback_id === "submit_reject_candidate") {
+            return handleRejectCandidateSubmission(payload);
+        }
     }
 
     return new NextResponse(
@@ -172,175 +330,311 @@ async function openModal(
         body: JSON.stringify(modalPayload),
     });
     const responseData = await response.json();
-    console.log("Modal open response:", responseData);
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },
     });
 }
 
-// Function to handle modal submission
-async function handleModalSubmission(payload: any) {
-    const { team, user } = payload;
-    const accessToken = await getAccessToken(team.id); // Assuming a function to get access tokens
-
-    // Log for debugging
-    console.log("Attempting to post submission acknowledgment message.");
-
-    // Post a message to the user or channel as needed
-    const postMessageResponse = await postMessage(user.id, accessToken);
-
-    // Check if the message was posted successfully
-    if (postMessageResponse.ok) {
-        console.log("Acknowledgment message posted successfully.");
-    } else {
-        console.error("Failed to post message:", postMessageResponse.error);
-    }
-
-    // Important: Respond with an empty body to close the modal
-    return new Response(null, {
-        status: 200, // Just a status 200 with no content
-    });
-}
-
-// Function to post a message to the user or channel
-async function postMessage(
-    userId: string,
-    accessToken: string | null | undefined,
+async function createMoveToNextStageModal(
+    trigger_id: string,
+    candidateId: string,
+    privateMetadata: string,
 ) {
-    const url = "https://slack.com/api/chat.postMessage";
-    const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-    };
-    const body = JSON.stringify({
-        channel: userId, // Direct message to the user who submitted the modal
-        text: "Thank you! Feedback Received :thumbsup:",
-    });
+    try {
+        // Fetch candidate details to get the job ID
+        const candidateDetails = await fetchCandidateDetails(candidateId);
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: body,
-    });
+        // Extract Job ID from candidate details
+        let jobId;
+        if (
+            candidateDetails.applications &&
+            candidateDetails.applications.length > 0
+        ) {
+            const application = candidateDetails.applications[0];
+            if (application.jobs && application.jobs.length > 0) {
+                jobId = application.jobs[0].id;
+            } else {
+                throw new Error("Job ID not found in the application");
+            }
+        } else {
+            throw new Error("No applications found for the candidate");
+        }
 
-    return response.json(); // Parses the JSON response and returns it
-}
-// Creating the modal payload separately
-async function createModalPayload(trigger_id: string, teamId: number) {
-    const interviewData = await fetchScorecard(teamId); // Assuming this fetches relevant data
-    if (!interviewData) {
-        throw new Error("Scorecard data is missing."); // Throw an error to be handled by the caller
-    }
+        // Fetch stages for the job
+        const stages = await fetchStagesForJob(jobId);
 
-    return {
-        trigger_id: trigger_id,
-        view: {
-            type: "modal",
-            callback_id: "submit_feedback",
-            title: {
-                type: "plain_text",
-                text: "Scorecard Feedback",
-                emoji: true,
-            },
-            submit: {
-                type: "plain_text",
-                text: "Submit",
-                emoji: true,
-            },
-            close: {
-                type: "plain_text",
-                text: "Cancel",
-                emoji: true,
-            },
-            blocks: [
-                {
-                    type: "header",
-                    text: {
-                        type: "plain_text",
-                        text: `Feedback for ${interviewData.interviewer.name}`,
-                        emoji: true,
-                    },
+        // Create and return the modal payload
+        return {
+            trigger_id: trigger_id,
+            view: {
+                type: "modal",
+                callback_id: "submit_move_to_next_stage",
+                private_metadata: privateMetadata, // Store candidate ID and other info in private metadata
+                title: {
+                    type: "plain_text",
+                    text: "Move to Next Stage",
+                    emoji: true,
                 },
-                {
-                    type: "section",
-                    text: {
-                        type: "mrkdwn",
-                        text: `*Interview Step:* ${interviewData.interview_step.name}`,
-                    },
+                submit: {
+                    type: "plain_text",
+                    text: "Submit",
+                    emoji: true,
                 },
-                {
-                    type: "section",
-                    text: {
-                        type: "mrkdwn",
-                        text: ":memo: Please provide your feedback on the following aspects of the interview. Your insights are invaluable.",
-                    },
+                close: {
+                    type: "plain_text",
+                    text: "Cancel",
+                    emoji: true,
                 },
-
-                {
-                    type: "divider",
-                },
-                ...interviewData.questions.map((question) => ({
-                    type: "input",
-
-                    label: {
-                        type: "plain_text",
-                        text: question.question,
-                        emoji: true,
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "Select the next stage for this candidate:",
+                        },
                     },
-                    element: {
-                        type: "plain_text_input",
-                        multiline: true,
-                        action_id: `answer_${question.id}`,
-                    },
-                })),
-                {
-                    type: "input",
-                    block_id: "overall_recommendation",
-                    label: {
-                        type: "plain_text",
-                        text: "Overall Recommendation",
-                        emoji: true,
-                    },
-                    element: {
-                        type: "static_select",
-                        placeholder: {
+                    {
+                        type: "input",
+                        block_id: "stage_select_block",
+                        label: {
                             type: "plain_text",
-                            text: "Choose recommendation",
+                            text: "Stage",
                             emoji: true,
                         },
-                        options: [
-                            {
+                        element: {
+                            type: "static_select",
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Select stage",
+                                emoji: true,
+                            },
+                            options: stages.map((stage) => ({
                                 text: {
                                     type: "plain_text",
-                                    text: "👍 Recommend",
+                                    text: stage.name,
                                     emoji: true,
                                 },
-                                value: "recommend",
-                            },
-                            {
-                                text: {
-                                    type: "plain_text",
-                                    text: "👎 Don't Recommend",
-                                    emoji: true,
-                                },
-                                value: "do_not_recommend",
-                            },
-                            {
-                                text: {
-                                    type: "plain_text",
-                                    text: "💯 Highly Recommend",
-                                    emoji: true,
-                                },
-                                value: "highly_recommend",
-                            },
-                        ],
-                        action_id: "recommendation_select",
+                                value: stage.id.toString(),
+                            })),
+                            action_id: "stage_select",
+                        },
                     },
+                ],
+            },
+        };
+    } catch (error) {
+        console.error("Error creating move to next stage modal:", error);
+        throw error; // Ensure the error is handled by the caller
+    }
+}
+
+async function createRejectCandidateModal(
+    trigger_id: string,
+    _candidateId: string,
+    privateMetadata: string,
+) {
+    try {
+        // Fetch reject reasons and email templates
+        const rejectReasons = await fetchRejectReasons();
+        const emailTemplates = await fetchRejectReasons();
+
+        // Create and return the modal payload
+        return {
+            trigger_id: trigger_id,
+            view: {
+                type: "modal",
+                callback_id: "submit_reject_candidate",
+                private_metadata: privateMetadata, // Store candidate ID in private metadata
+                title: {
+                    type: "plain_text",
+                    text: "Reject Candidate",
+                    emoji: true,
+                },
+                submit: {
+                    type: "plain_text",
+                    text: "Submit",
+                    emoji: true,
+                },
+                close: {
+                    type: "plain_text",
+                    text: "Cancel",
+                    emoji: true,
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "Select a reason for rejecting this candidate:",
+                        },
+                    },
+                    {
+                        type: "input",
+                        block_id: "reject_reason_select_block",
+                        label: {
+                            type: "plain_text",
+                            text: "Reason",
+                            emoji: true,
+                        },
+                        element: {
+                            type: "static_select",
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Select reason",
+                                emoji: true,
+                            },
+                            options: rejectReasons.map((reason) => ({
+                                text: {
+                                    type: "plain_text",
+                                    text: reason.name,
+                                    emoji: true,
+                                },
+                                value: reason.id.toString(),
+                            })),
+                            action_id: "reject_reason_select",
+                        },
+                    },
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "Select an email template to send to the candidate:",
+                        },
+                    },
+                    {
+                        type: "input",
+                        block_id: "email_template_select_block",
+                        label: {
+                            type: "plain_text",
+                            text: "Email Template",
+                            emoji: true,
+                        },
+                        element: {
+                            type: "static_select",
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Select template",
+                                emoji: true,
+                            },
+                            options: emailTemplates.map((template) => ({
+                                text: {
+                                    type: "plain_text",
+                                    text: template.name,
+                                    emoji: true,
+                                },
+                                value: template.id.toString(),
+                            })),
+                            action_id: "email_template_select",
+                        },
+                    },
+                    {
+                        type: "input",
+                        block_id: "reject_comments",
+                        label: {
+                            type: "plain_text",
+                            text: "Additional Comments",
+                            emoji: true,
+                        },
+                        element: {
+                            type: "plain_text_input",
+                            multiline: true,
+                            action_id: "reject_comments_input",
+                        },
+                    },
+                ],
+            },
+        };
+    } catch (error) {
+        console.error("Error creating reject candidate modal:", error);
+        throw error; // Ensure the error is handled by the caller
+    }
+}
+async function handleRejectCandidateSubmission(payload: SlackInteraction) {
+    try {
+        const { view, user, team } = payload;
+
+        // Decode private_metadata
+        const { response_url, message_blocks, attachments, candidate_id } =
+            JSON.parse(view.private_metadata);
+
+        const rejectReasonId =
+            view.state.values.reject_reason_select_block.reject_reason_select
+                .selected_option.value;
+        const emailTemplateId =
+            view.state.values.email_template_select_block.email_template_select
+                .selected_option.value;
+        const rejectComments =
+            view.state.values.reject_comments.reject_comments_input.value;
+
+        // Acknowledge the modal submission to close the modal
+        const acknowledgmentResponse = NextResponse.json({}, { status: 200 });
+
+        // Fetch Slack users based on the team ID from the payload
+        const slackUsers = await getEmailsfromSlack(team.id);
+
+        // Match Slack user to Greenhouse user
+        const greenhouseUsers = await fetchGreenhouseUsers();
+        const userMapping = await matchSlackToGreenhouseUsers(
+            greenhouseUsers,
+            slackUsers,
+        );
+        const greenhouseUserId = userMapping[user.id];
+
+        let statusMessage = "";
+        let emoji = "✅";
+        if (!greenhouseUserId) {
+            statusMessage =
+                "Failed to find corresponding Greenhouse user for the Slack user. This has been submitted.";
+            emoji = "❌";
+        } else {
+            const result = await rejectCandidateInGreenhouse(
+                candidate_id,
+                greenhouseUserId,
+                rejectReasonId,
+                emailTemplateId,
+                rejectComments,
+            );
+            if (result.success) {
+                statusMessage =
+                    "Candidate has been rejected successfully. This has been submitted.";
+            } else {
+                statusMessage = `Failed to reject candidate: ${result.error}. This has been submitted.`;
+                emoji = "❌";
+            }
+        }
+
+        // Add the new text message as a context block below the text and above the action buttons
+        const contextBlock = {
+            type: "context",
+            elements: [
+                {
+                    type: "mrkdwn",
+                    text: `${emoji} ${statusMessage}`,
                 },
             ],
-        },
-    };
+        };
+
+        // Find the index of the first actions block
+        const actionBlockIndex = attachments[0].blocks.findIndex(
+            (block: any) => block.type === "actions",
+        );
+
+        if (actionBlockIndex !== -1) {
+            // Insert the context block before the actions block
+            attachments[0].blocks.splice(actionBlockIndex, 0, contextBlock);
+        } else {
+            // Add the context block to the end if no actions block is found
+            attachments[0].blocks.push(contextBlock);
+        }
+
+        await updateSlackMessage(response_url, message_blocks, attachments);
+
+        return acknowledgmentResponse;
+    } catch (error) {
+        console.error("Error handling submission:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 }
 
 export async function POST(request: Request) {

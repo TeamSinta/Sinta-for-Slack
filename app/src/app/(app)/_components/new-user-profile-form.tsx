@@ -47,10 +47,7 @@ type NewUserProfileFormProps = {
     currentStep: number;
 };
 
-export function NewUserProfileForm({
-    user,
-    currentStep,
-}: NewUserProfileFormProps) {
+export function NewUserProfileForm({ user }: NewUserProfileFormProps) {
     const router = useRouter();
 
     const form = useForm<ProfileFormSchema>({

@@ -92,7 +92,7 @@ export function NewUserOrgForm({
             await completeNewUserMutate();
 
             await startAwaitableTransition(() => {
-                document.cookie = `${new_user_setup_step_cookie}${userId}=${currentStep + 1}; path=/`;
+                document.cookie = `${new_user_setup_step_cookie}${userId}=${currentStep ?? 0 + 1}; path=/`;
                 router.refresh();
             });
 

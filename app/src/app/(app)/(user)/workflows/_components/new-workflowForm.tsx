@@ -34,9 +34,7 @@ import {
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackWorkflow from "./slack-workflow";
 import ConditionComponent from "./conditions";
-import {
-    fetchJobsFromGreenhouse,
-} from "@/server/greenhouse/core";
+import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
@@ -91,12 +89,11 @@ const createFeedbackFormSchema = workflowFormSchema.omit({
 });
 
 export interface Condition {
-  field: { value: string; label: string; } | string;
-  condition: string;
-  value: string;
-  unit?: string;
+    field: { value: string; label: string } | string;
+    condition: string;
+    value: string;
+    unit?: string;
 }
-
 
 interface DateFieldOption {
     value: string;
@@ -128,16 +125,16 @@ function CreateWorkflowSheet() {
     const [selectedJobId, setSelectedJobId] = useState<string>("");
 
     useEffect(() => {
-      const fetchJobs = async () => {
-          try {
-              const jobs = await fetchJobsFromGreenhouse();
-              setJobs(jobs);
-          } catch (error) {
-              console.error("Failed to fetch jobs:", error);
-          }
-      };
-      void fetchJobs();
-  }, []);
+        const fetchJobs = async () => {
+            try {
+                const jobs = await fetchJobsFromGreenhouse();
+                setJobs(jobs);
+            } catch (error) {
+                console.error("Failed to fetch jobs:", error);
+            }
+        };
+        void fetchJobs();
+    }, []);
 
     useEffect(() => {
         if (selectedAlertType === "timebased") {
@@ -147,7 +144,6 @@ function CreateWorkflowSheet() {
                     condition: "", // Set a default condition
                     value: "",
                     unit: "Days",
-
                 },
             ]);
         } else if (selectedAlertType === "stuck-in-stage") {
@@ -240,11 +236,11 @@ function CreateWorkflowSheet() {
                 form.setValue("triggerConfig.processor", value);
                 break;
             case "stage":
-              const conditionIndex = conditions.findIndex(
-                (condition) =>
-                  typeof condition.field !== "string" &&
-                  condition.field.value === "when stuck-in-stage in",
-              );
+                const conditionIndex = conditions.findIndex(
+                    (condition) =>
+                        typeof condition.field !== "string" &&
+                        condition.field.value === "when stuck-in-stage in",
+                );
                 handleConditionChange(conditionIndex, "field", {
                     value: value,
                     label,
@@ -263,7 +259,9 @@ function CreateWorkflowSheet() {
         updateRecipient("messageFields", fields);
     };
 
-    const handleButtonsChange = (buttons: { action: string; label: string }[]) => {
+    const handleButtonsChange = (
+        buttons: { action: string; label: string }[],
+    ) => {
         updateRecipient("messageButtons", buttons);
     };
 
@@ -271,41 +269,46 @@ function CreateWorkflowSheet() {
         updateRecipient("messageDelivery", option);
     };
 
-    const handleRecipientsChange = (recipientObjects: { label: string; value: string }[]) => {
+    const handleRecipientsChange = (
+        recipientObjects: { label: string; value: string }[],
+    ) => {
         updateRecipient("recipients", recipientObjects);
     };
 
-    const updateRecipient = (key: keyof typeof recipientConfig, value: unknown) => {
+    const updateRecipient = (
+        key: keyof typeof recipientConfig,
+        value: unknown,
+    ) => {
         const newRecipient = { ...recipientConfig, [key]: value };
         setRecipientConfig(newRecipient);
         form.setValue("recipient", newRecipient);
     };
 
     interface FormValues {
-      name: string;
-      objectField: string;
-      alertType: string;
-      recipient: typeof recipientConfig;
-      conditions: Condition[]; // Ensure conditions is of type Condition[]
-      organizationId: string;
-      triggerConfig: {
-        apiUrl: string;
-        processor: string;
-      };
+        name: string;
+        objectField: string;
+        alertType: string;
+        recipient: typeof recipientConfig;
+        conditions: Condition[]; // Ensure conditions is of type Condition[]
+        organizationId: string;
+        triggerConfig: {
+            apiUrl: string;
+            processor: string;
+        };
     }
 
     // Initialize the form with correct types
     const form = useForm<FormValues>({
-      resolver: zodResolver(createFeedbackFormSchema),
-      defaultValues: {
-        name: "",
-        objectField: "",
-        alertType: "",
-        recipient: recipientConfig,
-        conditions: [], // Initialize with an empty array of Condition[]
-        organizationId: "",
-        triggerConfig: { apiUrl: "", processor: "" },
-      },
+        resolver: zodResolver(createFeedbackFormSchema),
+        defaultValues: {
+            name: "",
+            objectField: "",
+            alertType: "",
+            recipient: recipientConfig,
+            conditions: [], // Initialize with an empty array of Condition[]
+            organizationId: "",
+            triggerConfig: { apiUrl: "", processor: "" },
+        },
     });
 
     useEffect(() => {
@@ -338,33 +341,36 @@ function CreateWorkflowSheet() {
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
-      try {
-        const formData = form.getValues();
-        console.log("Form Data before submission:", formData);
+        try {
+            const formData = form.getValues();
+            console.log("Form Data before submission:", formData);
 
-        // Transform conditions if necessary
-        const transformedData = {
-          ...formData,
-          conditions: formData.conditions.map(condition => ({
-            ...condition,
-            field: typeof condition.field === "string" ? { value: condition.field, label: "" } : condition.field
-          }))
-        };
+            // Transform conditions if necessary
+            const transformedData = {
+                ...formData,
+                conditions: formData.conditions.map((condition) => ({
+                    ...condition,
+                    field:
+                        typeof condition.field === "string"
+                            ? { value: condition.field, label: "" }
+                            : condition.field,
+                })),
+            };
 
-        await mutateAsync(transformedData);
-        await startAwaitableTransition(() => {
-          router.refresh();
-        });
-        reset();
-        setIsOpen(false);
-        toast.success("Workflow created successfully");
-      } catch (error) {
-        toast.error(
-          (error as { message?: string })?.message ?? "Failed to submit Workflow",
-        );
-      }
+            await mutateAsync(transformedData);
+            await startAwaitableTransition(() => {
+                router.refresh();
+            });
+            reset();
+            setIsOpen(false);
+            toast.success("Workflow created successfully");
+        } catch (error) {
+            toast.error(
+                (error as { message?: string })?.message ??
+                    "Failed to submit Workflow",
+            );
+        }
     };
-
 
     const alertTypeOptions = [
         { value: "timebased", label: "Time-based" },

@@ -20,5 +20,4 @@ export function getAbsoluteUrl(path: string) {
     return `${env.NEXTAUTH_URL}${path}`;
 }
 
-
 // Custom fetch wrapper function with authorization header

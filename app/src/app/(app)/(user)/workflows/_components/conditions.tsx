@@ -12,10 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export interface Condition {
-  field: { value: string; label: string; } | string;
-  condition: string;
-  value: string;
-  unit?: string;
+    field: { value: string; label: string } | string;
+    condition: string;
+    value: string;
+    unit?: string;
 }
 
 interface ConditionProps {
@@ -36,11 +36,25 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     conditionOptions,
 }) => {
     const handleFieldChange = (value: string) => {
-        const selectedOption = objectFieldOptions.find(option => option.name === value);
-        onChange(index, 'field', selectedOption ? JSON.stringify({ value: selectedOption.name, label: selectedOption.name }) : value);
+        const selectedOption = objectFieldOptions.find(
+            (option) => option.name === value,
+        );
+        onChange(
+            index,
+            "field",
+            selectedOption
+                ? JSON.stringify({
+                      value: selectedOption.name,
+                      label: selectedOption.name,
+                  })
+                : value,
+        );
     };
 
-    const fieldValue = typeof condition.field === 'string' ? condition.field : condition.field.value;
+    const fieldValue =
+        typeof condition.field === "string"
+            ? condition.field
+            : condition.field.value;
 
     return (
         <div className="mb-4 flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4">
