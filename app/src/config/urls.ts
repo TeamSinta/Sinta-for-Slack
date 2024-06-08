@@ -8,8 +8,7 @@
  */
 
 export const siteUrls = {
-    publicUrl:
-        "https://103ed68b03da.ngrok.app",
+    publicUrl: "https://5bc1e5fa5023dc7a.ngrok.app",
     github: "https://github.com/msinta/",
     home: "/",
     auth: {

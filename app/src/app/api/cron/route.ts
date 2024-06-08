@@ -20,7 +20,6 @@ import {
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 
-
 export async function POST() {
     try {
         const workflows: Workflow[] = await getWorkflows(); // Retrieve workflows from the database
@@ -33,7 +32,7 @@ export async function POST() {
 
                 const filteredConditionsData = filterDataWithConditions(
                     data,
-                    workflow.conditions
+                    workflow.conditions,
                 );
 
                 if (filteredConditionsData.length === 0) {
@@ -41,29 +40,36 @@ export async function POST() {
                 } else {
                     const filteredSlackData = filterProcessedForSlack(
                         filteredConditionsData,
-                        workflow.recipient
+                        workflow.recipient,
                     );
                     await sendSlackNotification(
                         filteredSlackData,
-                        workflow.recipient
+                        workflow.recipient,
                     );
                 }
             } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
-                const data = await customFetch(apiUrl, processor ? { query: processor } : {});
+                const data = await customFetch(
+                    apiUrl,
+                    processor ? { query: processor } : {},
+                );
 
                 // Filter data based on the "stuck-in-stage" conditions
-                const filteredConditionsData = await filterStuckinStageDataConditions(
-                    data,
-                    workflow.conditions
+                const filteredConditionsData =
+                    await filterStuckinStageDataConditions(
+                        data,
+                        workflow.conditions,
+                    );
+                console.log(filteredConditionsData);
+                const filteredSlackData = await filterProcessedForSlack(
+                    filteredConditionsData,
+                    workflow.recipient,
                 );
-                console.log(filteredConditionsData)
-                const filteredSlackData = await filterProcessedForSlack(filteredConditionsData, workflow.recipient);
-                console.log(filteredSlackData)
+                console.log(filteredSlackData);
 
                 await sendSlackButtonNotification(
                     filteredSlackData,
-                    workflow.recipient
+                    workflow.recipient,
                 );
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
@@ -73,7 +79,7 @@ export async function POST() {
         if (shouldReturnNull) {
             return new NextResponse(
                 JSON.stringify({ message: "No workflows to process" }),
-                { status: 200 }
+                { status: 200 },
             );
         }
 
@@ -81,7 +87,7 @@ export async function POST() {
             JSON.stringify({ message: "Workflows processed successfully" }),
             {
                 status: 200,
-            }
+            },
         );
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
@@ -92,7 +98,7 @@ export async function POST() {
             }),
             {
                 status: 500,
-            }
+            },
         );
     }
 }

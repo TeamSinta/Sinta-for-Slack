@@ -11,7 +11,10 @@ import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from "@/components/ui/fancy.box";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import MessageButtons, { type ButtonAction, ButtonType } from "./message-buttons";
+import MessageButtons, {
+    type ButtonAction,
+    ButtonType,
+} from "./message-buttons";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import Image from "next/image";
 
@@ -87,7 +90,10 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     };
 
     const addButton = () => {
-        const newButtons = [...buttons, { label: "", action: "", type: ButtonType.UpdateButton }];
+        const newButtons = [
+            ...buttons,
+            { label: "", action: "", type: ButtonType.UpdateButton },
+        ];
         handleButtonsChange(newButtons);
     };
 
@@ -163,14 +169,16 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
 
     return (
         <div className="workflow-container mt-4">
-          <div className="flex ">
-            <Label className="text-xl font-bold">Configure Slack Alert </Label>
-            <Image
-                                        src={slackLogo}
-                                        alt={`slack-logo`}
-                                        className="ml-2 h-7 w-7"
-                                    />{" "}
-</div>
+            <div className="flex ">
+                <Label className="text-xl font-bold">
+                    Configure Slack Alert{" "}
+                </Label>
+                <Image
+                    src={slackLogo}
+                    alt={`slack-logo`}
+                    className="ml-2 h-7 w-7"
+                />{" "}
+            </div>
             {/* Opening Text */}
             <div className="my-4">
                 <Label>Opening Text</Label>

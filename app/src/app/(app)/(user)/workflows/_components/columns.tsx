@@ -40,43 +40,45 @@ export type WorkflowData = {
 };
 
 type Field = {
-  label: string;
-  value: string;
+    label: string;
+    value: string;
 };
 
 // Update the Condition type to use the Field type
 export type Condition = {
-  condition: string;
-  value: string | number;
-  unit?: string;
-  field: Field | string; // Field can be either an object with label or a string
+    condition: string;
+    value: string | number;
+    unit?: string;
+    field: Field | string; // Field can be either an object with label or a string
 };
-
-
 
 export function getColumns(): ColumnDef<WorkflowData>[] {
     return columns;
 }
 
 function formatCondition(condition: Condition): string {
-  const conditionMappings: Record<string, string> = {
-      greaterThan: "greater than",
-      lessThan: "less than",
-      equalTo: "equal to",
-      notEqualTo: "not equal to",
-      contains: "contains",
-      doesNotContain: "does not contain",
-      beginsWith: "begins with",
-      endsWith: "ends with",
-      after: "after",
-      before: "before",
-  };
+    const conditionMappings: Record<string, string> = {
+        greaterThan: "greater than",
+        lessThan: "less than",
+        equalTo: "equal to",
+        notEqualTo: "not equal to",
+        contains: "contains",
+        doesNotContain: "does not contain",
+        beginsWith: "begins with",
+        endsWith: "ends with",
+        after: "after",
+        before: "before",
+    };
 
-  const readableCondition = conditionMappings[condition.condition] ?? condition.condition;
-  const unit = condition.unit ? ` ${condition.unit}` : " days";
-  const readableField = typeof condition.field === 'object' ? condition.field.label : condition.field;
+    const readableCondition =
+        conditionMappings[condition.condition] ?? condition.condition;
+    const unit = condition.unit ? ` ${condition.unit}` : " days";
+    const readableField =
+        typeof condition.field === "object"
+            ? condition.field.label
+            : condition.field;
 
-  return `${readableField} is ${readableCondition} ${condition.value}${unit}`;
+    return `${readableField} is ${readableCondition} ${condition.value}${unit}`;
 }
 
 export const columns: ColumnDef<WorkflowData>[] = [
@@ -141,9 +143,7 @@ export const columns: ColumnDef<WorkflowData>[] = [
                 <div
                     className="cursor-pointer hover:underline"
                     title={conditionTexts.join("; ")}
-                    onClick={() =>
-                        console.log("Conditions Clicked:")
-                    }
+                    onClick={() => console.log("Conditions Clicked:")}
                 >
                     {conditionTexts.length > 1
                         ? `${conditionTexts[0]} + ${conditionTexts.length - 1} more`

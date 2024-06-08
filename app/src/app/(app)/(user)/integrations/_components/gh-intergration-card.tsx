@@ -1,26 +1,25 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setGreenhouseToken } from '@/server/actions/greenhouse/mutations';
+import { setGreenhouseToken } from "@/server/actions/greenhouse/mutations";
 
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { useRouter } from "next/navigation";
-import { toast } from 'sonner';
-
+import { toast } from "sonner";
 
 interface GreenhouseIntegrationCardProps {
     name: string;
@@ -30,18 +29,13 @@ interface GreenhouseIntegrationCardProps {
     lastModified?: string;
 }
 
-export const GreenhouseIntegrationCard: React.FC<GreenhouseIntegrationCardProps> = ({
-    name,
-    imageUrl,
-    buttonText,
-    isConnected,
-    lastModified,
-}) => {
+export const GreenhouseIntegrationCard: React.FC<
+    GreenhouseIntegrationCardProps
+> = ({ name, imageUrl, buttonText, isConnected, lastModified }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [token, setToken] = useState("");
     const router = useRouter();
-    const [isPending, startAwaitableTransition] = useAwaitableTransition();
-
+    const [, startAwaitableTransition] = useAwaitableTransition();
 
     const handleTokenSubmit = async () => {
         const response = await setGreenhouseToken(token);
@@ -51,10 +45,8 @@ export const GreenhouseIntegrationCard: React.FC<GreenhouseIntegrationCardProps>
             setIsModalOpen(false);
             toast.success("API key successfully connected");
             await startAwaitableTransition(() => {
-              router.refresh();
-          });
-
-
+                router.refresh();
+            });
         } else {
             // Handle failure here, e.g., show an error message
         }
@@ -69,7 +61,9 @@ export const GreenhouseIntegrationCard: React.FC<GreenhouseIntegrationCardProps>
                         <AvatarFallback>{name.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <p className="text-lg font-medium leading-none">{name}</p>
+                        <p className="text-lg font-medium leading-none">
+                            {name}
+                        </p>
                         {isConnected && (
                             <div className="mt-1 flex items-center">
                                 <div className="mr-2 rounded bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-200 dark:text-green-900">
@@ -92,13 +86,13 @@ export const GreenhouseIntegrationCard: React.FC<GreenhouseIntegrationCardProps>
                 </div>
             </Card>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                </DialogTrigger>
+                <DialogTrigger asChild></DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Enter Greenhouse API Token</DialogTitle>
                         <DialogDescription>
-                            Please enter your Greenhouse API token to connect your account.
+                            Please enter your Greenhouse API token to connect
+                            your account.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -115,7 +109,9 @@ export const GreenhouseIntegrationCard: React.FC<GreenhouseIntegrationCardProps>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" onClick={handleTokenSubmit}>Submit</Button>
+                        <Button type="button" onClick={handleTokenSubmit}>
+                            Submit
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

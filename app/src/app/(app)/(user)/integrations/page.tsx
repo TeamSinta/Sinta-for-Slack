@@ -1,16 +1,17 @@
-import React from 'react';
+import React from "react";
 import { AppPageShell } from "../../_components/page-shell";
 import { integrationsPageConfig } from "./_constants/page-config";
-import { checkGreenhouseTeamIdFilled, checkSlackTeamIdFilled } from "@/server/actions/organization/queries";
+import {
+    checkGreenhouseTeamIdFilled,
+    checkSlackTeamIdFilled,
+} from "@/server/actions/organization/queries";
 
-import { setGreenhouseToken } from '@/server/actions/greenhouse/mutations';
-import { GreenhouseIntegrationCard } from './_components/gh-intergration-card';
-import { IntegrationCard } from './_components/intergration-cards';
+import { GreenhouseIntegrationCard } from "./_components/gh-intergration-card";
+import { IntegrationCard } from "./_components/intergration-cards";
 
 export default async function Integrations() {
     const slackIntegration = await checkSlackTeamIdFilled();
     const greenhouseIntegration = await checkGreenhouseTeamIdFilled();
-
 
     return (
         <AppPageShell
@@ -18,7 +19,7 @@ export default async function Integrations() {
             description={integrationsPageConfig.description}
         >
             <h2 className="text-lg font-medium">Your integrations</h2>
-            {slackIntegration || greenhouseIntegration ? (
+            {slackIntegration ?? greenhouseIntegration ? (
                 <>
                     {slackIntegration && (
                         <IntegrationCard

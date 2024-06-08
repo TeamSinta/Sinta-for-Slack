@@ -43,18 +43,18 @@ export function FancyMultiSelect({
     const handleUnselect = React.useCallback(
         (option: Option) => {
             const updatedOptions = selectedOptions.filter(
-                (opt) => opt.value !== option.value
+                (opt) => opt.value !== option.value,
             );
             onOptionChange(updatedOptions);
         },
-        [selectedOptions, onOptionChange]
+        [selectedOptions, onOptionChange],
     );
 
     const selectables = options.filter(
         (option) =>
             !selectedOptions.some(
-                (selectedOption) => selectedOption.value === option.value
-            )
+                (selectedOption) => selectedOption.value === option.value,
+            ),
     );
 
     const handleKeyDown = React.useCallback(
@@ -75,7 +75,7 @@ export function FancyMultiSelect({
                 }
             }
         },
-        [selectedOptions, handleUnselect]
+        [selectedOptions, handleUnselect],
     );
 
     return (
