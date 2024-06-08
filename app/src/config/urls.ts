@@ -8,7 +8,7 @@
  */
 
 export const siteUrls = {
-    publicUrl: "https://5bc1e5fa5023dc7a.ngrok.app",
+    publicUrl: "https://sinta-slack.vercel.app/",
     github: "https://github.com/msinta/",
     home: "/",
     auth: {
