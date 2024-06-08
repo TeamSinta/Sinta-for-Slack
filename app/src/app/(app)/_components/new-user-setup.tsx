@@ -15,12 +15,8 @@ export async function NewUserSetup() {
     const cookieValue = cookies().get(`${new_user_setup_step_cookie}${user.id}`)?.value;
     const currentStep = cookieValue ? parseInt(cookieValue, 10) : 1;
 
-    // Debugging logs
-    console.log("Cookie value:", cookieValue);
-    console.log("Current step:", currentStep);
-
     // Define the forms for each step
-    const forms: Record<number, JSX.Element> = {
+    const forms: { [key: number]: JSX.Element } = {
         1: <NewUserProfileForm user={user} currentStep={currentStep} />,
         2: <NewUserOrgForm currentStep={currentStep} userId={user?.id} />,
     };

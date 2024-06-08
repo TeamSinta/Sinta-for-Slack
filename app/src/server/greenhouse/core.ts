@@ -105,6 +105,169 @@ export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
     }
 };
 
+export async function fetchCandidateDetails(candidateId: string): Promise<any> {
+  try {
+      // Replace this URL with the actual Greenhouse API endpoint for fetching candidate details
+      const response = await customFetch(`https://harvest.greenhouse.io/v1/candidates/${candidateId}`);
+      return response;
+  } catch (error) {
+      console.error("Error fetching candidate details: ", error);
+      return null;
+  }
+}
+
+export async function moveToNextStageInGreenhouse(
+  candidateId: string,
+  toStageId: string,
+  greenhouseUserId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Fetch the candidate details to get the current stage ID
+    const candidateDetails = await fetchCandidateDetails(candidateId);
+    const application = candidateDetails.applications.find(
+      (app) => app.candidate_id.toString() === candidateId
+    );
+    console.log(candidateDetails)
+    console.log(toStageId);
+    console.log(greenhouseUserId, candidateId);
+    if (!application) {
+      throw new Error("Application not found for the candidate.");
+    }
+
+    const fromStageId = application.current_stage.id;
+
+    const url = `https://harvest.greenhouse.io/v1/applications/${application.id}/move`;
+    const body = {
+      from_stage_id: fromStageId,
+      to_stage_id: parseInt(toStageId),
+    };
+
+    const response = await customFetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "On-Behalf-Of": greenhouseUserId,
+      },
+      body: JSON.stringify(body),
+    });
+
+    // Log the response for debugging
+    console.log(response);
+    console.log("hello")
+
+    // Assume a successful response is indicated by the presence of an "id" field in the response
+    if (response.id) {
+      return { success: true };
+    } else {
+      // Extract error message from the response if available
+      const errorMessage = response.message || 'Unknown error';
+      throw new Error(`Error moving to next stage: ${errorMessage}`);
+    }
+  } catch (error) {
+    console.error("Error moving to next stage:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectCandidateInGreenhouse(candidateId: string, greenhouseUserId: string, rejectReasonId: string, emailTemplateId: string, rejectComments: string): Promise<{ success: boolean, error?: string }> {
+  try {
+    // Implement your logic to reject the candidate in Greenhouse
+    // For example:
+    const url = `https://harvest.greenhouse.io/v1/candidates/${candidateId}/reject`;
+    const response = await customFetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "On-Behalf-Of": greenhouseUserId,
+      },
+      body: JSON.stringify({
+        reason_id: rejectReasonId,
+        email_template_id: emailTemplateId,
+        comments: rejectComments,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      throw new Error(`Error rejecting candidate: ${errorResponse.message}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error rejecting candidate:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+
+
+
+
+export async function fetchRejectReasons(): Promise<{ id: number, name: string }[]> {
+  try {
+      // Replace this URL with the actual Greenhouse API endpoint for fetching reject reasons
+      const queryString = new URLSearchParams({
+          include_defaults: 'true'
+      }).toString();
+
+      const url = `https://harvest.greenhouse.io/v1/rejection_reasons?${queryString}`;
+
+      const response = await customFetch(url);
+      const rejectReasons = await response;
+      if (!Array.isArray(rejectReasons)) {
+          throw new Error('Invalid response format for reject reasons');
+      }
+
+      // Parse the response to send an array of objects with id and name
+      return rejectReasons.map((reason: { id: number, name: string }) => ({
+          id: reason.id,
+          name: reason.name
+      }));
+  } catch (error) {
+      console.error("Error fetching reject reasons: ", error);
+      return [];
+  }
+}
+
+export async function fetchGreenhouseUsers(): Promise<Record<string, { id: string; email: string }>> {
+  try {
+      const users = await customFetch('https://harvest.greenhouse.io/v1/users') as { id: string; primary_email_address: string }[];
+      return users.reduce((acc: Record<string, { id: string; email: string }>, user) => {
+          if (user.primary_email_address) {
+              acc[user.id] = { id: user.id, email: user.primary_email_address };
+          }
+          return acc;
+      }, {});
+  } catch (error) {
+      console.error("Error fetching Greenhouse users: ", error);
+      return {};
+  }
+}
+
+export async function matchSlackToGreenhouseUsers(
+  greenhouseUsers: Record<string, { id: string; email: string }>,
+  slackUsers: { value: string; label: string; email: string }[]
+): Promise<Record<string, string>> {
+  console.log(greenhouseUsers);
+
+  const greenhouseUserMap: Record<string, string> = {};
+
+  for (const [key, user] of Object.entries(greenhouseUsers)) {
+      greenhouseUserMap[user.email] = user.id; // Map email to Greenhouse user ID
+  }
+
+  const userMapping: Record<string, string> = {};
+  for (const slackUser of slackUsers) {
+      if (greenhouseUserMap[slackUser.email]) {
+          userMapping[slackUser.value] = greenhouseUserMap[slackUser.email]; // Use Slack user ID as the key
+      }
+  }
+  return userMapping;
+}
+
+
+
+
 export function mapWebhookActionToObjectField(action: string): string {
     switch (action) {
         case "application_updated":
@@ -240,64 +403,59 @@ async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
     return response as ActivityFeed;
 }
 
-function calculateTimeInStages(activities: Activity[]): Record<string, number> {
-  const stageDurations: Record<string, number> = {};
-  let currentStage = "Initial Stage";
+function calculateTimeInCurrentStage(currentStage: string, activities: Activity[]): number {
   let stageStartDate: Date | null = null;
 
-  activities.forEach((activity) => {
-      const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
-      if (stageChangeMatch) {
-          const newStage = stageChangeMatch[1];
-          const createdAt = new Date(activity.created_at);
+  // Iterate through activities in reverse order to find the most recent matching stage change
+  for (let i = activities.length - 1; i >= 0; i--) {
+    const activity = activities[i];
+    const stageChangeMatch = activity.body.match(/was moved into (.+) for/);
 
-          if (stageStartDate) {
-              const duration = Math.floor(
-                  (createdAt.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
-              );
-              if (!stageDurations[currentStage]) {
-                  stageDurations[currentStage] = 0;
-              }
-              stageDurations[currentStage] += duration;
-          }
-
-          currentStage = newStage;
-          stageStartDate = createdAt;
+    if (stageChangeMatch) {
+      const newStage = stageChangeMatch[1];
+      if (newStage === currentStage) {
+        stageStartDate = new Date(activity.created_at);
+        break;
       }
-  });
-
-  if (stageStartDate) {
-      const now = new Date();
-      const duration = Math.floor(
-          (now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      if (!stageDurations[currentStage]) {
-          stageDurations[currentStage] = 0;
-      }
-      stageDurations[currentStage] += duration;
+    }
   }
 
-  return stageDurations;
+  if (stageStartDate) {
+    const now = new Date();
+    const duration = Math.floor(
+      (now.getTime() - stageStartDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return duration;
+  } else {
+    // Return a large negative number if the stageStartDate is not found
+    return Number.NEGATIVE_INFINITY;
+  }
 }
 
 export async function filterStuckinStageDataConditions(
-    candidates: Candidate[],
-    conditions: Condition[],
+  candidates: Candidate[],
+  conditions: Condition[],
 ): Promise<Candidate[]> {
-    const matchedCandidates: Candidate[] = [];
+  const matchedCandidates: Candidate[] = [];
 
-    const condition = conditions[0];
-    const stageName = condition.field.label;
-    const thresholdDays = parseInt(condition.value, 10);
+  const condition = conditions[0];
+  const stageName = condition.field.label;
+  const thresholdDays = parseInt(condition.value, 10);
 
-    for (const candidate of candidates) {
-        const candidateId = candidate.id;
-        const activityFeed = await fetchActivityFeed(candidateId);
-        const stageDurations = calculateTimeInStages(activityFeed.activities);
-        if (stageDurations[stageName] && stageDurations[stageName] > thresholdDays) {
-            matchedCandidates.push(candidate);
-        }
+  for (const candidate of candidates) {
+    const candidateId = candidate.id;
+    const activityFeed = await fetchActivityFeed(candidateId);
+    const application = candidate.applications.find(app => app.current_stage.name === stageName);
+    if (application) {
+      const currentStage = application.current_stage.name;
+      const daysInCurrentStage = calculateTimeInCurrentStage(currentStage, activityFeed.activities);
+      console.log(`Candidate ${candidateId} is in ${currentStage} for ${daysInCurrentStage} days`);
+
+      if (daysInCurrentStage > thresholdDays) {
+        matchedCandidates.push(candidate);
+      }
     }
+  }
 
-    return matchedCandidates;
+  return matchedCandidates;
 }

@@ -24,7 +24,7 @@ export default async function Integrations() {
                         <IntegrationCard
                             name="Slack"
                             imageUrl="https://assets-global.website-files.com/621c8d7ad9e04933c4e51ffb/65eba5ffa14998827c92cc01_slack-octothorpe.png"
-                            integrationUrl="https://slack.com/oauth/v2/authorize?client_id=4416099431878.6969999702627&scope=commands,incoming-webhook,channels:manage,chat:write,channels:write.invites,im:write&user_scope=channels:write"
+                            integrationUrl="https://slack.com/oauth/v2/authorize?client_id=4416099431878.6969999702627&scope=channels:manage,channels:read,channels:write.invites,chat:write,commands,groups:read,im:read,im:write,incoming-webhook,mpim:read,team:read,users:read,users:read.email&user_scope=channels:write,team:read,users:read,users:read.email"
                             buttonText="Resync"
                             isConnected={slackIntegration ?? ""}
                             lastModified="03 Feb 2024, 11:02 am"

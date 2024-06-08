@@ -5,6 +5,8 @@ import crypto from "crypto";
 import { env } from "@/env";
 import { type Candidate } from "@/types/greenhouse";
 import { type WorkflowRecipient } from "@/types/workflows";
+import { getEmailsfromSlack } from "@/server/slack/core";
+import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 
 export async function log(message: string) {
     console.log(message);
@@ -75,41 +77,75 @@ export async function verifyRequest(req: NextRequest) {
     }
 }
 
-export function filterProcessedForSlack(
-    candidates: Candidate[],
-    workflow: WorkflowRecipient,
-): Record<string, string>[] {
-    return candidates.map((candidate) => {
-        const result: Record<string, string> = {};
 
-        workflow.messageFields.forEach((field) => {
-            switch (field) {
-                case "name":
-                    result[field] = `${candidate.first_name} ${candidate.last_name}`;
-                    break;
-                case "title":
-                    result[field] = candidate.title || "Not provided";
-                    break;
-                case "recruiter_name":
-                    result[field] = candidate.recruiter
-                        ? candidate.recruiter.name
-                        : "No recruiter";
-                    break;
-                case "coordinator_name":
-                    result[field] = candidate.coordinator
-                        ? candidate.coordinator.name
-                        : "No coordinator";
-                    break;
-                default:
-                    const candidateField = candidate[field as keyof Candidate];
-                    result[field] = getFieldValue(candidateField, field);
-                    break;
-            }
-        });
 
-        return result;
-    });
+
+async function matchUsers(greenhouseUsers: Record<string, { id: string, email: string }>, slackUsers: { value: string; label: string; email: string }[]): Promise<Record<string, string>> {
+  const slackUserMap = slackUsers.reduce((acc: Record<string, string>, user) => {
+      acc[user.email] = user.value; // Map email to Slack user ID
+      return acc;
+  }, {});
+
+  const userMapping: Record<string, string> = {};
+  for (const greenhouseUserId in greenhouseUsers) {
+      const email = greenhouseUsers[greenhouseUserId].email;
+      if (slackUserMap[email]) {
+          userMapping[greenhouseUsers[greenhouseUserId].id] = slackUserMap[email]; // Use Greenhouse user ID as the key
+      }
+  }
+  return userMapping;
 }
+
+
+export async function filterProcessedForSlack(
+  candidates: Candidate[],
+  workflow: WorkflowRecipient
+): Promise<Record<string, string | number>[]> {
+  const greenhouseUsers = await fetchGreenhouseUsers();
+  const slackUsers = await getEmailsfromSlack();
+  const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+
+  return candidates.map((candidate) => {
+      const result: Record<string, string | number> = {
+          candidate_id: candidate.id, // Include candidate ID
+      };
+
+      workflow.messageFields.forEach((field) => {
+          switch (field) {
+              case "name":
+                  result[field] = `${candidate.first_name} ${candidate.last_name}`;
+                  break;
+              case "title":
+                  result[field] = candidate.title || "Not provided";
+                  break;
+              case "recruiter_name":
+                  if (candidate.recruiter) {
+                      const slackId = userMapping[candidate.recruiter.id];
+                      result[field] = slackId ? `<@${slackId}>` : candidate.recruiter.name;
+                  } else {
+                      result[field] = "No recruiter";
+                  }
+                  break;
+              case "coordinator_name":
+                  if (candidate.coordinator) {
+                      const slackId = userMapping[candidate.coordinator.id];
+                      result[field] = slackId ? `<@${slackId}>` : candidate.coordinator.name;
+                  } else {
+                      result[field] = "No coordinator";
+                  }
+                  break;
+              default:
+                  const candidateField = candidate[field as keyof Candidate];
+                  result[field] = getFieldValue(candidateField, field);
+                  break;
+          }
+      });
+
+      return result;
+  });
+}
+
+
 
 function getFieldValue(field: unknown, fieldName: string): string {
     if (field === undefined || field === null) {

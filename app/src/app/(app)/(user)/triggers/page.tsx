@@ -14,7 +14,7 @@ export default function Triggers() {
                 </CardHeader>
                 <CardContent className="flex flex-col items-center text-center">
                     <p className="mb-4 text-gray-700">
-                        Our triggers feateure is under development and will be available soon. Stay tuned!
+                        Our triggers feature is under development and will be available soon. Stay tuned!
                     </p>
                     <Button variant="outline" onClick={() => alert('Notify me when available!')}>
                         Notify Me

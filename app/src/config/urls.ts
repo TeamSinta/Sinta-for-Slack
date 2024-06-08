@@ -9,7 +9,7 @@
 
 export const siteUrls = {
     publicUrl:
-        "https://b639-2a02-a420-67-6854-19d2-222f-18e5-b769.ngrok-free.app",
+        "https://103ed68b03da.ngrok.app",
     github: "https://github.com/msinta/",
     home: "/",
     auth: {

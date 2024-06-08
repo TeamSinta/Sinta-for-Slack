@@ -142,7 +142,7 @@ export const columns: ColumnDef<WorkflowData>[] = [
                     className="cursor-pointer hover:underline"
                     title={conditionTexts.join("; ")}
                     onClick={() =>
-                        console.log("Conditions Clicked:", row.original.conditions)
+                        console.log("Conditions Clicked:")
                     }
                 >
                     {conditionTexts.length > 1

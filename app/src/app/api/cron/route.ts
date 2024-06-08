@@ -27,10 +27,9 @@ export async function POST() {
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
-            if (workflow.alertType === "timebased") {
+            if (workflow.alertType === "time-based") {
                 const { apiUrl } = workflow.triggerConfig;
                 const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
-                console.log(data)
 
                 const filteredConditionsData = filterDataWithConditions(
                     data,
@@ -52,17 +51,16 @@ export async function POST() {
             } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
                 const data = await customFetch(apiUrl, processor ? { query: processor } : {});
-                console.log(data)
+
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData = await filterStuckinStageDataConditions(
                     data,
                     workflow.conditions
                 );
+                console.log(filteredConditionsData)
+                const filteredSlackData = await filterProcessedForSlack(filteredConditionsData, workflow.recipient);
+                console.log(filteredSlackData)
 
-                const filteredSlackData = filterProcessedForSlack(
-                    filteredConditionsData,
-                    workflow.recipient
-                );
                 await sendSlackButtonNotification(
                     filteredSlackData,
                     workflow.recipient
