@@ -5,6 +5,7 @@
 import { db } from "@/server/db";
 import { organizations } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
+import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {
     if (!teamId) {
@@ -94,21 +95,24 @@ export async function refreshTokenIfNeeded(
 }
 
 export async function setAccessToken(
-    accessToken: string,
-    teamId: string,
-    refreshToken: string,
-    expiration: number,
+  accessToken: string,
+  teamId: string,
+  refreshToken: string,
+  expiration: number,
 ) {
-    const result = await db
-        .update(organizations)
-        .set({
-            slack_team_id: teamId,
-            slack_access_token: accessToken,
-            slack_refresh_token: refreshToken,
-            token_expiry: expiration,
-        })
-        .where(eq(organizations.slack_team_id, teamId))
-        .execute();
+  const { currentOrg } = await getOrganizations();
+  const orgID = currentOrg.id;
+  console.log("orgID", orgID)
+  const result = await db
+      .update(organizations)
+      .set({
+          slack_team_id: teamId,
+          slack_access_token: accessToken,
+          slack_refresh_token: refreshToken,
+          token_expiry: expiration,
+      })
+      .where(eq(organizations.id, orgID))
+      .execute();
 
-    return result ? "OK" : "Failed to update access token";
+  return result ? "OK" : "Failed to update access token";
 }
