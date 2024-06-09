@@ -102,7 +102,7 @@ export async function setAccessToken(
 ) {
   const { currentOrg } = await getOrganizations();
   const orgID = currentOrg.id;
-
+  console.log("orgID", orgID)
   const result = await db
       .update(organizations)
       .set({
