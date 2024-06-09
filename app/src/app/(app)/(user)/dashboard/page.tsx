@@ -91,8 +91,8 @@ export default function DashboardPage() {
             description="Overview of your account usage and potential features"
         >
             <div className="space-y-6  p-2">
-                <Card className="rounded-lg bg-white shadow dark:bg-gray-800">
-                    <CardHeader className="flex items-start rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
+                <Card className="rounded-lg  shadow bg-background">
+                <CardHeader className="flex flex-row items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-700">
                         <div className="flex items-center">
                             <div className="flex items-center">
                                 {" "}
@@ -117,9 +117,9 @@ export default function DashboardPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="rounded-lg bg-white shadow dark:bg-gray-800">
-                    <CardHeader className="flex flex-row items-center gap-2 rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
-                        <Dumbbell />
+                <Card className="rounded-lg bg-background">
+                <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
+                <Dumbbell />
                         <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                             Fantastic work! Here are the features you`ve
                             implemented so far!
@@ -169,8 +169,8 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="mb-4 rounded-lg bg-white shadow dark:bg-gray-800">
-                    <CardHeader className="flex flex-row items-center gap-2 rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
+                <Card className="mb-4 rounded-lg bg-background">
+                    <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
                         <Shrub />
                         <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                             Unleash your team`s potential with these amazing
@@ -204,9 +204,9 @@ export default function DashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-lg  bg-white shadow dark:bg-gray-800">
-                    <CardHeader className="rounded-lg bg-gray-50 px-4 py-2 dark:bg-gray-700">
-                        <CardTitle className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <Card className="rounded-lg bg-background">
+                <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
+                <CardTitle className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200">
                             <CogIcon className="mr-2 h-5 w-5 text-gray-500 dark:text-gray-400" />
                             System Status
                         </CardTitle>
