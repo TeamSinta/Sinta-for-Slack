@@ -287,7 +287,7 @@ const HeroSection = () => {
                 <div className="mt-6">
                   <p className="font-bold">Sign up for our newsletter</p>
                   <form id="wf-form-Subscribe" name="wf-form-Subscribe" data-name="Subscribe" method="get" className="flex mt-4">
-                    <input className="w-full p-2 text-black rounded-l-md" maxlength="256" name="Subscribe-2" data-name="Subscribe 2" placeholder="Enter your email..." type="email" id="Subscribe-2" required/>
+                    <input className="w-full p-2 text-black rounded-l-md" maxLength={256} name="Subscribe-2" data-name="Subscribe 2" placeholder="Enter your email..." type="email" id="Subscribe-2" required/>
                     <button type="submit" data-wait="Please wait..." className="bg-indigo-600 p-2 text-white rounded-r-md">Subscribe</button>
                   </form>
                 </div>
