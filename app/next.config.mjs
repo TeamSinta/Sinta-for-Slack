@@ -12,7 +12,7 @@ const nextConfig = {
         optimizePackageImports: ["lucide-react"],
     },
     images: {
-        domains: ["assets-global.website-files.com"],
+        domains: ["assets-global.website-files.com", "uploads-ssl.webflow.com"],
     },
 };
 
