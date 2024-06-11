@@ -63,13 +63,15 @@ function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
                     )}
                     aria-label="user dropdown"
                 >
-                    <Avatar className="h-6 w-6">
-                        <AvatarImage src={user!.image ?? ""} />
-
-                        <AvatarFallback className="text-xs">
-                            {user?.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                   <Avatar className="h-6 w-6">
+    {user?.image ? (
+        <AvatarImage src={user.image} />
+    ) : (
+        <AvatarFallback className="text-xs">
+            {user?.email?.charAt(0).toUpperCase()}
+        </AvatarFallback>
+    )}
+</Avatar>
 
                     {!isCollapsed && (
                         <span className="truncate">{user?.email}</span>
@@ -80,12 +82,15 @@ function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-60" align="start">
                 <DropdownMenuLabel className="flex w-56 flex-col items-start gap-2">
-                    <Avatar className="h-9 w-9">
-                        <AvatarImage src={user!.image ?? ""} />
-                        <AvatarFallback>
-                            {user?.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                <Avatar className="h-9 w-9">
+    {user?.image ? (
+        <AvatarImage src={user.image} />
+    ) : (
+        <AvatarFallback>
+            {user?.email?.charAt(0).toUpperCase()}
+        </AvatarFallback>
+    )}
+</Avatar>
 
                     <div className="flex w-full flex-col">
                         <p className="truncate text-sm">
