@@ -7,12 +7,12 @@ type WebLayoutProps = {
 
 export default function WebLayout({ children }: WebLayoutProps) {
     return (
-      <>
-      <BackgroundGradient />
-        <div>
-            <WebHeader />
-            {children}
-        </div>
+        <>
+            <BackgroundGradient />
+            <div>
+                <WebHeader />
+                {children}
+            </div>
         </>
     );
 }

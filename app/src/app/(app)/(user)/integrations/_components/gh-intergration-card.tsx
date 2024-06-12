@@ -14,9 +14,19 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { setGreenhouseToken } from "@/server/actions/greenhouse/mutations";
-
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { setGreenhouseDetails } from "@/server/actions/greenhouse/mutations";
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,26 +39,46 @@ interface GreenhouseIntegrationCardProps {
     lastModified?: string;
 }
 
+const formSchema = z.object({
+    subDomain: z
+        .string()
+        .min(3, { message: "Sub-domain must be at least 3 characters." }),
+    token: z
+        .string()
+        .min(10, { message: "API Token must be at least 10 characters." }),
+});
+
 export const GreenhouseIntegrationCard: React.FC<
     GreenhouseIntegrationCardProps
 > = ({ name, imageUrl, buttonText, isConnected, lastModified }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [token, setToken] = useState("");
     const router = useRouter();
     const [, startAwaitableTransition] = useAwaitableTransition();
 
-    const handleTokenSubmit = async () => {
-        const response = await setGreenhouseToken(token);
-        if (response === "OK") {
-            // Handle successful connection here, e.g., show a success message or update state
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            subDomain: "",
+            token: "",
+        },
+    });
 
+    const handleDetailsSubmit = async (values: {
+        subDomain: string;
+        token: string;
+    }) => {
+        const response = await setGreenhouseDetails(
+            values.subDomain,
+            values.token,
+        );
+        if (response === "OK") {
             setIsModalOpen(false);
-            toast.success("API key successfully connected");
+            toast.success("API key and sub-domain successfully connected");
             await startAwaitableTransition(() => {
                 router.refresh();
             });
         } else {
-            // Handle failure here, e.g., show an error message
+            toast.error("Failed to connect API key and sub-domain");
         }
     };
 
@@ -89,30 +119,65 @@ export const GreenhouseIntegrationCard: React.FC<
                 <DialogTrigger asChild></DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Enter Greenhouse API Token</DialogTitle>
+                        <DialogTitle>Enter Greenhouse Details</DialogTitle>
                         <DialogDescription>
-                            Please enter your Greenhouse API token to connect
-                            your account.
+                            Please enter your Greenhouse API token and
+                            sub-domain to connect your account.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="token" className="text-right">
-                                API Token
-                            </Label>
-                            <Input
-                                id="token"
-                                value={token}
-                                onChange={(e) => setToken(e.target.value)}
-                                className="col-span-3"
+                    <Form {...form}>
+                        <form
+                            onSubmit={form.handleSubmit(handleDetailsSubmit)}
+                            className="space-y-8"
+                        >
+                            <FormField
+                                control={form.control}
+                                name="subDomain"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Sub-domain</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="Subdomain"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Allows Sinta to link to your
+                                            greenhouse (ex. if your greenhouse
+                                            URL is &#34;app3.greenhouse.io&#34; then
+                                            your subdomainis &#34;app3&#34;)
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="button" onClick={handleTokenSubmit}>
-                            Submit
-                        </Button>
-                    </DialogFooter>
+                            <FormField
+                                control={form.control}
+                                name="token"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>API Token</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="API Token"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Enter your Greenhouse API token. You
+                                            can find this in your Greenhouse
+                                            account settings.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <DialogFooter>
+                                <Button type="submit">Submit</Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
                 </DialogContent>
             </Dialog>
         </>

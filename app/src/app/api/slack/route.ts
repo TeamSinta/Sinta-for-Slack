@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
                 expiresAt,
             );
             console.log("Access token updated:", updateResponse);
-            console.log(json)
+            console.log(json);
             if (updateResponse === "OK") {
                 const url = `${siteUrls.publicUrl}/success/${json.team.id}`;
                 return NextResponse.redirect(url);
