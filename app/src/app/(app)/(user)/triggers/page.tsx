@@ -3,6 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
+import comingsoon from "../../../../../public/comingsoon.png";
+import Image from "next/image";
 
 export default function Triggers() {
     return (
@@ -15,7 +17,9 @@ export default function Triggers() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center text-center">
-                    <p className="mb-4 text-gray-700">
+                <Image src={comingsoon} alt="Alert" className="rounded-lg"  />
+
+                    <p className="mb-4 text-gray-700 mt-4">
                         Our triggers feature is under development and will be
                         available soon. Stay tuned!
                     </p>
