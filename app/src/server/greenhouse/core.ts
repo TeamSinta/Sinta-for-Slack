@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -5,8 +6,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument*/
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
+// @ts-nocheck
 import { customFetch } from "@/utils/fetch";
 import { parseISO, differenceInCalendarDays } from "date-fns";
 import { isValid } from "date-fns";
