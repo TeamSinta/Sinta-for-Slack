@@ -15,14 +15,14 @@ export const AlertIntegrationDialog = () => (
         <DialogTitle>Integrations Required</DialogTitle>
       </DialogHeader>
       <DialogDescription>
-        <Image src={missingImage} alt="Alert"  />
+        <Image src={missingImage} alt="Alert" className="rounded-lg py-2"  />
         <p className="">
         Hey there! Looks like you haven&#39;t connected your Greenhouse & Slack. Connect them first, then you can unleash your workflow wizardry. 🧙‍♂️✨
         </p>
 
               </DialogDescription>
       <DialogFooter>
-      <Button className="hover:bg-indigo-500">
+      <Button className="hover:bg-indigo-500 ">
           <Link href="/integrations">Go to Integration Page</Link>
         </Button>
       </DialogFooter>
