@@ -1,59 +1,39 @@
-import { NextResponse } from "next/server";
-import { fetchScheduledInterviews, fetchScorecard } from "@/hooks/mock-data";
-import { checkSlackTeamIdFilled } from "@/server/actions/organization/queries";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-export const dynamic = "force-dynamic";
+import { getGreenhouseApiToken } from '@/server/actions/greenhouse/query';
+import { type NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
-    try {
-        const slackTeamId = await checkSlackTeamIdFilled();
+export const dynamic = 'force-dynamic';
 
-        const interviews = await fetchScheduledInterviews();
+export async function POST(request: NextRequest) {
+  try {
+    const { url, options }: { url: string; options: RequestInit & { query?: Record<string, string> } } = await request.json();
 
-        let responseMessage = "No interviews found for today.";
-
-        if (!slackTeamId) {
-            console.error("Slack team ID not found, cannot send messages.");
-            return new NextResponse(
-                JSON.stringify({
-                    error: "Slack team ID is required but was not found.",
-                }),
-                {
-                    status: 400,
-                },
-            );
-        }
-        for (const interview of interviews) {
-            const scorecardId = interview?.interviewers?.[0]?.scorecard_id;
-            if (scorecardId) {
-                const scorecard = await fetchScorecard(scorecardId);
-                if (scorecard) {
-                    // Prepare data for sending the Slack message
-                    // const interviewData = {
-                    //     teamId: slackTeamId ?? null,
-                    //     questions: scorecard.questions,
-                    //     interviewStep: scorecard.interview,
-                    //     overallRecommendation: scorecard.overall_recommendation,
-                    //     interviewer: scorecard.interviewer,
-                    //     scorecard_id: scorecard.id,
-                    // };
-                    // // Send Slack message
-                    // await sendSlackMessage(interviewData); // Assume interview ID is the post ID
-                    responseMessage = "Scorecard notification sent.";
-                }
-            }
-        }
-
-        return new NextResponse(JSON.stringify({ message: responseMessage }), {
-            status: 200,
-        });
-    } catch (error) {
-        console.error("Failed to send scorecard notifications:", error);
-        return new NextResponse(
-            JSON.stringify({ error: "Internal server error" }),
-            {
-                status: 500,
-            },
-        );
+    const apiToken = await getGreenhouseApiToken();
+    if (!apiToken) {
+      return NextResponse.json({ error: 'API token not found for the current organization' }, { status: 400 });
     }
+
+    const headers: HeadersInit = {
+      Authorization: `Basic ${btoa(apiToken + ":")}`, // Encode API token for Basic Auth
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+
+    let requestUrl = url;
+    if (options.query) {
+      const queryParams = new URLSearchParams(options.query).toString();
+      requestUrl = `${url}?${queryParams}`;
+    }
+
+    const response = await fetch(requestUrl, { ...options, headers });
+    if (!response.ok) {
+      return NextResponse.json({ error: `HTTP error! Status: ${response.status}` }, { status: response.status });
+    }
+
+    const responseData = await response.json();
+    return NextResponse.json(responseData);
+  } catch (error) {
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+  }
 }
