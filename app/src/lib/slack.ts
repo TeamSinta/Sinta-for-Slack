@@ -106,10 +106,13 @@ async function matchUsers(
 export async function filterProcessedForSlack(
     candidates: Candidate[],
     workflow: WorkflowRecipient,
+    slack_team_id: string,
 ): Promise<Record<string, string | number>[]> {
     const greenhouseUsers = await fetchGreenhouseUsers();
-    const slackUsers = await getEmailsfromSlack();
+    const slackUsers = await getEmailsfromSlack(slack_team_id);
     const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+    console.log("userMapping", userMapping);
+    console.log("slackUsers", slackUsers);
 
     return candidates.map((candidate) => {
         const result: Record<string, string | number> = {
