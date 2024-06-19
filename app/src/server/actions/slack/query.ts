@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 "use server";
-
 import { db } from "@/server/db";
 import { organizations, workflows } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
