@@ -13,7 +13,7 @@ export async function getGreenhouseApiToken(): Promise<string | null> {
 
     const result = await db
         .select({
-            greenhouse_api_token: organizations.greenhouse_api_token
+            greenhouse_api_token: organizations.greenhouse_api_token,
         })
         .from(organizations)
         .where(eq(organizations.id, orgID))

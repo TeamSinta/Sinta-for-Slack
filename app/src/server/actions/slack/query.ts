@@ -3,7 +3,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { organizations } from "@/server/db/schema";
+import { organizations, workflows } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 
@@ -26,20 +26,19 @@ export async function getAccessToken(teamId: string): Promise<string> {
         throw new Error("Organization not found or no access token available.");
     }
 
-    // Check if token_expiry is null or the access token is expired
-    if (
-        !organization.slack_access_token ||
-        organization.token_expiry === null ||
-        Date.now() >= (organization.token_expiry ?? 0) * 1000
-    ) {
-        return await refreshTokenIfNeeded(
-            teamId,
-            organization.token_expiry!,
-            organization.slack_refresh_token!,
-        ); // This will refresh the token if necessary
-    }
+    // // Check if token_expiry is null or the access token is expired
+    // if (
+    //     !organization.slack_access_token ||
+    //     Date.now() >= (organization.token_expiry ?? 0) * 1000
+    // ) {
+    //     return await refreshTokenIfNeeded(
+    //         teamId,
+    //         organization.token_expiry!,
+    //         organization.slack_refresh_token!,
+    //     ); // This will refresh the token if necessary
+    // }
 
-    return organization.slack_access_token; // Return the existing access token if it's still valid
+    return organization.slack_access_token!;
 }
 
 export async function refreshTokenIfNeeded(
@@ -115,4 +114,38 @@ export async function setAccessToken(
         .execute();
 
     return result ? "OK" : "Failed to update access token";
+}
+
+export async function getSlackTeamIDByWorkflowID(
+    workflowId: string,
+): Promise<string> {
+    if (!workflowId) {
+        throw new Error("No workflow ID provided.");
+    }
+
+    // Fetch workflow details using the provided workflow ID
+    const workflow = await db.query.workflows.findFirst({
+        where: eq(workflows.id, workflowId),
+        columns: {
+            organizationId: true,
+        },
+    });
+
+    if (!workflow) {
+        throw new Error("Workflow not found.");
+    }
+
+    // Fetch organization's Slack team ID using the organization ID from the workflow
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.id, workflow.organizationId),
+        columns: {
+            slack_team_id: true,
+        },
+    });
+
+    if (!organization) {
+        throw new Error("Organization not found.");
+    }
+
+    return organization.slack_team_id!;
 }

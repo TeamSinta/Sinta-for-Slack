@@ -19,6 +19,7 @@ import {
     sendSlackNotification,
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
+import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 
 export async function POST() {
     try {
@@ -60,15 +61,29 @@ export async function POST() {
                         data,
                         workflow.conditions,
                     );
+
+                const slackTeamID = await getSlackTeamIDByWorkflowID(
+                    workflow.id,
+                );
+
+                console.log("filteredConditionsData", filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
                     filteredConditionsData,
                     workflow.recipient,
+                    slackTeamID,
                 );
 
-                await sendSlackButtonNotification(
-                    filteredSlackData,
-                    workflow.recipient,
-                );
+                if (filteredSlackData.length > 0) {
+                    await sendSlackButtonNotification(
+                        filteredSlackData,
+                        workflow.recipient,
+                        slackTeamID,
+                    );
+                    console.log(filteredSlackData);
+                    console.log("Sent to Slack");
+                } else {
+                    console.log("No data to send to Slack");
+                }
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
