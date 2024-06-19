@@ -26,17 +26,17 @@ export async function getAccessToken(teamId: string): Promise<string> {
         throw new Error("Organization not found or no access token available.");
     }
 
-    // // Check if token_expiry is null or the access token is expired
-    // if (
-    //     !organization.slack_access_token ||
-    //     Date.now() >= (organization.token_expiry ?? 0) * 1000
-    // ) {
-    //     return await refreshTokenIfNeeded(
-    //         teamId,
-    //         organization.token_expiry!,
-    //         organization.slack_refresh_token!,
-    //     ); // This will refresh the token if necessary
-    // }
+    // Check if token_expiry is null or the access token is expired
+    if (
+        !organization.slack_access_token ||
+        Date.now() >= (organization.token_expiry ?? 0) * 1000
+    ) {
+        return await refreshTokenIfNeeded(
+            teamId,
+            organization.token_expiry!,
+            organization.slack_refresh_token!,
+        ); // This will refresh the token if necessary
+    }
 
     return organization.slack_access_token!;
 }
