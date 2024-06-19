@@ -38,7 +38,7 @@ export async function getAccessToken(teamId: string): Promise<string> {
     //     ); // This will refresh the token if necessary
     // }
 
-    return organization.slack_access_token as string;
+    return organization.slack_access_token!;
 }
 
 export async function refreshTokenIfNeeded(
@@ -116,34 +116,36 @@ export async function setAccessToken(
     return result ? "OK" : "Failed to update access token";
 }
 
-export async function getSlackTeamIDByWorkflowID(workflowId: string): Promise<string> {
-  if (!workflowId) {
-      throw new Error("No workflow ID provided.");
-  }
+export async function getSlackTeamIDByWorkflowID(
+    workflowId: string,
+): Promise<string> {
+    if (!workflowId) {
+        throw new Error("No workflow ID provided.");
+    }
 
-  // Fetch workflow details using the provided workflow ID
-  const workflow = await db.query.workflows.findFirst({
-      where: eq(workflows.id, workflowId),
-      columns: {
-          organizationId: true,
-      },
-  });
+    // Fetch workflow details using the provided workflow ID
+    const workflow = await db.query.workflows.findFirst({
+        where: eq(workflows.id, workflowId),
+        columns: {
+            organizationId: true,
+        },
+    });
 
-  if (!workflow) {
-      throw new Error("Workflow not found.");
-  }
+    if (!workflow) {
+        throw new Error("Workflow not found.");
+    }
 
-  // Fetch organization's Slack team ID using the organization ID from the workflow
-  const organization = await db.query.organizations.findFirst({
-      where: eq(organizations.id, workflow.organizationId),
-      columns: {
-          slack_team_id: true,
-      },
-  });
+    // Fetch organization's Slack team ID using the organization ID from the workflow
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.id, workflow.organizationId),
+        columns: {
+            slack_team_id: true,
+        },
+    });
 
-  if (!organization) {
-      throw new Error("Organization not found.");
-  }
+    if (!organization) {
+        throw new Error("Organization not found.");
+    }
 
-  return organization.slack_team_id as string;
+    return organization.slack_team_id!;
 }

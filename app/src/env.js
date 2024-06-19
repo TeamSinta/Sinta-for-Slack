@@ -65,7 +65,8 @@ export const env = createEnv({
         UPLOADTHING_SECRET: process.env.UPLOADTHING_SECRET,
         UPLOADTHING_ID: process.env.UPLOADTHING_ID,
         VERCEL_SLACK_HOOK: process.env.VERCEL_SLACK_HOOK,
-        GREENHOUSE_API_HARVEST: process.env.GREENHOUSE_API_HARVEST,    },
+        GREENHOUSE_API_HARVEST: process.env.GREENHOUSE_API_HARVEST,
+    },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
      * useful for Docker builds.

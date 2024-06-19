@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -394,7 +393,14 @@ export const filterDataWithConditions = (
                         );
                 }
             }
-            console.log("itemValue", itemValue, "value", value, "operator", operator)
+            console.log(
+                "itemValue",
+                itemValue,
+                "value",
+                value,
+                "operator",
+                operator,
+            );
             switch (operator) {
                 case "equals":
                     return itemValue === value;
@@ -461,60 +467,59 @@ function calculateTimeInCurrentStage(
 }
 
 export async function filterStuckinStageDataConditions(
-  candidates: Candidate[],
-  conditions: Condition[],
+    candidates: Candidate[],
+    conditions: Condition[],
 ): Promise<Candidate[]> {
-  const matchedCandidates: Candidate[] = [];
+    const matchedCandidates: Candidate[] = [];
 
-  const condition = conditions[0];
-  const stageName = condition.field.label;
-  const thresholdDays = parseInt(condition.value, 10);
-  const operator = condition.condition;
+    const condition = conditions[0];
+    const stageName = condition.field.label;
+    const thresholdDays = parseInt(condition.value, 10);
+    const operator = condition.condition;
 
-  for (const candidate of candidates) {
-      const candidateId = candidate.id;
-      const activityFeed = await fetchActivityFeed(candidateId);
-      const application = candidate.applications.find(
-          (app) => app.current_stage.name === stageName,
-      );
-      if (application) {
-          const currentStage = application.current_stage.name;
-          const daysInCurrentStage = calculateTimeInCurrentStage(
-              currentStage,
-              activityFeed.activities,
-          );
+    for (const candidate of candidates) {
+        const candidateId = candidate.id;
+        const activityFeed = await fetchActivityFeed(candidateId);
+        const application = candidate.applications.find(
+            (app) => app.current_stage.name === stageName,
+        );
+        if (application) {
+            const currentStage = application.current_stage.name;
+            const daysInCurrentStage = calculateTimeInCurrentStage(
+                currentStage,
+                activityFeed.activities,
+            );
 
+            let conditionMet = false;
 
-          let conditionMet = false;
+            switch (operator) {
+                case "greaterThan":
+                    conditionMet = daysInCurrentStage > thresholdDays;
+                    break;
+                case "lessThan":
+                    conditionMet = daysInCurrentStage < thresholdDays;
+                    break;
+                case "greaterThanOrEqual":
+                    conditionMet = daysInCurrentStage >= thresholdDays;
+                    break;
+                case "lessThanOrEqual":
+                    conditionMet = daysInCurrentStage <= thresholdDays;
+                    break;
+                case "equals":
+                    conditionMet = daysInCurrentStage === thresholdDays;
+                    break;
+                case "notEqual":
+                    conditionMet = daysInCurrentStage !== thresholdDays;
+                    break;
+                default:
+                    console.warn(`Unsupported condition operator: ${operator}`);
+            }
 
-          switch (operator) {
-              case "greaterThan":
-                  conditionMet = daysInCurrentStage > thresholdDays;
-                  break;
-              case "lessThan":
-                  conditionMet = daysInCurrentStage < thresholdDays;
-                  break;
-              case "greaterThanOrEqual":
-                  conditionMet = daysInCurrentStage >= thresholdDays;
-                  break;
-              case "lessThanOrEqual":
-                  conditionMet = daysInCurrentStage <= thresholdDays;
-                  break;
-              case "equals":
-                  conditionMet = daysInCurrentStage === thresholdDays;
-                  break;
-              case "notEqual":
-                  conditionMet = daysInCurrentStage !== thresholdDays;
-                  break;
-              default:
-                  console.warn(`Unsupported condition operator: ${operator}`);
-          }
+            if (conditionMet) {
+                matchedCandidates.push(candidate);
+            }
+        }
+    }
 
-          if (conditionMet) {
-              matchedCandidates.push(candidate);
-          }
-      }
-  }
-
-  return matchedCandidates;
+    return matchedCandidates;
 }

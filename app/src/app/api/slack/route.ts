@@ -75,9 +75,9 @@ export async function GET(req: NextRequest) {
             `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`,
             { method: "POST" },
         );
-        console.log("response", response)
+        console.log("response", response);
         const json = await response.json();
-        console.log("jsoon", json)
+        console.log("jsoon", json);
 
         if (
             json.access_token &&
@@ -193,7 +193,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
             slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
-        console.log("greenhouseUserId", greenhouseUserId)
+        console.log("greenhouseUserId", greenhouseUserId);
         let statusMessage = "";
         let emoji = "✅";
         if (!greenhouseUserId) {
@@ -285,7 +285,7 @@ async function handleSlackInteraction(payload: SlackInteraction) {
                 candidateId,
                 privateMetadata,
             );
-            console.log("modalPayload", modalPayload)
+            console.log("modalPayload", modalPayload);
             return openModal(modalPayload, accessToken);
         } else if (action_id.startsWith("reject_candidate_")) {
             // Encode necessary information in private_metadata
@@ -325,7 +325,7 @@ async function openModal(
     modalPayload: any,
     accessToken: string | null | undefined,
 ) {
-  console.log("accessToken", accessToken)
+    console.log("accessToken", accessToken);
 
     const response = await fetch("https://slack.com/api/views.open", {
         method: "POST",
@@ -337,7 +337,7 @@ async function openModal(
     });
 
     const responseData = await response.json();
-    console.log("Modal opened:", responseData)
+    console.log("Modal opened:", responseData);
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },

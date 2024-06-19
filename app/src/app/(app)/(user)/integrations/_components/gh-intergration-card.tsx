@@ -145,8 +145,9 @@ export const GreenhouseIntegrationCard: React.FC<
                                         <FormDescription>
                                             Allows Sinta to link to your
                                             greenhouse (ex. if your greenhouse
-                                            URL is &#34;app3.greenhouse.io&#34; then
-                                            your subdomain is &#34;app3&#34;)
+                                            URL is &#34;app3.greenhouse.io&#34;
+                                            then your subdomain is
+                                            &#34;app3&#34;)
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>

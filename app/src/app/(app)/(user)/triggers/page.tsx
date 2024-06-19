@@ -17,9 +17,13 @@ export default function Triggers() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center text-center">
-                <Image src={comingsoon} alt="Alert" className="rounded-lg"  />
+                    <Image
+                        src={comingsoon}
+                        alt="Alert"
+                        className="rounded-lg"
+                    />
 
-                    <p className="mb-4 text-gray-700 mt-4">
+                    <p className="mb-4 mt-4 text-gray-700">
                         Our triggers feature is under development and will be
                         available soon. Stay tuned!
                     </p>

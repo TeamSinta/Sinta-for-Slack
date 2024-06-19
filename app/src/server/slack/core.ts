@@ -115,7 +115,6 @@ export async function getEmailsfromSlack(
     teamId?: string,
 ): Promise<{ value: string; label: string; email: string }[]> {
     try {
-
         const accessToken = await getAccessToken(teamId);
         const response = await fetch("https://slack.com/api/users.list", {
             method: "GET",
@@ -124,7 +123,6 @@ export async function getEmailsfromSlack(
                 "Content-Type": "application/json",
             },
         });
-
 
         if (!response.ok) {
             throw new Error("Failed to fetch users");
@@ -332,7 +330,7 @@ export async function sendSlackButtonNotification(
                                                 return `*${fieldName}*: ${String(fieldValue)}`;
                                             })
                                             .filter(Boolean)
-                                                  .join("\n"),
+                                            .join("\n"),
                                     },
                                 },
                                 {
@@ -400,17 +398,25 @@ export async function sendSlackButtonNotification(
             }),
         });
 
-        console.log("response", await response.json())
-        function prettyPrint(obj: any, depth: number = 2) {
-          return JSON.stringify(obj, (key, value) => {
-              if (depth !== 0 && typeof value === 'object' && value !== null) {
-                  return value;
-              }
-              return value;
-          }, 2);
-      }
+        console.log("response", await response.json());
+        function prettyPrint(obj: any, depth = 2) {
+            return JSON.stringify(
+                obj,
+                (key, value) => {
+                    if (
+                        depth !== 0 &&
+                        typeof value === "object" &&
+                        value !== null
+                    ) {
+                        return value;
+                    }
+                    return value;
+                },
+                2,
+            );
+        }
 
-      console.log("attachments", prettyPrint(attachments));
+        console.log("attachments", prettyPrint(attachments));
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(

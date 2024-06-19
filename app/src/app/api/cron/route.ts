@@ -62,26 +62,28 @@ export async function POST() {
                         workflow.conditions,
                     );
 
-                const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
+                const slackTeamID = await getSlackTeamIDByWorkflowID(
+                    workflow.id,
+                );
 
-                console.log(  "filteredConditionsData", filteredConditionsData);
+                console.log("filteredConditionsData", filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
                     filteredConditionsData,
                     workflow.recipient,
-                    slackTeamID
+                    slackTeamID,
                 );
 
                 if (filteredSlackData.length > 0) {
-                  await sendSlackButtonNotification(
-                      filteredSlackData,
-                      workflow.recipient,
-                      slackTeamID
-                  );
-                  console.log(filteredSlackData)
-                  console.log("Sent to Slack");
-              } else {
-                  console.log("No data to send to Slack");
-              }
+                    await sendSlackButtonNotification(
+                        filteredSlackData,
+                        workflow.recipient,
+                        slackTeamID,
+                    );
+                    console.log(filteredSlackData);
+                    console.log("Sent to Slack");
+                } else {
+                    console.log("No data to send to Slack");
+                }
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
