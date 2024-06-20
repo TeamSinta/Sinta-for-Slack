@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -394,7 +393,14 @@ export const filterDataWithConditions = (
                         );
                 }
             }
-
+            console.log(
+                "itemValue",
+                itemValue,
+                "value",
+                value,
+                "operator",
+                operator,
+            );
             switch (operator) {
                 case "equals":
                     return itemValue === value;
@@ -469,6 +475,7 @@ export async function filterStuckinStageDataConditions(
     const condition = conditions[0];
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
+    const operator = condition.condition;
 
     for (const candidate of candidates) {
         const candidateId = candidate.id;
@@ -483,7 +490,32 @@ export async function filterStuckinStageDataConditions(
                 activityFeed.activities,
             );
 
-            if (daysInCurrentStage > thresholdDays) {
+            let conditionMet = false;
+
+            switch (operator) {
+                case "greaterThan":
+                    conditionMet = daysInCurrentStage > thresholdDays;
+                    break;
+                case "lessThan":
+                    conditionMet = daysInCurrentStage < thresholdDays;
+                    break;
+                case "greaterThanOrEqual":
+                    conditionMet = daysInCurrentStage >= thresholdDays;
+                    break;
+                case "lessThanOrEqual":
+                    conditionMet = daysInCurrentStage <= thresholdDays;
+                    break;
+                case "equals":
+                    conditionMet = daysInCurrentStage === thresholdDays;
+                    break;
+                case "notEqual":
+                    conditionMet = daysInCurrentStage !== thresholdDays;
+                    break;
+                default:
+                    console.warn(`Unsupported condition operator: ${operator}`);
+            }
+
+            if (conditionMet) {
                 matchedCandidates.push(candidate);
             }
         }

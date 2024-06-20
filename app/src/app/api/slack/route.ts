@@ -75,7 +75,9 @@ export async function GET(req: NextRequest) {
             `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`,
             { method: "POST" },
         );
+        console.log("response", response);
         const json = await response.json();
+        console.log("jsoon", json);
 
         if (
             json.access_token &&
@@ -191,7 +193,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
             slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
-
+        console.log("greenhouseUserId", greenhouseUserId);
         let statusMessage = "";
         let emoji = "✅";
         if (!greenhouseUserId) {
@@ -249,7 +251,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-
+    console.log("Received interaction:", payload);
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -283,6 +285,7 @@ async function handleSlackInteraction(payload: SlackInteraction) {
                 candidateId,
                 privateMetadata,
             );
+            console.log("modalPayload", modalPayload);
             return openModal(modalPayload, accessToken);
         } else if (action_id.startsWith("reject_candidate_")) {
             // Encode necessary information in private_metadata
@@ -322,6 +325,8 @@ async function openModal(
     modalPayload: any,
     accessToken: string | null | undefined,
 ) {
+    console.log("accessToken", accessToken);
+
     const response = await fetch("https://slack.com/api/views.open", {
         method: "POST",
         headers: {
@@ -330,7 +335,9 @@ async function openModal(
         },
         body: JSON.stringify(modalPayload),
     });
+
     const responseData = await response.json();
+    console.log("Modal opened:", responseData);
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },

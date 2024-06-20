@@ -115,18 +115,7 @@ export async function getEmailsfromSlack(
     teamId?: string,
 ): Promise<{ value: string; label: string; email: string }[]> {
     try {
-        let slackTeamId = teamId;
-
-        if (!slackTeamId) {
-            const { currentOrg = {} } = (await getOrganizations()) || {};
-            if (!currentOrg.slack_team_id) {
-                console.error("No Slack team ID available.");
-                return [];
-            }
-            slackTeamId = currentOrg.slack_team_id;
-        }
-
-        const accessToken = await getAccessToken(slackTeamId);
+        const accessToken = await getAccessToken(teamId);
         const response = await fetch("https://slack.com/api/users.list", {
             method: "GET",
             headers: {
@@ -275,13 +264,10 @@ export async function sendSlackNotification(
 export async function sendSlackButtonNotification(
     filteredSlackData: Record<string, unknown>[],
     workflowRecipient: WorkflowRecipient,
+    slackTeamID: string,
 ): Promise<void> {
-    const { currentOrg = {} } = (await getOrganizations()) || {};
-    if (!currentOrg.slack_team_id) {
-        console.error("No Slack team ID available.");
-        return;
-    }
-    const accessToken = await getAccessToken(currentOrg.slack_team_id);
+    console.log("slackID", slackTeamID);
+    const accessToken = await getAccessToken(slackTeamID);
 
     for (const recipient of workflowRecipient.recipients) {
         const channel = recipient.value;
@@ -349,7 +335,7 @@ export async function sendSlackButtonNotification(
                                 },
                                 {
                                     type: "actions",
-                                    block_id: "Sc16L",
+                                    block_id: `block_id_${candidateId}`,
                                     elements:
                                         workflowRecipient.messageButtons.map(
                                             (button) => {
@@ -412,6 +398,25 @@ export async function sendSlackButtonNotification(
             }),
         });
 
+        console.log("response", await response.json());
+        function prettyPrint(obj: any, depth = 2) {
+            return JSON.stringify(
+                obj,
+                (key, value) => {
+                    if (
+                        depth !== 0 &&
+                        typeof value === "object" &&
+                        value !== null
+                    ) {
+                        return value;
+                    }
+                    return value;
+                },
+                2,
+            );
+        }
+
+        console.log("attachments", prettyPrint(attachments));
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
