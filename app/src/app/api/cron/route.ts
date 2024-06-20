@@ -53,7 +53,7 @@ export async function GET() {
                     apiUrl,
                     processor ? { query: processor } : {},
                 );
-
+                console.log("cron-job running!!");
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData =
                     await filterStuckinStageDataConditions(
