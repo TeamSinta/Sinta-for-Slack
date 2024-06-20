@@ -12,6 +12,7 @@ const nextConfig = {
         optimizePackageImports: ["lucide-react"],
     },
     transpilePackages: ["@radix-ui/react-dialog"],
+
     images: {
         domains: ["assets-global.website-files.com", "uploads-ssl.webflow.com"],
     },
