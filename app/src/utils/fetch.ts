@@ -23,7 +23,6 @@ export async function customFetch(
                 },
             },
         );
-
         if (response.status !== 200) {
             throw new Error(
                 `HTTP error! Status: ${response.status}, Body: ${response.data}`,
