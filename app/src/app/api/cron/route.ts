@@ -5,8 +5,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
-"use server";
-
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
@@ -21,7 +19,8 @@ import {
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 
-export async function POST() {
+// Define the GET handler for the route
+export async function GET() {
     try {
         const workflows: Workflow[] = await getWorkflows(); // Retrieve workflows from the database
         let shouldReturnNull = false; // Flag to determine whether to return null
@@ -90,28 +89,12 @@ export async function POST() {
         }
 
         if (shouldReturnNull) {
-            return new NextResponse(
-                JSON.stringify({ message: "No workflows to process" }),
-                { status: 200 },
-            );
+            return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
         }
 
-        return new NextResponse(
-            JSON.stringify({ message: "Workflows processed successfully" }),
-            {
-                status: 200,
-            },
-        );
+        return NextResponse.json({ message: "Workflows processed successfully" }, { status: 200 });
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
-        return new NextResponse(
-            JSON.stringify({
-                error: "Failed to process workflows",
-                details: (error as Error).message,
-            }),
-            {
-                status: 500,
-            },
-        );
+        return NextResponse.json({ error: "Failed to process workflows", details: (error as Error).message }, { status: 500 });
     }
 }
