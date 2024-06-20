@@ -36,7 +36,7 @@ export async function getAccessToken(teamId: string): Promise<string> {
         ); // This will refresh the token if necessary
     }
 
-    return organization.slack_access_token!;
+    return organization.slack_access_token;
 }
 
 export async function refreshTokenIfNeeded(
