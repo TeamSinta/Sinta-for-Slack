@@ -72,8 +72,8 @@ export async function refreshTokenIfNeeded(
         ) {
             const expiresAt = Math.floor(Date.now() / 1000) + data.expires_in;
             await setAccessToken(
-                teamId,
                 data.access_token,
+                teamId,
                 data.refresh_token,
                 expiresAt,
             );
