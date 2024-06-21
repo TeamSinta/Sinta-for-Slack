@@ -18,6 +18,7 @@ import {
     fetchCandidateDetails,
     fetchGreenhouseUsers,
     fetchRejectReasons,
+    fetchEmailTemplates,
     fetchStagesForJob,
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
@@ -50,7 +51,7 @@ interface SlackAction {
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-
+    
     if (!code) {
         return new NextResponse(
             JSON.stringify({ message: "Code parameter is missing." }),
@@ -60,7 +61,13 @@ export async function GET(req: NextRequest) {
 
     const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
     const clientSecret = process.env.SLACK_CLIENT_SECRET;
+    const redirectUri = process.env.NEXTAUTH_URL+"api/slack";
 
+    // console.log('json secret - ',json)
+    console.log('redirectUri  - ',redirectUri)
+    console.log('clientId  - ',clientId)
+    console.log('client secret - ',clientSecret)
+    console.log('code - ',code)
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -71,14 +78,13 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const response = await fetch(
-            `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`,
+        const url = `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`
+        console.log('url - ',url)
+        const response = await fetch(url,
             { method: "POST" },
         );
-        console.log("response", response);
         const json = await response.json();
-        console.log("jsoon", json);
-
+        console.log('json - ',json)
         if (
             json.access_token &&
             json.refresh_token &&
@@ -193,7 +199,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
             slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
-        console.log("greenhouseUserId", greenhouseUserId);
+
         let statusMessage = "";
         let emoji = "✅";
         if (!greenhouseUserId) {
@@ -251,7 +257,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-    console.log("Received interaction:", payload);
+
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -285,7 +291,6 @@ async function handleSlackInteraction(payload: SlackInteraction) {
                 candidateId,
                 privateMetadata,
             );
-            console.log("modalPayload", modalPayload);
             return openModal(modalPayload, accessToken);
         } else if (action_id.startsWith("reject_candidate_")) {
             // Encode necessary information in private_metadata
@@ -325,8 +330,6 @@ async function openModal(
     modalPayload: any,
     accessToken: string | null | undefined,
 ) {
-    console.log("accessToken", accessToken);
-
     const response = await fetch("https://slack.com/api/views.open", {
         method: "POST",
         headers: {
@@ -335,9 +338,7 @@ async function openModal(
         },
         body: JSON.stringify(modalPayload),
     });
-
     const responseData = await response.json();
-    console.log("Modal opened:", responseData);
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },
@@ -445,7 +446,7 @@ async function createRejectCandidateModal(
     try {
         // Fetch reject reasons and email templates
         const rejectReasons = await fetchRejectReasons();
-        const emailTemplates = await fetchRejectReasons();
+        const emailTemplates = await fetchEmailTemplates();
 
         // Create and return the modal payload
         return {
