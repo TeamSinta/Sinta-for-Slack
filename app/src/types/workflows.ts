@@ -3,5 +3,6 @@ export interface WorkflowRecipient {
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
     messageDelivery: string;
-    recipients: string[];
+    recipients: any[];
+    // recipients: string[];
 }
