@@ -16,6 +16,7 @@ import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
 import { siteUrls } from "@/config/urls";
 import {
     fetchCandidateDetails,
+    fetchEmailTemplates,
     fetchGreenhouseUsers,
     fetchRejectReasons,
     fetchStagesForJob,
@@ -198,7 +199,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         let emoji = "✅";
         if (!greenhouseUserId) {
             statusMessage =
-                "Failed to find corresponding Greenhouse user for the Slack user. This has been submitted.";
+                "Incorrect permissions. Failed to find corresponding Greenhouse user for the Slack user.";
             emoji = "❌";
         } else {
             const result = await moveToNextStageInGreenhouse(
@@ -445,7 +446,7 @@ async function createRejectCandidateModal(
     try {
         // Fetch reject reasons and email templates
         const rejectReasons = await fetchRejectReasons();
-        const emailTemplates = await fetchRejectReasons();
+        const emailTemplates = await fetchEmailTemplates();
 
         // Create and return the modal payload
         return {
