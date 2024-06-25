@@ -18,6 +18,7 @@ import {
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
+import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
 
 // Define the GET handler for the route
 export async function GET() {
@@ -64,6 +65,8 @@ export async function GET() {
                 const slackTeamID = await getSlackTeamIDByWorkflowID(
                     workflow.id,
                 );
+                const subDomain = await getSubdomainByWorkflowID( workflow.id,);
+
 
                 console.log("filteredConditionsData", filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
@@ -77,6 +80,7 @@ export async function GET() {
                         filteredSlackData,
                         workflow.recipient,
                         slackTeamID,
+                        subDomain
                     );
                     console.log(filteredSlackData);
                     console.log("Sent to Slack");

@@ -6,6 +6,7 @@ import {
     membersToOrganizations,
     orgRequests,
     organizations,
+    workflows,
 } from "@/server/db/schema";
 import { protectedProcedure } from "@/server/procedures";
 import { and, asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
@@ -231,4 +232,36 @@ export async function getPaginatedOrgMembersQuery(
     const pageCount = Math.ceil(total / input.per_page);
 
     return { data, pageCount, total };
+}
+
+export async function getSubdomainByWorkflowID(workflowId: string): Promise<string> {
+  if (!workflowId) {
+      throw new Error("No workflow ID provided.");
+  }
+
+  // Fetch workflow details using the provided workflow ID
+  const workflow = await db.query.workflows.findFirst({
+      where: eq(workflows.id, workflowId),
+      columns: {
+          organizationId: true,
+      },
+  });
+
+  if (!workflow) {
+      throw new Error("Workflow not found.");
+  }
+
+  // Fetch organization's subdomain using the organization ID from the workflow
+  const organization = await db.query.organizations.findFirst({
+      where: eq(organizations.id, workflow.organizationId),
+      columns: {
+          greenhouse_subdomain: true,
+      },
+  });
+
+  if (!organization) {
+      throw new Error("Organization not found.");
+  }
+
+  return organization.greenhouse_subdomain!;
 }

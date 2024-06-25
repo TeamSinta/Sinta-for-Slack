@@ -216,11 +216,11 @@ export async function fetchEmailTemplates(): Promise<
         // const queryString = new URLSearchParams({
         //     skip_count: "true",
         // }).toString();
-        
+
         // const url = `https://harvest.greenhouse.io/v1/rejection_reasons?${queryString}`;
         const url = `https://harvest.greenhouse.io/v1/email_templates`;
         const response = await customFetch(url);
-        
+
         const emailTemplates = response;
         if (!Array.isArray(emailTemplates)) {
             throw new Error("Invalid response format for reject reasons");
@@ -257,35 +257,6 @@ export async function fetchRejectReasons(): Promise<
         return rejectReasons.map((reason: { id: number; name: string }) => ({
             id: reason.id,
             name: reason.name,
-        }));
-    } catch (error) {
-        console.error("Error fetching reject reasons: ", error);
-        return [];
-    }
-}
-
-export async function fetchEmailTemplates(): Promise<
-    { id: number; name: string }[]
-> {
-    try {
-        // Replace this URL with the actual Greenhouse API endpoint for fetching reject reasons
-        // const queryString = new URLSearchParams({
-        //     skip_count: "true",
-        // }).toString();
-
-        // const url = `https://harvest.greenhouse.io/v1/rejection_reasons?${queryString}`;
-        const url = `https://harvest.greenhouse.io/v1/email_templates`;
-        const response = await customFetch(url);
-
-        const emailTemplates = response;
-        if (!Array.isArray(emailTemplates)) {
-            throw new Error("Invalid response format for reject reasons");
-        }
-
-        // Parse the response to send an array of objects with id and name
-        return emailTemplates.map((emailTemplate: { id: number; name: string }) => ({
-            id: emailTemplate.id,
-            name: emailTemplate.name,
         }));
     } catch (error) {
         console.error("Error fetching reject reasons: ", error);
@@ -545,7 +516,7 @@ export async function filterStuckinStageDataConditions(
                 currentStage,
                 activityFeed.activities,
             );
-          
+
             let conditionMet = false;
 
             switch (operator) {

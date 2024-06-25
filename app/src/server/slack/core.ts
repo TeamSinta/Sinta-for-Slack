@@ -262,166 +262,177 @@ export async function sendSlackNotification(
 }
 
 export async function sendSlackButtonNotification(
-    filteredSlackData: Record<string, unknown>[],
-    workflowRecipient: WorkflowRecipient,
-    slackTeamID: string,
+  filteredSlackData: Record<string, unknown>[],
+  workflowRecipient: WorkflowRecipient,
+  slackTeamID: string,
+  subDomain: string, // Adding sub-domain as a parameter
 ): Promise<void> {
-    console.log("slackID", slackTeamID);
-    const accessToken = await getAccessToken(slackTeamID);
+  console.log("slackID", slackTeamID);
+  const accessToken = await getAccessToken(slackTeamID);
 
-    for (const recipient of workflowRecipient.recipients) {
-        const channel = recipient.value;
+  for (const recipient of workflowRecipient.recipients) {
+      const channel = recipient.value;
 
-        const blocks = [
-            {
-                type: "header",
-                text: {
-                    type: "plain_text",
-                    text: workflowRecipient.openingText,
-                    emoji: true,
-                },
-            },
-        ];
+      const blocks = [
+          {
+              type: "header",
+              text: {
+                  type: "plain_text",
+                  text: workflowRecipient.openingText,
+                  emoji: true,
+              },
+          },
+      ];
 
-        const attachments = [
-            {
-                color: "#384ab4",
-                blocks: [
-                    {
-                        type: "divider",
-                    },
-                    ...filteredSlackData
-                        .map((data) => {
-                            const candidateId = data.candidate_id;
-                            return [
-                                {
-                                    type: "section",
-                                    text: {
-                                        type: "mrkdwn",
-                                        text: workflowRecipient.messageFields
-                                            .map((field: string) => {
-                                                if (field === "candidate_id")
-                                                    return ""; // Skip candidate_id in the message
-                                                let fieldName: string;
-                                                switch (field) {
-                                                    case "name":
-                                                        fieldName =
-                                                            "Candidate's Name";
-                                                        break;
-                                                    case "title":
-                                                        fieldName = "Role";
-                                                        break;
-                                                    default:
-                                                        fieldName =
-                                                            field
-                                                                .charAt(0)
-                                                                .toUpperCase() +
-                                                            field
-                                                                .slice(1)
-                                                                .replace(
-                                                                    /_/g,
-                                                                    " ",
-                                                                );
-                                                        break;
-                                                }
-                                                const fieldValue =
-                                                    data[field] ??
-                                                    "Not provided";
-                                                return `*${fieldName}*: ${String(fieldValue)}`;
-                                            })
-                                            .filter(Boolean)
-                                            .join("\n"),
-                                    },
-                                },
-                                {
-                                    type: "actions",
-                                    block_id: `block_id_${candidateId}`,
-                                    elements:
-                                        workflowRecipient.messageButtons.map(
-                                            (button) => {
-                                                const buttonElement: any = {
-                                                    type: "button",
-                                                    text: {
-                                                        type: "plain_text",
-                                                        text: button.label,
-                                                        emoji: true,
-                                                    },
-                                                    value: `${button.updateType ?? button.type}_${candidateId}`, // Include candidateId in the value
-                                                };
+      const attachments = [
+          {
+              color: "#384ab4",
+              blocks: [
+                  {
+                      type: "divider",
+                  },
+                  ...filteredSlackData
+                      .map((data) => {
+                          const candidateId = data.candidate_id;
+                          return [
+                              {
+                                  type: "section",
+                                  text: {
+                                      type: "mrkdwn",
+                                      text: workflowRecipient.messageFields
+                                          .map((field: string) => {
+                                              if (field === "candidate_id")
+                                                  return ""; // Skip candidate_id in the message
+                                              let fieldName: string;
+                                              switch (field) {
+                                                  case "name":
+                                                      fieldName =
+                                                          "Candidate's Name";
+                                                      break;
+                                                  case "title":
+                                                      fieldName = "Role";
+                                                      break;
+                                                  default:
+                                                      fieldName =
+                                                          field
+                                                              .charAt(0)
+                                                              .toUpperCase() +
+                                                          field
+                                                              .slice(1)
+                                                              .replace(
+                                                                  /_/g,
+                                                                  " ",
+                                                              );
+                                                      break;
+                                              }
+                                              const fieldValue =
+                                                  data[field] ??
+                                                  "Not provided";
+                                              return `*${fieldName}*: ${String(fieldValue)}`;
+                                          })
+                                          .filter(Boolean)
+                                          .join("\n"),
+                                  },
+                              },
+                              {
+                                  type: "actions",
+                                  block_id: `block_id_${candidateId}`,
+                                  elements:
+                                      workflowRecipient.messageButtons.map(
+                                          (button) => {
+                                              const buttonElement: any = {
+                                                  type: "button",
+                                                  text: {
+                                                      type: "plain_text",
+                                                      text: button.label,
+                                                      emoji: true,
+                                                  },
+                                                  value: `${button.updateType ?? button.type}_${candidateId}`, // Include candidateId in the value
+                                              };
 
-                                                if (
-                                                    button.type ===
-                                                    "UpdateButton"
-                                                ) {
-                                                    if (
-                                                        button.updateType ===
-                                                        "MoveToNextStage"
-                                                    ) {
-                                                        buttonElement.style =
-                                                            "primary";
-                                                        buttonElement.action_id = `move_to_next_stage_${candidateId}`;
-                                                    } else if (
-                                                        button.updateType ===
-                                                        "RejectCandidate"
-                                                    ) {
-                                                        buttonElement.style =
-                                                            "danger";
-                                                        buttonElement.action_id = `reject_candidate_${candidateId}`;
-                                                    }
-                                                } else {
-                                                    buttonElement.action_id =
-                                                        button.action ||
-                                                        `${button.type.toLowerCase()}_action_${candidateId}`;
-                                                }
+                                              if (
+                                                  button.type === "UpdateButton"
+                                              ) {
+                                                  if (
+                                                      button.updateType ===
+                                                      "MoveToNextStage"
+                                                  ) {
+                                                      buttonElement.style =
+                                                          "primary";
+                                                      buttonElement.action_id = `move_to_next_stage_${candidateId}`;
+                                                  } else if (
+                                                      button.updateType ===
+                                                      "RejectCandidate"
+                                                  ) {
+                                                      buttonElement.style =
+                                                          "danger";
+                                                      buttonElement.action_id = `reject_candidate_${candidateId}`;
+                                                  }
+                                              } else if (
+                                                  button.linkType === "Dynamic"
+                                              ) {
+                                                  const baseURL = `https://${subDomain}.greenhouse.io`;
+                                                  if (button.action === "candidateRecord") {
+                                                      buttonElement.url = `${baseURL}/people/${candidateId}`;
+                                                  } else if (button.action === "jobRecord") {
+                                                      buttonElement.url = `${baseURL}/sdash/${candidateId}`; // Using candidateId for now as per instructions
+                                                  }
+                                                  buttonElement.type = "button";
+                                              } else {
+                                                  buttonElement.action_id =
+                                                      button.action ||
+                                                      `${button.type.toLowerCase()}_action_${candidateId}`;
+                                              }
 
-                                                return buttonElement;
-                                            },
-                                        ),
-                                },
-                            ];
-                        })
-                        .flat(), // Flatten the array of arrays
-                ],
-            },
-        ];
+                                              return buttonElement;
+                                          },
+                                      ),
+                              },
+                          ];
+                      })
+                      .flat(), // Flatten the array of arrays
+              ],
+          },
+      ];
 
-        const response = await fetch("https://slack.com/api/chat.postMessage", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-                channel: channel,
-                attachments: attachments,
-                blocks: blocks,
-            }),
-        });
+      const response = await fetch("https://slack.com/api/chat.postMessage", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+              channel: channel,
+              attachments: attachments,
+              blocks: blocks,
+          }),
+      });
 
-        console.log("response", await response.json());
-        function prettyPrint(obj: any, depth = 2) {
-            return JSON.stringify(
-                obj,
-                (key, value) => {
-                    if (
-                        depth !== 0 &&
-                        typeof value === "object" &&
-                        value !== null
-                    ) {
-                        return value;
-                    }
-                    return value;
-                },
-                2,
-            );
-        }
+      console.log("response", await response.json());
+      console.log("attachments", attachments);
+      function prettyPrint(obj: any, depth = 2) {
+          return JSON.stringify(
+              obj,
+              (key, value) => {
+                  if (
+                      depth !== 0 &&
+                      typeof value === "object" &&
+                      value !== null
+                  ) {
+                      return value;
+                  }
+                  return value;
+              },
+              2,
+          );
+      }
 
-        console.log("attachments", prettyPrint(attachments));
-        if (!response.ok) {
-            const errorResponse = await response.text();
-            console.error(
-                `Failed to post message to channel ${channel}: ${errorResponse}`,
-            );
-        }
-    }
+      console.log("attachments", prettyPrint(attachments));
+      if (!response.ok) {
+          const errorResponse = await response.text();
+          console.error(
+              `Failed to post message to channel ${channel}: ${errorResponse}`,
+          );
+      }
+  }
 }

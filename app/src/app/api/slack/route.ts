@@ -19,7 +19,6 @@ import {
     fetchEmailTemplates,
     fetchGreenhouseUsers,
     fetchRejectReasons,
-    fetchEmailTemplates,
     fetchStagesForJob,
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
@@ -52,7 +51,7 @@ interface SlackAction {
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-    
+
     if (!code) {
         return new NextResponse(
             JSON.stringify({ message: "Code parameter is missing." }),
@@ -271,6 +270,10 @@ async function handleSlackInteraction(payload: SlackInteraction) {
                 },
             );
         }
+        if (action.value.startsWith("LinkButton_")) {
+          return handleJsonPost({ message: "Link button clicked" });
+        }
+
         const { action_id } = action;
         const accessToken = await getAccessToken(team.id);
 
@@ -339,7 +342,6 @@ async function openModal(
         },
         body: JSON.stringify(modalPayload),
     });
-    const responseData = await response.json();
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },
