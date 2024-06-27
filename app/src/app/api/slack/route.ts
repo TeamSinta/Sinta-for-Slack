@@ -559,6 +559,22 @@ async function createRejectCandidateModal(
         throw error; // Ensure the error is handled by the caller
     }
 }
+async function getApplicationFromCandidateId(candidateId){
+    const candidateDetails = await fetchCandidateDetails(candidateId);
+
+    // Extract Job ID from candidate details
+    let jobId;
+    if (
+        candidateDetails.applications &&
+        candidateDetails.applications.length > 0
+    ) {
+        const application = candidateDetails.applications[0];
+        return application
+    } else {
+        throw new Error("No applications found for the candidate");
+    }
+    return null
+}
 async function handleRejectCandidateSubmission(payload: SlackInteraction) {
     try {
         const { view, user, team } = payload;
@@ -597,13 +613,22 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
                 "Failed to find corresponding Greenhouse user for the Slack user. This has been submitted.";
             emoji = "❌";
         } else {
-            const result = await rejectCandidateInGreenhouse(
-                candidate_id,
+            const cand_application = getApplicationFromCandidateId(candidate_id)
+            const applicationId = cand_application.id
+            const result = await rejectApplicationInGreenhouse(
+                applicationId,
                 greenhouseUserId,
                 rejectReasonId,
                 emailTemplateId,
                 rejectComments,
-            );
+            )
+            // const result = await rejectCandidateInGreenhouse(
+            //     candidate_id,
+            //     greenhouseUserId,
+            //     rejectReasonId,
+            //     emailTemplateId,
+            //     rejectComments,
+            // );
             if (result.success) {
                 statusMessage =
                     "Candidate has been rejected successfully. This has been submitted.";
