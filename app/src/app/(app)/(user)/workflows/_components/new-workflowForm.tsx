@@ -89,10 +89,16 @@ const createFeedbackFormSchema = workflowFormSchema.omit({
 });
 
 export interface Condition {
-    field: { value: string; label: string } | string;
-    condition: string;
-    value: string;
-    unit?: string;
+  field: string;
+  operator: string;
+  value: string;
+}
+
+export interface LegacyCondition {
+  field: { value: string; label: string };
+  condition: string;
+  value: string;
+  unit?: string;
 }
 
 interface DateFieldOption {
@@ -106,8 +112,13 @@ interface Job {
 }
 
 function CreateWorkflowSheet() {
-    const [conditions, setConditions] = useState<Condition[]>([]);
-    const [recipientConfig, setRecipientConfig] = useState({
+  const [conditions, setConditions] = useState<Condition[]>([
+    { field: "", operator: "", value: "" }
+]);
+const [legacyConditions, setLegacyConditions] = useState<LegacyCondition[]>([
+  { field: { value: "", label: "" }, condition: "", value: "", unit: "" }
+]);
+  const [recipientConfig, setRecipientConfig] = useState({
         openingText: "",
         messageFields: [],
         messageButtons: [],
@@ -115,6 +126,8 @@ function CreateWorkflowSheet() {
         recipients: [],
     });
     const [selectedAlertType, setSelectedAlertType] = useState("create/update");
+    const [isInitialSetupDone, setIsInitialSetupDone] = useState<boolean>(false);
+
     const [, setSelectedOrganization] = useState("");
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
@@ -137,60 +150,84 @@ function CreateWorkflowSheet() {
     }, []);
 
     useEffect(() => {
-        if (selectedAlertType === "timebased") {
-            setConditions([
-                {
-                    field: { value: "", label: "" },
-                    condition: "", // Set a default condition
-                    value: "",
-                    unit: "Days",
-                },
-            ]);
-        } else if (selectedAlertType === "stuck-in-stage") {
-            setConditions([
-                {
-                    field: {
-                        value: "when stuck-in-stage in",
-                        label: "When Stuck in Stage",
-                    },
-                    condition: "greaterThan",
-                    value: "for",
-                },
-            ]);
-        } else {
-            setConditions([]);
-        }
-    }, [selectedAlertType]);
+      if (!isInitialSetupDone) {
+          if (selectedAlertType === "timebased") {
+              setLegacyConditions([
+                  {
+                      field: { value: "", label: "" },
+                      condition: "",
+                      value: "",
+                      unit: "Days",
+                  },
+              ]);
+          } else if (selectedAlertType === "stuck-in-stage") {
+              setConditions([
+                  {
+                      field: {
+                          value: "when stuck-in-stage in",
+                          label: "When Stuck in Stage",
+                      },
+                      condition: "greaterThan",
+                      value: "for",
+                  },
+              ]);
+          } else {
+              setConditions([]);
+          }
+          setIsInitialSetupDone(true);
+      }
+  }, [selectedAlertType, isInitialSetupDone]);
+
 
     const handleConditionChange = (
-        index: number,
-        key: keyof Condition,
-        value: unknown,
-    ) => {
-        const newConditions = [...conditions];
-        const condition = newConditions[index];
-        if (!condition) return;
-        condition[key] = value as string; // Cast value to the appropriate type
-        setConditions(newConditions);
-    };
+      index: number,
+      key: keyof Condition,
+      value: string,
+  ) => {
+      const newConditions = [...conditions];
+      const condition = newConditions[index];
+      if (!condition) return;
+      condition[key] = value;
+      console.log("Updated condition: ", newConditions);
+      setConditions(newConditions);
+  };
+  const handleConditionChangeLegacy = (
+    index: number,
+    key: keyof LegacyCondition,
+    value: any,
+) => {
+    const newConditions = [...legacyConditions];
+    const condition = newConditions[index];
+    if (!condition) return;
 
-    const addCondition = () => {
-        setConditions([
-            ...conditions,
-            {
-                field: { value: "", label: "" },
-                condition: "",
-                value: "",
-                unit: "",
-            },
-        ]);
-    };
+    if (key === "field") {
+        condition[key] = { value: value.value, label: value.label };
+    } else {
+        condition[key] = value;
+    }
 
-    const removeCondition = (index: number) => {
-        const newConditions = [...conditions];
-        newConditions.splice(index, 1);
-        setConditions(newConditions);
-    };
+    console.log("Updated condition (legacy): ", newConditions);
+    setLegacyConditions(newConditions);
+};
+
+
+  const addCondition = () => {
+    setConditions([
+        ...conditions,
+        {
+            field: "",
+            operator: "",
+            value: "",
+        },
+    ]);
+};
+
+const removeCondition = (index: number) => {
+  const newConditions = [...conditions];
+  newConditions.splice(index, 1);
+  setConditions(newConditions);
+};
+
 
     const handleSelectChange = (
         value: string,
@@ -222,10 +259,12 @@ function CreateWorkflowSheet() {
                 }
                 break;
             case "alertType":
-                if (alertTypeOptions.some((option) => option.value === value)) {
-                    setSelectedAlertType(value);
-                    form.setValue("alertType", value);
-                }
+              if (alertTypeOptions.some((option) => option.value === value)) {
+                setSelectedAlertType(value);
+                form.setValue("alertType", value);
+                setIsInitialSetupDone(false);  // Reset the initial setup flag
+            }
+
                 break;
             case "organizationId":
                 setSelectedOrganization(value);
@@ -395,54 +434,9 @@ function CreateWorkflowSheet() {
             name: "Candidates",
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
         },
-        {
-            name: "Close Reasons",
-            apiUrl: "https://harvest.greenhouse.io/v1/close_reasons",
-        }, // Verify if correct
-        {
-            name: "Custom Fields",
-            apiUrl: "https://harvest.greenhouse.io/v1/custom_fields",
-        }, // Verify if correct
-        {
-            name: "Demographic Data",
-            apiUrl: "https://harvest.greenhouse.io/v1/demographic_data",
-        }, // Verify if correct
-        {
-            name: "Departments",
-            apiUrl: "https://harvest.greenhouse.io/v1/departments",
-        },
-        {
-            name: "Education",
-            apiUrl: "https://harvest.greenhouse.io/v1/education",
-        }, // Verify if correct
-        { name: "EEOC", apiUrl: "https://harvest.greenhouse.io/v1/eeoc" }, // Verify if correct
-        {
-            name: "Email Templates",
-            apiUrl: "https://harvest.greenhouse.io/v1/email_templates",
-        }, // Verify if correct
-        {
-            name: "Job Openings",
-            apiUrl: "https://harvest.greenhouse.io/v1/job_openings",
-        }, // Verify if correct
-        {
-            name: "Job Posts",
-            apiUrl: "https://harvest.greenhouse.io/v1/job_posts",
-        },
-        {
-            name: "Job Stages",
-            apiUrl: "https://harvest.greenhouse.io/v1/job_stages",
-        },
+
         { name: "Jobs", apiUrl: "https://harvest.greenhouse.io/v1/jobs" },
         { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
-        { name: "Offices", apiUrl: "https://harvest.greenhouse.io/v1/offices" },
-        {
-            name: "Prospect Pools",
-            apiUrl: "https://harvest.greenhouse.io/v1/prospect_pools",
-        }, // Verify if correct
-        {
-            name: "Rejection Reasons",
-            apiUrl: "https://harvest.greenhouse.io/v1/rejection_reasons",
-        },
         {
             name: "Scheduled Interviews",
             apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
@@ -451,31 +445,9 @@ function CreateWorkflowSheet() {
             name: "Scorecards",
             apiUrl: "https://harvest.greenhouse.io/v1/scorecards",
         },
-        { name: "Sources", apiUrl: "https://harvest.greenhouse.io/v1/sources" }, // Verify if correct
-        { name: "Tags", apiUrl: "https://harvest.greenhouse.io/v1/tags" }, // Verify if correct
-        {
-            name: "Tracking Links",
-            apiUrl: "https://harvest.greenhouse.io/v1/tracking_links",
-        }, // Verify if correct
-        { name: "Users", apiUrl: "https://harvest.greenhouse.io/v1/users" },
-        {
-            name: "User Permissions",
-            apiUrl: "https://harvest.greenhouse.io/v1/user_permissions",
-        }, // Verify if correct
-        {
-            name: "User Roles",
-            apiUrl: "https://harvest.greenhouse.io/v1/user_roles",
-        }, // Verify if correct
     ];
 
-    const conditionOptions = [
-        { value: "equal", label: "Equal To" },
-        { value: "notEqual", label: "Not equal To" },
-        { value: "one", label: "Is one of" },
-        { value: "notOne", label: "Is not one of" },
-        { value: "notBlank", label: "Is not blank" },
-        { value: "blank", label: "Is blank " },
-    ];
+
 
     const timeConditionOptions = [
         { value: "before", label: "Before" },
@@ -489,6 +461,59 @@ function CreateWorkflowSheet() {
         { label: "Updated at", value: "updated_at" },
         { label: "Last activity", value: "last_activity" },
     ];
+
+    const conditionTypesWithOperators = [
+      {
+          name: "Anonymized",
+          operators: [{ value: "equal", label: "Equal To" }],
+          values: ["True", "False"]
+      },
+      {
+          name: "Coordinator",
+          operators: [
+              { value: "equal", label: "Equal To" },
+              { value: "notEqual", label: "Not Equal To" }
+          ],
+          values: [] // Assuming values are dynamic or not predefined
+      },
+      {
+          name: "Following",
+          operators: [{ value: "equal", label: "Equal To" }],
+          values: ["True", "False"]
+      },
+      {
+          name: "GDPR Consent Status",
+          operators: [
+              { value: "equal", label: "Equal To" },
+              { value: "notEqual", label: "Not Equal To" }
+          ],
+          values: ["Granted", "Denied"] // Assuming predefined values for GDPR consent
+      },
+      {
+          name: "Last Activity",
+          operators: [
+              { value: "equal", label: "Equal To" },
+              { value: "before", label: "Before" },
+              { value: "after", label: "After" }
+          ],
+          values: [] // Assuming values are dynamic or date-based
+      },
+      {
+          name: "Recruiter",
+          operators: [
+              { value: "equal", label: "Equal To" },
+              { value: "notEqual", label: "Not Equal To" }
+          ],
+          values: [] // Assuming values are dynamic or not predefined
+      },
+      {
+          name: "Tags",
+          operators: [{ value: "equal", label: "Equal To" }],
+          values: [] // Assuming values are dynamic or not predefined
+      }
+  ];
+
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -672,141 +697,115 @@ function CreateWorkflowSheet() {
                                 {/* Conditional rendering based on selected alert type */}
                                 {selectedAlertType === "timebased" && (
                                     <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Date Field
-                                            </Label>
-                                            <Select
-                                                onValueChange={(value) =>
-                                                    handleConditionChange(
-                                                        0,
-                                                        "field",
-                                                        {
-                                                            value,
-                                                            label:
-                                                                dateFieldOptions.find(
-                                                                    (opt) =>
-                                                                        opt.value ===
-                                                                        value,
-                                                                )?.label ??
-                                                                value,
-                                                        },
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Date Field" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {dateFieldOptions.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        option.value
-                                                                    }
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Condition
-                                            </Label>
-                                            <Select
-                                                onValueChange={(value) =>
-                                                    handleConditionChange(
-                                                        0,
-                                                        "condition",
+                                    <div className="flex-1">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Date Property
+                                        </Label>
+                                        <Select
+                                            onValueChange={(value) =>
+                                                handleConditionChangeLegacy(
+                                                    0,
+                                                    "field",
+                                                    {
                                                         value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Condition" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {timeConditionOptions.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        option.value
-                                                                    }
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Value
-                                            </Label>
-                                            <Input
-                                                placeholder="Enter Value"
-                                                className="w-full border border-gray-300 bg-white"
-                                                value={conditions[0]?.value}
-                                                onChange={(e) =>
-                                                    handleConditionChange(
-                                                        0,
-                                                        "value",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Time Unit
-                                            </Label>
-                                            <Select
-                                                value={
-                                                    conditions[0]?.unit ??
-                                                    "Days"
-                                                }
-                                                onValueChange={(value) =>
-                                                    handleConditionChange(
-                                                        0,
-                                                        "unit",
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Unit" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        <SelectItem value="Days">
-                                                            Days
+                                                        label: dateFieldOptions.find(
+                                                            (opt) => opt.value === value,
+                                                        )?.label ?? value,
+                                                    },
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full border border-gray-300 bg-white">
+                                                <SelectValue placeholder="Select Date Field" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {dateFieldOptions.map((option) => (
+                                                        <SelectItem
+                                                            key={option.value}
+                                                            value={option.value}
+                                                        >
+                                                            {option.label}
                                                         </SelectItem>
-                                                        <SelectItem value="Hours">
-                                                            Hours
-                                                        </SelectItem>
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
+                                    {/* Other elements for legacy conditions */}
+                                    <div className="flex-1">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Condition
+                                        </Label>
+                                        <Select
+                                            onValueChange={(value) =>
+                                                handleConditionChangeLegacy(
+                                                    0,
+                                                    "condition",
+                                                    value,
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full border border-gray-300 bg-white">
+                                                <SelectValue placeholder="Select Condition" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {timeConditionOptions.map((option) => (
+                                                        <SelectItem
+                                                            key={option.value}
+                                                            value={option.value}
+                                                        >
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="flex-1">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Value
+                                        </Label>
+                                        <Input
+                                            placeholder="Enter Value"
+                                            className="w-full border border-gray-300 bg-white"
+                                            value={legacyConditions[0]?.value}
+                                            onChange={(e) =>
+                                                handleConditionChangeLegacy(
+                                                    0,
+                                                    "value",
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Time Unit
+                                        </Label>
+                                        <Select
+                                            value={legacyConditions[0]?.unit ?? "Days"}
+                                            onValueChange={(value) =>
+                                                handleConditionChangeLegacy(
+                                                    0,
+                                                    "unit",
+                                                    value,
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full border border-gray-300 bg-white">
+                                                <SelectValue placeholder="Select Unit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    <SelectItem value="Days">Days</SelectItem>
+                                                    <SelectItem value="Hours">Hours</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
                                     <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
@@ -845,18 +844,24 @@ function CreateWorkflowSheet() {
                                     </div>
                                 )}
 
-                                {/* Display additional conditions dynamically added */}
-                                {conditions.slice(1).map((condition, index) => (
-                                    <ConditionComponent
-                                        key={index}
-                                        index={index + 1} // Adjust index for zero-based array
-                                        condition={condition}
-                                        onChange={handleConditionChange}
-                                        onRemove={removeCondition}
-                                        objectFieldOptions={objectFieldOptions}
-                                        conditionOptions={conditionOptions}
-                                    />
-                                ))}
+
+{conditions.map((condition, index) => (
+                <div key={index}>
+                    <ConditionComponent
+                        index={index}
+                        condition={condition}
+                        onChange={handleConditionChange}
+                        onRemove={removeCondition}
+                        conditionTypesWithOperators={conditionTypesWithOperators}
+                    />
+                    {index < conditions.length - 1 && (
+                        <div style={{ textAlign: 'center', margin: '10px 0' }}>
+                            AND
+                        </div>
+                    )}
+                </div>
+            ))}
+
 
                                 {/* Button to add new conditions */}
                                 <Button
