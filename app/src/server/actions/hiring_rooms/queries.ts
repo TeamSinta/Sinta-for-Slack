@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { hiring_rooms } from "@/server/db/schema"; // Assuming HiringRoomStatus is the enum type for status
+import { workflows } from "@/server/db/schema"; // Assuming HiringRoomStatus is the enum type for status
 import { asc, desc, eq, count, and, ilike, or, ne } from "drizzle-orm";
 import { z } from "zod";
 import { unstable_noStore as noStore } from "next/cache";
@@ -26,7 +26,7 @@ type GetPaginatedHiringRoomsQueryProps = z.infer<
 
 export async function getHiringRooms() {
     const { data } = await db.transaction(async (tx) => {
-        const data = await tx.select().from(hiring_rooms).execute();
+        const data = await tx.select().from(workflows).execute();
 
         return { data };
     });
@@ -43,43 +43,43 @@ export async function getPaginatedHiringRoomsQuery(
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
-        keyof typeof hiring_rooms.$inferSelect | undefined,
+        keyof typeof workflows.$inferSelect | undefined,
         "asc" | "desc" | undefined,
     ]) ?? ["createdAt", "desc"];
 
     const { data, total } = await db.transaction(async (tx) => {
         const hiring_roomFilter = and(
-            eq(hiring_rooms.organizationId, currentOrg.id), // Primary filter by organization ID
-            eq(hiring_rooms.ownerId, user.id), // Ensure the owner ID matches the user ID
+            eq(workflows.organizationId, currentOrg.id), // Primary filter by organization ID
+            eq(workflows.ownerId, user.id), // Ensure the owner ID matches the user ID
             or(
                 input.name
-                    ? ilike(hiring_rooms.name, `%${input.name}%`)
+                    ? ilike(workflows.name, `%${input.name}%`)
                     : undefined,
-                input.status ? eq(hiring_rooms.status, input.status) : undefined,
+                input.status ? eq(workflows.status, input.status) : undefined,
                 input.ownerId
-                    ? eq(hiring_rooms.ownerId, input.ownerId)
+                    ? eq(workflows.ownerId, input.ownerId)
                     : undefined,
             ),
         );
 
         const data = await tx
             .select()
-            .from(hiring_rooms)
+            .from(workflows)
             .offset(offset)
             .limit(input.per_page)
             .where(hiring_roomFilter)
             .orderBy(
-                column && column in hiring_rooms
+                column && column in workflows
                     ? order === "asc"
-                        ? asc(hiring_rooms[column])
-                        : desc(hiring_rooms[column])
-                    : desc(hiring_rooms.createdAt),
+                        ? asc(workflows[column])
+                        : desc(workflows[column])
+                    : desc(workflows.createdAt),
             )
             .execute();
 
         const total = await tx
             .select({ count: count() })
-            .from(hiring_rooms)
+            .from(workflows)
             .where(hiring_roomFilter)
             .execute()
             .then((res) => res[0]?.count ?? 0);
@@ -101,42 +101,42 @@ export async function getPaginatedHiringRoomsByOrgQuery(
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
-        keyof typeof hiring_rooms.$inferSelect | undefined,
+        keyof typeof workflows.$inferSelect | undefined,
         "asc" | "desc" | undefined,
     ]) ?? ["createdAt", "desc"];
 
     const { data, total } = await db.transaction(async (tx) => {
         const hiring_roomFilter = and(
-            eq(hiring_rooms.organizationId, currentOrg.id), // Primary filter by organization ID
+            eq(workflows.organizationId, currentOrg.id), // Primary filter by organization ID
             or(
                 input.name
-                    ? ilike(hiring_rooms.name, `%${input.name}%`)
+                    ? ilike(workflows.name, `%${input.name}%`)
                     : undefined,
-                input.status ? eq(hiring_rooms.status, input.status) : undefined,
+                input.status ? eq(workflows.status, input.status) : undefined,
                 input.ownerId
-                    ? eq(hiring_rooms.ownerId, input.ownerId)
+                    ? eq(workflows.ownerId, input.ownerId)
                     : undefined,
             ),
         );
 
         const data = await tx
             .select()
-            .from(hiring_rooms)
+            .from(workflows)
             .offset(offset)
             .limit(input.per_page)
             .where(hiring_roomFilter)
             .orderBy(
-                column && column in hiring_rooms
+                column && column in workflows
                     ? order === "asc"
-                        ? asc(hiring_rooms[column])
-                        : desc(hiring_rooms[column])
-                    : desc(hiring_rooms.createdAt),
+                        ? asc(workflows[column])
+                        : desc(workflows[column])
+                    : desc(workflows.createdAt),
             )
             .execute();
 
         const total = await tx
             .select({ count: count() })
-            .from(hiring_rooms)
+            .from(workflows)
             .where(hiring_roomFilter)
             .execute()
             .then((res) => res[0]?.count ?? 0);
@@ -158,43 +158,43 @@ export async function getPaginatedHiringRoomsExcludingUserQuery(
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
-        keyof typeof hiring_rooms.$inferSelect | undefined,
+        keyof typeof workflows.$inferSelect | undefined,
         "asc" | "desc" | undefined,
     ]) ?? ["createdAt", "desc"];
 
     const { data, total } = await db.transaction(async (tx) => {
         const hiring_roomFilter = and(
-            eq(hiring_rooms.organizationId, currentOrg.id), // Primary filter by organization ID
-            ne(hiring_rooms.ownerId, user.id), // Exclude hiring_rooms created by the current user
+            eq(workflows.organizationId, currentOrg.id), // Primary filter by organization ID
+            ne(workflows.ownerId, user.id), // Exclude workflows created by the current user
             or(
                 input.name
-                    ? ilike(hiring_rooms.name, `%${input.name}%`)
+                    ? ilike(workflows.name, `%${input.name}%`)
                     : undefined,
-                input.status ? eq(hiring_rooms.status, input.status) : undefined,
+                input.status ? eq(workflows.status, input.status) : undefined,
                 input.ownerId
-                    ? eq(hiring_rooms.ownerId, input.ownerId)
+                    ? eq(workflows.ownerId, input.ownerId)
                     : undefined,
             ),
         );
 
         const data = await tx
             .select()
-            .from(hiring_rooms)
+            .from(workflows)
             .offset(offset)
             .limit(input.per_page)
             .where(hiring_roomFilter)
             .orderBy(
-                column && column in hiring_rooms
+                column && column in workflows
                     ? order === "asc"
-                        ? asc(hiring_rooms[column])
-                        : desc(hiring_rooms[column])
-                    : desc(hiring_rooms.createdAt),
+                        ? asc(workflows[column])
+                        : desc(workflows[column])
+                    : desc(workflows.createdAt),
             )
             .execute();
 
         const total = await tx
             .select({ count: count() })
-            .from(hiring_rooms)
+            .from(workflows)
             .where(hiring_roomFilter)
             .execute()
             .then((res) => res[0]?.count ?? 0);
