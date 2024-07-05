@@ -67,12 +67,14 @@ export async function GET() {
                 const slackTeamID = await getSlackTeamIDByWorkflowID(
                     workflow.id,
                 );
-                const subDomain = await getSubdomainByWorkflowID( workflow.id,);
-
+                const subDomain = await getSubdomainByWorkflowID(workflow.id);
 
                 const greenhouseUsers = await fetchGreenhouseUsers();
                 const slackUsers = await getEmailsfromSlack(slackTeamID);
-                const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+                const userMapping = await matchUsers(
+                    greenhouseUsers,
+                    slackUsers,
+                );
                 // const matchGreenhouseUsers = matc
                 // console.log("filteredConditionsData", filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
@@ -81,7 +83,7 @@ export async function GET() {
                     slackTeamID,
                     greenhouseUsers,
                     slackUsers,
-                    userMapping
+                    userMapping,
                 );
 
                 if (filteredSlackData.length > 0) {
@@ -91,7 +93,7 @@ export async function GET() {
                         slackTeamID,
                         subDomain,
                         userMapping,
-                        filteredConditionsData
+                        filteredConditionsData,
                     );
                 } else {
                     console.log("No data to send to Slack");
@@ -99,17 +101,28 @@ export async function GET() {
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
-            console.log('hereererere')
-
+            console.log("hereererere");
         }
 
         if (shouldReturnNull) {
-            return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
+            return NextResponse.json(
+                { message: "No workflows to process" },
+                { status: 200 },
+            );
         }
 
-        return NextResponse.json({ message: "Workflows processed successfully" }, { status: 200 });
+        return NextResponse.json(
+            { message: "Workflows processed successfully" },
+            { status: 200 },
+        );
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
-        return NextResponse.json({ error: "Failed to process workflows", details: (error as Error).message }, { status: 500 });
+        return NextResponse.json(
+            {
+                error: "Failed to process workflows",
+                details: (error as Error).message,
+            },
+            { status: 500 },
+        );
     }
 }

@@ -17,7 +17,6 @@ import MessageButtons, {
 import slackLogo from "../../../../../../public/slack-logo.png";
 import Image from "next/image";
 
-
 const fields = [
     { value: "name", label: "Candidate Name", color: "" },
     { value: "title", label: "Job Title", color: "" },
@@ -74,7 +73,6 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         setButtons(newButtons);
         onButtonsChange(newButtons);
     };
-
 
     const handleRecipientsChange = (selectedOptions: Option[]) => {
         setSelectedRecipients(selectedOptions);

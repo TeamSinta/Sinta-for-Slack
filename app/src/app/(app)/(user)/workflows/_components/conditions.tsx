@@ -25,7 +25,11 @@ interface ConditionProps {
     index: number;
     onChange: (index: number, field: keyof Condition, value: string) => void;
     onRemove: (index: number) => void;
-    conditionTypesWithOperators: Array<{ name: string; operators: Array<{ value: string; label: string }>, values: Array<string> }>;
+    conditionTypesWithOperators: Array<{
+        name: string;
+        operators: Array<{ value: string; label: string }>;
+        values: Array<string>;
+    }>;
 }
 
 const ConditionComponent: React.FC<ConditionProps> = ({
@@ -50,7 +54,9 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     };
 
     const handleOperatorChange = (value: string) => {
-        const operator = selectedField?.operators.find(op => op.value === value);
+        const operator = selectedField?.operators.find(
+            (op) => op.value === value,
+        );
         onChange(index, "operator", value);
         onChange(index, "operatorLabel", operator?.label ?? value);
     };
@@ -62,7 +68,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
 
     const fieldValue = condition.field;
     const selectedField = conditionTypesWithOperators.find(
-        (option) => option.name === fieldValue
+        (option) => option.name === fieldValue,
     );
 
     return (
@@ -158,9 +164,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     <Input
                         placeholder="Enter Value"
                         value={condition.value}
-                        onChange={(e) =>
-                            handleValueChange(e.target.value)
-                        }
+                        onChange={(e) => handleValueChange(e.target.value)}
                         className="w-full border border-gray-300 bg-white"
                         disabled={!selectedField}
                     />
