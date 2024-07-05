@@ -52,7 +52,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     const handleOperatorChange = (value: string) => {
         const operator = selectedField?.operators.find(op => op.value === value);
         onChange(index, "operator", value);
-        onChange(index, "operatorLabel", operator?.label || value);
+        onChange(index, "operatorLabel", operator?.label ?? value);
     };
 
     const handleValueChange = (value: string) => {

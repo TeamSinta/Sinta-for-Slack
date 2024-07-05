@@ -54,7 +54,6 @@ export async function GET() {
                     apiUrl,
                     processor ? { query: processor } : {},
                 );
-                console.log("cron-job running!!");
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData =
                     await filterStuckinStageDataConditions(
@@ -68,7 +67,6 @@ export async function GET() {
                 const subDomain = await getSubdomainByWorkflowID( workflow.id,);
 
 
-                console.log("filteredConditionsData", filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
                     filteredConditionsData,
                     workflow.recipient,
@@ -82,8 +80,6 @@ export async function GET() {
                         slackTeamID,
                         subDomain
                     );
-                    console.log(filteredSlackData);
-                    console.log("Sent to Slack");
                 } else {
                     console.log("No data to send to Slack");
                 }

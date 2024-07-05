@@ -1,5 +1,11 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 // @ts-nocheck
+
+
 
 "use client";
 
@@ -188,7 +194,6 @@ const [legacyConditions, setLegacyConditions] = useState<LegacyCondition[]>([
       const condition = newConditions[index];
       if (!condition) return;
       condition[key] = value;
-      console.log("Updated condition: ", newConditions);
       setConditions(newConditions);
   };
   const handleConditionChangeLegacy = (
@@ -206,7 +211,6 @@ const [legacyConditions, setLegacyConditions] = useState<LegacyCondition[]>([
         condition[key] = value;
     }
 
-    console.log("Updated condition (legacy): ", newConditions);
     setLegacyConditions(newConditions);
 };
 
