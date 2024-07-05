@@ -223,10 +223,10 @@ const MessageButtons: React.FC<MessageButtonsProps> = ({
                                         <SelectContent>
                                             <SelectGroup>
                                                 <SelectItem value="candidateRecord">
-                                                    Candidate Record
+                                                    Candidate Profile
                                                 </SelectItem>
                                                 <SelectItem value="jobRecord">
-                                                    Job Record
+                                                    Job
                                                 </SelectItem>
                                             </SelectGroup>
                                         </SelectContent>

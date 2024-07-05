@@ -6,7 +6,6 @@
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from "@/components/ui/fancy.box";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
@@ -18,7 +17,6 @@ import MessageButtons, {
 import slackLogo from "../../../../../../public/slack-logo.png";
 import Image from "next/image";
 
-const deliveryOptions = ["Group DM", "Direct Message", "Channels"];
 
 const fields = [
     { value: "name", label: "Candidate Name", color: "" },
@@ -49,14 +47,12 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onOpeningTextChange,
     onFieldsSelect,
     onButtonsChange,
-    onDeliveryOptionChange,
     onRecipientsChange,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<ButtonAction[]>([]);
-    const [deliveryOption, setDeliveryOption] = useState("");
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
@@ -79,10 +75,6 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         onButtonsChange(newButtons);
     };
 
-    const handleDeliveryOptionChange = (option: string) => {
-        setDeliveryOption(option);
-        onDeliveryOptionChange(option);
-    };
 
     const handleRecipientsChange = (selectedOptions: Option[]) => {
         setSelectedRecipients(selectedOptions);

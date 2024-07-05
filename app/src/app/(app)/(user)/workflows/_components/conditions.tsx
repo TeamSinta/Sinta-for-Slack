@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export interface Condition {
-    field: { value: string; label: string } | string;
-    condition: string;
+    field: string;
+    fieldLabel: string;
+    operator: string;
+    operatorLabel: string;
     value: string;
-    unit?: string;
+    valueLabel: string;
 }
 
 interface ConditionProps {
@@ -23,8 +25,7 @@ interface ConditionProps {
     index: number;
     onChange: (index: number, field: keyof Condition, value: string) => void;
     onRemove: (index: number) => void;
-    objectFieldOptions: Array<{ name: string; apiUrl: string }>;
-    conditionOptions: Array<{ value: string; label: string }>;
+    conditionTypesWithOperators: Array<{ name: string; operators: Array<{ value: string; label: string }>, values: Array<string> }>;
 }
 
 const ConditionComponent: React.FC<ConditionProps> = ({
@@ -32,29 +33,37 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     index,
     onChange,
     onRemove,
-    objectFieldOptions,
-    conditionOptions,
+    conditionTypesWithOperators,
 }) => {
     const handleFieldChange = (value: string) => {
-        const selectedOption = objectFieldOptions.find(
+        const selectedOption = conditionTypesWithOperators.find(
             (option) => option.name === value,
         );
-        onChange(
-            index,
-            "field",
-            selectedOption
-                ? JSON.stringify({
-                      value: selectedOption.name,
-                      label: selectedOption.name,
-                  })
-                : value,
-        );
+        if (selectedOption) {
+            onChange(index, "field", selectedOption.name);
+            onChange(index, "fieldLabel", selectedOption.name);
+            onChange(index, "operator", "");
+            onChange(index, "operatorLabel", "");
+            onChange(index, "value", "");
+            onChange(index, "valueLabel", "");
+        }
     };
 
-    const fieldValue =
-        typeof condition.field === "string"
-            ? condition.field
-            : condition.field.value;
+    const handleOperatorChange = (value: string) => {
+        const operator = selectedField?.operators.find(op => op.value === value);
+        onChange(index, "operator", value);
+        onChange(index, "operatorLabel", operator?.label ?? value);
+    };
+
+    const handleValueChange = (value: string) => {
+        onChange(index, "value", value);
+        onChange(index, "valueLabel", value);
+    };
+
+    const fieldValue = condition.field;
+    const selectedField = conditionTypesWithOperators.find(
+        (option) => option.name === fieldValue
+    );
 
     return (
         <div className="mb-4 flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4">
@@ -62,18 +71,20 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 {/* Field Selector */}
                 <div className="flex-1">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Field
+                        Property
                     </Label>
                     <Select
                         value={fieldValue}
                         onValueChange={handleFieldChange}
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
-                            <SelectValue placeholder="Select Field" />
+                            <SelectValue placeholder="Select Property">
+                                {condition.fieldLabel}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                {objectFieldOptions.map((option) => (
+                                {conditionTypesWithOperators.map((option) => (
                                     <SelectItem
                                         key={option.name}
                                         value={option.name}
@@ -86,23 +97,24 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     </Select>
                 </div>
 
-                {/* Condition Selector */}
+                {/* Operator Selector */}
                 <div className="flex-1">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Condition
+                        Operator
                     </Label>
                     <Select
-                        value={condition.condition}
-                        onValueChange={(value) =>
-                            onChange(index, "condition", value)
-                        }
+                        value={condition.operator}
+                        onValueChange={handleOperatorChange}
+                        disabled={!selectedField}
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
-                            <SelectValue placeholder="Select Condition" />
+                            <SelectValue placeholder="Select Operator">
+                                {condition.operatorLabel}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                {conditionOptions.map((option) => (
+                                {selectedField?.operators.map((option) => (
                                     <SelectItem
                                         key={option.value}
                                         value={option.value}
@@ -116,17 +128,43 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 </div>
             </div>
 
-            {/* Value Input */}
+            {/* Value Input or Selector */}
             <div className="flex-1">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Value
                 </Label>
-                <Input
-                    placeholder="Enter Value"
-                    value={condition.value}
-                    onChange={(e) => onChange(index, "value", e.target.value)}
-                    className="w-full border border-gray-300 bg-white"
-                />
+                {selectedField?.values?.length ?? 0 > 0 ? (
+                    <Select
+                        value={condition.value}
+                        onValueChange={handleValueChange}
+                        disabled={!selectedField}
+                    >
+                        <SelectTrigger className="w-full border border-gray-300 bg-white">
+                            <SelectValue placeholder="Select Value">
+                                {condition.valueLabel}
+                            </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {selectedField?.values.map((value) => (
+                                    <SelectItem key={value} value={value}>
+                                        {value}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <Input
+                        placeholder="Enter Value"
+                        value={condition.value}
+                        onChange={(e) =>
+                            handleValueChange(e.target.value)
+                        }
+                        className="w-full border border-gray-300 bg-white"
+                        disabled={!selectedField}
+                    />
+                )}
             </div>
 
             {/* Remove Button */}

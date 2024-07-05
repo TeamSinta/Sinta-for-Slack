@@ -20,6 +20,7 @@ import {
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
+import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
 
 // Define the GET handler for the route
 export async function GET() {
@@ -66,6 +67,9 @@ export async function GET() {
                 const slackTeamID = await getSlackTeamIDByWorkflowID(
                     workflow.id,
                 );
+                const subDomain = await getSubdomainByWorkflowID( workflow.id,);
+
+
                 const greenhouseUsers = await fetchGreenhouseUsers();
                 const slackUsers = await getEmailsfromSlack(slackTeamID);
                 const userMapping = await matchUsers(greenhouseUsers, slackUsers);
@@ -85,11 +89,10 @@ export async function GET() {
                         filteredSlackData,
                         workflow.recipient,
                         slackTeamID,
+                        subDomain,
                         userMapping,
                         filteredConditionsData
                     );
-                    // console.log(filteredSlackData);
-                    console.log("Sent to Slack");
                 } else {
                     console.log("No data to send to Slack");
                 }

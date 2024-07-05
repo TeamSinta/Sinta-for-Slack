@@ -256,11 +256,11 @@ export async function fetchEmailTemplates(): Promise<
         // const queryString = new URLSearchParams({
         //     skip_count: "true",
         // }).toString();
-        
+
         // const url = `https://harvest.greenhouse.io/v1/rejection_reasons?${queryString}`;
         const url = `https://harvest.greenhouse.io/v1/email_templates`;
         const response = await customFetch(url);
-        
+
         const emailTemplates = response;
         if (!Array.isArray(emailTemplates)) {
             throw new Error("Invalid response format for reject reasons");
@@ -303,7 +303,6 @@ export async function fetchRejectReasons(): Promise<
         return [];
     }
 }
-
 export async function fetchGreenhouseUsers(): Promise<
     Record<string, { id: string; email: string }>
 > {
@@ -557,7 +556,7 @@ export async function filterStuckinStageDataConditions(
                 currentStage,
                 activityFeed.activities,
             );
-          
+
             let conditionMet = false;
 
             switch (operator) {

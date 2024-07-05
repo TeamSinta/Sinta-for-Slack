@@ -16,9 +16,9 @@ import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
 import { siteUrls } from "@/config/urls";
 import {
     fetchCandidateDetails,
+    fetchEmailTemplates,
     fetchGreenhouseUsers,
     fetchRejectReasons,
-    fetchEmailTemplates,
     fetchStagesForJob,
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
@@ -51,7 +51,7 @@ interface SlackAction {
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-    
+
     if (!code) {
         return new NextResponse(
             JSON.stringify({ message: "Code parameter is missing." }),
@@ -204,7 +204,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         let emoji = "✅";
         if (!greenhouseUserId) {
             statusMessage =
-                "Failed to find corresponding Greenhouse user for the Slack user. This has been submitted.";
+                "Incorrect permissions. Failed to find corresponding Greenhouse user for the Slack user.";
             emoji = "❌";
         } else {
             const result = await moveToNextStageInGreenhouse(
@@ -270,6 +270,10 @@ async function handleSlackInteraction(payload: SlackInteraction) {
                 },
             );
         }
+        if (action.value.startsWith("LinkButton_")) {
+          return handleJsonPost({ message: "Link button clicked" });
+        }
+
         const { action_id } = action;
         const accessToken = await getAccessToken(team.id);
 
@@ -338,7 +342,6 @@ async function openModal(
         },
         body: JSON.stringify(modalPayload),
     });
-    const responseData = await response.json();
     return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
         status: response.ok ? 200 : 400,
         headers: { "Content-Type": "application/json" },
@@ -563,7 +566,6 @@ async function getApplicationFromCandidateId(candidateId){
     const candidateDetails = await fetchCandidateDetails(candidateId);
 
     // Extract Job ID from candidate details
-    let jobId;
     if (
         candidateDetails.applications &&
         candidateDetails.applications.length > 0
