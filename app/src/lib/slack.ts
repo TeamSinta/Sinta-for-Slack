@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { env } from "@/env";
@@ -84,7 +83,6 @@ export async function matchUsers(
     greenhouseUsers: Record<string, { id: string; email: string }>,
     slackUsers: { value: string; label: string; email: string }[],
 ): Promise<Record<string, string>> {
-
     // candidate -> application -> greenhouseUser role -> greenhouse User -> slackUser
     const slackUserMap = slackUsers.reduce(
         (acc: Record<string, string>, user) => {
@@ -103,7 +101,7 @@ export async function matchUsers(
             // console.log('green house user -',greenhouseUser.)
             const slackId = slackUserMap[email];
             if (slackId) {
-                console.log('email - in user matching',email)
+                console.log("email - in user matching", email);
                 userMapping[greenhouseUser.id] = slackId; // Use Greenhouse user ID as the key
             }
         }
@@ -119,9 +117,9 @@ export async function filterProcessedForSlack(
     slack_team_id: string,
 ): Promise<Record<string, unknown>[]> {
     const greenhouseUsers = await fetchGreenhouseUsers();
-    console.log('greenhouseruser',greenhouseUsers)
+    console.log("greenhouseruser", greenhouseUsers);
     const slackUsers = await getEmailsfromSlack(slack_team_id);
-    console.log('slackUsers',slackUsers)
+    console.log("slackUsers", slackUsers);
     const userMapping = await matchUsers(greenhouseUsers, slackUsers);
     // console.log("workflow", workflow);
     // console.log("slackUsers", slackUsers);
@@ -149,51 +147,57 @@ export async function filterProcessedForSlack(
         const result: Record<string, unknown> = {
             candidate_id: candidate.id, // Include candidate ID
             coordinator: candidate.coordinator,
-            recruiter: candidate.recruiter
+            recruiter: candidate.recruiter,
         };
         // to clarify the "first application" of a candidate, cutting corner because 99%? only have one
         // const cand_app = candidate.applications[0]
 
         // why are we using message fields for this?
-        workflow.recipients.forEach((recipient: any)=>{
+        workflow.recipients.forEach((recipient: any) => {
             //find the user
             // console.log('recipient - ',recipient.source)
             // console.log('recipient - ',recipient.value)
             // value == coordinator
-            if(recipient.source === "greenhouse"){
+            if (recipient.source === "greenhouse") {
                 const role = recipient.value as string;
-            if(role.includes("ecruiter")){
-                console.log('found role recruiter- ',candidate.recruiter?.id)
-                if (candidate.recruiter) {
-                    const slackId = userMapping[candidate.recruiter.id];
-                    if(slackId){
-                        console.log('entered map')
-                        recipient.slackValue = slackId;
-                    } else {
-                        console.log('else map', candidate.recruiter.first_name)
-                        recipient.slackValue = "no bucks";
+                if (role.includes("ecruiter")) {
+                    console.log(
+                        "found role recruiter- ",
+                        candidate.recruiter?.id,
+                    );
+                    if (candidate.recruiter) {
+                        const slackId = userMapping[candidate.recruiter.id];
+                        if (slackId) {
+                            console.log("entered map");
+                            recipient.slackValue = slackId;
+                        } else {
+                            console.log(
+                                "else map",
+                                candidate.recruiter.first_name,
+                            );
+                            recipient.slackValue = "no bucks";
+                        }
                     }
-                }
-
-            } else if(role.includes("oordinator")){
-                console.log('found role - ',candidate.coordinator?.id)
-                if (candidate.coordinator) {
-                    const slackId = userMapping[candidate.coordinator.id];
-                    if(slackId){
-                        console.log('entered map')
-                        recipient.slackValue = slackId;
-                    } else {
-                        console.log('else map', candidate.coordinator.first_name)
-                        recipient.slackValue = "no bucks coordinator";
+                } else if (role.includes("oordinator")) {
+                    console.log("found role - ", candidate.coordinator?.id);
+                    if (candidate.coordinator) {
+                        const slackId = userMapping[candidate.coordinator.id];
+                        if (slackId) {
+                            console.log("entered map");
+                            recipient.slackValue = slackId;
+                        } else {
+                            console.log(
+                                "else map",
+                                candidate.coordinator.first_name,
+                            );
+                            recipient.slackValue = "no bucks coordinator";
+                        }
                     }
+                } else {
+                    // console.log('no role greenhouse')
                 }
-
             }
-            else{
-                // console.log('no role greenhouse')
-            }
-        }
-        })
+        });
         workflow.messageFields.forEach((field) => {
             switch (field) {
                 case "name":
@@ -209,7 +213,7 @@ export async function filterProcessedForSlack(
                     break;
             }
         });
-        console.log('user mapping  -' ,userMapping)
+        console.log("user mapping  -", userMapping);
         return result;
     });
 }

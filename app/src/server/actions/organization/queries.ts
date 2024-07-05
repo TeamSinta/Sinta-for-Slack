@@ -103,6 +103,51 @@ export async function checkGreenhouseTeamIdFilled() {
 }
 
 /**
+ * @returns A boolean indicating if there are any active workflows.
+ */
+export async function Checktoseeworkflows() {
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+
+    if (!currentOrg) {
+        throw new Error("No current organization found.");
+    }
+
+    const activeWorkflows = await db.query.workflows.findMany({
+        where: eq(workflows.organizationId, currentOrg.id), // Properly use 'eq' for condition
+        columns: {
+            id: true, // We only need to check if there's at least one workflow
+        },
+    });
+
+    return activeWorkflows.length > 0; // Return true if there's at least one workflow, false otherwise
+}
+
+/**
+ * Fetch the first 5 workflows for the current organization.
+ * @returns An array of workflows with their names.
+ */
+export async function getFirstFiveWorkflows() {
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+
+    if (!currentOrg) {
+        throw new Error("No current organization found.");
+    }
+
+    const workflowFilter = eq(workflows.organizationId, currentOrg.id);
+
+    const workflowsList = await db.query.workflows.findMany({
+        where: workflowFilter, // Apply the filter
+        columns: {
+            name: true, // Fetch the name of the workflows
+        },
+        limit: 5, // Limit to the first 5 workflows
+        orderBy: desc(workflows.createdAt), // Order by creation date, descending
+    });
+
+    return workflowsList;
+}
+
+/**
  * @purpose Get organization by id
  * @param orgId
  * @returns organization
@@ -234,34 +279,36 @@ export async function getPaginatedOrgMembersQuery(
     return { data, pageCount, total };
 }
 
-export async function getSubdomainByWorkflowID(workflowId: string): Promise<string> {
-  if (!workflowId) {
-      throw new Error("No workflow ID provided.");
-  }
+export async function getSubdomainByWorkflowID(
+    workflowId: string,
+): Promise<string> {
+    if (!workflowId) {
+        throw new Error("No workflow ID provided.");
+    }
 
-  // Fetch workflow details using the provided workflow ID
-  const workflow = await db.query.workflows.findFirst({
-      where: eq(workflows.id, workflowId),
-      columns: {
-          organizationId: true,
-      },
-  });
+    // Fetch workflow details using the provided workflow ID
+    const workflow = await db.query.workflows.findFirst({
+        where: eq(workflows.id, workflowId),
+        columns: {
+            organizationId: true,
+        },
+    });
 
-  if (!workflow) {
-      throw new Error("Workflow not found.");
-  }
+    if (!workflow) {
+        throw new Error("Workflow not found.");
+    }
 
-  // Fetch organization's subdomain using the organization ID from the workflow
-  const organization = await db.query.organizations.findFirst({
-      where: eq(organizations.id, workflow.organizationId),
-      columns: {
-          greenhouse_subdomain: true,
-      },
-  });
+    // Fetch organization's subdomain using the organization ID from the workflow
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.id, workflow.organizationId),
+        columns: {
+            greenhouse_subdomain: true,
+        },
+    });
 
-  if (!organization) {
-      throw new Error("Organization not found.");
-  }
+    if (!organization) {
+        throw new Error("Organization not found.");
+    }
 
-  return organization.greenhouse_subdomain!;
+    return organization.greenhouse_subdomain!;
 }

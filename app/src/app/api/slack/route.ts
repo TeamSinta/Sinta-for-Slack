@@ -61,13 +61,13 @@ export async function GET(req: NextRequest) {
 
     const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
     const clientSecret = process.env.SLACK_CLIENT_SECRET;
-    const redirectUri = process.env.NEXTAUTH_URL+"api/slack";
+    const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
-    console.log('redirectUri  - ',redirectUri)
-    console.log('clientId  - ',clientId)
-    console.log('client secret - ',clientSecret)
-    console.log('code - ',code)
+    console.log("redirectUri  - ", redirectUri);
+    console.log("clientId  - ", clientId);
+    console.log("client secret - ", clientSecret);
+    console.log("code - ", code);
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -78,13 +78,11 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const url = `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`
-        console.log('url - ',url)
-        const response = await fetch(url,
-            { method: "POST" },
-        );
+        const url = `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        console.log("url - ", url);
+        const response = await fetch(url, { method: "POST" });
         const json = await response.json();
-        console.log('json - ',json)
+        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&
@@ -271,7 +269,7 @@ async function handleSlackInteraction(payload: SlackInteraction) {
             );
         }
         if (action.value.startsWith("LinkButton_")) {
-          return handleJsonPost({ message: "Link button clicked" });
+            return handleJsonPost({ message: "Link button clicked" });
         }
 
         const { action_id } = action;
@@ -562,7 +560,7 @@ async function createRejectCandidateModal(
         throw error; // Ensure the error is handled by the caller
     }
 }
-async function getApplicationFromCandidateId(candidateId){
+async function getApplicationFromCandidateId(candidateId) {
     const candidateDetails = await fetchCandidateDetails(candidateId);
 
     // Extract Job ID from candidate details
@@ -571,11 +569,11 @@ async function getApplicationFromCandidateId(candidateId){
         candidateDetails.applications.length > 0
     ) {
         const application = candidateDetails.applications[0];
-        return application
+        return application;
     } else {
         throw new Error("No applications found for the candidate");
     }
-    return null
+    return null;
 }
 async function handleRejectCandidateSubmission(payload: SlackInteraction) {
     try {
@@ -615,15 +613,16 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
                 "Failed to find corresponding Greenhouse user for the Slack user. This has been submitted.";
             emoji = "❌";
         } else {
-            const cand_application = getApplicationFromCandidateId(candidate_id)
-            const applicationId = cand_application.id
+            const cand_application =
+                getApplicationFromCandidateId(candidate_id);
+            const applicationId = cand_application.id;
             const result = await rejectApplicationInGreenhouse(
                 applicationId,
                 greenhouseUserId,
                 rejectReasonId,
                 emailTemplateId,
                 rejectComments,
-            )
+            );
             // const result = await rejectCandidateInGreenhouse(
             //     candidate_id,
             //     greenhouseUserId,

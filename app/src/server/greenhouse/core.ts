@@ -170,7 +170,6 @@ export async function moveToNextStageInGreenhouse(
     }
 }
 
-
 export async function rejectApplicationInGreenhouse(
     applicationId: string,
     greenhouseUserId: string,
@@ -267,10 +266,12 @@ export async function fetchEmailTemplates(): Promise<
         }
 
         // Parse the response to send an array of objects with id and name
-        return emailTemplates.map((emailTemplate: { id: number; name: string }) => ({
-            id: emailTemplate.id,
-            name: emailTemplate.name,
-        }));
+        return emailTemplates.map(
+            (emailTemplate: { id: number; name: string }) => ({
+                id: emailTemplate.id,
+                name: emailTemplate.name,
+            }),
+        );
     } catch (error) {
         console.error("Error fetching reject reasons: ", error);
         return [];
@@ -583,7 +584,7 @@ export async function filterStuckinStageDataConditions(
             }
 
             if (conditionMet) {
-                    matchedCandidates.push(candidate);
+                matchedCandidates.push(candidate);
             }
         }
     }

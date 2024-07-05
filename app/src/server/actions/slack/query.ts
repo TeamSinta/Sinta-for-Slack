@@ -29,14 +29,14 @@ export async function getAccessToken(teamId: string): Promise<string> {
         !organization.slack_access_token ||
         Date.now() >= (organization.token_expiry ?? 0) * 1000
     ) {
-        console.log('refresh token - ', organization)
-        console.log('refresh token - team id - ', teamId)
+        console.log("refresh token - ", organization);
+        console.log("refresh token - team id - ", teamId);
         const refreshToken = await refreshTokenIfNeeded(
             teamId,
             organization.token_expiry!,
             organization.slack_refresh_token!,
         ); // This will refresh the token if necessary
-        return refreshToken
+        return refreshToken;
     }
 
     return organization.slack_access_token;
