@@ -265,12 +265,46 @@ export async function sendSlackButtonNotification(
     filteredSlackData: Record<string, unknown>[],
     workflowRecipient: WorkflowRecipient,
     slackTeamID: string,
+    userMapping: Record<string, string>,
+    filteredConditionsData
 ): Promise<void> {
-    console.log("slackID", slackTeamID);
+    console.log('filtered filteredConditionsData dagat-',filteredConditionsData)
     const accessToken = await getAccessToken(slackTeamID);
+    const greenhouseRecipients = []
+    let hasGreenhouse = false
+    const greenhouseRoles = []
+    workflowRecipient.recipients.map((rec)=>{
+        if(rec.source =="greenhouse") {
+            hasGreenhouse=true
+            greenhouseRoles.push(rec.value)
+        }
+    })
 
-    for (const recipient of workflowRecipient.recipients) {
-        const channel = recipient.value;
+    if(hasGreenhouse){
+        
+        const candidates = filteredConditionsData
+        // console.log('filteredConditionsData - ',filteredConditionsData)
+        // console.log('candidates - ',candidates)
+        candidates.forEach((cand)=>{
+            greenhouseRoles.forEach((role)=>{
+                if(role.includes("ecruiter") || role.includes("oordinator")){
+                    if(userMapping[cand.recruiter.id]){
+                        let newRecipient={"value":userMapping[cand.recruiter.id]}
+                        greenhouseRecipients.push(newRecipient)
+                    } else if(userMapping[cand.coordinator.id]){
+                        let newRecipient={"value":userMapping[cand.coordinator.id]}
+                        greenhouseRecipients.push(newRecipient)
+                    }
+                }
+            })
+        })
+    }
+    const allRecipients = workflowRecipient.recipients.concat(greenhouseRecipients)
+    for (const recipient of allRecipients) {
+        console.log('reciepient - ',recipient)
+        let channel = recipient.value;
+
+ 
 
         const blocks = [
             {
@@ -398,7 +432,8 @@ export async function sendSlackButtonNotification(
             }),
         });
 
-        console.log("response", await response.json());
+        // console.log("response slack message sent", response.status);
+        // console.log("response slack message skip sent sent");
         function prettyPrint(obj: any, depth = 2) {
             return JSON.stringify(
                 obj,
@@ -416,12 +451,16 @@ export async function sendSlackButtonNotification(
             );
         }
 
-        console.log("attachments", prettyPrint(attachments));
-        if (!response.ok) {
-            const errorResponse = await response.text();
-            console.error(
-                `Failed to post message to channel ${channel}: ${errorResponse}`,
-            );
-        }
+        // console.log("attachments", prettyPrint(attachments));
+        // if (!response.ok) {
+        //     const errorResponse = await response.text();
+        //     console.error(
+        //         `Failed to post message to channel ${channel}: ${errorResponse}`,
+        //     );
+        // }
     }
+    console.log('total recipients',allRecipients.length)
+
+    // console.log('total recipients',workflowRecipient.recipients)
+    // console.log('total recipients',workflowRecipient.recipients.length)
 }

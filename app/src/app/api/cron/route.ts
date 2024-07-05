@@ -5,13 +5,15 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
+import { getEmailsfromSlack } from "@/server/slack/core";
+import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import { filterProcessedForSlack } from "@/lib/slack";
+import { filterProcessedForSlack, matchUsers } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
     sendSlackNotification,
@@ -54,22 +56,28 @@ export async function GET() {
                     processor ? { query: processor } : {},
                 );
                 console.log("cron-job running!!");
+                // console.log("cron-job running!! - data ",data);
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData =
                     await filterStuckinStageDataConditions(
                         data,
                         workflow.conditions,
                     );
-
                 const slackTeamID = await getSlackTeamIDByWorkflowID(
                     workflow.id,
                 );
-
-                console.log("filteredConditionsData", filteredConditionsData);
+                const greenhouseUsers = await fetchGreenhouseUsers();
+                const slackUsers = await getEmailsfromSlack(slackTeamID);
+                const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+                // const matchGreenhouseUsers = matc
+                // console.log("filteredConditionsData", filteredConditionsData);
                 const filteredSlackData = await filterProcessedForSlack(
                     filteredConditionsData,
                     workflow.recipient,
                     slackTeamID,
+                    greenhouseUsers,
+                    slackUsers,
+                    userMapping
                 );
 
                 if (filteredSlackData.length > 0) {
@@ -77,8 +85,10 @@ export async function GET() {
                         filteredSlackData,
                         workflow.recipient,
                         slackTeamID,
+                        userMapping,
+                        filteredConditionsData
                     );
-                    console.log(filteredSlackData);
+                    // console.log(filteredSlackData);
                     console.log("Sent to Slack");
                 } else {
                     console.log("No data to send to Slack");
@@ -86,6 +96,8 @@ export async function GET() {
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
+            console.log('hereererere')
+
         }
 
         if (shouldReturnNull) {

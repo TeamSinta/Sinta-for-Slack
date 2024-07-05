@@ -9,7 +9,6 @@ export async function getAccessToken(teamId: string): Promise<string> {
     if (!teamId) {
         throw new Error("No Slack team ID provided.");
     }
-
     // Fetch organization's Slack token details using the provided team ID
     const organization = await db.query.organizations.findFirst({
         where: eq(organizations.slack_team_id, teamId),
@@ -23,17 +22,21 @@ export async function getAccessToken(teamId: string): Promise<string> {
     if (!organization) {
         throw new Error("Organization not found or no access token available.");
     }
+    // console.log('get Access token - ')
 
     // Check if token_expiry is null or the access token is expired
     if (
         !organization.slack_access_token ||
         Date.now() >= (organization.token_expiry ?? 0) * 1000
     ) {
-        return await refreshTokenIfNeeded(
+        console.log('refresh token - ', organization)
+        console.log('refresh token - team id - ', teamId)
+        const refreshToken = await refreshTokenIfNeeded(
             teamId,
             organization.token_expiry!,
             organization.slack_refresh_token!,
         ); // This will refresh the token if necessary
+        return refreshToken
     }
 
     return organization.slack_access_token;
