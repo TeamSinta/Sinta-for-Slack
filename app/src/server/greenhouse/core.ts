@@ -170,6 +170,45 @@ export async function moveToNextStageInGreenhouse(
     }
 }
 
+
+export async function rejectApplicationInGreenhouse(
+    applicationId: string,
+    greenhouseUserId: string,
+    rejectReasonId: string,
+    emailTemplateId: string,
+    rejectComments: string,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        // I don't think this is a valid endpoint- need to reject the application
+        // Implement your logic to reject the candidate in Greenhouse
+        // For example:
+        const url = `https://harvest.greenhouse.io/v1/applications/${applicationId}/reject`;
+        const response = await customFetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "On-Behalf-Of": greenhouseUserId,
+            },
+            body: JSON.stringify({
+                reason_id: rejectReasonId,
+                email_template_id: emailTemplateId,
+                comments: rejectComments,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorResponse = await response.json();
+            throw new Error(
+                `Error rejecting candidate: ${errorResponse.message}`,
+            );
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error rejecting candidate:", error);
+        return { success: false, error: error.message };
+    }
+}
 export async function rejectCandidateInGreenhouse(
     candidateId: string,
     greenhouseUserId: string,
@@ -178,6 +217,7 @@ export async function rejectCandidateInGreenhouse(
     rejectComments: string,
 ): Promise<{ success: boolean; error?: string }> {
     try {
+        // I don't think this is a valid endpoint- need to reject the application
         // Implement your logic to reject the candidate in Greenhouse
         // For example:
         const url = `https://harvest.greenhouse.io/v1/candidates/${candidateId}/reject`;

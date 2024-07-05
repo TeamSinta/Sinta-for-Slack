@@ -22,3 +22,29 @@ build/
 .DS_Store
 Thumbs.db
 package-lock.json
+
+
+
+# dependencies
+/.pnp
+
+
+# testing
+/coverage
+
+# database
+/prisma/db.sqlite
+/prisma/db.sqlite-journal
+
+# next.js
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug

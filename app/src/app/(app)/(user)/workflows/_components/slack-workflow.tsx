@@ -208,7 +208,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
             />
 
             {/* Message Delivery */}
-            <div className="my-4">
+            {/* <div className="my-4">
                 <Label>Message Delivery</Label>
                 <RadioGroup
                     value={deliveryOption}
@@ -227,7 +227,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                         </div>
                     ))}
                 </RadioGroup>
-            </div>
+            </div> */}
 
             {/* Multi-Select for Recipients */}
             <div className="my-4">
