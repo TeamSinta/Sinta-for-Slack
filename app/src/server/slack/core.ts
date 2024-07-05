@@ -290,10 +290,10 @@ export async function sendSlackButtonNotification(
             greenhouseRoles.forEach((role)=>{
                 if(role.includes("ecruiter") || role.includes("oordinator")){
                     if(userMapping[cand.recruiter.id]){
-                        let newRecipient={"value":userMapping[cand.recruiter.id]}
+                        const newRecipient={"value":userMapping[cand.recruiter.id]}
                         greenhouseRecipients.push(newRecipient)
                     } else if(userMapping[cand.coordinator.id]){
-                        let newRecipient={"value":userMapping[cand.coordinator.id]}
+                        const newRecipient={"value":userMapping[cand.coordinator.id]}
                         greenhouseRecipients.push(newRecipient)
                     }
                 }
@@ -303,7 +303,7 @@ export async function sendSlackButtonNotification(
     const allRecipients = workflowRecipient.recipients.concat(greenhouseRecipients)
     for (const recipient of allRecipients) {
         console.log('reciepient - ',recipient)
-        let channel = recipient.value;
+        const channel = recipient.value;
 
 
 
@@ -442,24 +442,24 @@ export async function sendSlackButtonNotification(
           }),
       });
 
-        // console.log("response slack message sent", response.status);
+        console.log("response slack message sent", response.status);
         // console.log("response slack message skip sent sent");
-        function prettyPrint(obj: any, depth = 2) {
-            return JSON.stringify(
-                obj,
-                (key, value) => {
-                    if (
-                        depth !== 0 &&
-                        typeof value === "object" &&
-                        value !== null
-                    ) {
-                        return value;
-                    }
-                    return value;
-                },
-                2,
-            );
-        }
+        // function prettyPrint(obj: any, depth = 2) {
+        //     return JSON.stringify(
+        //         obj,
+        //         (key, value) => {
+        //             if (
+        //                 depth !== 0 &&
+        //                 typeof value === "object" &&
+        //                 value !== null
+        //             ) {
+        //                 return value;
+        //             }wor
+        //             return value;
+        //         },
+        //         2,
+        //     );
+        // }
 
         // console.log("attachments", prettyPrint(attachments));
         // if (!response.ok) {

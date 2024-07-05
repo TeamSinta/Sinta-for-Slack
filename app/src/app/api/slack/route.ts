@@ -566,7 +566,6 @@ async function getApplicationFromCandidateId(candidateId){
     const candidateDetails = await fetchCandidateDetails(candidateId);
 
     // Extract Job ID from candidate details
-    let jobId;
     if (
         candidateDetails.applications &&
         candidateDetails.applications.length > 0
