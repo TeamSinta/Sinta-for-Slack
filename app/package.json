@@ -53,7 +53,7 @@
         "command": "^0.0.5",
         "date-fns": "^3.3.1",
         "dialog": "^0.3.1",
-        "drizzle-orm": "^0.29.4",
+        "drizzle-orm": "^0.29.5",
         "drizzle-zod": "^0.5.1",
         "dropdown-menu": "^0.1.1",
         "eslint-plugin-unused-imports": "^3.1.0",
