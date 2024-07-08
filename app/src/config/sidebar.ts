@@ -105,11 +105,6 @@ const navigation: SidebarNavItems[] = [
                 href: siteUrls.dashboard.home,
             },
             {
-                label: "Hiring Rooms",
-                icon: Zap,
-                href: siteUrls.hiringrooms.home,
-            },
-            {
                 label: "Workflows",
                 icon: Zap,
                 href: siteUrls.workflows.home,
