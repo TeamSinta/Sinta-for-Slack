@@ -22,6 +22,7 @@ import {
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 
+// naming change? why mutation??
 function createHiringRoomMutation(){
     
 }

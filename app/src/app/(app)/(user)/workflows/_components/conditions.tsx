@@ -36,6 +36,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     conditionOptions,
 }) => {
     const handleFieldChange = (value: string) => {
+        console.log('go bucks field change handle')
         const selectedOption = objectFieldOptions.find(
             (option) => option.name === value,
         );
@@ -66,7 +67,10 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     </Label>
                     <Select
                         value={fieldValue}
-                        onValueChange={handleFieldChange}
+                        // onValueChange={()=>{handleFieldChange}
+                        onValueChange={(value) =>
+                            onChange(index, "field", value)
+                        }
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Field" />
