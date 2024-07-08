@@ -136,7 +136,7 @@ function CreateWorkflowSheet() {
         messageDelivery: "",
         recipients: [],
     });
-    const [selectedAlertType, setSelectedAlertType] = useState("create/update");
+    const [selectedAlertType, setSelectedAlertType] = useState("timebased");
     const [isInitialSetupDone, setIsInitialSetupDone] =
         useState<boolean>(false);
 
@@ -420,7 +420,7 @@ function CreateWorkflowSheet() {
 
     const alertTypeOptions = [
         { value: "timebased", label: "Time-based" },
-        { value: "create/update", label: "Create/Update" },
+        // { value: "create/update", label: "Create/Update" },
         { value: "stuck-in-stage", label: "Stuck-in-Stage" },
     ];
 
