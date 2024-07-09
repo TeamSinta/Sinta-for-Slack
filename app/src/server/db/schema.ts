@@ -31,6 +31,33 @@ export const workflowStatusEnum = pgEnum("workflow_status", [
     "Inactive",
     "Archived",
 ]);
+export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
+
+export const hiringrooms = createTable("hiringroom", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    objectField: varchar("objectField", { length: 255 }).notNull(),
+    alertType: varchar("alertType", { length: 255 }).notNull(),
+    conditions: jsonb("conditions").notNull(), // Updated to JSONB
+    triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
+    recipient: jsonb("recipient").notNull(),
+    status: hiringroomStatusEnum("status").default("Active").notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    modifiedAt: timestamp("modifiedAt", { mode: "date" }),
+    ownerId: varchar("ownerId", { length: 255 })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+});
 
 export const workflows = createTable("workflow", {
     id: varchar("id", { length: 255 })
@@ -65,6 +92,17 @@ export const workflowsRelations = relations(workflows, ({ one }) => ({
     }),
 }));
 
+export const hiringroomsRelations = relations(hiringrooms, ({ one }) => ({
+    owner: one(users, {
+        fields: [hiringrooms.ownerId],
+        references: [users.id],
+    }),
+    organization: one(organizations, {
+        fields: [hiringrooms.organizationId],
+        references: [organizations.id],
+    }),
+}));
+
 export const workflowInsertSchema = createInsertSchema(workflows, {
     name: z
         .string()
@@ -74,11 +112,26 @@ export const workflowInsertSchema = createInsertSchema(workflows, {
     alertType: z.string().min(1, "Alert type must not be empty"),
 });
 
+export const hiringroomInsertSchema = createInsertSchema(hiringrooms, {
+    name: z
+        .string()
+        .min(3, "Hiringroom name must be at least 3 characters long")
+        .max(50, "Hiringroom name must be at most 50 characters long"),
+    objectField: z.string().min(1, "Object field must not be empty"),
+    alertType: z.string().min(1, "Alert type must not be empty"),
+});
+
 export const workflowSelectSchema = createSelectSchema(workflows, {
     name: z
         .string()
         .min(3, "Workflow name must be at least 3 characters long")
         .max(50, "Workflow name must be at most 50 characters long"),
+});
+export const hiringroomSelectSchema = createSelectSchema(hiringrooms, {
+    name: z
+        .string()
+        .min(3, "Hiringroom name must be at least 3 characters long")
+        .max(50, "Hiringroom name must be at most 50 characters long"),
 });
 
 export const users = createTable("user", {
