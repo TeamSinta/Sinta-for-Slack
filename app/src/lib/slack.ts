@@ -110,44 +110,47 @@ export async function matchUsers(
 
     return userMapping;
 }
-export function addGreenhouseSlackValue(recipient: any, candidate: any, userMapping: any){
-    const role = recipient.value as string;
-    if (role.includes("ecruiter")) {
-        console.log(
-            "found role recruiter- ",
-            candidate.recruiter?.id,
-        );
-        if (candidate.recruiter) {
-            const slackId = userMapping[candidate.recruiter.id];
-            if (slackId) {
-                console.log("entered map");
-                recipient.slackValue = slackId;
-            } else {
-                console.log(
-                    "else map",
-                    candidate.recruiter.first_name,
-                );
-                recipient.slackValue = "no bucks";
+export function addGreenhouseSlackValue(recipient: any, candidates: any, userMapping: any){
+    candidates.forEach((candidate:any)=>{
+        const role = recipient.value as string;
+        if (role.includes("ecruiter")) {
+            console.log(
+                "found role recruiter- ",
+                candidate.recruiter?.id,
+            );
+            if (candidate.recruiter) {
+                const slackId = userMapping[candidate.recruiter.id];
+                if (slackId) {
+                    console.log("entered map");
+                    recipient.slackValue = slackId;
+                } else {
+                    console.log(
+                        "else map",
+                        candidate.recruiter.first_name,
+                    );
+                    recipient.slackValue = "no bucks";
+                }
             }
-        }
-    } else if (role.includes("oordinator")) {
-        console.log("found role - ", candidate.coordinator?.id);
-        if (candidate.coordinator) {
-            const slackId = userMapping[candidate.coordinator.id];
-            if (slackId) {
-                console.log("entered map");
-                recipient.slackValue = slackId;
-            } else {
-                console.log(
-                    "else map",
-                    candidate.coordinator.first_name,
-                );
-                recipient.slackValue = "no bucks coordinator";
+        } else if (role.includes("oordinator")) {
+            console.log("found role - ", candidate.coordinator?.id);
+            if (candidate.coordinator) {
+                const slackId = userMapping[candidate.coordinator.id];
+                if (slackId) {
+                    console.log("entered map");
+                    recipient.slackValue = slackId;
+                } else {
+                    console.log(
+                        "else map",
+                        candidate.coordinator.first_name,
+                    );
+                    recipient.slackValue = "no bucks coordinator";
+                }
             }
+        } else {
+            // console.log('no role greenhouse')
         }
-    } else {
-        // console.log('no role greenhouse')
-    }
+    })
+
 }
 export async function buildSlackMessageByCandidateOnFilteredData(
     // export async function filterProcessedForSlack(

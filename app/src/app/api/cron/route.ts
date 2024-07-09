@@ -25,12 +25,12 @@ import {addGreenhouseSlackValue} from '@/lib/slack'
 
 
 // naming change? why mutation??
-async function handleHiringRoom(hiring_room){
-    const channelName = "gobucks";
-    const userEmails = ["gobucks@yahoo.com","giannis@gmail.com"];
-    await createSlackChannel(channelName, userEmails)
+// async function handleHiringRoom(hiring_room){
+//     const channelName = "gobucks";
+//     const userEmails = ["gobucks@yahoo.com","giannis@gmail.com"];
+//     await createSlackChannel(channelName, userEmails)
 
-}
+// }
 // Define the GET handler for the route
 async function getAllJobs(){
     //https://harvest.greenhouse.io/v1/candidates
@@ -44,12 +44,40 @@ async function getAllCandidates(){
     const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
 
 }
+function getSlackUserIds(hiringroom, candidates, userMapping){
+    // function buildHiringRoomRecipients(hiringroom, candidates, userMapping){
+    hiringroom.recipient.map((recipient: any) => {
+        if (recipient.source === "greenhouse") {
+            return addGreenhouseSlackValue(recipient, candidates, userMapping);
+        }
+        return recipient;
+    });
+    const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(hiringroom)
+    return greenHouseAndSlackRecipients
+}
+function buildGreenHouseUsersForCandidate(hiring_room_recipient, cand_id, job_id){
+    hiring_room_recipient.forEach((recipient)=>{
+        if(recipient.source == "greenhouse"){
+            
+        }
+    })
+}
 export async function handleHiringrooms(){
     const hiringroom: HiringRoom[] = await getHiringRooms()
     const allJobs = await getAllJobs()
     let allCandidates = await getAllCandidates()
     // const filteredHiringrooms = filterHiringRooms
+    if(filteredHiringRooms.length > 0){
+
+        const greenhouseUsers = await fetchGreenhouseUsers();
+        const slackUsers = await getEmailsfromSlack(slackTeamID);
+        const userMapping = await matchUsers(
+            greenhouseUsers,
+            slackUsers,
+        );
+    }
     for (const hiring_room of filteredHiringrooms) {
+
         // create job room
         //    slack_channel_name = job_title + date posted + time
         //    slack_channel_name = job_id
@@ -57,15 +85,26 @@ export async function handleHiringrooms(){
         //    slack_channel_name = candidate_first_initial + candidate_last_name + job_title 
         //    slack_channel_name = cand_id + job_id 
         
+        
+
         if (hiring_room.type == 'candidate'){
-            const userEmails = []
+            // hiring_room.recipient = buildHiringRoomRecipients()
+            // const slackUserIds = getSlackUserIds()
             allCandidates.forEach((candidate)=>{
                 const channelName = candidate.id
-                await createSlackChannel(channelName, userEmails)
+                const greenHouseUsers = buildGreenHouseUsersForCandidate(hiring_room.recipient, cand_id, job_id)
+                await createSlackChannel(channelName, slackUserIds)
             })
+            // for a hiring flow candidate flow
+            // for all the candidates
+            // does channel exist for candidate that fits this hiring flow
+            // greenhouseusers = getGreenHouseUsers(hiringflow.recipient)
+            // slackUsers = hiringflow.recipient + greenhouseusers
+
+
         }
         else if (hiring_room.type == 'job'){
-            const userEmails = ["gobucks@yahoo.com","giannis@gmail.com"];
+            hiring_room.recipient = buildHiringRoomRecipients()
             allJobs.forEach((job)=>{
                 const channelName = job.id;
                 await createSlackChannel(channelName, userEmails)
@@ -192,7 +231,7 @@ export async function handleWorkflows(){
                     greenhouseUsers,
                     slackUsers,
                 );
-                workflow.recipients = workflow.recipients.map((recipient: any) => {
+                workflow.recipient = workflow.recipient.map((recipient: any) => {
                     if (recipient.source === "greenhouse") {
                         return addGreenhouseSlackValue(recipient, candidates, userMapping);
                     }
@@ -263,7 +302,8 @@ export async function GET() {
     }
 }
 
-async function createSlackChannel(channelName, userEmails) {
+async function createSlackChannel(channelName, userIds) {
+    // async function createSlackChannel(channelName, userEmails) {
     try {
       // Step 1: Create the channel
       const channelResponse = await slackClient.conversations.create({
@@ -273,11 +313,11 @@ async function createSlackChannel(channelName, userEmails) {
       const channelId = channelResponse.channel.id;
       console.log(`Channel created with ID: ${channelId}`);
   
-      // Step 2: Get user IDs from emails
-      const userIds = await Promise.all(userEmails.map(async (email) => {
-        const userResponse = await slackClient.users.lookupByEmail({ email });
-        return userResponse.user.id;
-      }));
+    //   // Step 2: Get user IDs from emails
+    //   const userIds = await Promise.all(userEmails.map(async (email) => {
+    //     const userResponse = await slackClient.users.lookupByEmail({ email });
+    //     return userResponse.user.id;
+    //   }));
   
       console.log(`User IDs: ${userIds}`);
   
