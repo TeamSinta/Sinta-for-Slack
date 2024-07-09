@@ -111,6 +111,19 @@ export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
     }
 };
 
+export async function fetchCandidates(): Promise<any> {
+    try {
+        // Replace this URL with the actual Greenhouse API endpoint for fetching candidate details
+        const response = await customFetch(
+            `https://harvest.greenhouse.io/v1/candidates`,
+        );
+        return response;
+    } catch (error) {
+        console.error("Error fetching candidate details: ", error);
+        return null;
+    }
+}
+
 export async function fetchCandidateDetails(candidateId: string): Promise<any> {
     try {
         // Replace this URL with the actual Greenhouse API endpoint for fetching candidate details
