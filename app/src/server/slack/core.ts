@@ -268,47 +268,15 @@ export async function sendSlackButtonNotification(
     subDomain: string, // Adding sub-domain as a parameter
     userMapping: Record<string, string>,
     filteredConditionsData,
+    greenHouseAndSlackRecipients
 ): Promise<void> {
     console.log(
         "filtered filteredConditionsData dagat-",
         filteredConditionsData,
     );
     const accessToken = await getAccessToken(slackTeamID);
-    const greenhouseRecipients = [];
-    let hasGreenhouse = false;
-    const greenhouseRoles = [];
-    workflowRecipient.recipients.map((rec) => {
-        if (rec.source == "greenhouse") {
-            hasGreenhouse = true;
-            greenhouseRoles.push(rec.value);
-        }
-    });
-
-    if (hasGreenhouse) {
-        const candidates = filteredConditionsData;
-        // console.log('filteredConditionsData - ',filteredConditionsData)
-        // console.log('candidates - ',candidates)
-        candidates.forEach((cand) => {
-            greenhouseRoles.forEach((role) => {
-                if (role.includes("ecruiter") || role.includes("oordinator")) {
-                    if (userMapping[cand.recruiter.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.recruiter.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    } else if (userMapping[cand.coordinator.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.coordinator.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    }
-                }
-            });
-        });
-    }
-    const allRecipients =
-        workflowRecipient.recipients.concat(greenhouseRecipients);
-    for (const recipient of allRecipients) {
+    
+    for (const recipient of greenHouseAndSlackRecipients) {
         console.log("reciepient - ", recipient);
         const channel = recipient.value;
 
