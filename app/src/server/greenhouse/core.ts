@@ -45,7 +45,7 @@ interface Activity {
 }
 
 interface MockData {
-    owner: string;
+    interviewer: string;
     recruiter: string;
     coordinator: string;
     hiringTeam: string;
@@ -61,7 +61,8 @@ export async function getMockGreenhouseData(): Promise<MockData> {
             coordinator: "{ Coordinator }",
             hiringTeam: "{ Hiring_Team }",
             admin: "{ Admin }",
-            owner: "{ Record_Owner }",
+            interviewer: "{ Interviewer }",
+
         };
 
         return mockData;
