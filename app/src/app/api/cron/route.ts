@@ -6,7 +6,7 @@
 // @ts-nocheck
 
 import { getEmailsfromSlack } from "@/server/slack/core";
-import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
+import { fetchGreenhouseUsers, filterScheduledInterviewsWithConditions } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
@@ -29,28 +29,43 @@ export async function GET() {
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
-            if (workflow.alertType === "time-based") {
-                const { apiUrl } = workflow.triggerConfig;
-                const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
+            if (workflow.alertType === "timebased") {
+              const { apiUrl } = workflow.triggerConfig;
 
-                const filteredConditionsData = filterDataWithConditions(
-                    data,
-                    workflow.conditions,
-                );
+              const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
+              console.log(data)
 
-                if (filteredConditionsData.length === 0) {
-                    shouldReturnNull = true; // Set flag to true
-                } else {
-                    const filteredSlackData = filterProcessedForSlack(
-                        filteredConditionsData,
-                        workflow.recipient,
-                    );
-                    await sendSlackNotification(
-                        filteredSlackData,
-                        workflow.recipient,
-                    );
-                }
-            } else if (workflow.alertType === "stuck-in-stage") {
+              let filteredConditionsData;
+              console.log("workflow.objectField", workflow.objectField);
+              switch (workflow.objectField) {
+                  case "Scheduled Interviews":
+                      filteredConditionsData = filterScheduledInterviewsWithConditions(
+                          data,
+                          workflow.conditions,
+                      );
+
+                      break;
+                  default:
+                      filteredConditionsData = filterDataWithConditions(
+                          data,
+                          workflow.conditions,
+                      );
+                      break;
+              }
+              console.log("filteredConditionsData", filteredConditionsData);
+              if (filteredConditionsData.length === 0) {
+                  shouldReturnNull = true; // Set flag to true
+              } else {
+                  const filteredSlackData = filterProcessedForSlack(
+                      filteredConditionsData,
+                      workflow.recipient,
+                  );
+                  await sendSlackNotification(
+                      filteredSlackData,
+                      workflow.recipient,
+                  );
+              }
+            } else if (workflow.alertType === "stuckin-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
                 const data = await customFetch(
                     apiUrl,

@@ -547,14 +547,14 @@ function CreateWorkflowSheet() {
     const timeConditionOptions = [
         { value: "before", label: "Before" },
         { value: "after", label: "After" },
-        { value: "same", label: "Same time / Same day" },
+        { value: "same", label: "Same" },
     ];
 
     const dateFieldOptions: DateFieldOption[] = [
         { label: "Created at", value: "created_at" },
         { label: "Closed at", value: "closed_at" },
         { label: "Last activity", value: "last_activity" },
-        { label: "Interview End time", value: "end_time" },
+        { label: "Interview End time", value: "end.date_time" },
     ];
 
     const conditionTypesWithOperators = [
@@ -909,7 +909,10 @@ function CreateWorkflowSheet() {
                                                         }
                                                     />
                                                 </div>
-                                                <div className="flex-1">
+
+                                            </>
+                                        )}
+                                         <div className="flex-1">
                                                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                         Time Unit
                                                     </Label>
@@ -941,8 +944,6 @@ function CreateWorkflowSheet() {
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                            </>
-                                        )}
                                     </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
