@@ -38,7 +38,7 @@ import {
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackHiringroom from "./slack-hiringroom";
 import ConditionComponent from "./conditions";
-import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
+import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
@@ -119,6 +119,113 @@ interface Job {
 }
 
 function CreateHiringroomSheet() {
+    const [coordinators, setCoordinators] = useState([])
+    const [recruiters, setRecruiters] = useState([])
+    const [jobNames, setJobNames] = useState([])
+    const [conditionTypesWithOperators, setConditionTypesWithOperators] = useState([
+        {
+            name: "Coordinator",
+            operators: [
+                { value: "equal", label: "Equal To" },
+                { value: "notEqual", label: "Not Equal To" },
+            ],
+            values: [], // Assuming values are dynamic or not predefined
+        },
+        {
+            name: "Recruiter",
+            operators: [
+                { value: "equal", label: "Equal To" },
+                { value: "notEqual", label: "Not Equal To" },
+            ],
+            values: [], // Assuming values are dynamic or not predefined
+        },
+        {
+            name: "Job Name",
+            operators: [
+                { value: "equal", label: "Equal To" },
+                { value: "notEqual", label: "Not Equal To" },
+            ],
+            values: [], // Assuming values are dynamic or not predefined
+        }
+        // {
+        //     name: "Tags",
+        //     operators: [{ value: "equal", label: "Equal To" }],
+        //     values: [], // Assuming values are dynamic or not predefined
+        // }
+    ]) as any[];
+
+
+    useEffect(() => {
+        console.log('go bucks in use effect fetch all suers')
+        const fetchData = async () => {
+            const greenhouseUsers = await fetchAllGreenhouseUsers()
+            const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
+            const greenhouseCandidates = await fetchCandidates()
+            let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            setCoordinators(coords)
+            setRecruiters(recrus)
+            setJobNames(greenhouseJobs)
+            let tmpConditionTypesWithOperators = conditionTypesWithOperators
+
+            const coordinatorsList = coords.map(coordinator => (coordinator.name));
+            const recruitersList = recrus.map(recruiter => (recruiter.name));
+            const jobNamesList = greenhouseJobs.map(jobName => (jobName.name));
+            tmpConditionTypesWithOperators[0]['values'] = coordinatorsList
+            //recruiter 
+            tmpConditionTypesWithOperators[1]['values'] = recruitersList
+            tmpConditionTypesWithOperators[2]['values'] = jobNamesList
+            console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
+            console.log('jobNamesList ',jobNamesList)
+            setConditionTypesWithOperators(tmpConditionTypesWithOperators)
+            console.log('conditionTypesWithOperators ',conditionTypesWithOperators)
+            console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
+        }
+        fetchData()
+    }, []);
+
+    function getAllCoordinators(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
+        // Get all coordinators from jobs
+        const coordinatorSet = new Set<string>();
+        jobs.forEach(job => {
+            if (job.coordinator_ids) {
+                job.coordinator_ids.forEach(id => coordinatorSet.add(id));
+            }
+        });
+    
+        // Get all coordinators from candidates
+        candidates.forEach(candidate => {
+            if (candidate.coordinator) {
+                coordinatorSet.add(candidate.coordinator.id);
+            }
+        });
+    
+        // Create list of coordinators
+        const coordinators = users.filter(user => coordinatorSet.has(user.id));
+    
+        return coordinators;
+    }
+    function getAllRecruiters(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
+        // Get all coordinators from jobs
+        const recruiterSet = new Set<string>();
+        jobs.forEach(job => {
+            if (job.recruiter_ids) {
+                job.recruiter_ids.forEach(id => recruiterSet.add(id));
+            }
+        });
+    
+        // Get all coordinators from candidates
+        candidates.forEach(candidate => {
+            if (candidate.recruiter) {
+                recruiterSet.add(candidate.recruiter.id);
+            }
+        });
+    
+        // Create list of coordinators
+        const recruiters = users.filter(user => recruiterSet.has(user.id));
+    
+        return recruiters;
+    }
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
     ]);
@@ -515,32 +622,33 @@ function CreateHiringroomSheet() {
     ];
 
     const objectFieldOptions = [
-        {
-            name: "Activity Feed",
-            apiUrl: "https://harvest.greenhouse.io/v1/activity_feed",
-        },
-        {
-            name: "Applications",
-            apiUrl: "https://harvest.greenhouse.io/v1/applications",
-        },
-        {
-            name: "Approvals",
-            apiUrl: "https://harvest.greenhouse.io/v1/approvals",
-        },
+        // {
+        //     name: "Activity Feed",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/activity_feed",
+        // }, // Verify if correct
+        // {
+        //     name: "Applications",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/applications",
+        // },
+        // {
+        //     name: "Approvals",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/approvals",
+        // }, // Verify if correct
         {
             name: "Candidates",
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
         },
+
         { name: "Jobs", apiUrl: "https://harvest.greenhouse.io/v1/jobs" },
-        { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
-        {
-            name: "Scheduled Interviews",
-            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-        },
-        {
-            name: "Scorecards",
-            apiUrl: "https://harvest.greenhouse.io/v1/scorecards",
-        },
+        // { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
+        // {
+        //     name: "Scheduled Interviews",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        // },
+        // {
+        //     name: "Scorecards",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scorecards",
+        // },
     ];
 
     const timeConditionOptions = [
@@ -554,57 +662,6 @@ function CreateHiringroomSheet() {
         { label: "Closed at", value: "closed_at" },
         { label: "Last activity", value: "last_activity" },
         { label: "Interview End time", value: "end.date_time" },
-    ];
-
-    const conditionTypesWithOperators = [
-        {
-            name: "Anonymized",
-            operators: [{ value: "equal", label: "Equal To" }],
-            values: ["True", "False"],
-        },
-        {
-            name: "Coordinator",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [],
-        },
-        {
-            name: "Following",
-            operators: [{ value: "equal", label: "Equal To" }],
-            values: ["True", "False"],
-        },
-        {
-            name: "GDPR Consent Status",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: ["Granted", "Denied"],
-        },
-        {
-            name: "Last Activity",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "before", label: "Before" },
-                { value: "after", label: "After" },
-            ],
-            values: [],
-        },
-        {
-            name: "Recruiter",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [],
-        },
-        {
-            name: "Tags",
-            operators: [{ value: "equal", label: "Equal To" }],
-            values: [],
-        },
     ];
 
     const isSameDayOrTimeCondition = (condition: string) =>

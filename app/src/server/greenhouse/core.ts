@@ -75,7 +75,31 @@ export async function getMockGreenhouseData(): Promise<MockData> {
         throw new Error("Failed to fetch data from Greenhouse");
     }
 }
-
+export async function fetchAllGreenhouseUsers(): Promise<
+    Record<string, { id: string; email: string }>
+> {
+    try {
+        const users = (await customFetch(
+            "https://harvest.greenhouse.io/v1/users",
+        ))
+        return users
+        
+    } catch (error) {
+        console.error("Error fetching Greenhouse users: ", error);
+        return {};
+    }
+}
+export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<Job[]> => {
+    try {
+        const jobs = (await customFetch(
+            "https://harvest.greenhouse.io/v1/jobs",
+        )) as any[];
+        return jobs
+    } catch (error) {
+        console.error("Error fetching jobs: ", error);
+        return [];
+    }
+};
 interface Job {
     id: number;
     name: string;

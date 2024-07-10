@@ -28,7 +28,7 @@ interface ConditionProps {
     conditionTypesWithOperators: Array<{
         name: string;
         operators: Array<{ value: string; label: string }>;
-        values: Array<string>;
+        values: Array<any>;
     }>;
 }
 
