@@ -13,7 +13,7 @@ import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import { filterProcessedForSlack, matchUsers } from "@/lib/slack";
+import { filterProcessedForSlack, filterScheduledInterviewsDataForSlack, matchUsers } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
     sendSlackNotification,
@@ -43,7 +43,25 @@ export async function GET() {
                           data,
                           workflow.conditions,
                       );
-
+                    const slackTeamID = await getSlackTeamIDByWorkflowID(
+                        workflow.id,
+                    );
+                    const subDomain = await getSubdomainByWorkflowID(workflow.id);
+                    const filteredSlackData = await filterScheduledInterviewsDataForSlack(
+                      filteredConditionsData,
+                      workflow.recipient,
+                      slackTeamID,
+                  );
+                  console.log( "filteredSlackData", filteredSlackData)
+                  if (filteredSlackData.length > 0) {
+                    await sendSlackNotification(
+                        filteredSlackData,
+                        workflow.recipient,
+                        slackTeamID,
+                        subDomain,                    );
+                } else {
+                    console.log("No data to send to Slack");
+                }
                       break;
                   default:
                       filteredConditionsData = filterDataWithConditions(
@@ -56,14 +74,8 @@ export async function GET() {
               if (filteredConditionsData.length === 0) {
                   shouldReturnNull = true; // Set flag to true
               } else {
-                  const filteredSlackData = filterProcessedForSlack(
-                      filteredConditionsData,
-                      workflow.recipient,
-                  );
-                  await sendSlackNotification(
-                      filteredSlackData,
-                      workflow.recipient,
-                  );
+                console.log("No conditions running")
+
               }
             } else if (workflow.alertType === "stuckin-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
