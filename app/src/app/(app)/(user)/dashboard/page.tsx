@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import homepageicon from "../../../../../public/fistbump.png";
 import slackLogo from "../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../public/greenhouseLogo.png";
-import { CheckCircleIcon, CogIcon, ArrowUpRight, Zap } from "lucide-react";
+import { CheckCircleIcon, CogIcon, ArrowUpRight, Zap, ArrowDown, ChevronDown } from "lucide-react";
 import { StatusIndicator } from "./_components/statusIndicator";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import {
     Checktoseeworkflows,
     getFirstFiveWorkflows,
 } from "@/server/actions/organization/queries";
+import { Button } from "@/components/ui/button";
 
 const mockData = {
     welcomeText: "Welcome to your Sinta Launchpad!",
@@ -43,6 +44,7 @@ export default async function DashboardPage() {
     const greenhouseIntegration = await checkGreenhouseTeamIdFilled();
     const workflowsExist = await Checktoseeworkflows();
     const workflows = workflowsExist ? await getFirstFiveWorkflows() : [];
+
 
     return (
         <AppPageShell
@@ -120,6 +122,20 @@ export default async function DashboardPage() {
                                     </div>
                                 ))}
                             </div>
+                            <div className="text-start mt-2">
+                            <Link href="/workflows">
+
+        <Button
+          variant={'ghost'}
+          className=" "
+        >
+          View All
+          <ArrowUpRight className="w-4 h-4 ml-2"
+ />
+
+          </Button>
+          </Link>
+          </div>
                         </CardContent>
                     </Card>
                 ) : (
