@@ -40,6 +40,9 @@ export async function getPaginatedWorkflowsQuery(
 
     const { user } = await protectedProcedure();
     const { currentOrg } = await getOrganizations();
+    if (!currentOrg) {
+        throw new Error("No current organization found.");
+    }
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
@@ -98,6 +101,9 @@ export async function getPaginatedWorkflowsByOrgQuery(
     noStore();
 
     const { currentOrg } = await getOrganizations();
+    if (!currentOrg) {
+        throw new Error("No current organization found.");
+    }
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
@@ -155,6 +161,10 @@ export async function getPaginatedWorkflowsExcludingUserQuery(
     noStore();
     const { user } = await protectedProcedure();
     const { currentOrg } = await getOrganizations();
+
+    if (!currentOrg) {
+        throw new Error("No current organization found.");
+    }
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from "react";
 import {
     Select,
@@ -12,18 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export interface Condition {
-    field: string;
-    fieldLabel: string;
+    field: { value: string; label: string };
     operator: string;
-    operatorLabel: string;
     value: string;
-    valueLabel: string;
+    conditionType: string;
 }
 
 interface ConditionProps {
     condition: Condition;
     index: number;
-    onChange: (index: number, field: keyof Condition, value: string) => void;
+    onChange: (index: number, field: keyof Condition, value: any) => void;
     onRemove: (index: number) => void;
     conditionTypesWithOperators: Array<{
         name: string;
@@ -44,29 +44,24 @@ const ConditionComponent: React.FC<ConditionProps> = ({
             (option) => option.name === value,
         );
         if (selectedOption) {
-            onChange(index, "field", selectedOption.name);
-            onChange(index, "fieldLabel", selectedOption.name);
+            onChange(index, "field", {
+                value: selectedOption.name,
+                label: selectedOption.name,
+            });
             onChange(index, "operator", "");
-            onChange(index, "operatorLabel", "");
             onChange(index, "value", "");
-            onChange(index, "valueLabel", "");
         }
     };
 
     const handleOperatorChange = (value: string) => {
-        const operator = selectedField?.operators.find(
-            (op) => op.value === value,
-        );
         onChange(index, "operator", value);
-        onChange(index, "operatorLabel", operator?.label ?? value);
     };
 
     const handleValueChange = (value: string) => {
         onChange(index, "value", value);
-        onChange(index, "valueLabel", value);
     };
 
-    const fieldValue = condition.field;
+    const fieldValue = condition.field.value;
     const selectedField = conditionTypesWithOperators.find(
         (option) => option.name === fieldValue,
     );
@@ -85,7 +80,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Property">
-                                {condition.fieldLabel}
+                                {condition.field.label}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -115,7 +110,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Operator">
-                                {condition.operatorLabel}
+                                {condition.operator}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -147,7 +142,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Value">
-                                {condition.valueLabel}
+                                {condition.value}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>

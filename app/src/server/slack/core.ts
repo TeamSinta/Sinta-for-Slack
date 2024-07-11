@@ -157,16 +157,18 @@ interface WorkflowRecipient {
 export async function sendSlackNotification(
     filteredSlackData: Record<string, unknown>[],
     workflowRecipient: WorkflowRecipient,
+    slackTeamID: string,
+    subDomain: string,
 ): Promise<void> {
-    const { currentOrg = {} } = (await getOrganizations()) || {};
-    if (!currentOrg.slack_team_id) {
-        console.error("No Slack team ID available.");
-        return;
-    }
-    const accessToken = await getAccessToken(currentOrg.slack_team_id);
+    const accessToken = await getAccessToken(slackTeamID);
+    const allRecipients = workflowRecipient.recipients;
 
-    for (const recipient of workflowRecipient.recipients) {
-        const channel = recipient.value;
+    for (const recipient of allRecipients) {
+        console.log("Recipient:", recipient);
+        const channel =
+            recipient.source === "greenhouse"
+                ? recipient.slackValue
+                : recipient.value;
 
         const blocks = [
             {
@@ -188,6 +190,7 @@ export async function sendSlackNotification(
                     },
                     ...filteredSlackData
                         .map((data) => {
+                            const interviewId = data.interview_id;
                             return [
                                 {
                                     type: "section",
@@ -195,43 +198,105 @@ export async function sendSlackNotification(
                                         type: "mrkdwn",
                                         text: workflowRecipient.messageFields
                                             .map((field: string) => {
-                                                const fieldName =
-                                                    field
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                    field
-                                                        .slice(1)
-                                                        .replace(/_/g, " ");
+                                                if (field === "interview_id")
+                                                    return ""; // Skip interview_id in the message
+                                                let fieldName: string;
+                                                switch (field) {
+                                                    case "title":
+                                                        fieldName = "Role";
+                                                        break;
+                                                    default:
+                                                        fieldName =
+                                                            field
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                            field
+                                                                .slice(1)
+                                                                .replace(
+                                                                    /_/g,
+                                                                    " ",
+                                                                );
+                                                        break;
+                                                }
                                                 const fieldValue =
                                                     data[field] ??
                                                     "Not provided";
                                                 return `*${fieldName}*: ${String(fieldValue)}`;
                                             })
+                                            .filter(Boolean)
                                             .join("\n"),
                                     },
                                 },
-                                ...(workflowRecipient.messageButtons.length > 0
-                                    ? [
-                                          {
-                                              type: "actions",
-                                              elements:
-                                                  workflowRecipient.messageButtons.map(
-                                                      (button) => ({
-                                                          type: "button",
-                                                          text: {
-                                                              type: "plain_text",
-                                                              text: button.label,
-                                                              emoji: true,
-                                                          },
-                                                          url: button.action,
-                                                          value: "click_me_123",
-                                                          action_id:
-                                                              "button_action",
-                                                      }),
-                                                  ),
-                                          },
-                                      ]
-                                    : []),
+                                {
+                                    type: "section",
+                                    text: {
+                                        type: "mrkdwn",
+                                        text: data.customMessageBody,
+                                    },
+                                },
+                                {
+                                    type: "actions",
+                                    block_id: `block_id_${interviewId}`,
+                                    elements:
+                                        workflowRecipient.messageButtons.map(
+                                            (button) => {
+                                                const buttonElement: any = {
+                                                    type: "button",
+                                                    text: {
+                                                        type: "plain_text",
+                                                        text: button.label,
+                                                        emoji: true,
+                                                    },
+                                                    value: `${button.updateType ?? button.type}_${interviewId}`, // Include interviewId in the value
+                                                };
+
+                                                if (
+                                                    button.type ===
+                                                    "UpdateButton"
+                                                ) {
+                                                    if (
+                                                        button.updateType ===
+                                                        "MoveToNextStage"
+                                                    ) {
+                                                        buttonElement.style =
+                                                            "primary";
+                                                        buttonElement.action_id = `move_to_next_stage_${interviewId}`;
+                                                    } else if (
+                                                        button.updateType ===
+                                                        "RejectCandidate"
+                                                    ) {
+                                                        buttonElement.style =
+                                                            "danger";
+                                                        buttonElement.action_id = `reject_candidate_${interviewId}`;
+                                                    }
+                                                } else if (
+                                                    button.linkType ===
+                                                    "Dynamic"
+                                                ) {
+                                                    const baseURL = `https://${subDomain}.greenhouse.io`;
+                                                    if (
+                                                        button.action ===
+                                                        "candidateRecord"
+                                                    ) {
+                                                        buttonElement.url = `${baseURL}/people/${interviewId}`;
+                                                    } else if (
+                                                        button.action ===
+                                                        "jobRecord"
+                                                    ) {
+                                                        buttonElement.url = `${baseURL}/sdash/${interviewId}`;
+                                                    }
+                                                    buttonElement.type =
+                                                        "button";
+                                                } else {
+                                                    buttonElement.action_id =
+                                                        button.action ||
+                                                        `${button.type.toLowerCase()}_action_${interviewId}`;
+                                                }
+
+                                                return buttonElement;
+                                            },
+                                        ),
+                                },
                             ];
                         })
                         .flat(), // Flatten the array of arrays
@@ -252,6 +317,7 @@ export async function sendSlackNotification(
             }),
         });
 
+        console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
@@ -259,6 +325,7 @@ export async function sendSlackNotification(
             );
         }
     }
+    console.log("Total recipients:", allRecipients.length);
 }
 
 export async function sendSlackButtonNotification(
