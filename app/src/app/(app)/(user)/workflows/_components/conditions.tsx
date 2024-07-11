@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import {
     Select,
@@ -18,6 +19,7 @@ export interface Condition {
     operator: string;
     value: { id: string; email: string; name: string } | string;
     conditionType: string;
+    operatorLabel: string;
 }
 
 interface ConditionProps {
@@ -86,6 +88,17 @@ const ConditionComponent: React.FC<ConditionProps> = ({
         (option) => option.name === fieldValue,
     );
 
+    useEffect(() => {
+        if (users.length > 0 && typeof condition.value === 'string') {
+            const user = users.find(user => user.id === condition.value);
+            if (user) {
+                onChange(index, "value", user);
+            }
+        }
+    }, [users, condition.value, index, onChange]);
+
+    console.log("condition", condition); // Debugging log
+
     return (
         <div className="mb-4 flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4">
             <div className="flex flex-row gap-4">
@@ -100,7 +113,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Property">
-                                {condition.field.label}
+                                {condition.field.label || "Select Property"}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -130,7 +143,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Operator">
-                                {condition.operator}
+                                {condition.operatorLabel}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
