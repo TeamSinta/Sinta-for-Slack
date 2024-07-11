@@ -68,6 +68,7 @@ function getSlackUserIds(hiringroom, candidates, userMapping){
 }
 function getSlackIdsOfGreenHouseUsers(hiring_room_recipient, candidate, userMapping){
     const slackIds = []
+    console.log('hiring reciepieints  -',hiring_room_recipient.reciepients.length)
     hiring_room_recipient.recipients.forEach((recipient)=>{
         if(recipient.source == "greenhouse"){
             if(recipient.value.includes('ecruiter')){
@@ -222,6 +223,7 @@ export async function handleIndividualHiringroom(hiringroom){
     if (hiringroom.objectField == 'Candidates'){
         // hiringroom.recipient = buildHiringRoomRecipients()
         // const slackUserIds = getSlackUserIds()
+        console.log('all candidates ? -',allCandidates.length)
         allCandidates.forEach(async (candidate)=>{
             const candidateFitsConditions = true //check()
             if(candidateFitsConditions){
@@ -251,6 +253,7 @@ export async function handleIndividualHiringroom(hiringroom){
     else if (hiringroom.objectField == 'Jobs'){
         console.log('go bucks hiring job')
         // console.log('hiring room -',hiringroom," ------- hiring room")
+        console.log('all allJobs ? -',allJobs.length)
 
         allJobs.forEach(async (job)=>{
             const jobFitsConditions = true
@@ -323,8 +326,10 @@ function combineGreenhouseRolesAndSlackUsers(workflowRecipient){
     if (hasGreenhouse) {
         const candidates = filteredConditionsData;
         // console.log('filteredConditionsData - ',filteredConditionsData)
-        // console.log('candidates - ',candidates)
+        console.log('candidates - ',candidates.length)
         candidates.forEach((cand) => {
+        console.log('greenhouseRoles - ',greenhouseRoles.length)
+
             greenhouseRoles.forEach((role) => {
                 if (role.includes("ecruiter") || role.includes("oordinator")) {
                     if (userMapping[cand.recruiter.id]) {

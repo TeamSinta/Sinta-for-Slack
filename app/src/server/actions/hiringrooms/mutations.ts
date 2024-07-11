@@ -18,7 +18,7 @@ import { getOrganizations } from "../organization/queries";
 const hiringroomFormSchema = hiringroomInsertSchema.pick({
     name: true,
     objectField: true,
-    // alertType: true,
+    alertType: true,
     organizationId: true,
     slackChannelFormat: true,
     triggerConfig: true,

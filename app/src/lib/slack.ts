@@ -207,11 +207,11 @@ export async function buildSlackMessageByCandidateOnFilteredData(
     // workflow: WorkflowRecipient,
     // slack_team_id: string,
 ): Promise<Record<string, unknown>[]> {
-    const greenhouseUsers = await fetchGreenhouseUsers();
-    console.log("greenhouseruser", greenhouseUsers);
-    const slackUsers = await getEmailsfromSlack(slack_team_id);
-    console.log("slackUsers", slackUsers);
-    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+    // const greenhouseUsers = await fetchGreenhouseUsers();
+    // console.log("greenhouseruser", greenhouseUsers);
+    // const slackUsers = await getEmailsfromSlack(slack_team_id);
+    // console.log("slackUsers", slackUsers);
+    // const userMapping = await matchUsers(greenhouseUsers, slackUsers);
     // console.log("workflow", workflow);
     // console.log("slackUsers", slackUsers);
     // recipients, greenhouse recipients from greenhouse candidate application, greenhouse users, slack users
