@@ -88,7 +88,7 @@ export async function GET() {
                 } else {
                     console.log("No conditions running");
                 }
-            } else if (workflow.alertType === "stuckin-stage") {
+            } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
                 const data = await customFetch(
                     apiUrl,
