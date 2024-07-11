@@ -5,11 +5,8 @@ import slackLogo from "../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../public/greenhouseLogo.png";
 import {
     CheckCircleIcon,
-    CogIcon,
     ArrowUpRight,
     Zap,
-    ArrowDown,
-    ChevronDown,
     Cable,
 } from "lucide-react";
 import { StatusIndicator } from "./_components/statusIndicator";
@@ -256,7 +253,7 @@ export default async function DashboardPage() {
                     </>
                 )}
 
-                {(slackIntegration || greenhouseIntegration) &&
+                {(slackIntegration ?? greenhouseIntegration) &&
                     renderConnectionStatusCard()}
             </div>
         </AppPageShell>

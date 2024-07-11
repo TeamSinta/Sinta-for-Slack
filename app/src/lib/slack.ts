@@ -204,7 +204,7 @@ export async function filterProcessedForSlack(
                         `${candidate.first_name} ${candidate.last_name}`;
                     break;
                 case "title":
-                    result[field] = candidate.title || "Not provided";
+                    result[field] = candidate.title ?? "Not provided";
                     break;
                 default:
                     const candidateField = candidate[field as keyof Candidate];
@@ -245,7 +245,7 @@ export async function filterScheduledInterviewsDataForSlack(
                 email: int.email,
                 response_status: int.response_status,
                 scorecard_id: int.scorecard_id,
-                slackId: userMapping[int.id] || "no match",
+                slackId: userMapping[int.id] ?? "no match",
             })),
         };
 
@@ -267,7 +267,7 @@ export async function filterScheduledInterviewsDataForSlack(
             interview.interview.name,
         );
 
-        result["customMessageBody"] = customMessageBody;
+        result.customMessageBody = customMessageBody;
 
         workflow.recipients.forEach((recipient: any) => {
             if (recipient.source === "greenhouse") {

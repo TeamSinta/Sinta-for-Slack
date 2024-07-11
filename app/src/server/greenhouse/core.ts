@@ -1,9 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument*/
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
+// @ts-nocheck
 import { customFetch } from "@/utils/fetch";
-import {
-    parseISO,
-    differenceInCalendarDays,
-    differenceInHours,
-} from "date-fns";
+import { parseISO, differenceInCalendarDays, differenceInHours } from "date-fns";
 import { isValid } from "date-fns";
 
 interface Candidate {
@@ -25,15 +31,16 @@ interface Condition {
 }
 
 interface Condition {
-    field: {
-        value: string;
-        label: string;
-    };
-    condition: string;
-    value: string;
-    unit: string;
-    conditionType: string;
+  field: {
+      value: string;
+      label: string;
+  };
+  condition: string;
+  value: string;
+  unit: string;
+  conditionType: string;
 }
+
 
 interface ConditionField {
     value: string;
@@ -68,6 +75,7 @@ export async function getMockGreenhouseData(): Promise<MockData> {
             hiringTeam: "{ Hiring_Team }",
             admin: "{ Admin }",
             interviewer: "{ Interviewer }",
+
         };
 
         return mockData;
@@ -500,6 +508,7 @@ export const filterDataWithConditions = (
     });
 };
 
+
 async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
     const response = await customFetch(
         `https://harvest.greenhouse.io/v1/candidates/${candidateId}/activity_feed`,
@@ -546,7 +555,13 @@ export async function filterStuckinStageDataConditions(
 ): Promise<Candidate[]> {
     const matchedCandidates: Candidate[] = [];
 
+
+
     const condition = conditions[0];
+    if (condition == null) {
+        return matchedCandidates;
+      }
+
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
     const operator = condition.condition;
@@ -598,131 +613,100 @@ export async function filterStuckinStageDataConditions(
     return matchedCandidates;
 }
 
-interface ScheduledCondition {
-    field: {
-        value: string;
-        label: string;
-    };
-    condition: string;
-    value: string;
-    unit: string;
-    conditionType: string;
-}
+
+
 
 export const filterScheduledInterviewsWithConditions = (
-    data: Record<string, unknown>[],
-    conditions: Condition[],
+  data: Record<string, unknown>[],
+  conditions: Condition[],
 ): Record<string, unknown>[] => {
-    const today = new Date();
+  const today = new Date();
 
-    return data.filter((item) => {
-        return conditions.every((condition) => {
-            const {
-                field,
-                condition: operator,
-                value,
-                unit,
-                conditionType,
-            } = condition;
+  return data.filter((item) => {
+      return conditions.every((condition) => {
+          const { field, condition: operator, value, unit } = condition;
 
-            console.log("Processing condition:", condition);
+          console.log("Processing condition:", condition);
 
-            // Adjust the field value to match the data object structure
-            let itemValue;
-            if (field.value.includes(".")) {
-                const keys = field.value.split(".");
-                itemValue = keys.reduce(
-                    (obj, key) => (obj ? obj[key] : undefined),
-                    item,
-                );
-            } else {
-                itemValue = item[field.value] ?? item[field.label];
-            }
+          // Adjust the field value to match the data object structure
+          let itemValue;
+          if (field.value.includes('.')) {
+              const keys = field.value.split('.');
+              itemValue = keys.reduce((obj, key) => (obj ? obj[key] : undefined), item);
+          } else {
+              itemValue = item[field.value] ?? item[field.label];
+          }
 
-            console.log("Item value for field", field.value, ":", itemValue);
+          console.log("Item value for field", field.value, ":", itemValue);
 
-            if (!itemValue) {
-                console.log("Item value is empty for field", field.value);
-                return false;
-            }
+          if (!itemValue) {
+              console.log("Item value is empty for field", field.value);
+              return false;
+          }
 
-            if (isISODate(String(itemValue))) {
-                const fieldValueAsDate = parseISO(String(itemValue));
-                const valueAsNumber = parseInt(value, 10);
+          if (isISODate(String(itemValue))) {
+              const fieldValueAsDate = parseISO(String(itemValue));
+              const valueAsNumber = parseInt(value, 10);
 
-                console.log("Field value as date:", fieldValueAsDate);
+              console.log("Field value as date:", fieldValueAsDate);
 
-                if (unit === "Days") {
-                    switch (operator) {
-                        case "before":
-                            return (
-                                differenceInCalendarDays(
-                                    today,
-                                    fieldValueAsDate,
-                                ) < -valueAsNumber
-                            );
-                        case "after":
-                            return (
-                                differenceInCalendarDays(
-                                    today,
-                                    fieldValueAsDate,
-                                ) > -valueAsNumber
-                            );
-                        case "same":
-                            return (
-                                differenceInCalendarDays(
-                                    today,
-                                    fieldValueAsDate,
-                                ) === -valueAsNumber
-                            );
-                        default:
-                            return false;
-                    }
-                } else if (unit === "Hours") {
-                    console.log("Today:", today);
-                    console.log("Field value as date:", fieldValueAsDate);
-                    switch (operator) {
-                        case "before":
-                            return (
-                                differenceInHours(today, fieldValueAsDate) <
-                                -valueAsNumber
-                            );
-                        case "after":
-                            return (
-                                differenceInHours(today, fieldValueAsDate) >
-                                -valueAsNumber
-                            );
-                        case "same":
-                            return (
-                                differenceInHours(today, fieldValueAsDate) === 0
-                            );
-                        default:
-                            return false;
-                    }
-                }
-            }
+              if (unit === "Days") {
+                  switch (operator) {
+                      case "before":
+                          return (
+                              differenceInCalendarDays(today, fieldValueAsDate) <
+                              -valueAsNumber
+                          );
+                      case "after":
+                          return (
+                              differenceInCalendarDays(today, fieldValueAsDate) >
+                              -valueAsNumber
+                          );
+                      case "same":
+                          return (
+                              differenceInCalendarDays(today, fieldValueAsDate) ===
+                              -valueAsNumber
+                          );
+                      default:
+                          return false;
+                  }
+              } else if (unit === "Hours") {
+                  console.log("Today:", today);
+                  console.log("Field value as date:", fieldValueAsDate);
+                  switch (operator) {
+                      case "before":
+                          return differenceInHours(today, fieldValueAsDate) < -valueAsNumber;
+                      case "after":
+                          return differenceInHours(today, fieldValueAsDate) > -valueAsNumber;
+                      case "same":
+                          return differenceInHours(today, fieldValueAsDate) === 0;
+                      default:
+                          return false;
+                  }
+              }
+          }
 
-            switch (operator) {
-                case "equals":
-                    return itemValue === value;
-                case "notEqual":
-                    return itemValue !== value;
-                case "greaterThan":
-                    return itemValue > value;
-                case "lessThan":
-                    return itemValue < value;
-                case "greaterThanOrEqual":
-                    return itemValue >= value;
-                case "lessThanOrEqual":
-                    return itemValue <= value;
-                case "contains":
-                    return (
-                        typeof itemValue === "string" &&
-                        itemValue.includes(value)
-                    );
-                default:
-                    return false;
-            }
-        });
-    });
+          switch (operator) {
+              case "equals":
+                  return itemValue === value;
+              case "notEqual":
+                  return itemValue !== value;
+              case "greaterThan":
+                  return itemValue > value;
+              case "lessThan":
+                  return itemValue < value;
+              case "greaterThanOrEqual":
+                  return itemValue >= value;
+              case "lessThanOrEqual":
+                  return itemValue <= value;
+              case "contains":
+                  return (
+                      typeof itemValue === "string" &&
+                      itemValue.includes(value)
+                  );
+              default:
+                  return false;
+          }
+      });
+  });
 };

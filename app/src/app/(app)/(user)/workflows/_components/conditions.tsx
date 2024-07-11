@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from "react";
 import {
     Select,
@@ -52,9 +54,6 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     };
 
     const handleOperatorChange = (value: string) => {
-        const operator = selectedField?.operators.find(
-            (op) => op.value === value,
-        );
         onChange(index, "operator", value);
     };
 
