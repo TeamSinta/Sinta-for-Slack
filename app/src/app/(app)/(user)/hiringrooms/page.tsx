@@ -9,7 +9,6 @@ import {
     getPaginatedHiringroomsQuery,
 } from "@/server/actions/hiringrooms/queries";
 import { HiringroomsTable } from "./_components/hiringrooms-table";
-import { WorkflowsTable } from "./_components/workflows-table";
 import { type SearchParams } from "@/types/data-table";
 import {
     checkGreenhouseTeamIdFilled,
