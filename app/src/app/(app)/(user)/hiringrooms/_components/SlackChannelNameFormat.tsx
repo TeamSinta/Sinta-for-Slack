@@ -26,33 +26,26 @@ const jobTokens = [
 interface SlackChannelNameFormatProps {
   format: string;
   setFormat: (format: string) => void;
+  selectedType: string;
 }
 
-const SlackChannelNameFormat: React.FC<SlackChannelNameFormatProps> = ({ format, setFormat }) => {
-  const [selectedType, setSelectedType] = React.useState("candidate");
+const SlackChannelNameFormat: React.FC<SlackChannelNameFormatProps> = ({ format, setFormat, selectedType }) => {
+  // const [selectedType, setSelectedType] = React.useState("candidate");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormat(e.target.value);
   };
 
-  const handleTypeChange = (value: string) => {
-    setSelectedType(value);
-    if (value === "candidate") {
-      setFormat("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
-    } else if (value === "job") {
-      setFormat("job-{{JOB_NAME}}-{{JOB_POST_DATE}}");
-    }
-  };
-
-  const tokens = selectedType === "candidate" ? candidateTokens : jobTokens;
+  console.log('selectedtype - ',selectedType)
+  const tokens = selectedType === "Candidates" ? candidateTokens : jobTokens;
+  // const tokens = selectedType === "candidate" ? candidateTokens : jobTokens;
 
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-bold mb-4">Slack Settings</h2>
+    <div className="">
       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
         Slack Channel Name Format Type
       </Label>
-      <Select value={selectedType} onValueChange={handleTypeChange} className="mb-4">
+      {/* <Select value={selectedType}  className="mb-4">
         <SelectTrigger className="w-full border border-gray-300 bg-white">
           <SelectValue placeholder="Select Type">
             {selectedType === "candidate" ? "Candidate" : "Job"}
@@ -64,8 +57,8 @@ const SlackChannelNameFormat: React.FC<SlackChannelNameFormatProps> = ({ format,
             <SelectItem value="job">Job</SelectItem>
           </SelectGroup>
         </SelectContent>
-      </Select>
-      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      </Select> */}
+      <Label className="text-md font-medium text-gray-700 dark:text-gray-300">
         Slack Channel Name Format
       </Label>
       <Input
@@ -74,8 +67,11 @@ const SlackChannelNameFormat: React.FC<SlackChannelNameFormatProps> = ({ format,
         onChange={handleChange}
         className="w-full border border-gray-300 bg-white mb-4"
       />
-      <p>Tokens Available:</p>
-      <ul className="list-disc pl-5 mb-4">
+      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+
+      Tokens Available:
+      </Label>
+      <ul className="list-disc pl-5 mb-4 text-xs">
         {tokens.map((token) => (
           <li key={token.label}>
             <strong>{`{{${token.label}}}`}</strong> - i.e. {token.example}

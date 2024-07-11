@@ -161,7 +161,8 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         <div className="hiringroom-container mt-4">
             <div className="flex ">
                 <Label className="text-xl font-bold">
-                    Configure Slack Alert{" "}
+                    Configure Slack Recipients{" "}
+                    {/* Configure Slack Alert{" "} */}
                 </Label>
                 <Image
                     src={slackLogo}
@@ -170,32 +171,32 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                 />{" "}
             </div>
             {/* Opening Text */}
-            <div className="my-4">
+            {/* <div className="my-4">
                 <Label>Opening Text</Label>
                 <Input
                     value={openingText}
                     onChange={handleOpeningTextChange}
                     placeholder="Enter opening text..."
                 />
-            </div>
+            </div> */}
 
             {/* Message Fields */}
-            <div className="my-4">
+            {/* <div className="my-4">
                 <Label>Select Message Fields</Label>
                 <FancyBox
                     selectedOptions={selectedFields}
                     onOptionChange={handleFieldsSelect}
                     fields={fields}
                 />
-            </div>
+            </div> */}
 
             {/* Message Buttons */}
-            <MessageButtons
+            {/* <MessageButtons
                 buttons={buttons}
                 addButton={addButton}
                 updateButton={updateButton}
                 removeButton={removeButton}
-            />
+            /> */}
 
             {/* Message Delivery */}
             {/* <div className="my-4">

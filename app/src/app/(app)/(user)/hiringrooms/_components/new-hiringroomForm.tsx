@@ -705,7 +705,14 @@ function CreateHiringroomSheet() {
         { label: "Last activity", value: "last_activity" },
         { label: "Interview End time", value: "end.date_time" },
     ];
-
+    const handleTypeChange = (value: string) => {
+        if (value.toLowerCase().includes("candidate")) {
+          setFormat("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
+        } else if (value.toLowerCase().includes("job")) {
+          setFormat("job-{{JOB_NAME}}-{{JOB_POST_DATE}}");
+        }
+    };
+    
     const isSameDayOrTimeCondition = (condition: string) =>
         condition === "same";
 
@@ -777,12 +784,15 @@ function CreateHiringroomSheet() {
                                     </Label>
                                     <Select
                                         value={selectedValue}
-                                        onValueChange={(value) =>
+                                        onValueChange={(value) =>{
                                             handleSelectChange(
                                                 value,
                                                 "",
                                                 "objectField",
                                             )
+                                            handleTypeChange(value)
+                                        }
+                                            
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
@@ -804,7 +814,7 @@ function CreateHiringroomSheet() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                {isCandidateSelected && (
+                                {/* {isCandidateSelected && (
                                     <JobsDropdown
                                         onJobSelect={(jobId) =>
                                             handleSelectChange(
@@ -814,7 +824,7 @@ function CreateHiringroomSheet() {
                                             )
                                         }
                                     />
-                                )}
+                                )} */}
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
@@ -1118,7 +1128,21 @@ function CreateHiringroomSheet() {
                         </div>
 
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
-                        <SlackChannelNameFormat format={format} setFormat={setFormat} />
+                         {/* Recipient */}
+                         <div className="flex items-start gap-8">
+                            <div className="w-1/3">
+                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                    Slack Channel Format
+                                </Label>
+                                <p className="mt-2 text-sm text-gray-500">
+                                    Specify the format of the slack channel name of the hiring room.
+                                </p>
+                            </div>
+                            <div className="flex-1">
+                            <SlackChannelNameFormat format={format} setFormat={setFormat} selectedType={selectedValue}/>
+                            </div>
+                        </div>
+                        <hr className="my-2 border-gray-300 dark:border-gray-700" />
 
                         {/* Recipient */}
                         <div className="flex items-start gap-8">

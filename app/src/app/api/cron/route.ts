@@ -131,10 +131,11 @@ function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): stri
         // Replace each placeholder with the corresponding value
         channelName = channelName
             .replaceAll("{{JOB_NAME}}", job.name)
-            .replaceAll("{{JOB_MONTH_TEXT}}", jobMonthText)
-            .replaceAll("{{JOB_MONTH_NUMBER}}", jobMonthNumber)
-            .replaceAll("{{JOB_MONTH_TEXT_ABBREVIATED}}", jobMonthTextAbbreviated)
-            .replaceAll("{{JOB_DAY_NUMBER}}", jobDayNumber);
+            .replaceAll("{{JOB_POST_DATE}}", jobMonthText)
+            .replaceAll("{{JOB_POST_MONTH_TEXT}}", jobMonthText)
+            .replaceAll("{{JOB_POST_MONTH_NUMBER}}", jobMonthNumber)
+            .replaceAll("{{JOB_POST_MONTH_TEXT_ABBREVIATED}}", jobMonthTextAbbreviated)
+            .replaceAll("{{JOB_POST_DAY_NUMBER}}", jobDayNumber);
         channelName = sanitizeChannelName(channelName)
         return channelName;
    }catch(e){
@@ -157,13 +158,15 @@ function buildSlackChannelNameForCandidate(slackChannelFormat: string, candidate
 
     // Replace each placeholder with the corresponding value
     channelName = channelName
-        .replaceAll("{{CANDIDATE_NAME}}", candidate.name)
+        .replaceAll("{{CANDIDATE_NAME}}",  candidate.first_name + " " + candidate.last_name)
         .replaceAll("{{CANDIDATE_FIRST_NAME}}", candidate.first_name)
         .replaceAll("{{CANDIDATE_LAST_NAME}}", candidate.last_name)
-        .replaceAll("{{CANDIDATE_MONTH_TEXT}}", candidateMonthText)
-        .replaceAll("{{CANDIDATE_MONTH_NUMBER}}", candidateMonthNumber)
-        .replaceAll("{{CANDIDATE_MONTH_TEXT_ABBREVIATED}}", candidateMonthTextAbbreviated)
-        .replaceAll("{{CANDIDATE_DAY_NUMBER}}", candidateDayNumber)
+        .replaceAll("{{CANDIDATE_CREATION_MONTH_TEXT}}", candidateMonthText)
+        .replaceAll("{{CANDIDATE_CREATION_MONTH_NUMBER}}", candidateMonthNumber)
+        .replaceAll("{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}", candidateMonthTextAbbreviated)
+        .replaceAll("{{CANDIDATE_CREATION_DAY_NUMBER}}", candidateDayNumber)
+        .replaceAll("{{CANDIDATE_CREATION_DATE}}", candidateDayNumber)
+        candidate_creation_month_text_abbreviated
     channelName = sanitizeChannelName(channelName)
     return channelName;
 }
@@ -232,7 +235,7 @@ export async function handleIndividualHiringroom(hiringroom){
                 if (channelId) {
                     const invitedUsers = await inviteUsersToChannel(channelId, slackUserIds, slackTeamID);
                     const messageText = 'Welcome to the new hiring room!';
-                    await postMessageToSlackChannel(channelId, messageText, slackTeamID);
+                    // await postMessageToSlackChannel(channelId, messageText, slackTeamID);
                     console.log('hiringroomId - ',hiringroomId)
                     await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat)
 
