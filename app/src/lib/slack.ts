@@ -6,9 +6,57 @@ import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { env } from "@/env";
 import { type Candidate } from "@/types/greenhouse";
-import { type WorkflowRecipient } from "@/types/workflows"; // Assuming you have a type for Recipient
 import { getEmailsfromSlack } from "@/server/slack/core";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
+
+// Helper interfaces for better type checking
+interface ScheduledInterview {
+    id: number;
+    application_id: number;
+    external_event_id: string;
+    start: { date_time: string };
+    end: { date_time: string };
+    location: string;
+    video_conferencing_url: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    interview: { id: number; name: string };
+    organizer: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        name: string;
+        employee_id: string;
+    };
+    interviewers: Array<{
+        id: number;
+        employee_id: string;
+        name: string;
+        email: string;
+        response_status: string;
+        scorecard_id: number;
+    }>;
+}
+
+interface WorkflowRecipient {
+    recipients: Array<{
+        label: string;
+        value: string;
+        source: string;
+        slackValue?: string;
+    }>;
+    openingText: string;
+    messageFields: Array<string>;
+    messageButtons: Array<{
+        type: string;
+        label: string;
+        action: string;
+        linkType: string;
+    }>;
+    messageDelivery: string;
+    customMessageBody: string;
+}
 
 export async function log(message: string) {
     // console.log(message);
@@ -159,7 +207,32 @@ export async function buildSlackMessageByCandidateOnFilteredData(
     // workflow: WorkflowRecipient,
     // slack_team_id: string,
 ): Promise<Record<string, unknown>[]> {
+    const greenhouseUsers = await fetchGreenhouseUsers();
+    console.log("greenhouseruser", greenhouseUsers);
+    const slackUsers = await getEmailsfromSlack(slack_team_id);
+    console.log("slackUsers", slackUsers);
+    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+    // console.log("workflow", workflow);
+    // console.log("slackUsers", slackUsers);
+    // recipients, greenhouse recipients from greenhouse candidate application, greenhouse users, slack users
 
+    // const recipientsx = workflow.recipients
+    // recipientsx.forEach((recipientx: any)=>{
+    //     if(recipientx.source == "greenhouse"){
+    //     //find the user
+    //         console.log('go bucks')
+    //         // value == coordinator
+    //         const role = recipientx.value
+    //         if(role.contains("ecruiter")){
+    //             const application =
+    //         } else if(role.contains("oordinator")){
+
+    //         }
+    //         else{
+    //             console.log('no role greenhouse')
+    //         }
+    //     }
+    // })
     return candidates.map((candidate) => {
         const result: Record<string, unknown> = {
             candidate_id: candidate.id, // Include candidate ID
@@ -178,7 +251,7 @@ export async function buildSlackMessageByCandidateOnFilteredData(
                         `${candidate.first_name} ${candidate.last_name}`;
                     break;
                 case "title":
-                    result[field] = candidate.title || "Not provided";
+                    result[field] = candidate.title ?? "Not provided";
                     break;
                 default:
                     const candidateField = candidate[field as keyof Candidate];
@@ -186,6 +259,103 @@ export async function buildSlackMessageByCandidateOnFilteredData(
                     break;
             }
         });
+        return result;
+    });
+}
+export async function filterScheduledInterviewsDataForSlack(
+    scheduledInterviews: ScheduledInterview[],
+    workflow: WorkflowRecipient,
+    slack_team_id: string,
+): Promise<Record<string, unknown>[]> {
+    const greenhouseUsers = await fetchGreenhouseUsers();
+    const slackUsers = await getEmailsfromSlack(slack_team_id);
+    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+
+    return scheduledInterviews.map((interview) => {
+        const result: Record<string, unknown> = {
+            interview_id: interview.id,
+            application_id: interview.application_id,
+            external_event_id: interview.external_event_id,
+            start: interview.start.date_time,
+            end: interview.end.date_time,
+            location: interview.location,
+            video_conferencing_url: interview.video_conferencing_url,
+            status: interview.status,
+            created_at: interview.created_at,
+            updated_at: interview.updated_at,
+            interview_name: interview.interview.name,
+            organizer: interview.organizer.name,
+            interviewers: interview.interviewers.map((int) => ({
+                id: int.id,
+                name: int.name,
+                email: int.email,
+                response_status: int.response_status,
+                scorecard_id: int.scorecard_id,
+                slackId: userMapping[int.id] ?? "no match",
+            })),
+        };
+
+        // Log interviewers to debug
+        console.log("Interviewers:", interview.interviewers);
+
+        // Replace placeholders in customMessageBody
+        let customMessageBody = workflow.customMessageBody;
+        customMessageBody = customMessageBody.replace(
+            /{{Interviewer}}/g,
+            interview.interviewers.map((int) => int.name).join(", "),
+        );
+        customMessageBody = customMessageBody.replace(
+            /{{Role title}}/g,
+            interview.interview.name,
+        );
+        customMessageBody = customMessageBody.replace(
+            /{{Job Stage}}/g,
+            interview.interview.name,
+        );
+
+        result.customMessageBody = customMessageBody;
+
+        workflow.recipients.forEach((recipient: any) => {
+            if (recipient.source === "greenhouse") {
+                const role = recipient.value as string;
+                if (role.includes("nterviewer")) {
+                    interview.interviewers.forEach((int) => {
+                        console.log("Checking interviewer:", int);
+                        const slackId = userMapping[int.id];
+                        if (slackId) {
+                            console.log("Interviewer Slack ID:", slackId);
+                            recipient.slackValue = slackId;
+                        } else {
+                            recipient.slackValue = "no match";
+                        }
+                    });
+                } else if (role.includes("ecruiter")) {
+                    const slackId = userMapping[interview.organizer.id];
+                    if (slackId) {
+                        recipient.slackValue = slackId;
+                    } else {
+                        recipient.slackValue = "no match";
+                    }
+                }
+            }
+        });
+
+        workflow.messageFields.forEach((field) => {
+            switch (field) {
+                case "title":
+                    result[field] = interview.interview.name;
+                    break;
+                case "Recruiter":
+                    result[field] = interview.organizer.name;
+                    break;
+                default:
+                    const fieldData =
+                        interview[field as keyof ScheduledInterview];
+                    result[field] = fieldData ? fieldData : "Not provided";
+                    break;
+            }
+        });
+
         return result;
     });
 }

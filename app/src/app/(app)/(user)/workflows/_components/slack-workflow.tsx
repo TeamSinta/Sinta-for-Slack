@@ -17,11 +17,11 @@ import slackLogo from "../../../../../../public/slack-logo.png";
 import Image from "next/image";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -229,7 +229,9 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                     <Checkbox
                         id="customMessageBody"
                         checked={showMarkdownInput}
-                        onCheckedChange={() => setShowMarkdownInput(!showMarkdownInput)}
+                        onCheckedChange={() =>
+                            setShowMarkdownInput(!showMarkdownInput)
+                        }
                     />
                     <label
                         htmlFor="customMessageBody"
@@ -248,7 +250,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                         value={customMessageBody}
                         onChange={handleCustomMessageBodyChange}
                         placeholder="Enter custom message body..."
-                        className="w-full h-24 p-2 border border-gray-300 rounded mt-2"
+                        className="mt-2 h-24 w-full rounded border border-gray-300 p-2"
                     ></textarea>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

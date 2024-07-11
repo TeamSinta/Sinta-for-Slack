@@ -7,8 +7,6 @@
 
 "use client";
 
-
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,7 +59,7 @@ export const recipientSchema = z.object({
             value: z.string(),
         }),
     ),
-    customMessageBody: z.string().optional(),  // This can be a large string
+    customMessageBody: z.string().optional(), // This can be a large string
 });
 
 export const workflowFormSchema = z.object({
@@ -123,7 +121,9 @@ function CreateWorkflowSheet() {
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
     ]);
-    const [timeBasedConditions, setTimeBasedConditions] = useState<TimeBasedCondition[]>([
+    const [timeBasedConditions, setTimeBasedConditions] = useState<
+        TimeBasedCondition[]
+    >([
         {
             field: { value: "", label: "" },
             condition: "",
@@ -132,7 +132,9 @@ function CreateWorkflowSheet() {
             conditionType: "main",
         },
     ]);
-    const [stuckStageConditions, setStuckStageConditions] = useState<Condition[]>([
+    const [stuckStageConditions, setStuckStageConditions] = useState<
+        Condition[]
+    >([
         {
             field: {
                 value: "when stuck-in-stage in",
@@ -218,9 +220,15 @@ function CreateWorkflowSheet() {
         condition[key] = value;
         setConditions(newConditions);
         if (selectedAlertType === "timebased") {
-            form.setValue("conditions", [...timeBasedConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...timeBasedConditions,
+                ...newConditions,
+            ]);
         } else {
-            form.setValue("conditions", [...stuckStageConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...stuckStageConditions,
+                ...newConditions,
+            ]);
         }
     };
 
@@ -279,9 +287,15 @@ function CreateWorkflowSheet() {
         newConditions.splice(index, 1);
         setConditions(newConditions);
         if (selectedAlertType === "timebased") {
-            form.setValue("conditions", [...timeBasedConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...timeBasedConditions,
+                ...newConditions,
+            ]);
         } else {
-            form.setValue("conditions", [...stuckStageConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...stuckStageConditions,
+                ...newConditions,
+            ]);
         }
     };
 
@@ -395,8 +409,8 @@ function CreateWorkflowSheet() {
     };
 
     const handleCustomMessageBodyChange = (customMessageBody: string) => {
-      updateRecipient("customMessageBody", customMessageBody);
-  };
+        updateRecipient("customMessageBody", customMessageBody);
+    };
 
     const updateRecipient = (
         key: keyof typeof recipientConfig,
@@ -435,12 +449,21 @@ function CreateWorkflowSheet() {
     });
 
     useEffect(() => {
-        if (selectedAlertType === "timebased" || selectedAlertType === "stuck-in-stage") {
+        if (
+            selectedAlertType === "timebased" ||
+            selectedAlertType === "stuck-in-stage"
+        ) {
             form.setValue("conditions", timeBasedConditions);
         } else {
             form.setValue("conditions", stuckStageConditions);
         }
-    }, [timeBasedConditions, stuckStageConditions, conditions, form, selectedAlertType]);
+    }, [
+        timeBasedConditions,
+        stuckStageConditions,
+        conditions,
+        form,
+        selectedAlertType,
+    ]);
 
     useEffect(() => {
         form.setValue("recipient", recipientConfig);
@@ -473,21 +496,26 @@ function CreateWorkflowSheet() {
             console.log("Form Data before submission:", formData);
 
             // Combine timeBasedConditions or stuckStageConditions and additional conditions
-            const allConditions = selectedAlertType === "timebased"
-                ? timeBasedConditions.map((condition) => ({
-                    ...condition,
-                    field: {
-                        value: condition.field.value,
-                        label: condition.field.label,
-                    },
-                })).concat(conditions)
-                : stuckStageConditions.map((condition) => ({
-                    ...condition,
-                    field: {
-                        value: condition.field.value,
-                        label: condition.field.label,
-                    },
-                })).concat(conditions);
+            const allConditions =
+                selectedAlertType === "timebased"
+                    ? timeBasedConditions
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions)
+                    : stuckStageConditions
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions);
 
             // Transform and include combined conditions
             const transformedData = {
@@ -636,7 +664,7 @@ function CreateWorkflowSheet() {
                         </DialogDescription>
                     </DialogTitle>
                     <DialogDescription className="mt-1 text-sm text-gray-500 dark:text-gray-400"></DialogDescription>
-                    </DialogHeader>
+                </DialogHeader>
                 <hr className="mb-6 mt-2 border-gray-300 dark:border-gray-700" />
 
                 <div className="flex h-full flex-col gap-6 overflow-y-auto px-6">
@@ -770,8 +798,8 @@ function CreateWorkflowSheet() {
                                                         : option.value ===
                                                                 "stuck-in-stage" &&
                                                             !isCandidateSelected
-                                                        ? "cursor-not-allowed bg-gray-300 text-opacity-50"
-                                                        : "hover:bg-indigo-100 hover:text-indigo-800"
+                                                          ? "cursor-not-allowed bg-gray-300 text-opacity-50"
+                                                          : "hover:bg-indigo-100 hover:text-indigo-800"
                                                 }`}
                                                 style={{ height: "40px" }}
                                             >
@@ -909,41 +937,40 @@ function CreateWorkflowSheet() {
                                                         }
                                                     />
                                                 </div>
-
                                             </>
                                         )}
-                                         <div className="flex-1">
-                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Time Unit
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            timeBasedConditions[0]
-                                                                ?.unit ?? "Days"
-                                                        }
-                                                        onValueChange={(value) =>
-                                                            handleConditionChangeTimeBased(
-                                                                0,
-                                                                "unit",
-                                                                value,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                            <SelectValue placeholder="Select Unit" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                <SelectItem value="Days">
-                                                                    Days
-                                                                </SelectItem>
-                                                                <SelectItem value="Hours">
-                                                                    Hours
-                                                                </SelectItem>
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                        <div className="flex-1">
+                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Time Unit
+                                            </Label>
+                                            <Select
+                                                value={
+                                                    timeBasedConditions[0]
+                                                        ?.unit ?? "Days"
+                                                }
+                                                onValueChange={(value) =>
+                                                    handleConditionChangeTimeBased(
+                                                        0,
+                                                        "unit",
+                                                        value,
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
+                                                    <SelectValue placeholder="Select Unit" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        <SelectItem value="Days">
+                                                            Days
+                                                        </SelectItem>
+                                                        <SelectItem value="Hours">
+                                                            Hours
+                                                        </SelectItem>
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
@@ -965,7 +992,7 @@ function CreateWorkflowSheet() {
                                             For
                                         </h1>
                                         <div className="flex-1">
-                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Days
                                             </Label>
                                             <Input
@@ -1032,14 +1059,20 @@ function CreateWorkflowSheet() {
                                 </p>
                             </div>
                             <div className="flex-1">
-                            <SlackWorkflow
-                              onOpeningTextChange={handleOpeningTextChange}
-                              onFieldsSelect={handleFieldsSelect}
-                              onButtonsChange={handleButtonsChange}
-                              onDeliveryOptionChange={handleDeliveryOptionChange}
-                              onRecipientsChange={handleRecipientsChange}
-                              onCustomMessageBodyChange={handleCustomMessageBodyChange} // Add this line
-                          />
+                                <SlackWorkflow
+                                    onOpeningTextChange={
+                                        handleOpeningTextChange
+                                    }
+                                    onFieldsSelect={handleFieldsSelect}
+                                    onButtonsChange={handleButtonsChange}
+                                    onDeliveryOptionChange={
+                                        handleDeliveryOptionChange
+                                    }
+                                    onRecipientsChange={handleRecipientsChange}
+                                    onCustomMessageBodyChange={
+                                        handleCustomMessageBodyChange
+                                    } // Add this line
+                                />
                             </div>
                         </div>
 

@@ -20,6 +20,7 @@ At Sinta, we craft tools that hiring teams love to use. We transform your messag
 
 Our vision is to help organizations build great teams effortlessly, creating a world where workforces are more impactful and innovative.
 
+
 ## Our Integrations
 
 Connect all your tools in one place with our integrations:
@@ -51,4 +52,8 @@ Contact us today for a demo and say goodbye to disorganized and unproductive hir
 
 Ready to simplify your hiring workflows? [Book a demo](#) or [contact us](#) to get started with Sinta!
 
+
+
+
 test
+
