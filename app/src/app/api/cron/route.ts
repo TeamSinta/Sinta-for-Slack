@@ -6,14 +6,21 @@
 // @ts-nocheck
 
 import { getEmailsfromSlack } from "@/server/slack/core";
-import { fetchGreenhouseUsers, filterScheduledInterviewsWithConditions } from "@/server/greenhouse/core";
+import {
+    fetchGreenhouseUsers,
+    filterScheduledInterviewsWithConditions,
+} from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import { filterProcessedForSlack, filterScheduledInterviewsDataForSlack, matchUsers } from "@/lib/slack";
+import {
+    filterProcessedForSlack,
+    filterScheduledInterviewsDataForSlack,
+    matchUsers,
+} from "@/lib/slack";
 import {
     sendSlackButtonNotification,
     sendSlackNotification,
@@ -30,53 +37,57 @@ export async function GET() {
 
         for (const workflow of workflows) {
             if (workflow.alertType === "timebased") {
-              const { apiUrl } = workflow.triggerConfig;
+                const { apiUrl } = workflow.triggerConfig;
 
-              const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
-              console.log(data)
+                const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
+                console.log(data);
 
-              let filteredConditionsData;
-              console.log("workflow.objectField", workflow.objectField);
-              switch (workflow.objectField) {
-                  case "Scheduled Interviews":
-                      filteredConditionsData = filterScheduledInterviewsWithConditions(
-                          data,
-                          workflow.conditions,
-                      );
-                    const slackTeamID = await getSlackTeamIDByWorkflowID(
-                        workflow.id,
-                    );
-                    const subDomain = await getSubdomainByWorkflowID(workflow.id);
-                    const filteredSlackData = await filterScheduledInterviewsDataForSlack(
-                      filteredConditionsData,
-                      workflow.recipient,
-                      slackTeamID,
-                  );
-                  console.log( "filteredSlackData", filteredSlackData)
-                  if (filteredSlackData.length > 0) {
-                    await sendSlackNotification(
-                        filteredSlackData,
-                        workflow.recipient,
-                        slackTeamID,
-                        subDomain,                    );
-                } else {
-                    console.log("No data to send to Slack");
+                let filteredConditionsData;
+                console.log("workflow.objectField", workflow.objectField);
+                switch (workflow.objectField) {
+                    case "Scheduled Interviews":
+                        filteredConditionsData =
+                            filterScheduledInterviewsWithConditions(
+                                data,
+                                workflow.conditions,
+                            );
+                        const slackTeamID = await getSlackTeamIDByWorkflowID(
+                            workflow.id,
+                        );
+                        const subDomain = await getSubdomainByWorkflowID(
+                            workflow.id,
+                        );
+                        const filteredSlackData =
+                            await filterScheduledInterviewsDataForSlack(
+                                filteredConditionsData,
+                                workflow.recipient,
+                                slackTeamID,
+                            );
+                        console.log("filteredSlackData", filteredSlackData);
+                        if (filteredSlackData.length > 0) {
+                            await sendSlackNotification(
+                                filteredSlackData,
+                                workflow.recipient,
+                                slackTeamID,
+                                subDomain,
+                            );
+                        } else {
+                            console.log("No data to send to Slack");
+                        }
+                        break;
+                    default:
+                        filteredConditionsData = filterDataWithConditions(
+                            data,
+                            workflow.conditions,
+                        );
+                        break;
                 }
-                      break;
-                  default:
-                      filteredConditionsData = filterDataWithConditions(
-                          data,
-                          workflow.conditions,
-                      );
-                      break;
-              }
-              console.log("filteredConditionsData", filteredConditionsData);
-              if (filteredConditionsData.length === 0) {
-                  shouldReturnNull = true; // Set flag to true
-              } else {
-                console.log("No conditions running")
-
-              }
+                console.log("filteredConditionsData", filteredConditionsData);
+                if (filteredConditionsData.length === 0) {
+                    shouldReturnNull = true; // Set flag to true
+                } else {
+                    console.log("No conditions running");
+                }
             } else if (workflow.alertType === "stuckin-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
                 const data = await customFetch(

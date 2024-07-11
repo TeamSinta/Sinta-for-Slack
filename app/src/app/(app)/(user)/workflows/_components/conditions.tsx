@@ -42,7 +42,10 @@ const ConditionComponent: React.FC<ConditionProps> = ({
             (option) => option.name === value,
         );
         if (selectedOption) {
-            onChange(index, "field", { value: selectedOption.name, label: selectedOption.name });
+            onChange(index, "field", {
+                value: selectedOption.name,
+                label: selectedOption.name,
+            });
             onChange(index, "operator", "");
             onChange(index, "value", "");
         }
