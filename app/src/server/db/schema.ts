@@ -45,7 +45,7 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     name: varchar("name", { length: 255 }).notNull(),
     channelId: varchar("channelId", { length: 255 }).notNull(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
-    createdBy: varchar("createdBy", { length: 255 }).notNull(),
+    createdBy: varchar("createdBy", { length: 255 }),
     description: varchar("description", { length: 255 }),
     isArchived: boolean("isArchived").default(false).notNull(),
     invitedUsers: jsonb("invited_users").notNull().default(sql`'[]'`),

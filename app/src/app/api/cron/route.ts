@@ -6,7 +6,11 @@
 // @ts-nocheck
 import { getAccessToken
  } from "@/server/actions/slack/query";
-
+import { format, parseISO } from 'date-fns';
+import { db } from "@/server/db";
+import {
+slackChannelsCreated
+} from "@/server/db/schema";
 import { getEmailsfromSlack } from "@/server/slack/core";
 import { fetchGreenhouseUsers,filterScheduledInterviewsWithConditions, fetchJobsFromGreenhouse, fetchCandidates } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
@@ -111,27 +115,45 @@ function buildGreenHouseUsersForCandidate(hiring_room_recipient, cand_id, job_id
         }
     })
 }
-function getNamingConvention(hiringroom){
 
+function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): string {
+   
+   try{
+        let channelName = slackChannelFormat
+        console.log('candidate  -',job)
+        console.log('candidate created at -',job.created_at)
+        // Parse the created_at date for job
+        const jobCreatedAt = parseISO(job.created_at);
+        const jobMonthText = format(jobCreatedAt, 'MMMM'); // Full month name
+        const jobMonthNumber = format(jobCreatedAt, 'MM'); // Month number
+        const jobMonthTextAbbreviated = format(jobCreatedAt, 'MMM'); // Abbreviated month name
+        const jobDayNumber = format(jobCreatedAt, 'dd'); // Day number
+        // Replace each placeholder with the corresponding value
+        channelName = channelName
+            .replaceAll("{{JOB_NAME}}", job.name)
+            .replaceAll("{{JOB_MONTH_TEXT}}", jobMonthText)
+            .replaceAll("{{JOB_MONTH_NUMBER}}", jobMonthNumber)
+            .replaceAll("{{JOB_MONTH_TEXT_ABBREVIATED}}", jobMonthTextAbbreviated)
+            .replaceAll("{{JOB_DAY_NUMBER}}", jobDayNumber);
+        channelName = sanitizeChannelName(channelName)
+        return channelName;
+   }catch(e){
+        console.log('errror in build salck channel - ',e)
+        const randomNumString = generateRandomSixDigitNumber()
+        throw new Error(`Error saving ASKJFALSFJAS;KFGHJASFGKDslack chanenl created: ${e}`);
+        return "goooooooo-bucks-"+randomNumString
+   }
 }
-import { format, parseISO } from 'date-fns';
-
-function buildSlackChannelName(slackChannelFormat: string, candidate: any, job: any): string {
+function buildSlackChannelNameForCandidate(slackChannelFormat: string, candidate: any): string {
     let channelName = slackChannelFormat;
-
+    console.log('candidate  -',candidate)
+    console.log('candidate created at -',candidate.created_at)
     // Parse the created_at date for candidate
     const candidateCreatedAt = parseISO(candidate.created_at);
     const candidateMonthText = format(candidateCreatedAt, 'MMMM'); // Full month name
     const candidateMonthNumber = format(candidateCreatedAt, 'MM'); // Month number
     const candidateMonthTextAbbreviated = format(candidateCreatedAt, 'MMM'); // Abbreviated month name
     const candidateDayNumber = format(candidateCreatedAt, 'dd'); // Day number
-
-    // Parse the created_at date for job
-    const jobCreatedAt = parseISO(job.created_at);
-    const jobMonthText = format(jobCreatedAt, 'MMMM'); // Full month name
-    const jobMonthNumber = format(jobCreatedAt, 'MM'); // Month number
-    const jobMonthTextAbbreviated = format(jobCreatedAt, 'MMM'); // Abbreviated month name
-    const jobDayNumber = format(jobCreatedAt, 'dd'); // Day number
 
     // Replace each placeholder with the corresponding value
     channelName = channelName
@@ -142,17 +164,35 @@ function buildSlackChannelName(slackChannelFormat: string, candidate: any, job: 
         .replaceAll("{{CANDIDATE_MONTH_NUMBER}}", candidateMonthNumber)
         .replaceAll("{{CANDIDATE_MONTH_TEXT_ABBREVIATED}}", candidateMonthTextAbbreviated)
         .replaceAll("{{CANDIDATE_DAY_NUMBER}}", candidateDayNumber)
-        .replaceAll("{{JOB_NAME}}", job.name)
-        .replaceAll("{{JOB_MONTH_TEXT}}", jobMonthText)
-        .replaceAll("{{JOB_MONTH_NUMBER}}", jobMonthNumber)
-        .replaceAll("{{JOB_MONTH_TEXT_ABBREVIATED}}", jobMonthTextAbbreviated)
-        .replaceAll("{{JOB_DAY_NUMBER}}", jobDayNumber);
     channelName = sanitizeChannelName(channelName)
     return channelName;
 }
+export async function saveSlackChannelCreatedToDB(slackChannelId, invitedUsers, channelName, hiringroomId, slackChannelFormat){
+    try{
+        console.log('hiringroomId - ',hiringroomId)
+        await db.insert(slackChannelsCreated).values({
+            name: channelName,
+            channelId: slackChannelId,
+            // createdBy: 'user_id', // Replace with actual user ID
+            // description: 'Channel description', // Optional
+            isArchived: false,
+            invitedUsers: invitedUsers,
+            hiringroomId: hiringroomId, // Replace with actual hiring room ID
+            channelFormat: slackChannelFormat, // Example format
+            createdAt: new Date(),
+            modifiedAt: new Date(), // Ensure this field is included
+        });
+    }
+    catch(e){
+        throw new Error(`Error saving slack chanenl created: ${e}`);
+    }
+    return "success"
 
+}
 export async function handleIndividualHiringroom(hiringroom){
-    console.log('indivi room')
+    const hiringroomId = hiringroom.id
+    console.log('indivi room - ',hiringroomId)
+    // return
     const allJobs = await fetchJobsFromGreenhouse()
     console.log('indivi room1')
     let allCandidates = await fetchCandidates()
@@ -160,10 +200,9 @@ export async function handleIndividualHiringroom(hiringroom){
     const greenhouseUsers = await fetchGreenhouseUsers();
     console.log('hiring room3 - past green house')
     const slackTeamID = await getSlackTeamIDByHiringroomID(
-        hiringroom.id,
+        hiringroomId,
     );
     console.log('indivi room4')
-    const namingConvention = getNamingConvention(hiringroom)
     const slackUsers = await getEmailsfromSlack(slackTeamID);
     const userMapping = await matchUsers(
         greenhouseUsers,
@@ -180,7 +219,7 @@ export async function handleIndividualHiringroom(hiringroom){
             if(candidateFitsConditions){
                 console.log('new cand')
                 // create slack channel
-                const channelName = buildSlackChannelName(hiringroom.slackChannelFormat, candidate, job);
+                const channelName = buildSlackChannelNameForCandidate(hiringroom.slackChannelFormat, candidate);
                 // const channelName = sanitizeChannelName(hiringroom.slackChannelFormat)
                 // const channelName = sanitizeChannelName(candidate.id + "-" + candidate.name)
                 const slackUsersIds = getSlackUsersFromRecipient(hiringroom.recipient)
@@ -191,9 +230,12 @@ export async function handleIndividualHiringroom(hiringroom){
                 const channelId = await createSlackChannel(channelName, slackTeamID);
                 // does this mean successfully create NOW, not previously created?
                 if (channelId) {
-                    await inviteUsersToChannel(channelId, slackUserIds, slackTeamID);
+                    const invitedUsers = await inviteUsersToChannel(channelId, slackUserIds, slackTeamID);
                     const messageText = 'Welcome to the new hiring room!';
                     await postMessageToSlackChannel(channelId, messageText, slackTeamID);
+                    console.log('hiringroomId - ',hiringroomId)
+                    await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat)
+
                 }
             }
         })
@@ -209,12 +251,14 @@ export async function handleIndividualHiringroom(hiringroom){
                 // create slack channel
                 // let channelName = sanitizeChannelName(job.id + "-"+"1")
                 // let channelName = sanitizeChannelName(job.id + "-"+"1")
-                const channelName = buildSlackChannelName(hiringroom.slackChannelFormat, candidate, job);
+                console.log('pre build')
+                const channelName = buildSlackChannelNameForJob(hiringroom.slackChannelFormat, job);
                 // channelName=channelName.substring(0,channelName.length-2)
                 // channelName = channelName.substring(0,6)
                 // channelName = channelName.substring(0,6)
                 // generateRandomSixDigitNumber
                 // const channelName = generateRandomSixDigitNumber()
+                console.log('post build')
 
                 const slackUsersIds = getSlackUsersFromRecipient(hiringroom.recipient)
                 // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
@@ -230,6 +274,9 @@ export async function handleIndividualHiringroom(hiringroom){
                     await inviteUsersToChannel(channelId, slackUserIds, slackTeamID);
                     // const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText);
+                    console.log('hiringroomId - ',hiringroomId)
+                    await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat)
+
                 }
             }
         })
@@ -428,7 +475,7 @@ export async function GET() {
         return NextResponse.json({ message: "No workflows to process" }, { status: 200 }); 
     }
 }
-
+// create slack channel via slack and save in db we created it
 async function createSlackChannel(channelName, slackTeamId) {
     console.log('createSlackChannel - pre access token - ',slackTeamId)
     const accessToken = await getAccessToken(slackTeamId);

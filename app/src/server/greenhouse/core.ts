@@ -79,16 +79,18 @@ export async function getMockGreenhouseData(): Promise<MockData> {
 interface Job {
     id: number;
     name: string;
+    created_at: string;
 }
 
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
-        )) as { id: number; name: string }[];
+        )) as { id: number; name: string, created_at: string }[];
         return jobs.map((job) => ({
             id: job.id,
             name: job.name,
+            created_at: job.created_at
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
