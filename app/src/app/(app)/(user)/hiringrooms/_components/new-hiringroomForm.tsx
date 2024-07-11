@@ -40,9 +40,11 @@ import SlackHiringroom from "./slack-hiringroom";
 import ConditionComponent from "./conditions";
 import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
+import SlackChannelNameFormat from "./SlackChannelNameFormat";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
 import { toast } from "sonner";
+import { handleIndividualHiringroom } from "@/app/api/cron/route"
 
 const messageButtonSchema = z.object({
     name: z.string(),
@@ -119,9 +121,14 @@ interface Job {
 }
 
 function CreateHiringroomSheet() {
+    
     const [coordinators, setCoordinators] = useState([])
     const [recruiters, setRecruiters] = useState([])
     const [jobNames, setJobNames] = useState([])
+
+    const [format, setFormat] = useState("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
+
+
     const [conditionTypesWithOperators, setConditionTypesWithOperators] = useState([
         {
             name: "Coordinator",
@@ -312,7 +319,11 @@ function CreateHiringroomSheet() {
             setIsInitialSetupDone(true);
         }
     }, [selectedAlertType, isInitialSetupDone]);
+    const handleFormatChange = (slackFormatString: string) =>{
+        setFormat(slackFormatString)
+        form.setValue("slackChannelFormat", [...stuckStageConditions, ...newConditions]);
 
+    }
     const handleConditionChange = (
         index: number,
         key: keyof Condition,
@@ -520,6 +531,7 @@ function CreateHiringroomSheet() {
         recipient: typeof recipientConfig;
         conditions: Condition[]; // Ensure conditions is of type Condition[]
         organizationId: string;
+        slackChannelFormat: string;
         triggerConfig: {
             apiUrl: string;
             processor: string;
@@ -536,6 +548,7 @@ function CreateHiringroomSheet() {
             recipient: recipientConfig,
             conditions: [], // Initialize with an empty array of Condition[]
             organizationId: "",
+            slackChannelFormat: format,
             triggerConfig: { apiUrl: "", processor: "" },
         },
     });
@@ -558,10 +571,39 @@ function CreateHiringroomSheet() {
         reset,
     } = useMutation({
         mutationFn: createHiringroomMutation,
-        onSuccess: () => {
-            router.refresh();
-            reset();
-            setIsOpen(false);
+        onSuccess: async (hiringroomValue) => {
+            console.log('hiringroomvalue - ',hiringroomValue)
+            // handleIndividualHiringroom(hiringroomValue) // to build
+            
+            // call endpoint that calls handle indiviual hiring room backend
+
+            try {
+
+                const response = await fetch("/api/hiringroom", {
+                    // const response = await fetch("https://slack.com/api/conversations.create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        // Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(hiringroomValue),
+                });
+        
+                const data = await response.json();
+                if (!data.ok) {
+                    throw new Error(`Error creating channel: ${data.error}`);
+                }
+        
+                console.log('Channel created successfully:');
+                // console.log('Channel created successfully:', data);
+                return data.channel.id; // Return the channel ID for further use
+            } catch (error) {
+                console.error('Error creating Slack channel route:', error);
+            }
+
+            // router.refresh();
+            // reset();
+            // setIsOpen(false);
         },
         onError: (error) => {
             toast.error(
@@ -1076,6 +1118,7 @@ function CreateHiringroomSheet() {
                         </div>
 
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
+                        <SlackChannelNameFormat format={format} setFormat={setFormat} />
 
                         {/* Recipient */}
                         <div className="flex items-start gap-8">

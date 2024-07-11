@@ -40,7 +40,7 @@ export async function getChannels(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
-
+        console.log('getChannels - pre access token')
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch(
             "https://slack.com/api/conversations.list",
@@ -81,6 +81,7 @@ export async function getActiveUsers(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
+        console.log('getActiveUsers - pre access token')
 
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch("https://slack.com/api/users.list", {
@@ -103,7 +104,7 @@ export async function getActiveUsers(): Promise<
                     label: `@${member.real_name}`,
                 }));
         } else {
-            throw new Error(data.error ?? "Error fetching users");
+            throw new Error(data.error ?? "Error fetching users" + response.status);
         }
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -112,9 +113,11 @@ export async function getActiveUsers(): Promise<
 }
 
 export async function getEmailsfromSlack(
-    teamId?: string,
+    teamId: string,
 ): Promise<{ value: string; label: string; email: string }[]> {
     try {
+        console.log('getEmailsfromSlack - pre access token', teamId)
+
         const accessToken = await getAccessToken(teamId);
         const response = await fetch("https://slack.com/api/users.list", {
             method: "GET",
@@ -163,6 +166,8 @@ export async function sendSlackNotification(
         console.error("No Slack team ID available.");
         return;
     }
+    console.log('send slack notification - pre access token')
+
     const accessToken = await getAccessToken(currentOrg.slack_team_id);
 
     for (const recipient of workflowRecipient.recipients) {
@@ -274,6 +279,8 @@ export async function sendSlackButtonNotification(
         "filtered filteredConditionsData dagat-",
         filteredConditionsData,
     );
+    console.log('sendSlackVutonNotification - pre access token')
+
     const accessToken = await getAccessToken(slackTeamID);
     
     for (const recipient of greenHouseAndSlackRecipients) {

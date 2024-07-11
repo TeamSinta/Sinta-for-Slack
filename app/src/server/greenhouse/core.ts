@@ -75,31 +75,7 @@ export async function getMockGreenhouseData(): Promise<MockData> {
         throw new Error("Failed to fetch data from Greenhouse");
     }
 }
-export async function fetchAllGreenhouseUsers(): Promise<
-    Record<string, { id: string; email: string }>
-> {
-    try {
-        const users = (await customFetch(
-            "https://harvest.greenhouse.io/v1/users",
-        ))
-        return users
-        
-    } catch (error) {
-        console.error("Error fetching Greenhouse users: ", error);
-        return {};
-    }
-}
-export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<Job[]> => {
-    try {
-        const jobs = (await customFetch(
-            "https://harvest.greenhouse.io/v1/jobs",
-        )) as any[];
-        return jobs
-    } catch (error) {
-        console.error("Error fetching jobs: ", error);
-        return [];
-    }
-};
+
 interface Job {
     id: number;
     name: string;
@@ -116,6 +92,7 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
+        console.log('here1?')
         return [];
     }
 };
@@ -148,7 +125,7 @@ export async function fetchCandidates(): Promise<any> {
         );
         return response;
     } catch (error) {
-        console.error("Error fetching candidate details: ", error);
+        console.error("Error fetching candidate details: ");
         return null;
     }
 }
@@ -366,7 +343,7 @@ export async function fetchGreenhouseUsers(): Promise<
             {},
         );
     } catch (error) {
-        console.error("Error fetching Greenhouse users: ", error);
+        console.error("Error fetching Greenhouse users: ");
         return {};
     }
 }
@@ -535,7 +512,33 @@ export const filterDataWithConditions = (
         });
     });
 };
+export async function fetchAllGreenhouseUsers(): Promise<
+    Record<string, { id: string; email: string }>
+> {
+    try {
+        const users = (await customFetch(
+            "https://harvest.greenhouse.io/v1/users",
+        ))
+        return users
+        
+    } catch (error) {
+        console.error("Error fetching Greenhouse users: ", error);
+        return {};
+    }
+}
 
+
+export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<Job[]> => {
+    try {
+        const jobs = (await customFetch(
+            "https://harvest.greenhouse.io/v1/jobs",
+        )) as any[];
+        return jobs
+    } catch (error) {
+        console.error("Error fetching jobs: ", error);
+        return [];
+    }
+};
 
 async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
     const response = await customFetch(

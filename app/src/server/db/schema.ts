@@ -11,10 +11,9 @@ import {
     timestamp,
     varchar,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type AdapterAccount } from "next-auth/adapters";
 import { z } from "zod";
-
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
  * database instance for multiple projects.
@@ -37,6 +36,27 @@ export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
     "Archived",
 ]);
 
+// slack_channels_created table definition
+export const slackChannelsCreated = createTable("slack_channels_created", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    channelId: varchar("channelId", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    createdBy: varchar("createdBy", { length: 255 }).notNull(),
+    description: varchar("description", { length: 255 }),
+    isArchived: boolean("isArchived").default(false).notNull(),
+    invitedUsers: jsonb("invited_users").notNull().default(sql`'[]'`),
+    hiringroomId: varchar("hiringroomId", { length: 255 })
+        .notNull()
+        .references(() => hiringrooms.id, { onDelete: "cascade" }),
+    channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
+});
+
+
+
 export const hiringrooms = createTable("hiringroom", {
     id: varchar("id", { length: 255 })
         .notNull()
@@ -44,13 +64,14 @@ export const hiringrooms = createTable("hiringroom", {
         .default(sql`gen_random_uuid()`),
     name: varchar("name", { length: 255 }).notNull(),
     objectField: varchar("objectField", { length: 255 }).notNull(),
-    alertType: varchar("alertType", { length: 255 }).notNull(),
+    alertType: varchar("alertType", { length: 255 }),
     conditions: jsonb("conditions").notNull(), // Updated to JSONB
     triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
     recipient: jsonb("recipient").notNull(),
     status: hiringroomStatusEnum("status").default("Active").notNull(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     modifiedAt: timestamp("modifiedAt", { mode: "date" }),
+    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
     ownerId: varchar("ownerId", { length: 255 })
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
@@ -92,7 +113,7 @@ export const workflowsRelations = relations(workflows, ({ one }) => ({
     }),
 }));
 
-export const hiringroomsRelations = relations(hiringrooms, ({ one }) => ({
+export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
     owner: one(users, {
         fields: [hiringrooms.ownerId],
         references: [users.id],
@@ -100,9 +121,20 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one }) => ({
     organization: one(organizations, {
         fields: [hiringrooms.organizationId],
         references: [organizations.id],
-    }),
+    }),    
+    slackChannelsCreated: many(slackChannelsCreated),
+    // slackChannelsCreated: many(slackChannelsCreated, {
+    //     fields: [slackChannelsCreated.hiringroomId],
+    //     references: [hiringrooms.id],
+    // }),
 }));
 
+export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
+    hiringroom: one(hiringrooms, {
+        fields: [slackChannelsCreated.hiringroomId],
+        references: [hiringrooms.id],
+    }),
+}));
 export const workflowInsertSchema = createInsertSchema(workflows, {
     name: z
         .string()

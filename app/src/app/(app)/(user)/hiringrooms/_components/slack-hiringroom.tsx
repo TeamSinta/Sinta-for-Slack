@@ -116,10 +116,10 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
 
                 // Combine the data into a single array, incorporating greenhouseData
                 const combinedOptions = [
-                    ...channelsData.map((channel) => ({
-                        ...channel,
-                        source: "slack",
-                    })),
+                    // ...channelsData.map((channel) => ({
+                    //     ...channel,
+                    //     source: "slack",
+                    // })),
                     ...usersData.map((user) => ({ ...user, source: "slack" })),
                     {
                         label: ` ${greenhouseData.recruiter}`,

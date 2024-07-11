@@ -11,6 +11,7 @@ export async function customFetch(
     const apiUrl = isNode ? `${baseUrl}/api/greenhouse/` : "/api/greenhouse/";
 
     try {
+        console.log('api url  ',apiUrl)
         const response = await axios.post(
             apiUrl,
             { url, options },
@@ -31,8 +32,8 @@ export async function customFetch(
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.error("Axios error:", error.toJSON());
-            console.error("Request config:", error.config);
+            // console.error("Axios error:", error.toJSON());
+            // console.error("Request config:", error.config);
             console.error("Response status:", error.response?.status);
             console.error("Response data:", error.response?.data);
         } else {

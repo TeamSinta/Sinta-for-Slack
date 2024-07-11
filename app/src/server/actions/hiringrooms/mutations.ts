@@ -18,14 +18,16 @@ import { getOrganizations } from "../organization/queries";
 const hiringroomFormSchema = hiringroomInsertSchema.pick({
     name: true,
     objectField: true,
-    alertType: true,
+    // alertType: true,
     organizationId: true,
+    slackChannelFormat: true,
     triggerConfig: true,
     recipient: true,
     conditions: true,
 });
 
 type CreateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
+
 
 export async function createHiringroomMutation(props: CreateHiringroomProps) {
     const { user } = await protectedProcedure();
@@ -43,7 +45,7 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
 
     const hiringroomData = hiringroomParse.data;
 
-    return await db
+    const result = await db
         .insert(hiringrooms)
         .values({
             name: hiringroomData.name,
@@ -54,10 +56,28 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
             organizationId: orgID,
             ownerId: user.id,
             triggerConfig: hiringroomData.triggerConfig,
+            slackChannelFormat: hiringroomData.slackChannelFormat,
             createdAt: new Date(),
             modifiedAt: new Date(),
         })
+        .returning({
+            id: hiringrooms.id,
+            name: hiringrooms.name,
+            objectField: hiringrooms.objectField,
+            alertType: hiringrooms.alertType,
+            conditions: hiringrooms.conditions,
+            recipient: hiringrooms.recipient,
+            organizationId: hiringrooms.organizationId,
+            ownerId: hiringrooms.ownerId,
+            triggerConfig: hiringrooms.triggerConfig,
+            slackChannelFormat: hiringrooms.slackChannelFormat,
+            createdAt: hiringrooms.createdAt,
+            modifiedAt: hiringrooms.modifiedAt,
+        }) // Specify the fields you need to return
+        // .returning("*") // Return all fields or specify the fields you need
         .execute();
+    // Assuming result is an array and we want the first (and only) record
+    return result[0];
 }
 /**
  * Update a hiringroom
