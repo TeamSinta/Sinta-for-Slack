@@ -11,51 +11,51 @@ import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 
 // Helper interfaces for better type checking
 interface ScheduledInterview {
-  id: number;
-  application_id: number;
-  external_event_id: string;
-  start: { date_time: string };
-  end: { date_time: string };
-  location: string;
-  video_conferencing_url: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  interview: { id: number; name: string };
-  organizer: {
-      id: number;
-      first_name: string;
-      last_name: string;
-      name: string;
-      employee_id: string;
-  };
-  interviewers: Array<{
-      id: number;
-      employee_id: string;
-      name: string;
-      email: string;
-      response_status: string;
-      scorecard_id: number;
-  }>;
+    id: number;
+    application_id: number;
+    external_event_id: string;
+    start: { date_time: string };
+    end: { date_time: string };
+    location: string;
+    video_conferencing_url: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    interview: { id: number; name: string };
+    organizer: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        name: string;
+        employee_id: string;
+    };
+    interviewers: Array<{
+        id: number;
+        employee_id: string;
+        name: string;
+        email: string;
+        response_status: string;
+        scorecard_id: number;
+    }>;
 }
 
 interface WorkflowRecipient {
-  recipients: Array<{
-      label: string;
-      value: string;
-      source: string;
-      slackValue?: string;
-  }>;
-  openingText: string;
-  messageFields: Array<string>;
-  messageButtons: Array<{
-      type: string;
-      label: string;
-      action: string;
-      linkType: string;
-  }>;
-  messageDelivery: string;
-  customMessageBody: string;
+    recipients: Array<{
+        label: string;
+        value: string;
+        source: string;
+        slackValue?: string;
+    }>;
+    openingText: string;
+    messageFields: Array<string>;
+    messageButtons: Array<{
+        type: string;
+        label: string;
+        action: string;
+        linkType: string;
+    }>;
+    messageDelivery: string;
+    customMessageBody: string;
 }
 
 export async function log(message: string) {
@@ -361,7 +361,6 @@ export async function filterScheduledInterviewsDataForSlack(
         return result;
     });
 }
-
 
 function getFieldValue(field: unknown, fieldName: string): string {
     if (field === undefined || field === null) {
