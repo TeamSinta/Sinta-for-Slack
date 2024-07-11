@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useEffect, useState } from "react";
 import {
     Select,
@@ -17,8 +16,7 @@ import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 export interface Condition {
     field: { value: string; label: string };
     operator: string;
-    operatorLabel: string; // Add the operatorLabel property
-    value: string;
+    value: { id: string; email: string; name: string } | string;
     conditionType: string;
 }
 
@@ -42,15 +40,20 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     conditionTypesWithOperators,
 }) => {
     const [users, setUsers] = useState<{ id: string; email: string; name: string }[]>([]);
-    const [, setUserMap] = useState<Record<string, { id: string; email: string; name: string }>>({});
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (condition.field.value === "Coordinator" || condition.field.value === "Recruiter") {
-            fetchGreenhouseUsers().then((userMap) => {
-                setUsers(Object.values(userMap));
-                setUserMap(userMap);
-            });
-        }
+        const fetchUsers = async () => {
+            if (condition.field.value === "Coordinator" || condition.field.value === "Recruiter") {
+                setIsLoading(true);
+                const userMap = await fetchGreenhouseUsers();
+                const userList = Object.values(userMap);
+                setUsers(userList);
+                setIsLoading(false);
+            }
+        };
+
+        fetchUsers();
     }, [condition.field.value]);
 
     const handleFieldChange = (value: string) => {
@@ -68,20 +71,14 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     };
 
     const handleOperatorChange = (value: string) => {
-        const selectedField = conditionTypesWithOperators.find(
-            (option) => option.name === condition.field.value,
-        );
-        const selectedOperator = selectedField?.operators.find(
-            (operator) => operator.value === value,
-        );
         onChange(index, "operator", value);
-        if (selectedOperator) {
-            onChange(index, "operatorLabel", selectedOperator.label);
-        }
     };
 
-    const handleValueChange = (value: string) => {
-        onChange(index, "value", value);
+    const handleValueChange = (userId: string) => {
+        const user = users.find(user => user.id === userId);
+        if (user) {
+            onChange(index, "value", user);
+        }
     };
 
     const fieldValue = condition.field.value;
@@ -89,7 +86,6 @@ const ConditionComponent: React.FC<ConditionProps> = ({
         (option) => option.name === fieldValue,
     );
 
-    console.log("condition", condition);
     return (
         <div className="mb-4 flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4">
             <div className="flex flex-row gap-4">
@@ -134,7 +130,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Operator">
-                                {selectedField?.operators.find((op) => op.value === condition.operator)?.label}
+                                {condition.operator}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -160,13 +156,13 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 </Label>
                 {selectedField?.values?.length ?? 0 > 0 ? (
                     <Select
-                        value={condition.value}
+                        value={typeof condition.value === 'object' ? condition.value.id : condition.value}
                         onValueChange={handleValueChange}
                         disabled={!selectedField}
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select Value">
-                                {selectedField?.values.find((val) => val === condition.field.label)}
+                                {typeof condition.value === 'object' ? (condition.value as { id: string; email: string; name: string }).name : condition.value}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -181,18 +177,19 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                     </Select>
                 ) : fieldValue === "Coordinator" || fieldValue === "Recruiter" ? (
                     <Select
-                        value={condition.value}
+                        value={typeof condition.value === 'object' ? condition.value.id : ""}
                         onValueChange={handleValueChange}
+                        disabled={isLoading}
                     >
                         <SelectTrigger className="w-full border border-gray-300 bg-white">
                             <SelectValue placeholder="Select User">
-                                {condition.value}
+                                {typeof condition.value === 'object' ? condition.value.name : "Select User"}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
                                 {users.map((user) => (
-                                    <SelectItem key={user.id} value={user.name}>
+                                    <SelectItem key={user.id} value={user.id}>
                                         {user.name} ({user.email})
                                     </SelectItem>
                                 ))}
@@ -202,7 +199,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 ) : (
                     <Input
                         placeholder="Enter Value"
-                        value={condition.value}
+                        value={typeof condition.value === 'object' ? condition.value.name : condition.value}
                         onChange={(e) => handleValueChange(e.target.value)}
                         className="w-full border border-gray-300 bg-white"
                         disabled={!selectedField}
