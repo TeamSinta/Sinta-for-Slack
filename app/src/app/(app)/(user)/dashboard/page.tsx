@@ -3,12 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import homepageicon from "../../../../../public/fistbump.png";
 import slackLogo from "../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../public/greenhouseLogo.png";
-import {
-    CheckCircleIcon,
-    ArrowUpRight,
-    Zap,
-    Cable,
-} from "lucide-react";
+import { CheckCircleIcon, ArrowUpRight, Zap, Cable } from "lucide-react";
 import { StatusIndicator } from "./_components/statusIndicator";
 import Image from "next/image";
 import Link from "next/link";
