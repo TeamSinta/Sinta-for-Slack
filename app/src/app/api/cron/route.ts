@@ -139,7 +139,7 @@ export async function GET() {
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
-            console.log("hereererere");
+            console.log("Workflows processed successfully");
         }
 
         if (shouldReturnNull) {
