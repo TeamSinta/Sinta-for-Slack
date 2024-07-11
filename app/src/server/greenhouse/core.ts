@@ -318,19 +318,21 @@ export async function fetchRejectReasons(): Promise<
         return [];
     }
 }
+
 export async function fetchGreenhouseUsers(): Promise<
-    Record<string, { id: string; email: string }>
+    Record<string, { id: string; email: string; name: string }>
 > {
     try {
         const users = (await customFetch(
             "https://harvest.greenhouse.io/v1/users",
-        )) as { id: string; primary_email_address: string }[];
+        )) as { id: string; primary_email_address: string; name: string }[];
         return users.reduce(
-            (acc: Record<string, { id: string; email: string }>, user) => {
+            (acc: Record<string, { id: string; email: string; name: string }>, user) => {
                 if (user.primary_email_address) {
                     acc[user.id] = {
                         id: user.id,
                         email: user.primary_email_address,
+                        name: user.name,
                     };
                 }
                 return acc;
@@ -342,6 +344,8 @@ export async function fetchGreenhouseUsers(): Promise<
         return {};
     }
 }
+
+
 
 export async function matchSlackToGreenhouseUsers(
     greenhouseUsers: Record<string, { id: string; email: string }>,
