@@ -73,7 +73,6 @@ interface MockData {
 
 type FilteredCandidate = Candidate; // Adjust as per actual structure
 
-
 export async function getMockGreenhouseData(): Promise<MockData> {
     try {
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -456,31 +455,47 @@ function isISODate(dateStr: string): boolean {
     return isValid(date);
 }
 
+export const filterDataWithConditions = (
+    candidates: Candidate[],
+    conditions: Condition[],
+): FilteredCandidate[] => {
+    return candidates.filter((candidate) => {
+        for (const condition of conditions) {
+            if (condition.conditionType !== "main") {
+                continue; // Ignore non-main conditions for now
+            }
 
-export const filterDataWithConditions = (candidates: Candidate[], conditions: Condition[]): FilteredCandidate[] => {
-  return candidates.filter(candidate => {
-      for (const condition of conditions) {
-          if (condition.conditionType !== "main") {
-              continue; // Ignore non-main conditions for now
-          }
+            const fieldValue = candidate[condition.field.value];
 
-          const fieldValue = candidate[condition.field.value];
-
-          if (typeof fieldValue === "string" && (condition.condition === "after" || condition.condition === "before" || condition.condition === "same")) {
-              const value = parseInt(condition.value, 10);
-              if (condition.condition === "after" && !isAfter(fieldValue, value, condition.unit)) {
-                  return false;
-              }
-              if (condition.condition === "before" && !isBefore(fieldValue, value, condition.unit)) {
-                  return false;
-              }
-              if (condition.condition === "same" && !isSame(fieldValue, value, condition.unit)) {
-                  return false;
-              }
-          }
-      }
-      return true;
-  });
+            if (
+                typeof fieldValue === "string" &&
+                (condition.condition === "after" ||
+                    condition.condition === "before" ||
+                    condition.condition === "same")
+            ) {
+                const value = parseInt(condition.value, 10);
+                if (
+                    condition.condition === "after" &&
+                    !isAfter(fieldValue, value, condition.unit)
+                ) {
+                    return false;
+                }
+                if (
+                    condition.condition === "before" &&
+                    !isBefore(fieldValue, value, condition.unit)
+                ) {
+                    return false;
+                }
+                if (
+                    condition.condition === "same" &&
+                    !isSame(fieldValue, value, condition.unit)
+                ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    });
 };
 
 async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {

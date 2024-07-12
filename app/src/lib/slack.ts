@@ -203,7 +203,6 @@ export async function filterProcessedForSlack(
             if (recipient.source === "greenhouse") {
                 const role = recipient.value as string;
                 if (role.includes("ecruiter")) {
-
                     if (candidate.recruiter) {
                         const slackId = userMapping[candidate.recruiter.id];
                         if (slackId) {
@@ -361,7 +360,7 @@ export async function filterCandidatesDataForSlack(
     const slackUsers = await getEmailsfromSlack(slack_team_id);
     const userMapping = await matchUsers(greenhouseUsers, slackUsers);
 
-    return candidates.map(candidate => {
+    return candidates.map((candidate) => {
         const result: Record<string, unknown> = {
             candidate_id: candidate.id,
             coordinator: candidate.coordinator,
@@ -369,10 +368,11 @@ export async function filterCandidatesDataForSlack(
         };
 
         // Populate result with message fields
-        workflow.messageFields.forEach(field => {
+        workflow.messageFields.forEach((field) => {
             switch (field) {
                 case "name":
-                    result[field] = `${candidate.first_name} ${candidate.last_name}`;
+                    result[field] =
+                        `${candidate.first_name} ${candidate.last_name}`;
                     break;
                 case "title":
                     result[field] = candidate.title ?? "Not provided";
@@ -387,12 +387,17 @@ export async function filterCandidatesDataForSlack(
                     result[field] = getPrimaryPhone(candidate.phone_numbers);
                     break;
                 case "social_media":
-                    result[field] = candidate.social_media_addresses.map(sm => sm.value).join(", ") ?? "Not provided";
+                    result[field] =
+                        candidate.social_media_addresses
+                            .map((sm) => sm.value)
+                            .join(", ") ?? "Not provided";
                     break;
                 case "recruiter_name":
                     if (candidate.recruiter) {
                         const slackId = userMapping[candidate.recruiter.id];
-                        result[field] = slackId ? `<@${slackId}>` : candidate.recruiter.name;
+                        result[field] = slackId
+                            ? `<@${slackId}>`
+                            : candidate.recruiter.name;
                     } else {
                         result[field] = "No recruiter";
                     }
@@ -400,7 +405,9 @@ export async function filterCandidatesDataForSlack(
                 case "coordinator_name":
                     if (candidate.coordinator) {
                         const slackId = userMapping[candidate.coordinator.id];
-                        result[field] = slackId ? `<@${slackId}>` : candidate.coordinator.name;
+                        result[field] = slackId
+                            ? `<@${slackId}>`
+                            : candidate.coordinator.name;
                     } else {
                         result[field] = "No coordinator";
                     }
@@ -414,22 +421,46 @@ export async function filterCandidatesDataForSlack(
 
         // Replace placeholders in customMessageBody
         let customMessageBody = workflow.customMessageBody;
-        customMessageBody = customMessageBody.replace("{{Recruiter}}", candidate.recruiter ? (userMapping[candidate.recruiter.id] ? `<@${userMapping[candidate.recruiter.id]}>` : `${candidate.recruiter.first_name} ${candidate.recruiter.last_name}`) : "Recruiter");
-        customMessageBody = customMessageBody.replace("{{Candidate_Name}}", `${candidate.first_name} ${candidate.last_name}`);
-        customMessageBody = customMessageBody.replace("{{Coordinator}}", candidate.coordinator ? (userMapping[candidate.coordinator.id] ? `<@${userMapping[candidate.coordinator.id]}>` : `${candidate.coordinator.first_name} ${candidate.coordinator.last_name}`) : "Coordinator");
+        customMessageBody = customMessageBody.replace(
+            "{{Recruiter}}",
+            candidate.recruiter
+                ? userMapping[candidate.recruiter.id]
+                    ? `<@${userMapping[candidate.recruiter.id]}>`
+                    : `${candidate.recruiter.first_name} ${candidate.recruiter.last_name}`
+                : "Recruiter",
+        );
+        customMessageBody = customMessageBody.replace(
+            "{{Candidate_Name}}",
+            `${candidate.first_name} ${candidate.last_name}`,
+        );
+        customMessageBody = customMessageBody.replace(
+            "{{Coordinator}}",
+            candidate.coordinator
+                ? userMapping[candidate.coordinator.id]
+                    ? `<@${userMapping[candidate.coordinator.id]}>`
+                    : `${candidate.coordinator.first_name} ${candidate.coordinator.last_name}`
+                : "Coordinator",
+        );
 
         result.customMessageBody = customMessageBody;
 
         // Map recipients
-        workflow.recipients.forEach(recipient => {
+        workflow.recipients.forEach((recipient) => {
             if (recipient.source === "greenhouse") {
                 const role = recipient.value as string;
                 if (role.includes("Recruiter") && candidate.recruiter) {
                     const slackId = userMapping[candidate.recruiter.id];
-                    recipient.slackValue = slackId ? slackId : candidate.recruiter.name;
-                } else if (role.includes("Coordinator") && candidate.coordinator) {
+                    recipient.slackValue = slackId
+                        ? slackId
+                        : candidate.recruiter.name;
+                } else if (
+                    role.includes("Coordinator") &&
+                    candidate.coordinator
+                ) {
                     const slackId = userMapping[candidate.coordinator.id];
-                    recipient.slackValue = slackId ? slackId : candidate.coordinator.name;
+                    recipient.slackValue = slackId
+                        ? slackId
+                        : candidate.coordinator.name;
                 }
             }
         });
@@ -450,12 +481,12 @@ function getFieldValue(field: unknown, fieldName: string): string {
 
 // Function to get the primary email from candidate email addresses
 const getPrimaryEmail = (emails: { value: string; type: string }[]): string => {
-  const email = emails.find(email => email.type === 'work') || emails[0];
-  return email ? email.value : "No email";
+    const email = emails.find((email) => email.type === "work") || emails[0];
+    return email ? email.value : "No email";
 };
 
 // Function to get the primary phone number from candidate phone numbers
 const getPrimaryPhone = (phones: { value: string; type: string }[]): string => {
-  const phone = phones.find(phone => phone.type === 'mobile') || phones[0];
-  return phone ? phone.value : "No phone number";
+    const phone = phones.find((phone) => phone.type === "mobile") || phones[0];
+    return phone ? phone.value : "No phone number";
 };

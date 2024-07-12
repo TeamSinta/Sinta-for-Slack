@@ -1,5 +1,11 @@
-import { filterCandidatesDataForSlack, filterScheduledInterviewsDataForSlack } from "@/lib/slack";
-import { filterDataWithConditions, filterScheduledInterviewsWithConditions } from "../greenhouse/core";
+import {
+    filterCandidatesDataForSlack,
+    filterScheduledInterviewsDataForSlack,
+} from "@/lib/slack";
+import {
+    filterDataWithConditions,
+    filterScheduledInterviewsWithConditions,
+} from "../greenhouse/core";
 import { sendSlackNotification } from "../slack/core";
 import { getSlackTeamIDByWorkflowID } from "../actions/slack/query";
 import { getSubdomainByWorkflowID } from "../actions/organization/queries";
@@ -22,16 +28,16 @@ interface Workflow {
 export async function processScheduledInterviews(
     data: any[], // Replace `any` with the actual type of data
     workflow: Workflow,
-): Promise<any[]> { // Replace `any[]` with the actual type of the filtered data
-  console.log("processScheduledInterviews  worklow");
+): Promise<any[]> {
+    // Replace `any[]` with the actual type of the filtered data
+    console.log("processScheduledInterviews  worklow");
 
-    const slackTeamID = await getSlackTeamIDByWorkflowID(
-      workflow.id,
+    const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
+    const subDomain = await getSubdomainByWorkflowID(workflow.id);
+    const filteredConditionsData = filterScheduledInterviewsWithConditions(
+        data,
+        workflow.conditions,
     );
-    const subDomain = await getSubdomainByWorkflowID(
-        workflow.id,
-    );
-    const filteredConditionsData = filterScheduledInterviewsWithConditions(data, workflow.conditions);
 
     const filteredSlackData = await filterScheduledInterviewsDataForSlack(
         filteredConditionsData,
@@ -56,16 +62,15 @@ export async function processScheduledInterviews(
 export async function processCandidates(
     data: any[], // Replace `any` with the actual type of data
     workflow: Workflow,
-
-): Promise<any[]> { // Replace `any[]` with the actual type of the filtered data
-  console.log("processing Candidates worklow");
-  const slackTeamID = await getSlackTeamIDByWorkflowID(
-    workflow.id,
-  );
-  const subDomain = await getSubdomainByWorkflowID(
-      workflow.id,
-  );
-    const filteredConditionsData = filterDataWithConditions(data, workflow.conditions);
+): Promise<any[]> {
+    // Replace `any[]` with the actual type of the filtered data
+    console.log("processing Candidates worklow");
+    const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
+    const subDomain = await getSubdomainByWorkflowID(workflow.id);
+    const filteredConditionsData = filterDataWithConditions(
+        data,
+        workflow.conditions,
+    );
 
     const filteredSlackData = await filterCandidatesDataForSlack(
         filteredConditionsData,
@@ -80,7 +85,6 @@ export async function processCandidates(
             slackTeamID,
             subDomain,
         );
-
     } else {
         console.log("No data to send to Slack");
     }

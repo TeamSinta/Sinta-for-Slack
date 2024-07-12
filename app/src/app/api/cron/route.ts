@@ -10,7 +10,7 @@ import {
     filterScheduledInterviewsWithConditions,
 } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
-import { getWorkflows,} from "@/server/actions/workflows/queries";
+import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
@@ -27,33 +27,45 @@ import {
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
-import { processCandidates, processScheduledInterviews } from "@/server/objectworkflows/queries";
+import {
+    processCandidates,
+    processScheduledInterviews,
+} from "@/server/objectworkflows/queries";
 import { WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
 
 // Define the GET handler for the route
 export async function GET() {
     try {
-        const workflows: WorkflowData[] = await getWorkflows() as WorkflowData[]; // Retrieve workflows from the database
+        const workflows: WorkflowData[] =
+            (await getWorkflows()) as WorkflowData[]; // Retrieve workflows from the database
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
             if (workflow.alertType === "timebased") {
-                const { apiUrl }: { apiUrl?: string } = workflow.triggerConfig as { apiUrl?: string };
+                const { apiUrl }: { apiUrl?: string } =
+                    workflow.triggerConfig as { apiUrl?: string };
 
                 const data = await customFetch(apiUrl ?? ""); // Fetch data using custom fetch wrapper
                 let filteredConditionsData;
 
                 switch (workflow.objectField) {
-                  case "Scheduled Interviews":
-                      filteredConditionsData = await processScheduledInterviews(data, workflow);
-                      break;
-                  case "Candidates":
-                      filteredConditionsData = await processCandidates(data, workflow);
-                      break;
-                  default:
-                      filteredConditionsData = filterDataWithConditions(data, workflow.conditions);
-                      break;
-              }
+                    case "Scheduled Interviews":
+                        filteredConditionsData =
+                            await processScheduledInterviews(data, workflow);
+                        break;
+                    case "Candidates":
+                        filteredConditionsData = await processCandidates(
+                            data,
+                            workflow,
+                        );
+                        break;
+                    default:
+                        filteredConditionsData = filterDataWithConditions(
+                            data,
+                            workflow.conditions,
+                        );
+                        break;
+                }
                 if (filteredConditionsData.length === 0) {
                     shouldReturnNull = true; // Set flag to true
                 } else {
