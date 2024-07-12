@@ -162,14 +162,8 @@ export async function sendSlackNotification(
     slackTeamID: string,
     subDomain: string,
 ): Promise<void> {
-   // const { currentOrg = {} } = (await getOrganizations()) || {};
-   // if (!currentOrg.slack_team_id) {
-   //     console.error("No Slack team ID available.");
-    //    return;
-    //}
-   // console.log('send slack notification - pre access token')
 
-    //const accessToken = await getAccessToken(currentOrg.slack_team_id);
+
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
     console.log("filteredSlackData", filteredSlackData);
@@ -202,7 +196,8 @@ export async function sendSlackNotification(
                         .map((data) => {
                             const interviewId = data.interview_id;
                             const candidateId = data.candidate_id;
-                            const id = interviewId || candidateId; // Use either interview_id or candidate_id
+                            const buttonLinkid = interviewId || candidateId; // Use either interview_id or candidate_id
+                            if (!buttonLinkid) return []; // Protect against undefined id
 
                             return [
                                 {
@@ -252,7 +247,7 @@ export async function sendSlackNotification(
                                 },
                                 {
                                     type: "actions",
-                                    block_id: `block_id_${id}`,
+                                    block_id: `block_id_${buttonLinkid}`,
                                     elements:
                                         workflowRecipient.messageButtons.map(
                                             (button) => {
@@ -263,7 +258,7 @@ export async function sendSlackNotification(
                                                         text: button.label,
                                                         emoji: true,
                                                     },
-                                                    value: `${button.updateType ?? button.type}_${id}`, // Include ID in the value
+                                                    value: `${button.updateType ?? button.type}_${buttonLinkid}`, // Include ID in the value
                                                 };
 
                                                 if (
@@ -276,14 +271,14 @@ export async function sendSlackNotification(
                                                     ) {
                                                         buttonElement.style =
                                                             "primary";
-                                                        buttonElement.action_id = `move_to_next_stage_${id}`;
+                                                        buttonElement.action_id = `move_to_next_stage_${buttonLinkid}`;
                                                     } else if (
                                                         button.updateType ===
                                                         "RejectCandidate"
                                                     ) {
                                                         buttonElement.style =
                                                             "danger";
-                                                        buttonElement.action_id = `reject_candidate_${id}`;
+                                                        buttonElement.action_id = `reject_candidate_${buttonLinkid}`;
                                                     }
                                                 } else if (
                                                     button.linkType ===
@@ -306,7 +301,7 @@ export async function sendSlackNotification(
                                                 } else {
                                                     buttonElement.action_id =
                                                         button.action ||
-                                                        `${button.type.toLowerCase()}_action_${id}`;
+                                                        `${button.type.toLowerCase()}_action_${buttonLinkid}`;
                                                 }
 
                                                 return buttonElement;
