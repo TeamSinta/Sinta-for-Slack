@@ -416,21 +416,14 @@ export async function handleWorkflows(){
                     greenhouseUsers,
                     slackUsers,
                 );
-                // workflow.recipient = workflow.recipient.map((recipient: any) => {
-                //     if (recipient.source === "greenhouse") {
-                //         return addGreenhouseSlackValue(recipient, candidates, userMapping);
-                //     }
-                //     return recipient;
-                // });
+
                 const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
-                // const matchGreenhouseUsers = matc
-                // console.log("filteredConditionsData", filteredConditionsData);
+
                 const filteredSlackDataWithMessage = await buildSlackMessageByCandidateOnFilteredData(
                     filteredConditionsData,
                     workflow.recipient,
                     slackTeamID,
                     workflow.messageFields,
-                    // slackTeamID
                 );
 
                 if (filteredSlackDataWithMessage.length > 0) {
@@ -479,7 +472,7 @@ export async function handleWorkflows(){
 export async function GET() {
     try{
         console.log('gobucks')
-        // await handleWorkflows()
+        await handleWorkflows()
         await handleHiringrooms()
         return NextResponse.json({ message: "Workflows processed successfully" }, { status: 200 });
 }
