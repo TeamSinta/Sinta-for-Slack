@@ -518,13 +518,18 @@ useEffect(() => {
                     triggerConfig: data.triggerConfig || { apiUrl: "", processor: "" },
                 };
                 console.log('DAA - ALERT ',data?.alertType)
+                form.setValue("id",data.id || "")
+                form.setValue("conditions",data.conditions || [])
+                form.setValue("createdAt",data.createdAt || "")
+                form.setValue("id",data.id || "")
+                form.setValue("modifiedAt",data.modifiedAt || "")
                 form.setValue("name",data.name || "")
                 form.setValue("objectField",data.objectField || "")
-                form.setValue("alertType",data.alertType || "timebased")
-                form.setValue("recipient",data.recipient || "")
-                form.setValue("conditions",data.conditions || [])
                 form.setValue("organizationId",data.organizationId || "")
-                form.setValue("triggerConfig",data.triggerConfig || { apiUrl: "", processor: "" })
+                form.setValue("ownerId",data.ownerId || "")
+                form.setValue("recipient",data.recipient || "")
+                form.setValue("status",data.status || "ACTIVE")
+                form.setValue("alertType",data.alertType || "timebased")
                 handleSelectChange(data.objectField || "","","objectField",)
                 handleSelectChange("timebased" || "","","alertType",)
                 // handleSelectChange(data.alertType || "timebased" || "","","alertType",)
@@ -609,6 +614,7 @@ useEffect(() => {
             setIsOpen(false);
             if (mode == "edit"){
                 toast.success("Workflow updated successfully");
+                router.push('/workflows')
             }
             else{
                 toast.success("Workflow created successfully");
