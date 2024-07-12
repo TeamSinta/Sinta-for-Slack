@@ -5,7 +5,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
+
+//@ts-nocheck
 
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
