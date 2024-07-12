@@ -16,7 +16,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
     deleteWorkflowMutation,
-    updateWorkflowMutation,
+    updateWorkflowStatusMutation,
 } from "@/server/actions/workflows/mutations";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 
@@ -30,7 +30,7 @@ export function ColumnDropdown({ id }: WorkflowData) {
         mutateAsync: changeStatusMutate,
         isPending: changeStatusIsPending,
     } = useMutation<unknown, unknown, { id: string; status: WorkflowStatus }>({
-        mutationFn: ({ id, status }) => updateWorkflowMutation({ id, status }),
+        mutationFn: ({ id, status }) => updateWorkflowStatusMutation({ id, status }),
         onSettled: () => {
             router.refresh();
         },
@@ -100,6 +100,14 @@ export function ColumnDropdown({ id }: WorkflowData) {
 
                 <DropdownMenuSeparator />
 
+                <DropdownMenuItem
+                    disabled={
+                        changeStatusIsPending || statusChangeIsTransitionPending
+                    }
+                    onClick={() => router.push(`/workflows?edit=true&workflowId=${id}`)} // Activate
+                >
+                    Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem
                     disabled={
                         changeStatusIsPending || statusChangeIsTransitionPending
