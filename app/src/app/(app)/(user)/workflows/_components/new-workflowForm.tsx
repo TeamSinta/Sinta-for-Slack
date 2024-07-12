@@ -730,6 +730,11 @@ useEffect(() => {
 
     return (
         <Dialog open={isOpen || mode == "edit"} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
+                    Create Workflow
+                </Button>
+            </DialogTrigger>
             <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
                 <DialogHeader className="flex flex-row justify-between">
                     <Image
