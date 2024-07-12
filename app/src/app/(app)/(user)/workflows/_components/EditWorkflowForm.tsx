@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import WorkflowForm from './WorkflowForm';
+import WorkflowForm from './new-workflowForm';
 
 interface EditWorkflowFormProps {
     workflowId: string;
@@ -10,8 +10,8 @@ const EditWorkflowForm: React.FC<EditWorkflowFormProps> = ({ workflowId }) => {
 
     return (
         <WorkflowForm
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
+            // isOpen={isOpen}
+            // setIsOpen={setIsOpen}
             mode="edit"
             workflowId={workflowId}
         />
