@@ -538,6 +538,7 @@ useEffect(() => {
                 handleSelectChange(data.organizationId || "","","organizationId",)
                 handleSelectChange(data.triggerConfig || "","","triggerConfig",)
                 handleRecipientsChange(data.recipient.recipients) // to fill in
+                handleCustomMessageBodyChange(data?.recipient?.customMessageBody)
                 setSelectedRecipients(data.recipient.recipients)
                 setRecipientConfig(data.recipient);
                 form.setValue("recipient", data.recipient);
