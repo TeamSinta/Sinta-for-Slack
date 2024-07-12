@@ -38,6 +38,7 @@ import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackWorkflow from "./slack-workflow";
 import ConditionComponent from "./conditions";
 import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
+import { getWorkflowById } from '@/server/actions/workflows/queries'
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
@@ -117,7 +118,8 @@ interface Job {
     name: string;
 }
 
-function CreateWorkflowSheet() {
+function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string }) {
+    const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
     ]);
@@ -487,6 +489,73 @@ function CreateWorkflowSheet() {
             );
         },
     });
+    // import { db } from "@/server/db"; // Adjust the import to your actual db instance
+// import { workflows } from "@/server/db/schema"; // Adjust the import to your actual schema
+const [isFormReady, setIsFormReady] = useState(false);
+
+useEffect(() => {
+    if (mode === 'edit' && workflowId) {
+        setIsFormReady(true);
+    }
+}, [mode, workflowId]);
+
+useEffect(() => {
+    if (isFormReady && mode === 'edit' && workflowId) {
+        const fetchWorkflowData = async () => {
+            try {
+                const data = await getWorkflowById(workflowId);
+                console.log('DATA - ',data)
+                const formattedData = {
+                    name: data.name || "",
+                    objectField: data.objectField || "",
+                    alertType: data.alertType || "timebased",
+                    recipient: data.recipient || "",
+                    conditions: data.conditions || [],
+                    organizationId: data.organizationId || "",
+                    triggerConfig: data.triggerConfig || { apiUrl: "", processor: "" },
+                };
+                console.log('DAA - ALERT ',data?.alertType)
+                form.setValue("name",data.name || "")
+                form.setValue("objectField",data.objectField || "")
+                form.setValue("alertType",data.alertType || "timebased")
+                form.setValue("recipient",data.recipient || "")
+                form.setValue("conditions",data.conditions || [])
+                form.setValue("organizationId",data.organizationId || "")
+                form.setValue("triggerConfig",data.triggerConfig || { apiUrl: "", processor: "" })
+                handleSelectChange(data.objectField || "","","objectField",)
+                handleSelectChange("timebased" || "","","alertType",)
+                // handleSelectChange(data.alertType || "timebased" || "","","alertType",)
+                handleSelectChange(data.recipient || "","","recipient",)
+                handleSelectChange(data.conditions || "","","conditions",)
+                handleSelectChange(data.organizationId || "","","organizationId",)
+                handleSelectChange(data.triggerConfig || "","","triggerConfig",)
+                handleRecipientsChange(data.recipient.recipients) // to fill in
+                setSelectedRecipientsx(data.recipient.recipients)
+                console.log('data.recipient ',data.recipient)
+                console.log('selecteld recipients ',selectedRecipientsx)
+                setRecipientConfig(newRecipient);
+                form.setValue("recipient", newRecipient);
+                // handleConditionChange
+                // handleOpeningTextChange
+            // }
+            // onFieldsSelect={handleFieldsSelect}
+            // onButtonsChange={handleButtonsChange}
+            // onDeliveryOptionChange={
+            //     handleDeliveryOptionChange
+            // }
+            // onRecipientsChange={handleRecipientsChange}
+            // onCustomMessageBodyChange={
+            //     handleCustomMessageBodyChange
+                // reset(formattedData); // Reset form with fetched data
+            } catch (error) {
+                toast.error("Failed to load workflow data.");
+            }
+        };
+
+        fetchWorkflowData();
+    }
+}, [isFormReady, mode, workflowId, reset]);
+
 
     const [, startAwaitableTransition] = useAwaitableTransition();
 
@@ -1072,6 +1141,8 @@ function CreateWorkflowSheet() {
                                     onCustomMessageBodyChange={
                                         handleCustomMessageBodyChange
                                     } // Add this line
+                                    selectedRecipients={selectedRecipients}
+                                    setSelectedRecipients={setSelectedRecipients}
                                 />
                             </div>
                         </div>
@@ -1092,4 +1163,4 @@ function CreateWorkflowSheet() {
     );
 }
 
-export default CreateWorkflowSheet;
+export default WorkflowSheet;

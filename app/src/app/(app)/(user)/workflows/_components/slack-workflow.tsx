@@ -65,12 +65,14 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onButtonsChange,
     onRecipientsChange,
     onCustomMessageBodyChange, // Add this line
+    selectedRecipients,
+    setSelectedRecipients
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<ButtonAction[]>([]);
-    const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
+    // const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
     );

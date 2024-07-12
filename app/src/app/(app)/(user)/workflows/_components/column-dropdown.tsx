@@ -104,6 +104,14 @@ export function ColumnDropdown({ id }: WorkflowData) {
                     disabled={
                         changeStatusIsPending || statusChangeIsTransitionPending
                     }
+                    onClick={() => router.push(`/workflows?edit=true&workflowId=${id}`)} // Activate
+                >
+                    Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    disabled={
+                        changeStatusIsPending || statusChangeIsTransitionPending
+                    }
                     onClick={() => onStatusChange("Active")} // Activate
                 >
                     Activate
