@@ -521,7 +521,7 @@ export async function fetchAllGreenhouseUsers(): Promise<
             "https://harvest.greenhouse.io/v1/users",
         ))
         return users
-        
+
     } catch (error) {
         console.error("Error fetching Greenhouse users: ", error);
         return {};
@@ -593,7 +593,7 @@ export async function filterStuckinStageDataConditions(
 
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
-    const operator = condition.condition;
+    const operator = condition.operator;
 
     for (const candidate of candidates) {
         const candidateId = candidate.id;
@@ -632,6 +632,7 @@ export async function filterStuckinStageDataConditions(
                 default:
                     console.warn(`Unsupported condition operator: ${operator}`);
             }
+            console.log(operator, daysInCurrentStage, thresholdDays, conditionMet)
 
             if (conditionMet) {
                 matchedCandidates.push(candidate);

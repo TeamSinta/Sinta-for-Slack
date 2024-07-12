@@ -205,68 +205,68 @@ export function addGreenhouseSlackValue(recipient: any, candidates: any, userMap
     })
 
 }
-export async function buildSlackMessageByCandidateOnFilteredData(
-    // export async function filterProcessedForSlack(
-    candidates: Candidate[],
-    workflowMessageFields: any[],
-    // workflow: WorkflowRecipient,
-    // slack_team_id: string,
-): Promise<Record<string, unknown>[]> {
-    // const greenhouseUsers = await fetchGreenhouseUsers();
-    // console.log("greenhouseruser", greenhouseUsers);
-    // const slackUsers = await getEmailsfromSlack(slack_team_id);
-    // console.log("slackUsers", slackUsers);
-    // const userMapping = await matchUsers(greenhouseUsers, slackUsers);
-    // console.log("workflow", workflow);
-    // console.log("slackUsers", slackUsers);
-    // recipients, greenhouse recipients from greenhouse candidate application, greenhouse users, slack users
+// export async function buildSlackMessageByCandidateOnFilteredData(
+//     // export async function filterProcessedForSlack(
+//     candidates: Candidate[],
+//     workflowMessageFields: any[],
+//     // workflow: WorkflowRecipient,
+//     // slack_team_id: string,
+// ): Promise<Record<string, unknown>[]> {
+//     // const greenhouseUsers = await fetchGreenhouseUsers();
+//     // console.log("greenhouseruser", greenhouseUsers);
+//     // const slackUsers = await getEmailsfromSlack(slack_team_id);
+//     // console.log("slackUsers", slackUsers);
+//     // const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+//     // console.log("workflow", workflow);
+//     // console.log("slackUsers", slackUsers);
+//     // recipients, greenhouse recipients from greenhouse candidate application, greenhouse users, slack users
 
-    // const recipientsx = workflow.recipients
-    // recipientsx.forEach((recipientx: any)=>{
-    //     if(recipientx.source == "greenhouse"){
-    //     //find the user
-    //         console.log('go bucks')
-    //         // value == coordinator
-    //         const role = recipientx.value
-    //         if(role.contains("ecruiter")){
-    //             const application =
-    //         } else if(role.contains("oordinator")){
+//     // const recipientsx = workflow.recipients
+//     // recipientsx.forEach((recipientx: any)=>{
+//     //     if(recipientx.source == "greenhouse"){
+//     //     //find the user
+//     //         console.log('go bucks')
+//     //         // value == coordinator
+//     //         const role = recipientx.value
+//     //         if(role.contains("ecruiter")){
+//     //             const application =
+//     //         } else if(role.contains("oordinator")){
 
-    //         }
-    //         else{
-    //             console.log('no role greenhouse')
-    //         }
-    //     }
-    // })
-    return candidates.map((candidate) => {
-        const result: Record<string, unknown> = {
-            candidate_id: candidate.id, // Include candidate ID
-            coordinator: candidate.coordinator,
-            recruiter: candidate.recruiter,
-        };
-        // to clarify the "first application" of a candidate, cutting corner because 99%? only have one
-        // const cand_app = candidate.applications[0]
+//     //         }
+//     //         else{
+//     //             console.log('no role greenhouse')
+//     //         }
+//     //     }
+//     // })
+//     return candidates.map((candidate) => {
+//         const result: Record<string, unknown> = {
+//             candidate_id: candidate.id, // Include candidate ID
+//             coordinator: candidate.coordinator,
+//             recruiter: candidate.recruiter,
+//         };
+//         // to clarify the "first application" of a candidate, cutting corner because 99%? only have one
+//         // const cand_app = candidate.applications[0]
 
-        // why are we using message fields for this?
+//         // why are we using message fields for this?
 
-        workflowMessageFields.forEach((field) => {
-            switch (field) {
-                case "name":
-                    result[field] =
-                        `${candidate.first_name} ${candidate.last_name}`;
-                    break;
-                case "title":
-                    result[field] = candidate.title ?? "Not provided";
-                    break;
-                default:
-                    const candidateField = candidate[field as keyof Candidate];
-                    result[field] = getFieldValue(candidateField, field);
-                    break;
-            }
-        });
-        return result;
-    });
-}
+//         workflowMessageFields.forEach((field) => {
+//             switch (field) {
+//                 case "name":
+//                     result[field] =
+//                         `${candidate.first_name} ${candidate.last_name}`;
+//                     break;
+//                 case "title":
+//                     result[field] = candidate.title ?? "Not provided";
+//                     break;
+//                 default:
+//                     const candidateField = candidate[field as keyof Candidate];
+//                     result[field] = getFieldValue(candidateField, field);
+//                     break;
+//             }
+//         });
+//         return result;
+//     });
+// }
 export async function filterScheduledInterviewsDataForSlack(
     scheduledInterviews: ScheduledInterview[],
     workflow: WorkflowRecipient,
