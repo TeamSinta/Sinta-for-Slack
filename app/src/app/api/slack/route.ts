@@ -189,7 +189,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers,
+            slackUsers
         );
         const greenhouseUserId = userMapping[user.id];
 
@@ -268,6 +268,8 @@ async function handleSlackInteraction(payload: SlackInteraction) {
         }
 
         const { action_id } = action;
+        console.log('handle slack interaction - pre access token')
+
         const accessToken = await getAccessToken(team.id);
 
         // Parse candidate ID from action_id
@@ -597,7 +599,7 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers,
+            slackUsers
         );
         const greenhouseUserId = userMapping[user.id];
 

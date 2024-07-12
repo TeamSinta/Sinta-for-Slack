@@ -31,6 +31,9 @@ export const siteUrls = {
     workflows: {
         home: "/workflows",
     },
+    hiringrooms: {
+        home: "/hiringrooms",
+    },
     integrations: {
         home: "/integrations",
     },

@@ -163,15 +163,60 @@ export async function matchUsers(
 
     return userMapping;
 }
+export function addGreenhouseSlackValue(recipient: any, candidates: any, userMapping: any){
+    candidates.forEach((candidate:any)=>{
+        const role = recipient.value as string;
+        if (role.includes("ecruiter")) {
+            console.log(
+                "found role recruiter- ",
+                candidate.recruiter?.id,
+            );
+            if (candidate.recruiter) {
+                const slackId = userMapping[candidate.recruiter.id];
+                if (slackId) {
+                    console.log("entered map");
+                    recipient.slackValue = slackId;
+                } else {
+                    console.log(
+                        "else map",
+                        candidate.recruiter.first_name,
+                    );
+                    recipient.slackValue = "no bucks";
+                }
+            }
+        } else if (role.includes("oordinator")) {
+            console.log("found role - ", candidate.coordinator?.id);
+            if (candidate.coordinator) {
+                const slackId = userMapping[candidate.coordinator.id];
+                if (slackId) {
+                    console.log("entered map");
+                    recipient.slackValue = slackId;
+                } else {
+                    console.log(
+                        "else map",
+                        candidate.coordinator.first_name,
+                    );
+                    recipient.slackValue = "no bucks coordinator";
+                }
+            }
+        } else {
+            // console.log('no role greenhouse')
+        }
+    })
 
-export async function filterProcessedForSlack(
+}
+export async function buildSlackMessageByCandidateOnFilteredData(
+    // export async function filterProcessedForSlack(
     candidates: Candidate[],
-    workflow: WorkflowRecipient,
-    slack_team_id: string,
+    workflowMessageFields: any[],
+    // workflow: WorkflowRecipient,
+    // slack_team_id: string,
 ): Promise<Record<string, unknown>[]> {
-    const greenhouseUsers = await fetchGreenhouseUsers();
-    const slackUsers = await getEmailsfromSlack(slack_team_id);
-    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+    // const greenhouseUsers = await fetchGreenhouseUsers();
+    // console.log("greenhouseruser", greenhouseUsers);
+    // const slackUsers = await getEmailsfromSlack(slack_team_id);
+    // console.log("slackUsers", slackUsers);
+    // const userMapping = await matchUsers(greenhouseUsers, slackUsers);
     // console.log("workflow", workflow);
     // console.log("slackUsers", slackUsers);
     // recipients, greenhouse recipients from greenhouse candidate application, greenhouse users, slack users
@@ -203,45 +248,8 @@ export async function filterProcessedForSlack(
         // const cand_app = candidate.applications[0]
 
         // why are we using message fields for this?
-        workflow.recipients.forEach((recipient: any) => {
-            //find the user
-            // console.log('recipient - ',recipient.source)
-            // console.log('recipient - ',recipient.value)
-            // value == coordinator
-            if (recipient.source === "greenhouse") {
-                const role = recipient.value as string;
-                if (role.includes("ecruiter")) {
-                    if (candidate.recruiter) {
-                        const slackId = userMapping[candidate.recruiter.id];
-                        if (slackId) {
-                            recipient.slackValue = slackId;
-                        } else {
-                            console.log(
-                                "else map",
-                                candidate.recruiter.first_name,
-                            );
-                            recipient.slackValue = "no bucks";
-                        }
-                    }
-                } else if (role.includes("oordinator")) {
-                    if (candidate.coordinator) {
-                        const slackId = userMapping[candidate.coordinator.id];
-                        if (slackId) {
-                            recipient.slackValue = slackId;
-                        } else {
-                            console.log(
-                                "else map",
-                                candidate.coordinator.first_name,
-                            );
-                            recipient.slackValue = "no bucks coordinator";
-                        }
-                    }
-                } else {
-                    // console.log('no role greenhouse')
-                }
-            }
-        });
-        workflow.messageFields.forEach((field) => {
+
+        workflowMessageFields.forEach((field) => {
             switch (field) {
                 case "name":
                     result[field] =
@@ -256,7 +264,6 @@ export async function filterProcessedForSlack(
                     break;
             }
         });
-        console.log("user mapping  -", userMapping);
         return result;
     });
 }

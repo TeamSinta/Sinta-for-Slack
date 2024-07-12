@@ -40,7 +40,7 @@ export async function getChannels(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
-
+        console.log('getChannels - pre access token')
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch(
             "https://slack.com/api/conversations.list",
@@ -81,6 +81,7 @@ export async function getActiveUsers(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
+        console.log('getActiveUsers - pre access token')
 
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch("https://slack.com/api/users.list", {
@@ -103,7 +104,7 @@ export async function getActiveUsers(): Promise<
                     label: `@${member.real_name}`,
                 }));
         } else {
-            throw new Error(data.error ?? "Error fetching users");
+            throw new Error(data.error ?? "Error fetching users" + response.status);
         }
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -112,9 +113,11 @@ export async function getActiveUsers(): Promise<
 }
 
 export async function getEmailsfromSlack(
-    teamId?: string,
+    teamId: string,
 ): Promise<{ value: string; label: string; email: string }[]> {
     try {
+        console.log('getEmailsfromSlack - pre access token', teamId)
+
         const accessToken = await getAccessToken(teamId);
         const response = await fetch("https://slack.com/api/users.list", {
             method: "GET",
@@ -159,6 +162,14 @@ export async function sendSlackNotification(
     slackTeamID: string,
     subDomain: string,
 ): Promise<void> {
+   // const { currentOrg = {} } = (await getOrganizations()) || {};
+   // if (!currentOrg.slack_team_id) {
+   //     console.error("No Slack team ID available.");
+    //    return;
+    //}
+   // console.log('send slack notification - pre access token')
+
+    //const accessToken = await getAccessToken(currentOrg.slack_team_id);
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
     console.log("filteredSlackData", filteredSlackData);
@@ -343,47 +354,17 @@ export async function sendSlackButtonNotification(
     subDomain: string, // Adding sub-domain as a parameter
     userMapping: Record<string, string>,
     filteredConditionsData,
+    greenHouseAndSlackRecipients
 ): Promise<void> {
     console.log(
         "filtered filteredConditionsData dagat-",
         filteredConditionsData,
     );
-    const accessToken = await getAccessToken(slackTeamID);
-    const greenhouseRecipients = [];
-    let hasGreenhouse = false;
-    const greenhouseRoles = [];
-    workflowRecipient.recipients.map((rec) => {
-        if (rec.source == "greenhouse") {
-            hasGreenhouse = true;
-            greenhouseRoles.push(rec.value);
-        }
-    });
+    console.log('sendSlackVutonNotification - pre access token')
 
-    if (hasGreenhouse) {
-        const candidates = filteredConditionsData;
-        // console.log('filteredConditionsData - ',filteredConditionsData)
-        // console.log('candidates - ',candidates)
-        candidates.forEach((cand) => {
-            greenhouseRoles.forEach((role) => {
-                if (role.includes("ecruiter") || role.includes("oordinator")) {
-                    if (userMapping[cand.recruiter.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.recruiter.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    } else if (userMapping[cand.coordinator.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.coordinator.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    }
-                }
-            });
-        });
-    }
-    const allRecipients =
-        workflowRecipient.recipients.concat(greenhouseRecipients);
-    for (const recipient of allRecipients) {
+    const accessToken = await getAccessToken(slackTeamID);
+    
+    for (const recipient of greenHouseAndSlackRecipients) {
         console.log("reciepient - ", recipient);
         const channel = recipient.value;
 
