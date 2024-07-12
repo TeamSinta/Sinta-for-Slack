@@ -153,179 +153,184 @@ interface WorkflowRecipient {
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
 }
-
 export async function sendSlackNotification(
-    filteredSlackData: Record<string, unknown>[],
-    workflowRecipient: WorkflowRecipient,
-    slackTeamID: string,
-    subDomain: string,
+  filteredSlackData: Record<string, unknown>[],
+  workflowRecipient: WorkflowRecipient,
+  slackTeamID: string,
+  subDomain: string,
 ): Promise<void> {
-    const accessToken = await getAccessToken(slackTeamID);
-    const allRecipients = workflowRecipient.recipients;
+  const accessToken = await getAccessToken(slackTeamID);
+  const allRecipients = workflowRecipient.recipients;
+  console.log("filteredSlackData", filteredSlackData);
 
-    for (const recipient of allRecipients) {
-        console.log("Recipient:", recipient);
-        const channel =
-            recipient.source === "greenhouse"
-                ? recipient.slackValue
-                : recipient.value;
+  for (const recipient of allRecipients) {
+      const channel =
+          recipient.source === "greenhouse"
+              ? recipient.slackValue
+              : recipient.value;
 
-        const blocks = [
-            {
-                type: "header",
-                text: {
-                    type: "plain_text",
-                    text: workflowRecipient.openingText,
-                    emoji: true,
-                },
-            },
-        ];
+      const blocks = [
+          {
+              type: "header",
+              text: {
+                  type: "plain_text",
+                  text: workflowRecipient.openingText,
+                  emoji: true,
+              },
+          },
+      ];
 
-        const attachments = [
-            {
-                color: "#384ab4",
-                blocks: [
-                    {
-                        type: "divider",
-                    },
-                    ...filteredSlackData
-                        .map((data) => {
-                            const interviewId = data.interview_id;
-                            return [
-                                {
-                                    type: "section",
-                                    text: {
-                                        type: "mrkdwn",
-                                        text: workflowRecipient.messageFields
-                                            .map((field: string) => {
-                                                if (field === "interview_id")
-                                                    return ""; // Skip interview_id in the message
-                                                let fieldName: string;
-                                                switch (field) {
-                                                    case "title":
-                                                        fieldName = "Role";
-                                                        break;
-                                                    default:
-                                                        fieldName =
-                                                            field
-                                                                .charAt(0)
-                                                                .toUpperCase() +
-                                                            field
-                                                                .slice(1)
-                                                                .replace(
-                                                                    /_/g,
-                                                                    " ",
-                                                                );
-                                                        break;
-                                                }
-                                                const fieldValue =
-                                                    data[field] ??
-                                                    "Not provided";
-                                                return `*${fieldName}*: ${String(fieldValue)}`;
-                                            })
-                                            .filter(Boolean)
-                                            .join("\n"),
-                                    },
-                                },
-                                {
-                                    type: "section",
-                                    text: {
-                                        type: "mrkdwn",
-                                        text: data.customMessageBody,
-                                    },
-                                },
-                                {
-                                    type: "actions",
-                                    block_id: `block_id_${interviewId}`,
-                                    elements:
-                                        workflowRecipient.messageButtons.map(
-                                            (button) => {
-                                                const buttonElement: any = {
-                                                    type: "button",
-                                                    text: {
-                                                        type: "plain_text",
-                                                        text: button.label,
-                                                        emoji: true,
-                                                    },
-                                                    value: `${button.updateType ?? button.type}_${interviewId}`, // Include interviewId in the value
-                                                };
+      const attachments = [
+          {
+              color: "#384ab4",
+              blocks: [
+                  {
+                      type: "divider",
+                  },
+                  ...filteredSlackData
+                      .map((data) => {
+                          const interviewId = data.interview_id;
+                          const candidateId = data.candidate_id;
+                          const id = interviewId || candidateId; // Use either interview_id or candidate_id
 
-                                                if (
-                                                    button.type ===
-                                                    "UpdateButton"
-                                                ) {
-                                                    if (
-                                                        button.updateType ===
-                                                        "MoveToNextStage"
-                                                    ) {
-                                                        buttonElement.style =
-                                                            "primary";
-                                                        buttonElement.action_id = `move_to_next_stage_${interviewId}`;
-                                                    } else if (
-                                                        button.updateType ===
-                                                        "RejectCandidate"
-                                                    ) {
-                                                        buttonElement.style =
-                                                            "danger";
-                                                        buttonElement.action_id = `reject_candidate_${interviewId}`;
-                                                    }
-                                                } else if (
-                                                    button.linkType ===
-                                                    "Dynamic"
-                                                ) {
-                                                    const baseURL = `https://${subDomain}.greenhouse.io`;
-                                                    if (
-                                                        button.action ===
-                                                        "candidateRecord"
-                                                    ) {
-                                                        buttonElement.url = `${baseURL}/people/${interviewId}`;
-                                                    } else if (
-                                                        button.action ===
-                                                        "jobRecord"
-                                                    ) {
-                                                        buttonElement.url = `${baseURL}/sdash/${interviewId}`;
-                                                    }
-                                                    buttonElement.type =
-                                                        "button";
-                                                } else {
-                                                    buttonElement.action_id =
-                                                        button.action ||
-                                                        `${button.type.toLowerCase()}_action_${interviewId}`;
-                                                }
+                          return [
+                              {
+                                  type: "section",
+                                  text: {
+                                      type: "mrkdwn",
+                                      text: workflowRecipient.messageFields
+                                          .map((field: string) => {
+                                              if (field === "interview_id" || field === "candidate_id")
+                                                  return ""; // Skip IDs in the message
+                                              let fieldName: string;
+                                              switch (field) {
+                                                  case "title":
+                                                      fieldName = "Role";
+                                                      break;
+                                                  default:
+                                                      fieldName =
+                                                          field
+                                                              .charAt(0)
+                                                              .toUpperCase() +
+                                                          field
+                                                              .slice(1)
+                                                              .replace(
+                                                                  /_/g,
+                                                                  " ",
+                                                              );
+                                                      break;
+                                              }
+                                              const fieldValue =
+                                                  data[field] ??
+                                                  "Not provided";
+                                              return `*${fieldName}*: ${String(fieldValue)}`;
+                                          })
+                                          .filter(Boolean)
+                                          .join("\n"),
+                                  },
+                              },
+                              {
+                                  type: "section",
+                                  text: {
+                                      type: "mrkdwn",
+                                      text: data.customMessageBody as string,
+                                  },
+                              },
+                              {
+                                  type: "actions",
+                                  block_id: `block_id_${id}`,
+                                  elements:
+                                      workflowRecipient.messageButtons.map(
+                                          (button) => {
+                                              const buttonElement: any = {
+                                                  type: "button",
+                                                  text: {
+                                                      type: "plain_text",
+                                                      text: button.label,
+                                                      emoji: true,
+                                                  },
+                                                  value: `${button.updateType ?? button.type}_${id}`, // Include ID in the value
+                                              };
 
-                                                return buttonElement;
-                                            },
-                                        ),
-                                },
-                            ];
-                        })
-                        .flat(), // Flatten the array of arrays
-                ],
-            },
-        ];
+                                              if (
+                                                  button.type ===
+                                                  "UpdateButton"
+                                              ) {
+                                                  if (
+                                                      button.updateType ===
+                                                      "MoveToNextStage"
+                                                  ) {
+                                                      buttonElement.style =
+                                                          "primary";
+                                                      buttonElement.action_id = `move_to_next_stage_${id}`;
+                                                  } else if (
+                                                      button.updateType ===
+                                                      "RejectCandidate"
+                                                  ) {
+                                                      buttonElement.style =
+                                                          "danger";
+                                                      buttonElement.action_id = `reject_candidate_${id}`;
+                                                  }
+                                              } else if (
+                                                  button.linkType ===
+                                                  "Dynamic"
+                                              ) {
+                                                  const baseURL = `https://${subDomain}.greenhouse.io`;
+                                                  if (
+                                                      button.action ===
+                                                      "candidateRecord"
+                                                  ) {
+                                                      buttonElement.url = `${baseURL}/people/${candidateId}`;
+                                                  } else if (
+                                                      button.action ===
+                                                      "jobRecord"
+                                                  ) {
+                                                      buttonElement.url = `${baseURL}/sdash/${interviewId}`;
+                                                  }
+                                                  buttonElement.type =
+                                                      "button";
+                                              } else {
+                                                  buttonElement.action_id =
+                                                      button.action ||
+                                                      `${button.type.toLowerCase()}_action_${id}`;
+                                              }
 
-        const response = await fetch("https://slack.com/api/chat.postMessage", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-                channel: channel,
-                attachments: attachments,
-                blocks: blocks,
-            }),
-        });
+                                              return buttonElement;
+                                          },
+                                      ),
+                              },
+                          ];
+                      })
+                      .flat(), // Flatten the array of arrays
+              ],
+          },
+      ];
 
-        console.log("Response Slack message sent:", response.status);
-        if (!response.ok) {
-            const errorResponse = await response.text();
-            console.error(
-                `Failed to post message to channel ${channel}: ${errorResponse}`,
-            );
-        }
-    }
-    console.log("Total recipients:", allRecipients.length);
+      const response = await fetch("https://slack.com/api/chat.postMessage", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+              channel: channel,
+              attachments: attachments,
+              blocks: blocks,
+          }),
+      });
+      console.log("channel", channel);
+      console.log("attachments", JSON.stringify(attachments, null, 2));
+      console.log("blocks", JSON.stringify(blocks, null, 2));
+
+      console.log("Response Slack message sent:", response);
+      if (!response.ok) {
+          const errorResponse = await response.text();
+          console.error(
+              `Failed to post message to channel ${channel}: ${errorResponse}`,
+          );
+      }
+  }
+  console.log("Total recipients:", allRecipients.length);
 }
 
 export async function sendSlackButtonNotification(

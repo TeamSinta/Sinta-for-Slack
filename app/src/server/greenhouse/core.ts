@@ -6,8 +6,9 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+//@ts-nocheck
 
-// @ts-nocheck
+import { isAfter, isBefore, isSame } from "@/lib/utils";
 import { customFetch } from "@/utils/fetch";
 import {
     parseISO,
@@ -21,6 +22,8 @@ interface Candidate {
     first_name: string;
     last_name: string;
     applications: Application[];
+    created_at: string;
+    last_activity: string;
 }
 
 interface Application {
@@ -67,6 +70,9 @@ interface MockData {
     hiringTeam: string;
     admin: string;
 }
+
+type FilteredCandidate = Candidate; // Adjust as per actual structure
+
 
 export async function getMockGreenhouseData(): Promise<MockData> {
     try {
@@ -450,72 +456,31 @@ function isISODate(dateStr: string): boolean {
     return isValid(date);
 }
 
-export const filterDataWithConditions = (
-    data: Record<string, unknown>[],
-    conditions: Condition[],
-): Record<string, unknown>[] => {
-    const today = new Date();
 
-    return data.filter((item) => {
-        return conditions.every((condition) => {
-            const { field, condition: operator, value, unit } = condition;
-            const itemValue = item[field.label] ?? item[field.value];
+export const filterDataWithConditions = (candidates: Candidate[], conditions: Condition[]): FilteredCandidate[] => {
+  return candidates.filter(candidate => {
+      for (const condition of conditions) {
+          if (condition.conditionType !== "main") {
+              continue; // Ignore non-main conditions for now
+          }
 
-            if (isISODate(String(itemValue)) && unit === "Days") {
-                const fieldValueAsDate = parseISO(String(itemValue));
-                const valueAsNumber = parseInt(value, 10);
+          const fieldValue = candidate[condition.field.value];
 
-                switch (operator) {
-                    case "before":
-                        return (
-                            differenceInCalendarDays(today, fieldValueAsDate) <
-                            -valueAsNumber
-                        );
-                    case "after":
-                        return (
-                            differenceInCalendarDays(today, fieldValueAsDate) >
-                            -valueAsNumber
-                        );
-                    case "same":
-                        return (
-                            differenceInCalendarDays(
-                                today,
-                                fieldValueAsDate,
-                            ) === -valueAsNumber
-                        );
-                }
-            }
-            console.log(
-                "itemValue",
-                itemValue,
-                "value",
-                value,
-                "operator",
-                operator,
-            );
-            switch (operator) {
-                case "equals":
-                    return itemValue === value;
-                case "notEqual":
-                    return itemValue !== value;
-                case "greaterThan":
-                    return itemValue > value;
-                case "lessThan":
-                    return itemValue < value;
-                case "greaterThanOrEqual":
-                    return itemValue >= value;
-                case "lessThanOrEqual":
-                    return itemValue <= value;
-                case "contains":
-                    return (
-                        typeof itemValue === "string" &&
-                        itemValue.includes(value)
-                    );
-                default:
-                    return false;
-            }
-        });
-    });
+          if (typeof fieldValue === "string" && (condition.condition === "after" || condition.condition === "before" || condition.condition === "same")) {
+              const value = parseInt(condition.value, 10);
+              if (condition.condition === "after" && !isAfter(fieldValue, value, condition.unit)) {
+                  return false;
+              }
+              if (condition.condition === "before" && !isBefore(fieldValue, value, condition.unit)) {
+                  return false;
+              }
+              if (condition.condition === "same" && !isSame(fieldValue, value, condition.unit)) {
+                  return false;
+              }
+          }
+      }
+      return true;
+  });
 };
 
 async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
