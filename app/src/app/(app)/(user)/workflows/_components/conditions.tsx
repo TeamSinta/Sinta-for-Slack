@@ -47,27 +47,26 @@ const ConditionComponent: React.FC<ConditionProps> = ({
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-      const fetchUsers = async () => {
-          if (
-              condition.field.value === "Coordinator" ||
-              condition.field.value === "Recruiter"
-          ) {
-              setIsLoading(true);
-              try {
-                  const userMap = await fetchGreenhouseUsers();
-                  const userList = Object.values(userMap);
-                  setUsers(userList);
-              } catch (error) {
-                  console.error("Error fetching users:", error);
-              } finally {
-                  setIsLoading(false);
-              }
-          }
-      };
+        const fetchUsers = async () => {
+            if (
+                condition.field.value === "Coordinator" ||
+                condition.field.value === "Recruiter"
+            ) {
+                setIsLoading(true);
+                try {
+                    const userMap = await fetchGreenhouseUsers();
+                    const userList = Object.values(userMap);
+                    setUsers(userList);
+                } catch (error) {
+                    console.error("Error fetching users:", error);
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        };
 
-      void fetchUsers();
-  }, [condition.field.value]);
-
+        void fetchUsers();
+    }, [condition.field.value]);
 
     const handleFieldChange = (value: string) => {
         const selectedOption = conditionTypesWithOperators.find(
