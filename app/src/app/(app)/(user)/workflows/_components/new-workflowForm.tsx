@@ -7,6 +7,9 @@
 
 "use client";
 
+import {
+    updateWorkflowMutation,
+} from "@/server/actions/workflows/mutations";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -530,11 +533,9 @@ useEffect(() => {
                 handleSelectChange(data.organizationId || "","","organizationId",)
                 handleSelectChange(data.triggerConfig || "","","triggerConfig",)
                 handleRecipientsChange(data.recipient.recipients) // to fill in
-                setSelectedRecipientsx(data.recipient.recipients)
-                console.log('data.recipient ',data.recipient)
-                console.log('selecteld recipients ',selectedRecipientsx)
-                setRecipientConfig(newRecipient);
-                form.setValue("recipient", newRecipient);
+                setSelectedRecipients(data.recipient.recipients)
+                setRecipientConfig(data.recipient);
+                form.setValue("recipient", data.recipient);
                 // handleConditionChange
                 // handleOpeningTextChange
             // }
@@ -548,7 +549,7 @@ useEffect(() => {
             //     handleCustomMessageBodyChange
                 // reset(formattedData); // Reset form with fetched data
             } catch (error) {
-                toast.error("Failed to load workflow data.");
+                toast.error("Failed to load workflow data."+error);
             }
         };
 
@@ -560,6 +561,7 @@ useEffect(() => {
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
+        console.log('on submit')
         try {
             const formData = form.getValues();
             console.log("Form Data before submission:", formData);
@@ -568,23 +570,23 @@ useEffect(() => {
             const allConditions =
                 selectedAlertType === "timebased"
                     ? timeBasedConditions
-                          .map((condition) => ({
-                              ...condition,
-                              field: {
-                                  value: condition.field.value,
-                                  label: condition.field.label,
-                              },
-                          }))
-                          .concat(conditions)
+                        .map((condition) => ({
+                            ...condition,
+                            field: {
+                                value: condition.field.value,
+                                label: condition.field.label,
+                            },
+                        }))
+                        .concat(conditions)
                     : stuckStageConditions
-                          .map((condition) => ({
-                              ...condition,
-                              field: {
-                                  value: condition.field.value,
-                                  label: condition.field.label,
-                              },
-                          }))
-                          .concat(conditions);
+                        .map((condition) => ({
+                            ...condition,
+                            field: {
+                                value: condition.field.value,
+                                label: condition.field.label,
+                            },
+                        }))
+                        .concat(conditions);
 
             // Transform and include combined conditions
             const transformedData = {
@@ -592,13 +594,25 @@ useEffect(() => {
                 conditions: allConditions,
             };
 
-            await mutateAsync(transformedData);
+            if (mode == "edit"){
+                //update db
+                await updateWorkflowMutation(transformedData)
+            }
+            else{
+                await mutateAsync(transformedData);
+            }
+
             await startAwaitableTransition(() => {
                 router.refresh();
             });
             reset();
             setIsOpen(false);
-            toast.success("Workflow created successfully");
+            if (mode == "edit"){
+                toast.success("Workflow updated successfully");
+            }
+            else{
+                toast.success("Workflow created successfully");
+            }
         } catch (error) {
             toast.error(
                 (error as { message?: string })?.message ??
@@ -709,12 +723,7 @@ useEffect(() => {
         condition === "same";
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
-                    Create Workflow
-                </Button>
-            </DialogTrigger>
+        <Dialog open={isOpen || mode == "edit"} onOpenChange={setIsOpen}>
             <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
                 <DialogHeader className="flex flex-row justify-between">
                     <Image
@@ -1153,7 +1162,7 @@ useEffect(() => {
                                 disabled={isMutatePending}
                                 className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
                             >
-                                Submit Workflow
+                                {mode == "edit" ? <>Save Workflow</>:<>Submit Workflow</>}
                             </Button>
                         </div>
                     </form>
