@@ -304,13 +304,13 @@ export async function handleIndividualHiringroom(hiringroom){
 
 export async function handleHiringrooms(){
     const hiringrooms: HiringRoom[] = await getHiringrooms()
-    console.log('hiring rooms length - ',hiringrooms.length)
+    const hiringroomsLength = hiringrooms.length
     if(hiringrooms.length > 0){
         for (const hiringroom of hiringrooms) {
             await handleIndividualHiringroom(hiringroom)
         }
     }
-    return true
+    return hiringroomsLength
 }
 function sanitizeChannelName(name) {
     return name
@@ -364,7 +364,8 @@ export async function handleWorkflows(){
     try {
         const workflows: WorkflowData[] =
             (await getWorkflows()) as WorkflowData[]; // Retrieve workflows from the database
-        console.log('workflows length - ',workflows.length)
+        // console.log('workflows length - ',workflows.length)
+        const workflowsLength = workflows.length
 
         let shouldReturnNull = false; // Flag to determine whether to return null
 
@@ -458,7 +459,7 @@ export async function handleWorkflows(){
                 { status: 200 },
             );
         }
-        return true
+        return workflowsLength
         return NextResponse.json(
             { message: "Workflows processed successfully" },
             { status: 200 },
@@ -479,10 +480,10 @@ export async function handleWorkflows(){
 export async function GET() {
     try{
         console.log('gobucks')
-        await handleWorkflows()
-        // await handleHiringrooms()
-        return NextResponse.json({ message: "Workflows processed successfully" }, { status: 200 });
-}
+        const numWorkflows = await handleWorkflows()
+        const numHiringrooms = await handleHiringrooms()
+        return NextResponse.json({ message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}` }, { status: 200 });
+    }
     catch(e){
         console.log('eeee - ', e)
         return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
