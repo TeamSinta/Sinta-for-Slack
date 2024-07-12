@@ -300,6 +300,7 @@ export async function handleIndividualHiringroom(hiringroom){
 
 export async function handleHiringrooms(){
     const hiringrooms: HiringRoom[] = await getHiringrooms()
+    console.log('hiring rooms length - ',hiringrooms.length)
     if(hiringrooms.length > 0){
         for (const hiringroom of hiringrooms) {
             await handleIndividualHiringroom(hiringroom)
@@ -358,6 +359,8 @@ export async function handleWorkflows(){
     try {
         const workflows: WorkflowData[] =
             (await getWorkflows()) as WorkflowData[]; // Retrieve workflows from the database
+        console.log('workflows length - ',workflows.length)
+
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
