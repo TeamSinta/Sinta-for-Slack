@@ -5,6 +5,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 
 //@ts-nocheck
+
 import { getAccessToken
  } from "@/server/actions/slack/query";
 import { format, parseISO } from 'date-fns';
@@ -13,7 +14,7 @@ import {
 slackChannelsCreated
 } from "@/server/db/schema";
 import { getEmailsfromSlack } from "@/server/slack/core";
-import { fetchGreenhouseUsers,filterScheduledInterviewsWithConditions, fetchJobsFromGreenhouse, fetchCandidates } from "@/server/greenhouse/core";
+import { fetchGreenhouseUsers, fetchJobsFromGreenhouse, fetchCandidates } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
@@ -21,7 +22,7 @@ import {
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
 import {
-  buildSlackMessageByCandidateOnFilteredData,
+    filterCandidatesDataForSlack,
     matchUsers,
 } from "@/lib/slack";
 import {
@@ -37,6 +38,9 @@ import {
 import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
 import {addGreenhouseSlackValue} from '@/lib/slack'
 import {getHiringrooms} from '@/server/actions/hiringrooms/queries'
+
+
+
 
 // naming change? why mutation??
 // async function handleHiringRoom(hiring_room){
@@ -326,6 +330,7 @@ function combineGreenhouseRolesAndSlackUsers(workflowRecipient){
             greenhouseRoles.push(rec.value);
         }
     });
+    console.log()
 
     if (hasGreenhouse) {
         const candidates = filteredConditionsData;
@@ -420,24 +425,23 @@ export async function handleWorkflows(){
                     slackUsers,
                 );
 
-                const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
+                // const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
 
-                const filteredSlackDataWithMessage = await buildSlackMessageByCandidateOnFilteredData(
+                const filteredSlackDataWithMessage = await filterCandidatesDataForSlack(
                     filteredConditionsData,
                     workflow.recipient,
                     slackTeamID,
-                    workflow.messageFields,
+
                 );
 
                 if (filteredSlackDataWithMessage.length > 0) {
                     await sendSlackButtonNotification(
-                        filteredSlackData,
+                      filteredSlackDataWithMessage,
                         workflow.recipient,
                         slackTeamID,
                         subDomain,
                         userMapping,
                         filteredConditionsData,
-                        greenHouseAndSlackRecipients
                     );
                 } else {
                     console.log("No data to send to Slack");
@@ -476,7 +480,7 @@ export async function GET() {
     try{
         console.log('gobucks')
         await handleWorkflows()
-        await handleHiringrooms()
+        // await handleHiringrooms()
         return NextResponse.json({ message: "Workflows processed successfully" }, { status: 200 });
 }
     catch(e){

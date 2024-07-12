@@ -40,7 +40,7 @@ export async function getChannels(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
-        console.log('getChannels - pre access token')
+
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch(
             "https://slack.com/api/conversations.list",
@@ -81,7 +81,6 @@ export async function getActiveUsers(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
-        console.log('getActiveUsers - pre access token')
 
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch("https://slack.com/api/users.list", {
@@ -104,7 +103,7 @@ export async function getActiveUsers(): Promise<
                     label: `@${member.real_name}`,
                 }));
         } else {
-            throw new Error(data.error ?? "Error fetching users" + response.status);
+            throw new Error(data.error ?? "Error fetching users");
         }
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -113,11 +112,9 @@ export async function getActiveUsers(): Promise<
 }
 
 export async function getEmailsfromSlack(
-    teamId: string,
+    teamId?: string,
 ): Promise<{ value: string; label: string; email: string }[]> {
     try {
-        console.log('getEmailsfromSlack - pre access token', teamId)
-
         const accessToken = await getAccessToken(teamId);
         const response = await fetch("https://slack.com/api/users.list", {
             method: "GET",
@@ -156,19 +153,18 @@ interface WorkflowRecipient {
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
 }
+
 export async function sendSlackNotification(
     filteredSlackData: Record<string, unknown>[],
     workflowRecipient: WorkflowRecipient,
     slackTeamID: string,
     subDomain: string,
 ): Promise<void> {
-
-
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
-    console.log("filteredSlackData", filteredSlackData);
 
     for (const recipient of allRecipients) {
+        console.log("Recipient:", recipient);
         const channel =
             recipient.source === "greenhouse"
                 ? recipient.slackValue
@@ -195,10 +191,6 @@ export async function sendSlackNotification(
                     ...filteredSlackData
                         .map((data) => {
                             const interviewId = data.interview_id;
-                            const candidateId = data.candidate_id;
-                            const buttonLinkid = interviewId || candidateId; // Use either interview_id or candidate_id
-                            if (!buttonLinkid) return []; // Protect against undefined id
-
                             return [
                                 {
                                     type: "section",
@@ -206,11 +198,8 @@ export async function sendSlackNotification(
                                         type: "mrkdwn",
                                         text: workflowRecipient.messageFields
                                             .map((field: string) => {
-                                                if (
-                                                    field === "interview_id" ||
-                                                    field === "candidate_id"
-                                                )
-                                                    return ""; // Skip IDs in the message
+                                                if (field === "interview_id")
+                                                    return ""; // Skip interview_id in the message
                                                 let fieldName: string;
                                                 switch (field) {
                                                     case "title":
@@ -242,12 +231,12 @@ export async function sendSlackNotification(
                                     type: "section",
                                     text: {
                                         type: "mrkdwn",
-                                        text: data.customMessageBody as string,
+                                        text: data.customMessageBody,
                                     },
                                 },
                                 {
                                     type: "actions",
-                                    block_id: `block_id_${buttonLinkid}`,
+                                    block_id: `block_id_${interviewId}`,
                                     elements:
                                         workflowRecipient.messageButtons.map(
                                             (button) => {
@@ -258,7 +247,7 @@ export async function sendSlackNotification(
                                                         text: button.label,
                                                         emoji: true,
                                                     },
-                                                    value: `${button.updateType ?? button.type}_${buttonLinkid}`, // Include ID in the value
+                                                    value: `${button.updateType ?? button.type}_${interviewId}`, // Include interviewId in the value
                                                 };
 
                                                 if (
@@ -271,14 +260,14 @@ export async function sendSlackNotification(
                                                     ) {
                                                         buttonElement.style =
                                                             "primary";
-                                                        buttonElement.action_id = `move_to_next_stage_${buttonLinkid}`;
+                                                        buttonElement.action_id = `move_to_next_stage_${interviewId}`;
                                                     } else if (
                                                         button.updateType ===
                                                         "RejectCandidate"
                                                     ) {
                                                         buttonElement.style =
                                                             "danger";
-                                                        buttonElement.action_id = `reject_candidate_${buttonLinkid}`;
+                                                        buttonElement.action_id = `reject_candidate_${interviewId}`;
                                                     }
                                                 } else if (
                                                     button.linkType ===
@@ -289,7 +278,7 @@ export async function sendSlackNotification(
                                                         button.action ===
                                                         "candidateRecord"
                                                     ) {
-                                                        buttonElement.url = `${baseURL}/people/${candidateId}`;
+                                                        buttonElement.url = `${baseURL}/people/${interviewId}`;
                                                     } else if (
                                                         button.action ===
                                                         "jobRecord"
@@ -301,7 +290,7 @@ export async function sendSlackNotification(
                                                 } else {
                                                     buttonElement.action_id =
                                                         button.action ||
-                                                        `${button.type.toLowerCase()}_action_${buttonLinkid}`;
+                                                        `${button.type.toLowerCase()}_action_${interviewId}`;
                                                 }
 
                                                 return buttonElement;
@@ -327,11 +316,8 @@ export async function sendSlackNotification(
                 blocks: blocks,
             }),
         });
-        console.log("channel", channel);
-        console.log("attachments", JSON.stringify(attachments, null, 2));
-        console.log("blocks", JSON.stringify(blocks, null, 2));
 
-        console.log("Response Slack message sent:", response);
+        console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
@@ -343,140 +329,229 @@ export async function sendSlackNotification(
 }
 
 export async function sendSlackButtonNotification(
-  filteredSlackData: Record<string, unknown>[],
-  workflowRecipient: WorkflowRecipient,
-  slackTeamID: string,
-  subDomain: string, // Adding sub-domain as a parameter
-  userMapping: Record<string, string>,
-  filteredConditionsData: any[], // Assuming filteredConditionsData is an array
-  greenHouseAndSlackRecipients: any[], // Added parameter type
+    filteredSlackData: Record<string, unknown>[],
+    workflowRecipient: WorkflowRecipient,
+    slackTeamID: string,
+    subDomain: string, // Adding sub-domain as a parameter
+    userMapping: Record<string, string>,
+    filteredConditionsData,
 ): Promise<void> {
-  console.log("filtered filteredConditionsData dagat-", filteredConditionsData);
-  console.log('sendSlackButtonNotification - pre access token')
+    console.log(
+        "filtered filteredConditionsData dagat-",
+        filteredConditionsData,
+    );
+    const accessToken = await getAccessToken(slackTeamID);
+    const greenhouseRecipients = [];
+    let hasGreenhouse = false;
+    const greenhouseRoles = [];
+    workflowRecipient.recipients.map((rec) => {
+        if (rec.source == "greenhouse") {
+            hasGreenhouse = true;
+            greenhouseRoles.push(rec.value);
+        }
+    });
 
-  const accessToken = await getAccessToken(slackTeamID);
+    if (hasGreenhouse) {
+        const candidates = filteredConditionsData;
+        // console.log('filteredConditionsData - ',filteredConditionsData)
+        // console.log('candidates - ',candidates)
+        candidates.forEach((cand) => {
+            greenhouseRoles.forEach((role) => {
+                if (role.includes("ecruiter") || role.includes("oordinator")) {
+                    if (userMapping[cand.recruiter.id]) {
+                        const newRecipient = {
+                            value: userMapping[cand.recruiter.id],
+                        };
+                        greenhouseRecipients.push(newRecipient);
+                    } else if (userMapping[cand.coordinator.id]) {
+                        const newRecipient = {
+                            value: userMapping[cand.coordinator.id],
+                        };
+                        greenhouseRecipients.push(newRecipient);
+                    }
+                }
+            });
+        });
+    }
+    const allRecipients =
+        workflowRecipient.recipients.concat(greenhouseRecipients);
+    for (const recipient of allRecipients) {
+        console.log("reciepient - ", recipient);
+        const channel = recipient.value;
 
-  for (const recipient of greenHouseAndSlackRecipients) {
-      console.log("recipient - ", recipient);
-      const channel = recipient.value;
+        const blocks = [
+            {
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: workflowRecipient.openingText,
+                    emoji: true,
+                },
+            },
+        ];
 
-      const blocks = [
-          {
-              type: "header",
-              text: {
-                  type: "plain_text",
-                  text: workflowRecipient.openingText,
-                  emoji: true,
-              },
-          },
-      ];
+        const attachments = [
+            {
+                color: "#384ab4",
+                blocks: [
+                    {
+                        type: "divider",
+                    },
+                    ...filteredSlackData
+                        .map((data) => {
+                            const candidateId = data.candidate_id;
+                            return [
+                                {
+                                    type: "section",
+                                    text: {
+                                        type: "mrkdwn",
+                                        text: workflowRecipient.messageFields
+                                            .map((field: string) => {
+                                                if (field === "candidate_id")
+                                                    return ""; // Skip candidate_id in the message
+                                                let fieldName: string;
+                                                switch (field) {
+                                                    case "name":
+                                                        fieldName =
+                                                            "Candidate's Name";
+                                                        break;
+                                                    case "title":
+                                                        fieldName = "Role";
+                                                        break;
+                                                    default:
+                                                        fieldName =
+                                                            field
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                            field
+                                                                .slice(1)
+                                                                .replace(
+                                                                    /_/g,
+                                                                    " ",
+                                                                );
+                                                        break;
+                                                }
+                                                const fieldValue =
+                                                    data[field] ??
+                                                    "Not provided";
+                                                return `*${fieldName}*: ${String(fieldValue)}`;
+                                            })
+                                            .filter(Boolean)
+                                            .join("\n"),
+                                    },
+                                },
+                                {
+                                    type: "actions",
+                                    block_id: `block_id_${candidateId}`,
+                                    elements:
+                                        workflowRecipient.messageButtons.map(
+                                            (button) => {
+                                                const buttonElement: any = {
+                                                    type: "button",
+                                                    text: {
+                                                        type: "plain_text",
+                                                        text: button.label,
+                                                        emoji: true,
+                                                    },
+                                                    value: `${button.updateType ?? button.type}_${candidateId}`, // Include candidateId in the value
+                                                };
 
-      const attachments = [
-          {
-              color: "#384ab4",
-              blocks: [
-                  {
-                      type: "divider",
-                  },
-                  ...filteredSlackData
-                      .map((data) => {
-                          const candidateId = data.candidate_id;
-                          if (!candidateId) return []; // Protect against undefined candidateId
+                                                if (
+                                                    button.type ===
+                                                    "UpdateButton"
+                                                ) {
+                                                    if (
+                                                        button.updateType ===
+                                                        "MoveToNextStage"
+                                                    ) {
+                                                        buttonElement.style =
+                                                            "primary";
+                                                        buttonElement.action_id = `move_to_next_stage_${candidateId}`;
+                                                    } else if (
+                                                        button.updateType ===
+                                                        "RejectCandidate"
+                                                    ) {
+                                                        buttonElement.style =
+                                                            "danger";
+                                                        buttonElement.action_id = `reject_candidate_${candidateId}`;
+                                                    }
+                                                } else if (
+                                                    button.linkType ===
+                                                    "Dynamic"
+                                                ) {
+                                                    const baseURL = `https://${subDomain}.greenhouse.io`;
+                                                    if (
+                                                        button.action ===
+                                                        "candidateRecord"
+                                                    ) {
+                                                        buttonElement.url = `${baseURL}/people/${candidateId}`;
+                                                    } else if (
+                                                        button.action ===
+                                                        "jobRecord"
+                                                    ) {
+                                                        buttonElement.url = `${baseURL}/sdash/${candidateId}`; // Using candidateId for now as per instructions
+                                                    }
+                                                    buttonElement.type =
+                                                        "button";
+                                                } else {
+                                                    buttonElement.action_id =
+                                                        button.action ||
+                                                        `${button.type.toLowerCase()}_action_${candidateId}`;
+                                                }
 
-                          return [
-                              {
-                                  type: "section",
-                                  text: {
-                                      type: "mrkdwn",
-                                      text: workflowRecipient.messageFields
-                                          .map((field: string) => {
-                                              if (field === "candidate_id") return ""; // Skip candidate_id in the message
-                                              let fieldName: string;
-                                              switch (field) {
-                                                  case "name":
-                                                      fieldName = "Candidate's Name";
-                                                      break;
-                                                  case "title":
-                                                      fieldName = "Role";
-                                                      break;
-                                                  default:
-                                                      fieldName =
-                                                          field.charAt(0).toUpperCase() +
-                                                          field.slice(1).replace(/_/g, " ");
-                                                      break;
-                                              }
-                                              const fieldValue = data[field] ?? "Not provided";
-                                              return `*${fieldName}*: ${String(fieldValue)}`;
-                                          })
-                                          .filter(Boolean)
-                                          .join("\n"),
-                                  },
-                              },
-                              {
-                                  type: "actions",
-                                  block_id: `block_id_${candidateId}`,
-                                  elements: workflowRecipient.messageButtons.map((button) => {
-                                      const buttonElement: any = {
-                                          type: "button",
-                                          text: {
-                                              type: "plain_text",
-                                              text: button.label,
-                                              emoji: true,
-                                          },
-                                          value: `${button.updateType ?? button.type}_${candidateId}`, // Include candidateId in the value
-                                      };
+                                                return buttonElement;
+                                            },
+                                        ),
+                                },
+                            ];
+                        })
+                        .flat(), // Flatten the array of arrays
+                ],
+            },
+        ];
 
-                                      if (button.type === "UpdateButton") {
-                                          if (button.updateType === "MoveToNextStage") {
-                                              buttonElement.style = "primary";
-                                              buttonElement.action_id = `move_to_next_stage_${candidateId}`;
-                                          } else if (button.updateType === "RejectCandidate") {
-                                              buttonElement.style = "danger";
-                                              buttonElement.action_id = `reject_candidate_${candidateId}`;
-                                          }
-                                      } else if (button.linkType === "Dynamic") {
-                                          const baseURL = `https://${subDomain}.greenhouse.io`;
-                                          if (button.action === "candidateRecord") {
-                                              buttonElement.url = `${baseURL}/people/${candidateId}`;
-                                          } else if (button.action === "jobRecord") {
-                                              buttonElement.url = `${baseURL}/sdash/${candidateId}`; // Using candidateId for now as per instructions
-                                          }
-                                          buttonElement.type = "button";
-                                      } else {
-                                          buttonElement.action_id = button.action || `${button.type.toLowerCase()}_action_${candidateId}`;
-                                      }
+        const response = await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channel,
+                attachments: attachments,
+                blocks: blocks,
+            }),
+        });
 
-                                      return buttonElement;
-                                  }),
-                              },
-                          ];
-                      })
-                      .flat(), // Flatten the array of arrays
-              ],
-          },
-      ];
+        console.log("response slack message sent", response.status);
+        // console.log("response slack message skip sent sent");
+        // function prettyPrint(obj: any, depth = 2) {
+        //     return JSON.stringify(
+        //         obj,
+        //         (key, value) => {
+        //             if (
+        //                 depth !== 0 &&
+        //                 typeof value === "object" &&
+        //                 value !== null
+        //             ) {
+        //                 return value;
+        //             }wor
+        //             return value;
+        //         },
+        //         2,
+        //     );
+        // }
 
-      const response = await fetch("https://slack.com/api/chat.postMessage", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-              channel: channel,
-              attachments: attachments,
-              blocks: blocks,
-          }),
-      });
+        // console.log("attachments", prettyPrint(attachments));
+        // if (!response.ok) {
+        //     const errorResponse = await response.text();
+        //     console.error(
+        //         `Failed to post message to channel ${channel}: ${errorResponse}`,
+        //     );
+        // }
+    }
+    console.log("total recipients", allRecipients.length);
 
-      console.log("response slack message sent", response.status);
-      if (!response.ok) {
-          const errorResponse = await response.text();
-          console.error(`Failed to post message to channel ${channel}: ${errorResponse}`);
-      }
-  }
-  console.log("total recipients", greenHouseAndSlackRecipients.length);
-
-  // console.log('total recipients',workflowRecipient.recipients)
-  // console.log('total recipients',workflowRecipient.recipients.length)
+    // console.log('total recipients',workflowRecipient.recipients)
+    // console.log('total recipients',workflowRecipient.recipients.length)
 }
