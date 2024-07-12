@@ -1,3 +1,8 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
+
 import {
     filterCandidatesDataForSlack,
     filterScheduledInterviewsDataForSlack,
@@ -9,10 +14,9 @@ import {
 import { sendSlackNotification } from "../slack/core";
 import { getSlackTeamIDByWorkflowID } from "../actions/slack/query";
 import { getSubdomainByWorkflowID } from "../actions/organization/queries";
-import { WorkflowRecipient } from "@/types/workflows";
+import { type WorkflowRecipient } from "@/types/workflows";
 
-//@ts-nocheck
-//@ts-ignore
+
 
 interface Workflow {
     id: string;

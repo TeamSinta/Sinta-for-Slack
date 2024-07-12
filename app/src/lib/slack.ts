@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
@@ -447,7 +452,7 @@ export async function filterCandidatesDataForSlack(
         // Map recipients
         workflow.recipients.forEach((recipient) => {
             if (recipient.source === "greenhouse") {
-                const role = recipient.value as string;
+                const role = recipient.value;
                 if (role.includes("Recruiter") && candidate.recruiter) {
                     const slackId = userMapping[candidate.recruiter.id];
                     recipient.slackValue = slackId
@@ -470,7 +475,7 @@ export async function filterCandidatesDataForSlack(
 }
 
 function getFieldValue(field: unknown, fieldName: string): string {
-    if (field === undefined || field === null) {
+    if (field === undefined ?? field === null) {
         return "Not available";
     }
     if (typeof field === "object") {
@@ -481,12 +486,12 @@ function getFieldValue(field: unknown, fieldName: string): string {
 
 // Function to get the primary email from candidate email addresses
 const getPrimaryEmail = (emails: { value: string; type: string }[]): string => {
-    const email = emails.find((email) => email.type === "work") || emails[0];
+    const email = emails.find((email) => email.type === "work") ?? emails[0];
     return email ? email.value : "No email";
 };
 
 // Function to get the primary phone number from candidate phone numbers
 const getPrimaryPhone = (phones: { value: string; type: string }[]): string => {
-    const phone = phones.find((phone) => phone.type === "mobile") || phones[0];
+    const phone = phones.find((phone) => phone.type === "mobile") ?? phones[0];
     return phone ? phone.value : "No phone number";
 };

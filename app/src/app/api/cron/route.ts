@@ -7,7 +7,6 @@
 import { getEmailsfromSlack } from "@/server/slack/core";
 import {
     fetchGreenhouseUsers,
-    filterScheduledInterviewsWithConditions,
 } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
@@ -17,12 +16,10 @@ import {
 } from "@/server/greenhouse/core";
 import {
     filterProcessedForSlack,
-    filterScheduledInterviewsDataForSlack,
     matchUsers,
 } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
-    sendSlackNotification,
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
@@ -31,7 +28,7 @@ import {
     processCandidates,
     processScheduledInterviews,
 } from "@/server/objectworkflows/queries";
-import { WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
+import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
 
 // Define the GET handler for the route
 export async function GET() {
