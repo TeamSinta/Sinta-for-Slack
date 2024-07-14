@@ -48,14 +48,14 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     createdBy: varchar("createdBy", { length: 255 }),
     description: varchar("description", { length: 255 }),
     isArchived: boolean("isArchived").default(false).notNull(),
-    invitedUsers: jsonb("invited_users").notNull().default(sql`'[]'`),
+    invitedUsers: jsonb("invited_users")
+        .notNull()
+        .default(sql`'[]'`),
     hiringroomId: varchar("hiringroomId", { length: 255 })
         .notNull()
         .references(() => hiringrooms.id, { onDelete: "cascade" }),
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
 });
-
-
 
 export const hiringrooms = createTable("hiringroom", {
     id: varchar("id", { length: 255 })
@@ -121,7 +121,7 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
     organization: one(organizations, {
         fields: [hiringrooms.organizationId],
         references: [organizations.id],
-    }),    
+    }),
     slackChannelsCreated: many(slackChannelsCreated),
     // slackChannelsCreated: many(slackChannelsCreated, {
     //     fields: [slackChannelsCreated.hiringroomId],
@@ -129,12 +129,15 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
     // }),
 }));
 
-export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
-    hiringroom: one(hiringrooms, {
-        fields: [slackChannelsCreated.hiringroomId],
-        references: [hiringrooms.id],
+export const slackChannelsCreatedRelations = relations(
+    slackChannelsCreated,
+    ({ one }) => ({
+        hiringroom: one(hiringrooms, {
+            fields: [slackChannelsCreated.hiringroomId],
+            references: [hiringrooms.id],
+        }),
     }),
-}));
+);
 export const workflowInsertSchema = createInsertSchema(workflows, {
     name: z
         .string()

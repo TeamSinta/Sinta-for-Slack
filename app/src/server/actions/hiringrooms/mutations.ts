@@ -28,7 +28,6 @@ const hiringroomFormSchema = hiringroomInsertSchema.pick({
 
 type CreateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
 
-
 export async function createHiringroomMutation(props: CreateHiringroomProps) {
     const { user } = await protectedProcedure();
     const { currentOrg } = await getOrganizations();

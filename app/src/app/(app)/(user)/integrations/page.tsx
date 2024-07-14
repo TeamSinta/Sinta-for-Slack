@@ -10,23 +10,25 @@ import { GreenhouseIntegrationCard } from "./_components/gh-intergration-card";
 import { IntegrationCard } from "./_components/intergration-cards";
 import { ConflictAlertModal } from "./conflictAlertDialog";
 
-export default async function Integrations({searchParams
+export default async function Integrations({
+    searchParams,
 }: {
-  searchParams?: { search?: string; }
+    searchParams?: { search?: string };
 }) {
     const slackIntegration = await checkSlackTeamIdFilled();
     const greenhouseIntegration = await checkGreenhouseTeamIdFilled();
     if (searchParams === undefined) {
         searchParams = {};
     }
-    const showConflictModal = 'conflict' in searchParams && searchParams.conflict !== undefined ;
+    const showConflictModal =
+        "conflict" in searchParams && searchParams.conflict !== undefined;
 
     return (
         <AppPageShell
             title={integrationsPageConfig.title}
             description={integrationsPageConfig.description}
         >
-                      {showConflictModal && <ConflictAlertModal />}
+            {showConflictModal && <ConflictAlertModal />}
 
             <h2 className="text-lg font-medium">Your integrations</h2>
             {slackIntegration ?? greenhouseIntegration ? (

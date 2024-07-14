@@ -34,7 +34,9 @@ const searchableColumns: DataTableSearchableColumn<HiringroomData>[] = [
     { id: "name", placeholder: "Search by hiringroom name..." },
 ];
 
-export function HiringroomsTable({ hiringroomsPromise }: HiringroomsTableProps) {
+export function HiringroomsTable({
+    hiringroomsPromise,
+}: HiringroomsTableProps) {
     const { data, pageCount, total } = React.use(hiringroomsPromise);
 
     const columns = useMemo<ColumnDef<HiringroomData, unknown>[]>(

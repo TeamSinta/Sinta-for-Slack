@@ -97,15 +97,15 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
-        )) as { id: number; name: string, created_at: string }[];
+        )) as { id: number; name: string; created_at: string }[];
         return jobs.map((job) => ({
             id: job.id,
             name: job.name,
-            created_at: job.created_at
+            created_at: job.created_at,
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
-        console.log('here1?')
+        console.log("here1?");
         return [];
     }
 };
@@ -537,24 +537,24 @@ export async function fetchAllGreenhouseUsers(): Promise<
     Record<string, { id: string; email: string }>
 > {
     try {
-        const users = (await customFetch(
+        const users = await customFetch(
             "https://harvest.greenhouse.io/v1/users",
-        ))
-        return users
-        
+        );
+        return users;
     } catch (error) {
         console.error("Error fetching Greenhouse users: ", error);
         return {};
     }
 }
 
-
-export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<Job[]> => {
+export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<
+    Job[]
+> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
         )) as any[];
-        return jobs
+        return jobs;
     } catch (error) {
         console.error("Error fetching jobs: ", error);
         return [];

@@ -40,7 +40,7 @@ export async function getChannels(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
-        console.log('getChannels - pre access token')
+        console.log("getChannels - pre access token");
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch(
             "https://slack.com/api/conversations.list",
@@ -81,7 +81,7 @@ export async function getActiveUsers(): Promise<
             console.error("No Slack team ID available.");
             return [];
         }
-        console.log('getActiveUsers - pre access token')
+        console.log("getActiveUsers - pre access token");
 
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch("https://slack.com/api/users.list", {
@@ -104,7 +104,9 @@ export async function getActiveUsers(): Promise<
                     label: `@${member.real_name}`,
                 }));
         } else {
-            throw new Error(data.error ?? "Error fetching users" + response.status);
+            throw new Error(
+                data.error ?? "Error fetching users" + response.status,
+            );
         }
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -116,7 +118,7 @@ export async function getEmailsfromSlack(
     teamId: string,
 ): Promise<{ value: string; label: string; email: string }[]> {
     try {
-        console.log('getEmailsfromSlack - pre access token', teamId)
+        console.log("getEmailsfromSlack - pre access token", teamId);
 
         const accessToken = await getAccessToken(teamId);
         const response = await fetch("https://slack.com/api/users.list", {
@@ -163,12 +165,12 @@ export async function sendSlackNotification(
     slackTeamID: string,
     subDomain: string,
 ): Promise<void> {
-   // const { currentOrg = {} } = (await getOrganizations()) || {};
-   // if (!currentOrg.slack_team_id) {
-   //     console.error("No Slack team ID available.");
+    // const { currentOrg = {} } = (await getOrganizations()) || {};
+    // if (!currentOrg.slack_team_id) {
+    //     console.error("No Slack team ID available.");
     //    return;
     //}
-   // console.log('send slack notification - pre access token')
+    // console.log('send slack notification - pre access token')
 
     //const accessToken = await getAccessToken(currentOrg.slack_team_id);
     const accessToken = await getAccessToken(slackTeamID);
@@ -346,16 +348,16 @@ export async function sendSlackButtonNotification(
     subDomain: string, // Adding sub-domain as a parameter
     userMapping: Record<string, string>,
     filteredConditionsData,
-    greenHouseAndSlackRecipients
+    greenHouseAndSlackRecipients,
 ): Promise<void> {
     console.log(
         "filtered filteredConditionsData dagat-",
         filteredConditionsData,
     );
-    console.log('sendSlackVutonNotification - pre access token')
+    console.log("sendSlackVutonNotification - pre access token");
 
     const accessToken = await getAccessToken(slackTeamID);
-    
+
     for (const recipient of greenHouseAndSlackRecipients) {
         console.log("reciepient - ", recipient);
         const channel = recipient.value;
