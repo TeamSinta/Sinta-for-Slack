@@ -117,13 +117,13 @@ function generateRandomSixDigitNumber() {
 function buildGreenHouseUsersForCandidate(hiring_room_recipient, cand_id, job_id){
     hiring_room_recipient.forEach((recipient)=>{
         if(recipient.source == "greenhouse"){
-            
+
         }
     })
 }
 
 function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): string {
-   
+
    try{
         let channelName = slackChannelFormat
         console.log('candidate  -',job)
@@ -218,7 +218,7 @@ export async function handleIndividualHiringroom(hiringroom){
         slackUsers,
     );
     // create job room - name job_title + date posted + time
-    // create candidate room - name candidate_first_initial + candidate_last_name + job_title 
+    // create candidate room - name candidate_first_initial + candidate_last_name + job_title
     console.log('5pre check object field - slack team id - ',slackTeamID)
     if (hiringroom.objectField == 'Candidates'){
         // hiringroom.recipient = buildHiringRoomRecipients()
@@ -274,10 +274,10 @@ export async function handleIndividualHiringroom(hiringroom){
                 const slackUsersIds = getSlackUsersFromRecipient(hiringroom.recipient)
                 // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
                 const slackUserIds = slackUsersIds // + slackIdsOfGreenHouseUsers
-                // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers 
+                // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers
                 console.log('create slack channel - ', slackTeamID)
                 console.log('create slack channelName - ', channelName)
-                
+
                 const channelId = await createSlackChannel(channelName, slackTeamID);
 
                 // does this mean successfully create NOW, not previously created?
@@ -495,13 +495,13 @@ export async function handleWorkflows(){
 export async function GET() {
     try{
         console.log('gobucks')
-        // await handleWorkflows()
+        await handleWorkflows()
         await handleHiringrooms()
         return NextResponse.json({ message: "Workflows processed successfully" }, { status: 200 });
 }
     catch(e){
         console.log('eeee - ', e)
-        return NextResponse.json({ message: "No workflows to process" }, { status: 200 }); 
+        return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
     }
 }
 // create slack channel via slack and save in db we created it
