@@ -16,11 +16,10 @@ export default async function Integrations({searchParams
 }) {
     const slackIntegration = await checkSlackTeamIdFilled();
     const greenhouseIntegration = await checkGreenhouseTeamIdFilled();
+    if (searchParams === undefined) {
+        searchParams = {};
+    }
     const showConflictModal = 'conflict' in searchParams && searchParams.conflict !== undefined ;
-
-    console.log("searchParams", searchParams)
-    console.log("showConflictModal", showConflictModal);
-
 
     return (
         <AppPageShell
