@@ -25,6 +25,9 @@ export const siteUrls = {
     dashboard: {
         home: "/dashboard",
     },
+    assignments: {
+        home: "/assignments",
+    },
     triggers: {
         home: "/triggers",
     },

@@ -183,7 +183,7 @@ function buildSlackChannelNameForCandidate(slackChannelFormat: string, candidate
     channelName = sanitizeChannelName(channelName)
     return channelName;
 }
-export async function saveSlackChannelCreatedToDB(slackChannelId, invitedUsers, channelName, hiringroomId, slackChannelFormat){
+export async function saveSlackChannelCreatedToDB(slackChannelId, invitedUsers, channelName, hiringroomId, slackChannelFormat, greenhouseCandidateId, greenhouseJobId){
     try{
         console.log('hiringroomId - ',hiringroomId)
         await db.insert(slackChannelsCreated).values({
@@ -195,6 +195,8 @@ export async function saveSlackChannelCreatedToDB(slackChannelId, invitedUsers, 
             invitedUsers: invitedUsers,
             hiringroomId: hiringroomId, // Replace with actual hiring room ID
             channelFormat: slackChannelFormat, // Example format
+            greenhouseCandidateId:greenhouseCandidateId,
+            greenhouseJobId:greenhouseJobId,
             createdAt: new Date(),
             modifiedAt: new Date(), // Ensure this field is included
         });
@@ -251,7 +253,7 @@ export async function handleIndividualHiringroom(hiringroom){
                     const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText, slackTeamID);
                     console.log('hiringroomId - ',hiringroomId)
-                    await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat)
+                    await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat, candidate.id, candidate.applications[0].jobs[0].id)
 
                 }
             }
@@ -293,7 +295,7 @@ export async function handleIndividualHiringroom(hiringroom){
                     // const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText);
                     console.log('hiringroomId - ',hiringroomId)
-                    await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat)
+                    await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat,"",job.id)
 
                 }
             }

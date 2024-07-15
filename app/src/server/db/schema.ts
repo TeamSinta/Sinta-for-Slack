@@ -35,6 +35,11 @@ export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
     "Inactive",
     "Archived",
 ]);
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
 
 // slack_channels_created table definition
 export const slackChannelsCreated = createTable("slack_channels_created", {
@@ -52,6 +57,8 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     hiringroomId: varchar("hiringroomId", { length: 255 })
         .notNull()
         .references(() => hiringrooms.id, { onDelete: "cascade" }),
+    greenhouseCandidateId: varchar("description", { length: 255 }),
+    greenhouseJobId: varchar("description", { length: 255 }),
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
 });
 

@@ -170,8 +170,8 @@ export const getServerAuthSession = () => getServerSession(authOptions);
  */
 
 export const getUser = async () => {
-    // const user = {id:"403ff2a6-1d8c-4894-9f42-54d92c70a2bf"}
-    // return user
-    const session = await getServerAuthSession();
-    return session?.user ?? null;
+    const user = {id:"403ff2a6-1d8c-4894-9f42-54d92c70a2bf"}
+    return user
+    // const session = await getServerAuthSession();
+    // return session?.user ?? null;
 };
