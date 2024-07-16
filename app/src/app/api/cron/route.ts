@@ -39,7 +39,7 @@ import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/colu
 import {addGreenhouseSlackValue} from '@/lib/slack'
 import {getHiringrooms} from '@/server/actions/hiringrooms/queries'
 
-
+import { inviteUsersToChannel } from '@/server/actions/assignments/mutations'
 
 
 // naming change? why mutation??
@@ -183,30 +183,7 @@ function buildSlackChannelNameForCandidate(slackChannelFormat: string, candidate
     channelName = sanitizeChannelName(channelName)
     return channelName;
 }
-export async function saveSlackChannelCreatedToDB(slackChannelId, invitedUsers, channelName, hiringroomId, slackChannelFormat, greenhouseCandidateId, greenhouseJobId){
-    try{
-        console.log('hiringroomId - ',hiringroomId)
-        await db.insert(slackChannelsCreated).values({
-            name: channelName,
-            channelId: slackChannelId,
-            // createdBy: 'user_id', // Replace with actual user ID
-            // description: 'Channel description', // Optional
-            isArchived: false,
-            invitedUsers: invitedUsers,
-            hiringroomId: hiringroomId, // Replace with actual hiring room ID
-            channelFormat: slackChannelFormat, // Example format
-            greenhouseCandidateId:greenhouseCandidateId,
-            greenhouseJobId:greenhouseJobId,
-            createdAt: new Date(),
-            modifiedAt: new Date(), // Ensure this field is included
-        });
-    }
-    catch(e){
-        throw new Error(`Error saving slack chanenl created: ${e}`);
-    }
-    return "success"
 
-}
 export async function handleIndividualHiringroom(hiringroom){
     const hiringroomId = hiringroom.id
     console.log('indivi room - ',hiringroomId)
@@ -253,6 +230,7 @@ export async function handleIndividualHiringroom(hiringroom){
                     const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText, slackTeamID);
                     console.log('hiringroomId - ',hiringroomId)
+                    console.log('channelName - ',channelName)
                     await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat, candidate.id, candidate.applications[0].jobs[0].id)
 
                 }
@@ -295,6 +273,7 @@ export async function handleIndividualHiringroom(hiringroom){
                     // const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText);
                     console.log('hiringroomId - ',hiringroomId)
+                    console.log('channelName - ',channelName)
                     await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat,"",job.id)
 
                 }
@@ -491,67 +470,4 @@ export async function GET() {
         return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
     }
 }
-// create slack channel via slack and save in db we created it
-async function createSlackChannel(channelName, slackTeamId) {
-    console.log('createSlackChannel - pre access token - ',slackTeamId)
-    const accessToken = await getAccessToken(slackTeamId);
 
-    try {
-        const response = await fetch("https://slack.com/api/conversations.create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-                name: channelName,
-            }),
-        });
-        console.log('Name taken - ',channelName)
-
-        const data = await response.json();
-        if (!data.ok) {
-            if(data.error == "name_taken"){
-                console.log('Name taken - ',channelName)
-                // throw new Error(`Error creating channel: ${data.error}`);
-
-            }
-            throw new Error(`Error creating channel: ${data.error}`);
-        }
-
-        console.log('Channel created successfully:');
-        // console.log('Channel created successfully:', data);
-        return data.channel.id; // Return the channel ID for further use
-    } catch (error) {
-        console.error('Error - createSlackChannel - creating Slack channel:', error);
-    }
-}
-
-async function inviteUsersToChannel(channelId, userIds, slackTeamId) {
-    try {
-            console.log('userids - ',userIds)
-            console.log('inviteuserstochannel - pre access token')
-
-            const accessToken = await getAccessToken(slackTeamId);
-            const response = await fetch("https://slack.com/api/conversations.invite", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    channel: channelId,
-                    users: userIds.join(','),
-                }),
-            });
-
-        const data = await response.json();
-        if (!data.ok) {
-            throw new Error(`Error inviting users: ${data.error}`);
-        }
-
-        console.log('Users invited successfully:', data);
-    } catch (error) {
-        console.error('Error inviting users to Slack channel:', error);
-    }
-}

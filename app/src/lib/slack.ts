@@ -152,8 +152,11 @@ export async function matchUsers(
     for (const greenhouseUserId in greenhouseUsers) {
         const greenhouseUser = greenhouseUsers[greenhouseUserId];
         if (greenhouseUser) {
+            // console.log('wtf - ',greenhouseUser)
             const email = greenhouseUser.email;
             const slackId = slackUserMap[email];
+            // console.log('email - ',email)
+            // console.log('slackId - ',slackId)
             if (slackId) {
                 console.log("email - in user matching", email);
                 userMapping[greenhouseUser.id] = slackId; // Use Greenhouse user ID as the key

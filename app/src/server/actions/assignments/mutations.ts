@@ -11,6 +11,9 @@ import { protectedProcedure, adminProcedure } from "@/server/procedures";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { getOrganizations } from "../organization/queries";
+import { getAccessToken } from "../slack/query";
+import { slackChannelsCreated } from "@/server/db/schema";
+// import { createSlackChannel } from "@/app/api/cron/route";
 
 /**
  * Create a new assignment
@@ -26,12 +29,126 @@ import { getOrganizations } from "../organization/queries";
 //     conditions: true,
 // });
 
-// type CreateAssignmentProps = z.infer<typeof assignmentFormSchema>;
 
+// create slack channel via slack and save in db we created it
+export async function createSlackChannel(channelName: any, slackTeamId: any) {
+    console.log('createSlackChannel - pre access token - ',slackTeamId)
+    const accessToken = await getAccessToken(slackTeamId);
+
+    try {
+        const response = await fetch("https://slack.com/api/conversations.create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                name: channelName,
+            }),
+        });
+        console.log('Name taken - ',channelName)
+
+        const data = await response.json();
+        if (!data.ok) {
+            if(data.error == "name_taken"){
+                console.log('Name taken - ',channelName)
+                // throw new Error(`Error creating channel: ${data.error}`);
+
+            }
+            throw new Error(`Error creating channel: ${data.error}`);
+        }
+
+        console.log('Channel created successfully:');
+        // console.log('Channel created successfully:', data);
+        return data.channel.id; // Return the channel ID for further use
+    } catch (error) {
+        console.error('Error - createSlackChannel - creating Slack channel:', error);
+    }
+}
+
+
+// type CreateAssignmentProps = z.infer<typeof assignmentFormSchema>;
+export async function saveSlackChannelCreatedToDB(slackChannelId: any, invitedUsers: any, channelName: any, hiringroomId: any, slackChannelFormat: any, greenhouseCandidateId: any, greenhouseJobId: any){
+    try{
+        console.log('hiringroomId - ',hiringroomId)
+        console.log('slackChannelId - ',slackChannelId)
+        console.log('channelName - ',channelName)
+        console.log('hiringroomId - ',hiringroomId)
+        console.log('slackChannelFormat - ',slackChannelFormat)
+        await db.insert(slackChannelsCreated).values({
+            name: channelName,
+            channelId: slackChannelId,
+            createdBy: 'user_id', // Replace with actual user ID
+            description: 'Channel description', // Optional
+            isArchived: false,
+            invitedUsers: invitedUsers,
+            hiringroomId: hiringroomId, // Replace with actual hiring room ID
+            channelFormat: slackChannelFormat, // Example format
+            greenhouseCandidateId:greenhouseCandidateId,
+            greenhouseJobId:greenhouseJobId,
+            createdAt: new Date(),
+            modifiedAt: new Date(), // Ensure this field is included
+        });
+        console.log('post success insert')
+    }
+    catch(e){
+        throw new Error(`Error saving slack chanenl created: ${e}`);
+    }
+    return "success"
+
+}
+
+export async function inviteUsersToChannel(channelId: Promise<any>, userIds: any[], slackTeamId: string) {
+    try {
+            console.log('userids - ',userIds)
+            console.log('inviteuserstochannel - pre access token')
+
+            const accessToken = await getAccessToken(slackTeamId);
+            const response = await fetch("https://slack.com/api/conversations.invite", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    channel: channelId,
+                    users: userIds.join(','),
+                }),
+            });
+
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(`Error inviting users: ${data.error}`);
+        }
+
+        console.log('Users invited successfully:', data);
+    } catch (error) {
+        console.error('Error inviting users to Slack channel:', error);
+    }
+}
 
 export async function createAssignmentMutation(props: any) {
-    // export async function createAssignmentMutation(props: CreateAssignmentProps) {
+    const channelName = ''
+    const slackTeamId = ''
+    const channelId = createSlackChannel(channelName, slackTeamId)
+    // invite users to slack channel
+    if (channelId) {
+        const slackUserIds = [] as any[]
+        await inviteUsersToChannel(channelId, slackUserIds, slackTeamId);
+        // const messageText = 'Welcome to the new hiring room!';
+        // await postMessageToSlackChannel(channelId, messageText);
+        // console.log('hiringroomId - ',hiringroomId)
+        console.log('channelName - ',channelName)
+        const hiringroomId = ''
+        const hiringroomSlackChannelFormat = ''
+        const jobId = ''
+        const candidateId = ''
+        //saveSlackChannelCreatedToDB(slackChannelId, invitedUsers, channelName, hiringroomId, slackChannelFormat, greenhouseCandidateId, greenhouseJobId){
+
+        await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroomSlackChannelFormat,candidateId,jobId)
+    }
     return
+    // export async function createAssignmentMutation(props: CreateAssignmentProps) {
     // const { user } = await protectedProcedure();
     // const { currentOrg } = await getOrganizations();
     // const orgID = currentOrg.id;
@@ -120,3 +237,4 @@ export async function deleteAssignmentMutation({ id }: { id: string }) {
 
     // return await db.delete(assignments).where(eq(assignments.id, id)).execute();
 }
+

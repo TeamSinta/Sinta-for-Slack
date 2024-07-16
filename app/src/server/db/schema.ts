@@ -52,13 +52,12 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     createdBy: varchar("createdBy", { length: 255 }),
     description: varchar("description", { length: 255 }),
+    greenhouseCandidateId: varchar("greenhouseCandidateId", { length: 255 }),
+    greenhouseJobId: varchar("greenhouseJobId", { length: 255 }),
     isArchived: boolean("isArchived").default(false).notNull(),
     invitedUsers: jsonb("invited_users").notNull().default(sql`'[]'`),
-    hiringroomId: varchar("hiringroomId", { length: 255 })
-        .notNull()
-        .references(() => hiringrooms.id, { onDelete: "cascade" }),
-    greenhouseCandidateId: varchar("description", { length: 255 }),
-    greenhouseJobId: varchar("description", { length: 255 }),
+    // hiringroomId: varchar("hiringroomId", { length: 255 }),
+        // .references(() => hiringrooms.id, { onDelete: "cascade" }),
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
 });
 
@@ -129,19 +128,19 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
         fields: [hiringrooms.organizationId],
         references: [organizations.id],
     }),    
-    slackChannelsCreated: many(slackChannelsCreated),
+    // slackChannelsCreated: many(slackChannelsCreated),
     // slackChannelsCreated: many(slackChannelsCreated, {
     //     fields: [slackChannelsCreated.hiringroomId],
     //     references: [hiringrooms.id],
     // }),
 }));
 
-export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
-    hiringroom: one(hiringrooms, {
-        fields: [slackChannelsCreated.hiringroomId],
-        references: [hiringrooms.id],
-    }),
-}));
+// export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
+//     hiringroom: one(hiringrooms, {
+//         fields: [slackChannelsCreated.hiringroomId],
+//         references: [hiringrooms.id],
+//     }),
+// }));
 export const workflowInsertSchema = createInsertSchema(workflows, {
     name: z
         .string()
