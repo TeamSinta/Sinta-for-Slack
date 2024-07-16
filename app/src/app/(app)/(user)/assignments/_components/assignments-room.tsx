@@ -51,6 +51,9 @@ export function AssignmentsRoom() {
     //     () => getColumns(),
     //     [],
     // );
+
+    const [recruiterCounts, setRecruiterCounts] = useState({});
+    const [coordinatorCounts, setCoordinatorCounts] = useState({});
     const [slackChannelsCreatedDict, setSlackChannelsCreatedDict] = useState({})
     const [candidates, setCandidates] = useState([])
     const [coordinators, setCoordinators] = useState([])
@@ -64,6 +67,33 @@ export function AssignmentsRoom() {
     const [selectedRecruiter, setSelectedRecruiter] = useState({});
     const [selectedCoordinator, setSelectedCoordinator] = useState({});
 
+    const getRecruiterCounts = (candidates) => {
+        const counts = {};
+        candidates.forEach(candidate => {
+            const recruiterId = candidate.recruiter?.id;
+            if (recruiterId) {
+                if (!counts[recruiterId]) {
+                    counts[recruiterId] = { count: 0, name: candidate.recruiter.name };
+                }
+                counts[recruiterId].count++;
+            }
+        });
+        return counts;
+    };
+
+    const getCoordinatorCounts = (candidates) => {
+        const counts = {};
+        candidates.forEach(candidate => {
+            const coordinatorId = candidate.coordinator?.id;
+            if (coordinatorId) {
+                if (!counts[coordinatorId]) {
+                    counts[coordinatorId] = { count: 0, name: candidate.coordinator.name };
+                }
+                counts[coordinatorId].count++;
+            }
+        });
+        return counts;
+    };
     useEffect(() => {
         const fetchData = async () => {
             // const stageOrder = {
@@ -91,9 +121,16 @@ export function AssignmentsRoom() {
             const greenhouseUsers = await fetchAllGreenhouseUsers()
             const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
             const greenhouseCandidates = await fetchCandidates()
+            setCandidates(greenhouseCandidates)
             let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            const initialRecruiterCounts = getRecruiterCounts(greenhouseCandidates);
+            const initialCoordinatorCounts = getCoordinatorCounts(greenhouseCandidates);
+            console.log('initialRecruiterCounts- ',initialRecruiterCounts)
+            console.log('initialCoordinatorCounts- ',initialCoordinatorCounts)
             
+            setRecruiterCounts(initialRecruiterCounts);
+            setCoordinatorCounts(initialCoordinatorCounts);
             console.log('greenhouseUsers- ',greenhouseUsers)
             console.log('greenhouseJobs- ',greenhouseJobs)
             console.log('greenhouseCandidates- ',greenhouseCandidates)
@@ -154,12 +191,19 @@ export function AssignmentsRoom() {
             let slackChannelsDict = slackChannelsCreated.reduce((acc, channel) => {
                 console.log('acc - ',acc)
                 console.log('channel - ',channel)
-                if(!acc[channel.greenhouseCandidateId])acc[channel.greenhouseCandidateId]={}
-                console.log('channel id-',channel)
-                acc[channel.greenhouseCandidateId].channelName = `${channel.name}`;
-                acc[channel.greenhouseCandidateId].channelLink = `https://slack.com/app_redirect?channel=${channel.channelId}`;
-                // acc[channel.greenhouseCandidateId].channelLink = `https://slack.com/app_redirect?channel=${channel.channelId}`;
-                return acc;
+                if(channel.isArchived){
+                    return acc
+                }
+                else{
+                    if(!acc[channel.greenhouseCandidateId])acc[channel.greenhouseCandidateId]={}
+                    console.log('channel id-',channel)
+                    acc[channel.greenhouseCandidateId].channelId = channel.channelId
+                    acc[channel.greenhouseCandidateId].channelName = `${channel.name}`;
+                    acc[channel.greenhouseCandidateId].channelLink = `https://slack.com/app_redirect?channel=${channel.channelId}`;
+                    // acc[channel.greenhouseCandidateId].channelLink = `https://slack.com/app_redirect?channel=${channel.channelId}`;
+                    
+                }
+               return acc;
             }, {});
             setSlackChannelsCreated(slackChannelsCreated)
             console.log('slackChannelsCreated- ',slackChannelsCreated)
@@ -185,16 +229,16 @@ export function AssignmentsRoom() {
         fetchData()
     }, []);
 
-    useEffect(() => {
-        const getCandidates = async () => {
-            const data = await fetchCandidates();
-            console.log('data',data)
-            setCandidates([]);
-            // setCandidates(data);
-        };
+    // useEffect(() => {
+    //     const getCandidates = async () => {
+    //         const data = await fetchCandidates();
+    //         console.log('data',data)
+    //         // setCandidates([]);
+    //         setCandidates(data);
+    //     };
 
-        getCandidates();
-    }, []);
+    //     getCandidates();
+    // }, []);
     function getSlackUsersFromHiringTeam(curJobHiringTeam){
         const slackUsers = []
         const curJobHiringManagers = curJobHiringTeam.hiring_managers
@@ -295,20 +339,75 @@ export function AssignmentsRoom() {
 
     }
    
-    const handleRecruiterChange = (candidateId, recruiterId) => {
+    const handleRecruiterChange = (candidateId, newRecruiterId) => {
+        const updatedCandidates = candidates.map(candidate => {
+            if (candidate.id === candidateId) {
+                candidate.recruiter = recruiters.find(r => r.id === newRecruiterId);
+            }
+            return candidate;
+        });
         setSelectedRecruiter(prevState => ({
             ...prevState,
-            [candidateId]: recruiterId,
+            [candidateId]: newRecruiterId,
         }));
+        setRecruiterCounts(getRecruiterCounts(updatedCandidates));
     };    
-    const handleCoordinatorChange = (candidateId, coordinatorId) => {
+    const handleCoordinatorChange = (candidateId, newCoordinatorId) => {
+        console.log('candidaters - ',candidates)
+        const updatedCandidates = candidates.map(candidate => {
+            if (candidate.id === candidateId) {
+                candidate.coordinator = coordinators.find(c => c.id === newCoordinatorId);
+            }
+            return candidate;
+        });
         setSelectedRecruiter(prevState => ({
             ...prevState,
-            [candidateId]: coordinatorId,
+            [candidateId]: newCoordinatorId,
         }));
+        setCoordinatorCounts(getCoordinatorCounts(updatedCandidates));
+
     };
+    async function handleDeleteSlackChannel(candidate){
+        try{
+            const channelId = slackChannelsCreatedDict[candidate.id].channelId
+            const slackTeamId = 'T04C82XCPRU'
+            // const deleteResponse = await deleteConversation(channelId)
+            const deleteObj = {hasDelete:true, channelId:channelId, slackTeamId: slackTeamId}
+            const response = await fetch("/api/slack", {
+                // const response = await fetch("https://slack.com/api/conversations.create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    // Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify(deleteObj),
+            });
+            console.log('deleteResponse - ',response)
+            return
+        }
+        catch(e){
+            console.log('eee-',e)
+        }
+    }
+    async function deleteConversation(channelId) {
+        const response = await fetch('https://slack.com/api/conversations.archive', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.SLACK_BOT_TOKEN}`
+            },
+            body: JSON.stringify({
+                channel: channelId
+            })
+        });
     
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(data.error);
+        }
     
+        return data;
+    }
 
     function getAllCoordinators(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
         // Get all coordinators from jobs
@@ -360,6 +459,21 @@ export function AssignmentsRoom() {
     }
     return (
         <div>
+            <div className="flex">
+            <div className="flex flex-col pl-8"><h2>Recruiter Counts</h2>
+            <ul>
+                {Object.entries(recruiterCounts).map(([id, { count, name }]) => (
+                    <li key={id}>{name}: {count}</li>
+                ))}
+            </ul></div>
+            <div className="flex flex-col pl-8"><h2>Coordinator Counts</h2>
+            <ul>
+                {Object.entries(coordinatorCounts).map(([id, { count, name }]) => (
+                    <li key={id}>{name}: {count}</li>
+                ))}
+            </ul></div>
+                
+            </div>
             <h1>Candidates List</h1>
             <table>
                 <thead>
@@ -384,7 +498,7 @@ export function AssignmentsRoom() {
                             <td>{candidate.applications[0].jobs[0].name}</td>
                             <td>
                             <div className="flex flex-row">R:<select
-                                    value={selectedRecruiter[candidate.id] || candidate.recruiter}
+                                    value={selectedRecruiter[candidate.id] || candidate.recruiter?.id || ""}
                                     onChange={(e) => {
                                         const newRecruiterId = e.target.value;
                                         handleRecruiterChange(candidate.id, newRecruiterId);
@@ -399,20 +513,20 @@ export function AssignmentsRoom() {
                                     ))}
                                 </select></div>
                                 <div className="flex flex-row">C:<select
-                                    value={selectedCoordinator[candidate.id] || candidate.coordinator}
-                                    onChange={(e) => {
-                                        const newCoordinatorId = e.target.value;
-                                        handleCoordinatorChange(candidate.id, newCoordinatorId);
-                                        updateGreenhouseCandidate(candidate, 'coordinator', newCoordinatorId);
-                                    }}
-                                >
-                                    <option value="" disabled>Select Coordinator</option>
-                                    {coordinators.map((coordinator) => (
-                                        <option key={coordinator.id} value={coordinator.id}>
-                                            {coordinator.name}
-                                        </option>
-                                    ))}
-                                </select></div>
+                                            value={selectedCoordinator[candidate.id] || candidate.coordinator?.id || ""}
+                                            onChange={(e) => {
+                                                const newCoordinatorId = e.target.value;
+                                                handleCoordinatorChange(candidate.id, newCoordinatorId);
+                                                updateGreenhouseCandidate(candidate, 'coordinator', newCoordinatorId);
+                                            }}
+                                        >
+                                            <option value="" disabled>Select Coordinator</option>
+                                            {coordinators.map((coordinator) => (
+                                                <option key={coordinator.id} value={coordinator.id}>
+                                                    {coordinator.name}
+                                                </option>
+                                            ))}
+                                        </select></div>
                             </td>
                             <td>
                                 {/* {candidate.curJobHiringTeam.toString()} */}
@@ -425,7 +539,10 @@ export function AssignmentsRoom() {
                             <td>
                                 {
                                 slackChannelsCreatedDict[candidate.id] ? 
-                                <>{slackChannelsCreatedDict[candidate.id].channelName}</> :
+                                <>
+                                {/* {slackChannelsCreatedDict[candidate.id].channelName} */}
+                                    <div onClick={()=>{handleDeleteSlackChannel(candidate)}} className="button bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Delete Channel - {candidate.id}</div>
+                                </> :
                                 // <><a href={slackChannelsCreatedDict[candidate.id].channelLink}>Slack Channel</a></> :
                                 <div onClick={()=>{createSlackChannelForCandidate(candidate)}} className="button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create Channel - {candidate.id}</div>
                                 // <div onClick={createSlackChannelForCandidate(candidate)} className="button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create Channel</div>
@@ -435,6 +552,7 @@ export function AssignmentsRoom() {
                     ))}
                 </tbody>
             </table>
+            
 
         </div>
     );
