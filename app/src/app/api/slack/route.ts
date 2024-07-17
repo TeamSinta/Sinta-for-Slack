@@ -64,10 +64,6 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
-    console.log("redirectUri  - ", redirectUri);
-    console.log("clientId  - ", clientId);
-    console.log("client secret - ", clientSecret);
-    console.log("code - ", code);
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -82,7 +78,6 @@ export async function GET(req: NextRequest) {
         console.log("url - ", url);
         const response = await fetch(url, { method: "POST" });
         const json = await response.json();
-        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&

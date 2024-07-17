@@ -24,11 +24,11 @@ import {
 import {
     buildSlackMessageByCandidateOnFilteredData,
     filterScheduledInterviewsDataForSlack,
+    filterCandidatesDataForSlack,
     matchUsers,
 } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
-    sendSlackNotification,
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 import {
@@ -36,8 +36,16 @@ import {
     getSlackTeamIDByHiringroomID,
 } from "@/server/actions/slack/query";
 import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
-import { addGreenhouseSlackValue } from "@/lib/slack";
-import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
+import {
+    processCandidates,
+    processScheduledInterviews,
+} from "@/server/objectworkflows/queries";
+import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
+import {addGreenhouseSlackValue} from '@/lib/slack'
+import {getHiringrooms} from '@/server/actions/hiringrooms/queries'
+
+
+
 
 // naming change? why mutation??
 // async function handleHiringRoom(hiring_room){
@@ -131,25 +139,20 @@ function generateRandomSixDigitNumber() {
     const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
     return randomNumber.toString(); // Convert to string
 }
-function buildGreenHouseUsersForCandidate(
-    hiring_room_recipient,
-    cand_id,
-    job_id,
-) {
-    hiring_room_recipient.forEach((recipient) => {
-        if (recipient.source == "greenhouse") {
+function buildGreenHouseUsersForCandidate(hiring_room_recipient, cand_id, job_id){
+    hiring_room_recipient.forEach((recipient)=>{
+        if(recipient.source == "greenhouse"){
+
         }
     });
 }
 
-function buildSlackChannelNameForJob(
-    slackChannelFormat: string,
-    job: any,
-): string {
-    try {
-        let channelName = slackChannelFormat;
-        console.log("candidate  -", job);
-        console.log("candidate created at -", job.created_at);
+function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): string {
+
+   try{
+        let channelName = slackChannelFormat
+        console.log('candidate  -',job)
+        console.log('candidate created at -',job.created_at)
         // Parse the created_at date for job
         const jobCreatedAt = parseISO(job.created_at);
         const jobMonthText = format(jobCreatedAt, "MMMM"); // Full month name
@@ -369,14 +372,15 @@ export async function handleIndividualHiringroom(hiringroom) {
     return hiringroom;
 }
 
-export async function handleHiringrooms() {
-    const hiringrooms: HiringRoom[] = await getHiringrooms();
-    if (hiringrooms.length > 0) {
+export async function handleHiringrooms(){
+    const hiringrooms: HiringRoom[] = await getHiringrooms()
+    const hiringroomsLength = hiringrooms.length
+    if(hiringrooms.length > 0){
         for (const hiringroom of hiringrooms) {
             await handleIndividualHiringroom(hiringroom);
         }
     }
-    return true;
+    return hiringroomsLength
 }
 function sanitizeChannelName(name) {
     return name
@@ -395,6 +399,7 @@ function combineGreenhouseRolesAndSlackUsers(workflowRecipient) {
             greenhouseRoles.push(rec.value);
         }
     });
+    console.log()
 
     if (hasGreenhouse) {
         const candidates = filteredConditionsData;
@@ -426,48 +431,31 @@ function combineGreenhouseRolesAndSlackUsers(workflowRecipient) {
 }
 export async function handleWorkflows() {
     try {
-        const workflows: Workflow[] = await getWorkflows(); // Retrieve workflows from the database
+        const workflows: WorkflowData[] =
+            (await getWorkflows()) as WorkflowData[]; // Retrieve workflows from the database
+        // console.log('workflows length - ',workflows.length)
+        const workflowsLength = workflows.length
+
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
             if (workflow.alertType === "timebased") {
-                const { apiUrl } = workflow.triggerConfig;
+                const { apiUrl }: { apiUrl?: string } =
+                    workflow.triggerConfig as { apiUrl?: string };
 
-                const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
-                console.log(data);
-
+                const data = await customFetch(apiUrl ?? ""); // Fetch data using custom fetch wrapper
                 let filteredConditionsData;
-                console.log("workflow.objectField", workflow.objectField);
+
                 switch (workflow.objectField) {
                     case "Scheduled Interviews":
                         filteredConditionsData =
-                            filterScheduledInterviewsWithConditions(
-                                data,
-                                workflow.conditions,
-                            );
-                        const slackTeamID = await getSlackTeamIDByWorkflowID(
-                            workflow.id,
+                            await processScheduledInterviews(data, workflow);
+                        break;
+                    case "Candidates":
+                        filteredConditionsData = await processCandidates(
+                            data,
+                            workflow,
                         );
-                        const subDomain = await getSubdomainByWorkflowID(
-                            workflow.id,
-                        );
-                        const filteredSlackData =
-                            await filterScheduledInterviewsDataForSlack(
-                                filteredConditionsData,
-                                workflow.recipient,
-                                slackTeamID,
-                            );
-                        console.log("filteredSlackData", filteredSlackData);
-                        if (filteredSlackData.length > 0) {
-                            await sendSlackNotification(
-                                filteredSlackData,
-                                workflow.recipient,
-                                slackTeamID,
-                                subDomain,
-                            );
-                        } else {
-                            console.log("No data to send to Slack");
-                        }
                         break;
                     default:
                         filteredConditionsData = filterDataWithConditions(
@@ -476,7 +464,6 @@ export async function handleWorkflows() {
                         );
                         break;
                 }
-                console.log("filteredConditionsData", filteredConditionsData);
                 if (filteredConditionsData.length === 0) {
                     shouldReturnNull = true; // Set flag to true
                 } else {
@@ -507,32 +494,24 @@ export async function handleWorkflows() {
                     greenhouseUsers,
                     slackUsers,
                 );
-                // workflow.recipient = workflow.recipient.map((recipient: any) => {
-                //     if (recipient.source === "greenhouse") {
-                //         return addGreenhouseSlackValue(recipient, candidates, userMapping);
-                //     }
-                //     return recipient;
-                // });
-                const greenHouseAndSlackRecipients =
-                    combineGreenhouseRolesAndSlackUsers(workflow);
-                // const matchGreenhouseUsers = matc
-                // console.log("filteredConditionsData", filteredConditionsData);
-                const filteredSlackDataWithMessage =
-                    await buildSlackMessageByCandidateOnFilteredData(
-                        filteredConditionsData,
-                        workflow.messageFields,
-                        // slackTeamID
-                    );
+
+                // const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
+
+                const filteredSlackDataWithMessage = await filterCandidatesDataForSlack(
+                    filteredConditionsData,
+                    workflow.recipient,
+                    slackTeamID,
+
+                );
 
                 if (filteredSlackDataWithMessage.length > 0) {
                     await sendSlackButtonNotification(
-                        filteredSlackData,
+                      filteredSlackDataWithMessage,
                         workflow.recipient,
                         slackTeamID,
                         subDomain,
                         userMapping,
                         filteredConditionsData,
-                        greenHouseAndSlackRecipients,
                     );
                 } else {
                     console.log("No data to send to Slack");
@@ -549,7 +528,7 @@ export async function handleWorkflows() {
                 { status: 200 },
             );
         }
-        return true;
+        return workflowsLength
         return NextResponse.json(
             { message: "Workflows processed successfully" },
             { status: 200 },
@@ -568,20 +547,15 @@ export async function handleWorkflows() {
 }
 // Define the GET handler for the route
 export async function GET() {
-    try {
-        console.log("gobucks");
-        await handleWorkflows();
-        await handleHiringrooms();
-        return NextResponse.json(
-            { message: "Workflows processed successfully" },
-            { status: 200 },
-        );
-    } catch (e) {
-        console.log("eeee - ", e);
-        return NextResponse.json(
-            { message: "No workflows to process" },
-            { status: 200 },
-        );
+    try{
+        console.log('gobucks')
+        const numWorkflows = await handleWorkflows()
+        const numHiringrooms = await handleHiringrooms()
+        return NextResponse.json({ message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}` }, { status: 200 });
+    }
+    catch(e){
+        console.log('eeee - ', e)
+        return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
     }
 }
 // create slack channel via slack and save in db we created it
