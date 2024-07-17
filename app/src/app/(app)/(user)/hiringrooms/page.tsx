@@ -15,6 +15,7 @@ import {
     checkSlackTeamIdFilled,
 } from "@/server/actions/organization/queries";
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
+import { hiringrooms, slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 
 type UsersPageProps = {
     searchParams: SearchParams;
