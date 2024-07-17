@@ -16,7 +16,6 @@ async function handleGreenhouseCandidateRequest(url: string, options: any ) {
         "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
         // ...options.headers,
     };
-    console.log('ehaders - ',headers)
     let requestUrl = url;
     if (options.query) {
         const queryParams = new URLSearchParams(options.query).toString();

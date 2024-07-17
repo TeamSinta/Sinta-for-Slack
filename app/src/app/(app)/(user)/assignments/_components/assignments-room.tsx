@@ -2,6 +2,10 @@
 // @ts-nocheck
 
 "use client";
+import {
+
+moveToNextStageInGreenhouse,
+} from "@/server/greenhouse/core";
 import { Icons } from "@/components/ui/icons";
 import { toast } from "sonner";
 import { getEmailsfromSlack,getChannels } from "@/server/slack/core";
@@ -23,7 +27,7 @@ import { assignmentStatusEnum } from "@/server/db/schema";
 import { updateGreenhouseCandidate } from "@/server/greenhouse/core";
 
 import { type getPaginatedAssignmentsQuery, getSlackChannelsCreated,getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
-import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse,fetchGreenhouseUsers, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
+import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse,fetchGreenhouseUsers, fetchJobStages, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
 import { createSlackChannel, inviteUsersToChannel, saveSlackChannelCreatedToDB} from "@/server/actions/assignments/mutations"
 
 export function AssignmentsRoom({assignmentsPromise}: any) {
@@ -38,7 +42,9 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
 
     // const assignmentsPromise = getSlackChannelsCreated()
     // const hiringroomAllPromise = getPaginatedHiringroomsByOrgQuery(search);
-
+    
+    const [jobStages, setJobStages] = useState([])
+    const [greenhouseUsers, setGreenhouseUsers] = useState([])
     const [recruiterCounts, setRecruiterCounts] = useState({});
     const [coordinatorCounts, setCoordinatorCounts] = useState({});
     const [slackChannelsCreatedDict, setSlackChannelsCreatedDict] = useState({})
@@ -49,6 +55,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
     const [candidateDict, setCandidateDict] = useState({})
     const [recruiters, setRecruiters] = useState([])
     const [jobNames, setJobNames] = useState([])
+    const [appReviewCandidates, setAppReviewCandidates] = useState([])
     const [candidatesToAssign, setCandidatesToAssign] = useState([])
     const [slackChannelsCreated, setSlackChannelsCreated] = useState([])
     const [userMapping, setUserMapping]=useState({})
@@ -94,6 +101,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
         });
         return counts;
     };
+    
     useEffect(() => {
         const fetchData = async () => {
             // const stageOrder = {
@@ -122,24 +130,29 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             const greenhouseUsersDict = await fetchGreenhouseUsers()
             const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
             const greenhouseCandidates = await fetchCandidates()
+            const jobStagesResp = await fetchJobStages()
+            console.log('jobStagesResp-',jobStagesResp)
+            setJobStages(jobStagesResp)
+
             setCandidates(greenhouseCandidates)
             let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             const initialRecruiterCounts = getRecruiterCounts(greenhouseCandidates);
             const initialCoordinatorCounts = getCoordinatorCounts(greenhouseCandidates);
-            
+            setGreenhouseUsers(greenhouseUsers)
             setRecruiterCounts(initialRecruiterCounts);
             setCoordinatorCounts(initialCoordinatorCounts);
 
             // const greenhouseUsers = await fetchAllGreenhouseUsers()
-            // console.log('slackUsers users - ',slackUsers)
-            // console.log('greenhouse users - ',greenhouseUsers)
+            console.log('slackUsers users - ',slackUsers)
+            console.log('greenhouse users - ',greenhouseUsers) 
+            console.log('greenhouse users - ',greenhouseUsersDict) 
             let tmpUserMapping = await matchUsers(
                 greenhouseUsersDict,
                 slackUsers,
             ) as any;
             setUserMapping(tmpUserMapping)
-            // console.log('userMapping users - ',userMapping)
+            console.log('userMapping users - ',userMapping)
 
             const slackEmails = await getEmailsfromSlack(slackTeamId)
             // console.log('slack user emails- ',slackEmails)
@@ -158,35 +171,30 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             // let greenhouseCandidates = await fetchCandidates()
             // console.log('greenhouseJobs - ', greenhouseJobs)
             // console.log('greenhouseCandidates - ', greenhouseCandidates)
+                const sortedCandidates = updateSorted(greenhouseCandidates, greenhouseJobsDict)
+                console.log('soted -',sortedCandidates)
+                setCandidatesToAssign(sortedCandidates)
+                let appReviewCandFiltered = sortedCandidates.filter((cand)=>{
+                    return cand?.applications[0].current_stage.name =="Application Review"
+                })
+                setAppReviewCandidates(appReviewCandFiltered)
+                // sortedCandidates = sortedCandidates.filter((cand)=>{
+                //     const curApp = cand.applications[0]
+                //     if(curApp && curApp.current_stage && curApp.current_stage != 'Application Review'){
+                //         return true
+                //     }
+                //     return false
+                // })
+        
+                const filteredCandidates = greenhouseCandidates.filter(candidate => {
+                    return candidate.applications[0].current_stage.name === 'Application Review'
+                });
+                console.log('filtered candidates - ',filteredCandidates)
+                console.log('sortedCandidates candidates - ',sortedCandidates)
+                console.log(' candidates - ',candidates)
+                // setCandidatesToAssign(sortedCandidates)
+                // setAppReviewCandidates(sortedCandidates)
             
-            const sortedCandidates = greenhouseCandidates.sort((a, b) => {
-                const stageA = a.applications[0]?.current_stage?.name || "";
-                const stageB = b.applications[0]?.current_stage?.name || "";
-            
-                return stageOrder.indexOf(stageA) - stageOrder.indexOf(stageB);
-            });
-            //   console.log('sortedCandidates - ', sortedCandidates)
-            const modSortedCandidates = []
-            sortedCandidates.forEach((cand,i)=>{
-                const jobId = cand.applications[0].jobs[0].id;
-                const curJob = greenhouseJobsDict[jobId];
-                const curJobHiringTeam = curJob.hiring_team;
-                const curJobHiringManagers = curJobHiringTeam.hiring_managers.map(user => ({ ...user, role: 'Hiring Manager' }));
-                const curJobCoordinators = curJobHiringTeam.coordinators.map(user => ({ ...user, role: 'Coordinator' }));
-                const curJobSourcers = curJobHiringTeam.sourcers.map(user => ({ ...user, role: 'Sourcer' }));
-                const curJobRecruiters = curJobHiringTeam.recruiters.map(user => ({ ...user, role: 'Recruiter' }));
-            
-                const combinedUsers = [...curJobHiringManagers, ...curJobCoordinators, ...curJobSourcers, ...curJobRecruiters];
-            
-                const uniqueUsers = combinedUsers.reduce((acc, user) => {
-                    if (!acc.find(item => item.id === user.id)) {
-                        acc.push(user);
-                    }
-                    return acc;
-                }, []);
-                sortedCandidates[i].curJobHiringTeam = curJobHiringTeam
-                sortedCandidates[i].curJobHiringTeamCombinedUsers = uniqueUsers
-            })
             const slackChannelsCreated = await getSlackChannelsCreated()
             let slackChannelsDict = slackChannelsCreated.reduce((acc, channel) => {
                 if(channel.isArchived){
@@ -204,15 +212,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             }, {});
             setSlackChannelsCreated(slackChannelsCreated)
             setSlackChannelsCreatedDict(slackChannelsDict)
-            
-            const filteredCandidates = greenhouseCandidates.filter(candidate => {
-                const applicationDate = new Date(candidate.applications[0].applied_at);
-                return candidate.status === 'active' &&
-                       candidate.applications[0].current_stage.name === 'Application Review' &&
-                       applicationDate >= last24Hours;
-            });
-            // setCandidates(greenhouseCandidates)
-            setCandidatesToAssign(sortedCandidates)
             // let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             // let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             setCoordinators(coords)
@@ -451,6 +450,92 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
     
         return coordinators;
     }
+    function updateSorted(greenhouseCandidates, greenhouseJobsDict){
+
+        const stageOrder = [
+            "Application Review",
+            "Preliminary Phone Screen",
+            "Phone Interview",
+            "Face to Face",
+            "Reference Check",
+            "Offer"
+          ];
+        const sortedCandidates = greenhouseCandidates.sort((a, b) => {
+            const stageA = a.applications[0]?.current_stage?.name || "";
+            const stageB = b.applications[0]?.current_stage?.name || "";
+        
+            return stageOrder.indexOf(stageA) - stageOrder.indexOf(stageB);
+        })
+        //   console.log('sortedCandidates - ', sortedCandidates)
+        const modSortedCandidates = []
+        sortedCandidates.forEach((cand,i)=>{
+            const curApp = cand.applications[0]
+            const jobId = curApp?.jobs[0].id;
+            console.log('jobId ',jobId)
+            console.log('greenhouseJobsDict ',greenhouseJobsDict)
+            const curJob = greenhouseJobsDict[jobId];
+            console.log('curJob ',curJob)
+            const curJobHiringTeam = curJob.hiring_team;
+            const curJobHiringManagers = curJobHiringTeam.hiring_managers.map(user => ({ ...user, role: 'Hiring Manager' }));
+            const curJobCoordinators = curJobHiringTeam.coordinators.map(user => ({ ...user, role: 'Coordinator' }));
+            const curJobSourcers = curJobHiringTeam.sourcers.map(user => ({ ...user, role: 'Sourcer' }));
+            const curJobRecruiters = curJobHiringTeam.recruiters.map(user => ({ ...user, role: 'Recruiter' }));
+        
+            const combinedUsers = [...curJobHiringManagers, ...curJobCoordinators, ...curJobSourcers, ...curJobRecruiters];
+        
+            const uniqueUsers = combinedUsers.reduce((acc, user) => {
+                if (!acc.find(item => item.id === user.id)) {
+                    acc.push(user);
+                }
+                return acc;
+            }, []);
+            sortedCandidates[i].curJobHiringTeam = curJobHiringTeam
+            sortedCandidates[i].curJobHiringTeamCombinedUsers = uniqueUsers
+        })
+        return sortedCandidates
+        
+    }
+    async function handleMoveNextStage(candidate){
+        try{
+            const candidate_id = candidate.id
+            const selectedStageId = '4136457008' //jobStages[0].id
+            // console.log('userMapping - ',userMapping)
+            // console.log('candidate - ',candidate)
+            // console.log('jobstages - ',jobStages)
+            // console.log('jobstages[0] - ',jobStages[0])
+            // const greenhouseUserId = ''
+            // const userMapping = await matchSlackToGreenhouseUsers(
+            //     greenhouseUsers,
+            //     slackUsers
+            // );
+            const greenhouseUserId = '4035439008'// userMapping[user.id];
+            // console.log('userMapping - ',greenhouseUserId)
+    
+            const result = await moveToNextStageInGreenhouse(
+                candidate_id,
+                selectedStageId,
+                greenhouseUserId,
+            );
+            const greenhouseCandidates = await fetchCandidates()
+            const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
+            const greenhouseJobsDict = greenhouseJobs.reduce((acc, job) => {
+                acc[job.id] = job;
+                return acc;
+            }, {});
+            const sortedCandidates = updateSorted(greenhouseCandidates,greenhouseJobsDict)
+            console.log('bucks?')
+            console.log('result?',result)   
+            setCandidatesToAssign(sortedCandidates)
+            
+            let appReviewCandFiltered = sortedCandidates.filter((cand)=>{
+                return cand?.applications[0].current_stage.name =="Application Review"
+            })
+            setAppReviewCandidates(appReviewCandFiltered)
+        }
+        catch(e){
+            console.log('e-',e)
+        }
+    }
     function getAllRecruiters(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
         // Get all coordinators from jobs
         const recruiterSet = new Set<string>();
@@ -475,7 +560,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
         }
         return recruiters;
     }
-
+    
 
     return (
         <div className="overflow-x-auto">
@@ -498,33 +583,30 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
           {/* <h2 className="text-lg font-bold">Counts</h2> */}
           <div className="flex">
             <div className="pr-5">
-              <h3 className="font-semibold">Recruiter Counts</h3>
-              <p>Chris Wu: 3</p>
-              <p>Mohamed Shegow: 1</p>
-              <p>Matthew Konicke: 1</p>
+                <div className="flex flex-col pl-8">
+                    <h2>Recruiter Counts</h2>
+                    <ul>
+                        {Object.entries(recruiterCounts).map(([id, { count, name }]) => (
+                            <li key={id}>{name}: {count}</li>
+                        ))}
+                    </ul>
+                </div>
             </div>
             <div  className="pr-5">
-              <h3 className="font-semibold">Coordinator Counts</h3>
-              <p>Chris Wu: 1</p>
-              <p>Matthew Konicke: 3</p>
-              <p>Mohammed Shegow: 2</p>
+                <div className="flex flex-col pl-8"><h2>Coordinator Counts</h2>
+                    <ul>
+                        {Object.entries(coordinatorCounts).map(([id, { count, name }]) => (
+                            <li key={id}>{name}: {count}</li>
+                        ))}
+                    </ul>
+                </div>
             </div>
           </div>
         </div>
       )}
 
-            {/* <div className="flex flex-col pl-8"><h2>Recruiter Counts</h2>
-            <ul>
-                {Object.entries(recruiterCounts).map(([id, { count, name }]) => (
-                    <li key={id}>{name}: {count}</li>
-                ))}
-            </ul></div>
-            <div className="flex flex-col pl-8"><h2>Coordinator Counts</h2>
-            <ul>
-                {Object.entries(coordinatorCounts).map(([id, { count, name }]) => (
-                    <li key={id}>{name}: {count}</li>
-                ))}
-            </ul></div> */}
+            {/* 
+             */}
                 
             </div>
             {/* <h1>Candidates List</h1> */}
@@ -552,7 +634,131 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
                     </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800">
-                    {candidatesToAssign.map((candidate) => (
+                    {appReviewCandidates.map((candidate,i) => (
+                        <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700" key={candidate.id}>
+                            <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {candidate ? (candidate.first_name[0] + candidate.last_name[0]).toUpperCase() : ""}
+
+                            </td>
+                            <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <div key={i+candidate.id} className="flex flex-col">
+                                    <div className="flex flex-col">
+                                    {candidate?.applications[0]?.current_stage.name}
+
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <div
+                                            onClick={() => { handleMoveNextStage(candidate)}}
+                                            className="w-fit button bg-blue-500 hover:bg-blue-700 text-white py-1 px-1 rounded"
+                                        >
+                                            Move to Next Stage
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {candidate.applications[0].jobs[0].name}
+                            </td>
+                            <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <div className="flex flex-col space-y-2">
+                                    <div className="flex items-center">
+                                        <span className="mr-2">Rec:</span>
+                                        <select
+                                            value={selectedRecruiter[candidate.id] || candidate.recruiter?.id || ""}
+                                            onChange={(e) => {
+                                                const newRecruiterId = e.target.value;
+                                                handleRecruiterChange(candidate.id, newRecruiterId);
+                                                updateGreenhouseCandidate(candidate, 'recruiter', newRecruiterId);
+                                            }}
+                                            className="w-100 form-select min-w-40 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600"
+                                        >
+                                            <option value="" disabled>Select Recruiter</option>
+                                            {recruiters.map((recruiter) => (
+                                                <option key={recruiter.id} value={recruiter.id}>
+                                                    {recruiter.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span className="mr-2">Coord:</span>
+                                        <select
+                                            value={selectedCoordinator[candidate.id] || candidate.coordinator?.id || ""}
+                                            onChange={(e) => {
+                                                const newCoordinatorId = e.target.value;
+                                                handleCoordinatorChange(candidate.id, newCoordinatorId);
+                                                updateGreenhouseCandidate(candidate, 'coordinator', newCoordinatorId);
+                                            }}
+                                            className="w-100 form-select min-w-40 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600"
+                                        >
+                                            <option value="" disabled>Select Coordinator</option>
+                                            {coordinators.map((coordinator) => (
+                                                <option key={coordinator.id} value={coordinator.id}>
+                                                    {coordinator.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className={"px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 "}>
+                                {candidate?.curJobHiringTeamCombinedUsers?.map((htm, i) => (
+                                    <div key={i} >
+                                        <div>
+                                            <div className={"flex flex-row"+userMapping[htm.id]?"bg-green-200":"bg-red-200"}>
+                                                {htm.role}: {htm.name}
+                                       
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </td>
+                            <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {slackChannelsCreatedDict[candidate.id] ? (
+                                    <div
+                                        onClick={() => { handleArchiveSlackChannel(candidate) }}
+                                        className="w-fit button bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                    >
+                                        Delete - {slackChannelsCreatedDict[candidate.id].channelName}
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={() => { createSlackChannelForCandidate(candidate) }}
+                                        className="w-fit button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                    >
+                                        Create Channel
+                                    </div>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Name
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Stage
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Job Name
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Actions
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Job Hiring Team
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Slack Channel
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800">
+                {candidatesToAssign.map((candidate,i) => (
                         <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700" key={candidate.id}>
                             <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {/* {candidate.first_name + " " + candidate.last_name} */}
@@ -560,10 +766,23 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
 
                             </td>
                             <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {candidate.applications[0].current_stage.name}
+                                <div key={i} className="flex flex-col">
+                                    <div className="flex flex-col">
+                                    {candidate?.applications[0]?.current_stage?.name}
+
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <div
+                                            onClick={() => { handleMoveNextStage(candidate)}}
+                                            className="w-fit button bg-blue-500 hover:bg-blue-700 text-white py-1 px-1 rounded"
+                                        >
+                                            Move to Next Stage
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                             <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {candidate.applications[0].jobs[0].name}
+                                {candidate?.applications[0]?.jobs[0].name}
                             </td>
                             <td className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                 <div className="flex flex-col space-y-2">
