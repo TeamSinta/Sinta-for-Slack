@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "next build",
+        "build": "./run_migrations.sh && next build",
         "db:push": "drizzle-kit push",
         "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
         "dev": "next dev",
