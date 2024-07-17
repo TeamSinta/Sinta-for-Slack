@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
 import Image, { type StaticImageData } from "next/image";
+import { ReactNode } from "react";
 
 const logoMap: Record<string, StaticImageData> = {
     slack: slackLogo,
@@ -24,7 +25,9 @@ type TriggerConfig = {
     details: Record<string, unknown>;
 };
 
-export type AssignmentData = {
+export type AssignmentChannelsData = {
+    invitedUsers: ReactNode;
+    isArchived: ReactNode;
     id: string;
     name: string;
     status: string;
@@ -52,7 +55,7 @@ export type Condition = {
     field: Field | string; // Field can be either an object with label or a string
 };
 
-export function getColumns(): ColumnDef<AssignmentData>[] {
+export function getColumns(): ColumnDef<AssignmentChannelsData>[] {
     return columns;
 }
 
@@ -81,64 +84,79 @@ function formatCondition(condition: Condition): string {
     return `${readableField} is ${readableCondition} ${condition.value}${unit}`;
 }
 
-export const columns: ColumnDef<AssignmentData>[] = [
+export const columns: ColumnDef<AssignmentChannelsData>[] = [
     {
         accessorKey: "name",
         header: () => <span className="pl-2">Name</span>,
     },
+    // {
+    //     accessorKey: "objectField",
+    //     header: "Object Field",
+    // },
     {
-        accessorKey: "objectField",
-        header: "Object Field",
+        accessorKey: "greenhouseCandidateName",
+        header: "Candidate",
     },
     {
-        accessorKey: "alertType",
-        header: "Alert Type",
+        accessorKey: "greenhouseJobName",
+        header: "Job",
     },
     {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-            <Badge variant="secondary" className="capitalize">
-                {row.original.status}
-            </Badge>
-        ),
+        accessorKey: "name",
+        header: "Slack Channel Name",
+    },
+    {
+        accessorKey: "recruiterName",
+        header: "Recruiter",
+    },
+    {
+        accessorKey: "coordinatorName",
+        header: "Coordinator",
     },
     {
         accessorKey: "createdAt",
         header: "Created At",
-        cell: ({ row }) => (
-            <span className="text-muted-foreground">
-                {format(new Date(row.original.createdAt), "PP")}
-            </span>
-        ),
+        // cell: ({ row }) => (
+            // <span className="text-muted-foreground">
+                // {row.original.createdAt ? format(new Date(row.original.createdAt), "PP") : ""}
+            // </span>
+        // ),
     },
     {
         accessorKey: "isArchived",
         header: "Archived",
-        cell: ({ row }) => (
-            <div className="flex flex-wrap gap-2">
-                {row.original.isArchived}
-            </div>
-        ),
+        // cell: ({ row }) => (
+            // <div className="flex flex-wrap gap-2">
+                // {row.original.isArchived}
+            // </div>
+        // ),
     },
-    {
-        accessorKey: "conditions",
-        header: "Conditions",
-        cell: ({ row }) => {
-            const conditionTexts = row.original.conditions.map(formatCondition);
-            return (
-                <div
-                    className="cursor-pointer hover:underline"
-                    title={conditionTexts.join("; ")}
-                    onClick={() => console.log("Conditions Clicked:")}
-                >
-                    {conditionTexts.length > 1
-                        ? `${conditionTexts[0]} + ${conditionTexts.length - 1} more`
-                        : conditionTexts[0]}
-                </div>
-            );
-        },
-    },
+    // {
+    //     accessorKey: "invitedUsers",
+    //     header: "Invited Users",
+    //     cell: ({ row }) => {
+    //         console.log('row-',row)
+    //         let invUsers = row.original.invitedUsers as any []
+    //         return (
+    //             <div>{invUsers.length} - users, {invUsers.toString()}</div>
+    //         )
+    //         // let invitedUsers = row.original.invitedUsers as any[]
+    //         // // if(row.original.conditions && row.original.conditions.length){
+    //         // //     invitedUsers = row.original.invitedUsers.map(formatCondition);
+    //         // // }
+    //         // return (
+    //         //     <div
+    //         //         className="cursor-pointer hover:underline"
+    //         //         title={invitedUsers.join("; ")}
+    //         //         onClick={() => console.log("Conditions Clicked:")}
+    //         //     >
+    //         //         {invitedUsers.length > 1
+    //         //             ? `${invitedUsers[0]} + ${invitedUsers.length - 1} more`
+    //         //             : invitedUsers[0]}
+    //         //     </div>
+    //         // );
+    //     },
+    // },
     {
         header: "Actions",
         id: "actions",

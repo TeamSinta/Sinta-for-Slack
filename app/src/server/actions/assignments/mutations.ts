@@ -49,6 +49,7 @@ export async function createSlackChannel(channelName: any, slackTeamId: any) {
         console.log('Name taken - ',channelName)
 
         const data = await response.json();
+        console.log('CREATE SLACK CHANNEL - ', data)
         if (!data.ok) {
             if(data.error == "name_taken"){
                 console.log('Name taken - ',channelName)
@@ -70,26 +71,47 @@ export async function createSlackChannel(channelName: any, slackTeamId: any) {
 // type CreateAssignmentProps = z.infer<typeof assignmentFormSchema>;
 export async function saveSlackChannelCreatedToDB(slackChannelId: any, invitedUsers: any, channelName: any, hiringroomId: any, slackChannelFormat: any, greenhouseCandidateId: any, greenhouseJobId: any){
     try{
-        console.log('hiringroomId - ',hiringroomId)
-        console.log('slackChannelId - ',slackChannelId)
         console.log('channelName - ',channelName)
+        console.log('slackChannelId - ',slackChannelId)
         console.log('hiringroomId - ',hiringroomId)
+        console.log('invitedUsers - ',invitedUsers)
         console.log('slackChannelFormat - ',slackChannelFormat)
-        await db.insert(slackChannelsCreated).values({
+        console.log('greenhouseCandidateId - ',greenhouseCandidateId)
+        console.log('greenhouseJobId - ',greenhouseJobId)
+        const result = await db
+        .insert(slackChannelsCreated)
+        .values({
             name: channelName,
             channelId: slackChannelId,
             createdBy: 'user_id', // Replace with actual user ID
             description: 'Channel description', // Optional
             isArchived: false,
-            invitedUsers: invitedUsers,
-            hiringroomId: hiringroomId, // Replace with actual hiring room ID
-            channelFormat: slackChannelFormat, // Example format
-            greenhouseCandidateId:greenhouseCandidateId,
-            greenhouseJobId:greenhouseJobId,
+            invitedUsers: invitedUsers ? invitedUsers : [],
+            hiringroomId: hiringroomId ? hiringroomId : "", // Replace with actual hiring room ID
+            channelFormat: slackChannelFormat ? slackChannelFormat : "", // Example format
+            greenhouseCandidateId:greenhouseCandidateId ? greenhouseCandidateId : "",
+            greenhouseJobId:greenhouseJobId ? greenhouseJobId :"",
             createdAt: new Date(),
             modifiedAt: new Date(), // Ensure this field is included
-        });
-        console.log('post success insert')
+        })
+        .returning({
+            name: slackChannelsCreated.name,
+            channelId: slackChannelsCreated.channelId,
+            createdBy: slackChannelsCreated.createdBy, // Replace with actual user ID
+            description: slackChannelsCreated.description, // Optional
+            isArchived: slackChannelsCreated.isArchived,
+            invitedUsers: slackChannelsCreated.invitedUsers,
+            // hiringroomId: slackChannelsCreated.hiringroomId, // Replace with actual hiring room ID
+            channelFormat: slackChannelsCreated.channelFormat, // Example format
+            greenhouseCandidateId: slackChannelsCreated.greenhouseCandidateId,
+            greenhouseJobId: slackChannelsCreated.greenhouseJobId,
+            createdAt: slackChannelsCreated.createdAt,
+            // modifiedAt: slackChannelsCreated.modifiedAt, // Ensure this field is included
+        }) // Specify the fields you need to return
+        // .returning("*") // Return all fields or specify the fields you need
+        .execute();
+    // Assuming result is an array and we want the first (and only) record
+    return result[0];
     }
     catch(e){
         throw new Error(`Error saving slack chanenl created: ${e}`);

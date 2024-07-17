@@ -11,7 +11,7 @@ import { getOrganizations } from "../organization/queries";
 // Define a Zod schema with the specific enum values
 const assignmentStatusSchema = z.enum(["Active", "Inactive", "Archived"]);
 
-const paginatedAssignmentPropsSchema = z.object({
+const paginatedSlackChannelCreatedPropsSchema = z.object({
     page: z.coerce.number().default(1),
     per_page: z.coerce.number().default(10),
     sort: z.string().optional(),
@@ -20,9 +20,66 @@ const paginatedAssignmentPropsSchema = z.object({
     ownerId: z.string().optional(),
 });
 
-type GetPaginatedAssignmentsQueryProps = z.infer<
-    typeof paginatedAssignmentPropsSchema
+type GetPaginatedSlackChannelCreatedQueryProps = z.infer<
+    typeof paginatedSlackChannelCreatedPropsSchema
 >;
+
+export async function getSlackChannelsCreated(
+    input: GetPaginatedSlackChannelCreatedQueryProps,
+) {
+    noStore();
+
+    const { currentOrg } = await getOrganizations();
+
+    const offset = (input.page - 1) * input.per_page;
+    const [column, order] = (input.sort?.split(".") as [
+        keyof typeof hiringrooms.$inferSelect | undefined,
+        "asc" | "desc" | undefined,
+    ]) ?? ["createdAt", "desc"];
+
+    const { data, total } = await db.transaction(async (tx) => {
+        const hiringroomFilter = and(
+            eq(hiringrooms.organizationId, currentOrg.id), // Primary filter by organization ID
+            or(
+                input.name
+                    ? ilike(hiringrooms.name, `%${input.name}%`)
+                    : undefined,
+                input.status ? eq(hiringrooms.status, input.status) : undefined,
+                input.ownerId
+                    ? eq(hiringrooms.ownerId, input.ownerId)
+                    : undefined,
+            ),
+        );
+
+        const data = await tx
+            .select()
+            .from(hiringrooms)
+            .offset(offset)
+            .limit(input.per_page)
+            .where(hiringroomFilter)
+            .orderBy(
+                column && column in hiringrooms
+                    ? order === "asc"
+                        ? asc(hiringrooms[column])
+                        : desc(hiringrooms[column])
+                    : desc(hiringrooms.createdAt),
+            )
+            .execute();
+
+        const total = await tx
+            .select({ count: count() })
+            .from(hiringrooms)
+            .where(hiringroomFilter)
+            .execute()
+            .then((res) => res[0]?.count ?? 0);
+
+        return { data, total };
+    });
+
+    const pageCount = Math.ceil(total / input.per_page);
+
+    return { data, pageCount, total };
+}
 
 export async function getAssignments() {
     const { data } = await db.transaction(async (tx) => {

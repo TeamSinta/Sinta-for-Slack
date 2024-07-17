@@ -34,15 +34,15 @@ const searchableColumns: DataTableSearchableColumn<AssignmentData>[] = [
     { id: "name", placeholder: "Search by hiringroom name..." },
 ];
 
-export function AssignmentsTable({ hiringroomsPromise }: AssignmentsTableProps) {
-    const { data, pageCount, total } = React.use(hiringroomsPromise);
+export function AssignmentsTable({ assignmentsPromise }: AssignmentsTableProps) {
+    const { data, pageCount, total } = React.use(assignmentsPromise);
 
     const columns = useMemo<ColumnDef<AssignmentData, unknown>[]>(
         () => getColumns(),
         [],
     );
 
-    const hiringroomsData: AssignmentData[] = data.map((hiringroom) => {
+    const assignmentsData: AssignmentData[] = data.map((hiringroom) => {
         return {
             id: hiringroom.id,
             name: hiringroom.name,
@@ -58,7 +58,7 @@ export function AssignmentsTable({ hiringroomsPromise }: AssignmentsTableProps) 
     });
 
     const { table } = useDataTable({
-        data: hiringroomsData,
+        data: assignmentsData,
         columns,
         pageCount,
         searchableColumns,

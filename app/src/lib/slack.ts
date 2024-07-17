@@ -139,6 +139,7 @@ export async function matchUsers(
     greenhouseUsers: Record<string, { id: string; email: string }>,
     slackUsers: { value: string; label: string; email: string }[],
 ): Promise<Record<string, string>> {
+    console.log('WTF IN MATCH')
     // candidate -> application -> greenhouseUser role -> greenhouse User -> slackUser
     const slackUserMap = slackUsers.reduce(
         (acc: Record<string, string>, user) => {

@@ -35,6 +35,11 @@ export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
     "Inactive",
     "Archived",
 ]);
+export const slackChannelsCreatedStatusEnum = pgEnum("slack_channels_created_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
 export const assignmentStatusEnum = pgEnum("assignment_status", [
     "Active",
     "Inactive",

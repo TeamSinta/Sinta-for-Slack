@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         );
     }
     catch(e){
-        console.log('e-',e)
+        console.log('e post hiring room -',e)
         return new NextResponse(
             JSON.stringify({ error: "Unsupported Content Type - " + e }),
             {

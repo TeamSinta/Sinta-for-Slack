@@ -18,7 +18,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Button } from "@/components/ui/button";
 import { AssignmentsTable } from "./_components/assignments-table";
+import { SlackChannelsCreatedTable } from "./_components/slackchannelscreated-table";
+import { AssignmentsChannelTable } from "./_components/assignmentchannels-table";
+
 import { AssignmentsRoom } from "./_components/assignments-room";
+import { type getPaginatedAssignmentsQuery, getSlackChannelsCreated,getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
+import { getColumns, type AssignmentData } from "./_components/columns"; // Adjust to include correct imports and types for hiringrooms
+import { assignmentStatusEnum } from "@/server/db/schema";
+import { useDataTable } from "@/hooks/use-data-table";
+import type {
+    DataTableFilterableColumn,
+    DataTableSearchableColumn,
+} from "@/types/data-table";
+import { channel } from "diagnostics_channel";
+import { type SearchParams } from "@/types/data-table";
+import { z } from "zod";
+
+
 
 const mockData = {
     welcomeText: "Welcome to your Sinta Launchpad!",
@@ -43,11 +59,58 @@ const mockData = {
         "Explore potential features",
     ],
 };
+const filterableColumns: DataTableFilterableColumn<AssignmentData>[] = [
+    {
+        id: "status",
+        title: "Status",
+        options: assignmentStatusEnum.enumValues.map((v) => ({
+            label: v,
+            value: v,
+        })),
+    },
+];
 
-export default async function AssignmentsPage() {
+type AssignmentsTableProps = {
+    assignmentsPromise: ReturnType<typeof getPaginatedAssignmentsQuery>;
+};
+
+const searchableColumns: DataTableSearchableColumn<AssignmentData>[] = [
+    { id: "name", placeholder: "Search by hiringroom name..." },
+];
+
+type UsersPageProps = {
+    searchParams: SearchParams;
+};
+    
+const searchParamsSchema = z.object({
+    page: z.coerce.number().default(1),
+    per_page: z.coerce.number().default(10),
+    sort: z.string().optional(),
+    email: z.string().optional(),
+    status: z.enum(["Active", "Inactive", "Archived"]).optional(),
+    role: z.string().optional(),
+    operator: z.string().optional(),
+});
+export default async function AssignmentsPage({searchParams}:UsersPageProps) {
     const slackIntegration = await checkSlackTeamIdFilled();
     const greenhouseIntegration = await checkGreenhouseTeamIdFilled();
     const workflowsExist = await Checktoseeworkflows();
+
+
+    // let searchParamsX = {
+    //     page: 1,
+    //     per_page: 10,
+    //     sort: 'asc',
+    //     email: "",
+    //     status: "Active",
+    //     role: "",
+    //     operator: "",
+    // }
+    // const search = searchParamsSchema.parse(searchParams);
+    const search = searchParamsSchema.parse(searchParams);
+    
+    const slackChannelsCreatedPromise = getSlackChannelsCreatedPromise(search)
+    
     // const workflows = workflowsExist ? await getFirstFiveWorkflows() : [];
 
     
@@ -213,36 +276,18 @@ export default async function AssignmentsPage() {
     //     </Card>
     // );
 
+ 
     return (
         <AppPageShell
             title="Assignments"
             description="Overview of your account usage and potential features"
         >
             <Tabs defaultValue="all" className="w-full space-y-5">
-                <div className={"flex justify-between "}>
-                    <TabsList className="grid w-[450px] grid-cols-3">
-                    <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="created_me">
-                            Created by me
-                        </TabsTrigger>
-                        <TabsTrigger value="created_team">
-                            Created by team
-                        </TabsTrigger>
-                    </TabsList>
-                    {slackIntegration && greenhouseIntegration ? (
-                        // <CreateHiringroomSheet />
-                        <>
-                        </>
-                    ) : (
-                        <>ab</>
-                        // <AlertIntegrationDialog />
-                    )}
-                </div>
+              
                 <TabsContent value="all">
                     <div className="w-full space-y-5">
-                    <AssignmentsRoom></AssignmentsRoom>
-
-                        {/* <AssignmentsTable assignmentsPromise={assignmentsPromise} /> */}
+                    <AssignmentsRoom assignmentsPromise={slackChannelsCreatedPromise}></AssignmentsRoom>
+                        {/* <AssignmentsTable assignmentsPromise={slackChannelsCreatedPromise} /> */}
                         {/* <AssignmentsTable hiringroomsPromise={hiringroomAllPromise} /> */}
                     </div>
                 </TabsContent>

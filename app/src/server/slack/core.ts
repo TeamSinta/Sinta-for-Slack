@@ -60,8 +60,7 @@ export async function getChannels(): Promise<
         const data: SlackApiResponse<SlackChannel> = await response.json();
         if (data.ok && data.channels) {
             return data.channels.map((channel) => ({
-                value: channel.id,
-                label: `#${channel.name}`,
+                ...channel
             }));
         } else {
             throw new Error(data.error ?? "Error fetching channels");
