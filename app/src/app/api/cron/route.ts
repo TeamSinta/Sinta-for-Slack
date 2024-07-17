@@ -75,14 +75,12 @@ function getSlackUserIds(hiringroom, candidates, userMapping){
 }
 function getSlackIdsOfGreenHouseUsers(hiring_room_recipient, candidate, userMapping){
     const slackIds = []
-    console.log('hiring reciepieints  -',hiring_room_recipient.reciepients.length)
     hiring_room_recipient.recipients.forEach((recipient)=>{
         if(recipient.source == "greenhouse"){
             if(recipient.value.includes('ecruiter')){
                 if (candidate.recruiter) {
                     const slackId = userMapping[candidate.recruiter.id];
                     if (slackId) {
-                        console.log("entered map");
                         slackIds.push(slackId) //recipient.slackValue = slackId;
                     }
                 }
@@ -100,7 +98,6 @@ function getSlackIdsOfGreenHouseUsers(hiring_room_recipient, candidate, userMapp
 }
 function getSlackUsersFromRecipient(hiringroomRecipient){
     const slackUsers = []
-    console.log('hiring room recipient',hiringroomRecipient)
     hiringroomRecipient.recipients.forEach((recipient)=>{
         if(recipient.source == "slack"){
             if(recipient.value && recipient.label.startsWith('@') && !recipient.label.startsWith('#')){
@@ -111,7 +108,6 @@ function getSlackUsersFromRecipient(hiringroomRecipient){
             }
         }
     })
-    console.log('slackUsers  - ',slackUsers)
 
     return slackUsers
 }
@@ -133,8 +129,6 @@ function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): stri
 
    try{
         let channelName = slackChannelFormat
-        console.log('candidate  -',job)
-        console.log('candidate created at -',job.created_at)
         // Parse the created_at date for job
         const jobCreatedAt = parseISO(job.created_at);
         const jobMonthText = format(jobCreatedAt, 'MMMM'); // Full month name
@@ -160,8 +154,6 @@ function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): stri
 }
 function buildSlackChannelNameForCandidate(slackChannelFormat: string, candidate: any): string {
     let channelName = slackChannelFormat;
-    console.log('candidate  -',candidate)
-    console.log('candidate created at -',candidate.created_at)
     // Parse the created_at date for candidate
     const candidateCreatedAt = parseISO(candidate.created_at);
     const candidateMonthText = format(candidateCreatedAt, 'MMMM'); // Full month name
@@ -186,18 +178,13 @@ function buildSlackChannelNameForCandidate(slackChannelFormat: string, candidate
 
 export async function handleIndividualHiringroom(hiringroom){
     const hiringroomId = hiringroom.id
-    console.log('indivi room - ',hiringroomId)
     // return
     const allJobs = await fetchJobsFromGreenhouse()
-    console.log('indivi room1')
     let allCandidates = await fetchCandidates()
-    console.log('indivi room2')
     const greenhouseUsers = await fetchGreenhouseUsers();
-    console.log('hiring room3 - past green house')
     const slackTeamID = await getSlackTeamIDByHiringroomID(
         hiringroomId,
     );
-    console.log('indivi room4')
     const slackUsers = await getEmailsfromSlack(slackTeamID);
     const userMapping = await matchUsers(
         greenhouseUsers,
@@ -205,22 +192,18 @@ export async function handleIndividualHiringroom(hiringroom){
     );
     // create job room - name job_title + date posted + time
     // create candidate room - name candidate_first_initial + candidate_last_name + job_title
-    console.log('5pre check object field - slack team id - ',slackTeamID)
     if (hiringroom.objectField == 'Candidates'){
         // hiringroom.recipient = buildHiringRoomRecipients()
         // const slackUserIds = getSlackUserIds()
-        console.log('all candidates ? -',allCandidates.length)
         allCandidates.forEach(async (candidate)=>{
             const candidateFitsConditions = true //check()
             if(candidateFitsConditions){
-                console.log('new cand')
                 // create slack channel
                 const channelName = buildSlackChannelNameForCandidate(hiringroom.slackChannelFormat, candidate);
                 // const channelName = sanitizeChannelName(hiringroom.slackChannelFormat)
                 // const channelName = sanitizeChannelName(candidate.id + "-" + candidate.name)
                 const slackUsersIds = getSlackUsersFromRecipient(hiringroom.recipient)
                 const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
-                console.log('past 1')
                 const slackUserIds = slackUsersIds.concat(slackIdsOfGreenHouseUsers)
                 const messageText = "really good message text"
                 const channelId = await createSlackChannel(channelName, slackTeamID);
@@ -229,8 +212,6 @@ export async function handleIndividualHiringroom(hiringroom){
                     const invitedUsers = await inviteUsersToChannel(channelId, slackUserIds, slackTeamID);
                     const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText, slackTeamID);
-                    console.log('hiringroomId - ',hiringroomId)
-                    console.log('channelName - ',channelName)
                     await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat, candidate.id, candidate.applications[0].jobs[0].id)
 
                 }
@@ -238,10 +219,6 @@ export async function handleIndividualHiringroom(hiringroom){
         })
     }
     else if (hiringroom.objectField == 'Jobs'){
-        console.log('go bucks hiring job')
-        // console.log('hiring room -',hiringroom," ------- hiring room")
-        console.log('all allJobs ? -',allJobs.length)
-
         allJobs.forEach(async (job)=>{
             const jobFitsConditions = true
             // const jobFitsConditions = check()
@@ -249,21 +226,17 @@ export async function handleIndividualHiringroom(hiringroom){
                 // create slack channel
                 // let channelName = sanitizeChannelName(job.id + "-"+"1")
                 // let channelName = sanitizeChannelName(job.id + "-"+"1")
-                console.log('pre build')
                 const channelName = buildSlackChannelNameForJob(hiringroom.slackChannelFormat, job);
                 // channelName=channelName.substring(0,channelName.length-2)
                 // channelName = channelName.substring(0,6)
                 // channelName = channelName.substring(0,6)
                 // generateRandomSixDigitNumber
                 // const channelName = generateRandomSixDigitNumber()
-                console.log('post build')
 
                 const slackUsersIds = getSlackUsersFromRecipient(hiringroom.recipient)
                 // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
                 const slackUserIds = slackUsersIds // + slackIdsOfGreenHouseUsers
                 // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers
-                console.log('create slack channel - ', slackTeamID)
-                console.log('create slack channelName - ', channelName)
 
                 const channelId = await createSlackChannel(channelName, slackTeamID);
 
@@ -272,8 +245,6 @@ export async function handleIndividualHiringroom(hiringroom){
                     await inviteUsersToChannel(channelId, slackUserIds, slackTeamID);
                     // const messageText = 'Welcome to the new hiring room!';
                     // await postMessageToSlackChannel(channelId, messageText);
-                    console.log('hiringroomId - ',hiringroomId)
-                    console.log('channelName - ',channelName)
                     await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat,"",job.id)
 
                 }
@@ -311,14 +282,11 @@ function combineGreenhouseRolesAndSlackUsers(workflowRecipient){
             greenhouseRoles.push(rec.value);
         }
     });
-    console.log()
 
     if (hasGreenhouse) {
         const candidates = filteredConditionsData;
         // console.log('filteredConditionsData - ',filteredConditionsData)
-        console.log('candidates - ',candidates.length)
         candidates.forEach((cand) => {
-        console.log('greenhouseRoles - ',greenhouseRoles.length)
 
             greenhouseRoles.forEach((role) => {
                 if (role.includes("ecruiter") || role.includes("oordinator")) {
@@ -387,7 +355,6 @@ export async function handleWorkflows(){
                     apiUrl,
                     processor ? { query: processor } : {},
                 );
-                console.log("cron-job running!!");
                 // console.log("cron-job running!! - data ",data);
                 // Filter data based on the "stuck-in-stage" conditions
                 const filteredConditionsData =
@@ -460,7 +427,6 @@ export async function handleWorkflows(){
 // Define the GET handler for the route
 export async function GET() {
     try{
-        console.log('gobucks')
         const numWorkflows = await handleWorkflows()
         const numHiringrooms = await handleHiringrooms()
         return NextResponse.json({ message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}` }, { status: 200 });

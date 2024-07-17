@@ -60,7 +60,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
     useEffect(()=>{
         const getAllSlackChannels = async()=>{
             let slackResp = await getChannels()
-            console.log('slack resp - ',slackResp)
             setAllSlackChannels(slackResp)
         }
         getAllSlackChannels()
@@ -131,11 +130,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             
             setRecruiterCounts(initialRecruiterCounts);
             setCoordinatorCounts(initialCoordinatorCounts);
-            console.log('greenhouseUsersgreenhouseUsers- ',greenhouseUsers)
-            console.log('slackUsers- ',slackUsers)
-            console.log('greenhouseJobs- ',greenhouseJobs)
-            console.log('greenhouseUsersDict- ',greenhouseUsersDict)
-            console.log('greenhouseCandidates- ',greenhouseCandidates)
 
             // const greenhouseUsers = await fetchAllGreenhouseUsers()
             // console.log('slackUsers users - ',slackUsers)
@@ -144,7 +138,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
                 greenhouseUsersDict,
                 slackUsers,
             ) as any;
-            console.log('tmpUserMapping users - ',tmpUserMapping)
             setUserMapping(tmpUserMapping)
             // console.log('userMapping users - ',userMapping)
 
@@ -267,7 +260,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
         })
     },[])
     const createSlackChannelForCandidate = async (candidate) => {
-        console.log('candidate - ',candidate)
         // create slack channel
         const slackTeamId = 'T04C82XCPRU'
         const recInitials = candidate.recruiter ? candidate.recruiter.first_name.substring(0,1).toLowerCase()+ candidate.recruiter.last_name.substring(0,1).toLowerCase() : ""
@@ -283,10 +275,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
         const jobId = candidate.applications[0].jobs[0].id
         const curJob = jobsDict[jobId]
         const curJobHiringTeam = curJob.hiring_team
-        console.log('greenhouseRecruiterId - ',greenhouseRecruiterId)
-        console.log('greenhouseCoordinatorId - ',greenhouseCoordinatorId)
-        console.log('slackCoordinatorId - ',slackCoordinatorId)
-        console.log('slackRecruiterId - ',slackRecruiterId)
         const hiringteamSlackIds = getSlackUsersFromHiringTeam(curJobHiringTeam, userMapping)
         let slackUserIds = []
         if(slackCoordinatorId && slackCoordinatorId != "" && slackCoordinatorId != undefined){
@@ -298,10 +286,8 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
         // const slackUserIds = [].concat(hiringteamSlackIds)
         slackUserIds = slackUserIds.concat(slackUserIds)
         // const slackUserIds = [slackRecruiterId, slackCoordinatorId].concat(hiringteamSlackIds)
-        console.log('slackUserIds - ',slackUserIds)
         // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
         const slackChannelId = await createSlackChannel(channelName, slackTeamId)
-        console.log('slackChannelId - ',slackChannelId)
         if(slackChannelId){
             await inviteUsersToChannel(slackChannelId, slackUserIds, slackTeamId);
             const hiringroomId = ''
@@ -309,7 +295,6 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             const greenhouseJobId = candidate?.applications[0]?.jobs[0].id
             const greenhouseCandidateId = candidate.id
                 // await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat,"",job.id)
-            console.log('pre slack channel db -')
             const slackChannelDB = await saveSlackChannelCreatedToDB(slackChannelId, slackUserIds, channelName, hiringroomId, hiringroomSlackChannelFormat, greenhouseCandidateId, greenhouseJobId)
             console.log('post slack channel db -',slackChannelDB)
             // update ui
