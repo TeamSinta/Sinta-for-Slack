@@ -11,7 +11,6 @@ import { slackChannelsCreated } from "@/server/db/schema";
 import { getEmailsfromSlack } from "@/server/slack/core";
 import {
     fetchGreenhouseUsers,
-    filterScheduledInterviewsWithConditions,
     fetchJobsFromGreenhouse,
     fetchCandidates,
 } from "@/server/greenhouse/core";
@@ -22,8 +21,6 @@ import {
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
 import {
-    buildSlackMessageByCandidateOnFilteredData,
-    filterScheduledInterviewsDataForSlack,
     filterCandidatesDataForSlack,
     matchUsers,
 } from "@/lib/slack";
