@@ -36,6 +36,7 @@ export type AssignmentData = {
     alertType: string;
     objectField: string;
     ownerId: string;
+    isArchived:boolean;
     triggerConfig: TriggerConfig;
 };
 
@@ -117,7 +118,7 @@ export const columns: ColumnDef<AssignmentData>[] = [
         header: "Archived",
         cell: ({ row }) => (
             <div className="flex flex-wrap gap-2">
-                {row.original.isArchived}
+                {row.original?.isArchived}
             </div>
         ),
     },

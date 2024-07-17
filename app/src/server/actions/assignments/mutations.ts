@@ -79,37 +79,35 @@ export async function saveSlackChannelCreatedToDB(slackChannelId: any, invitedUs
         console.log('greenhouseCandidateId - ',greenhouseCandidateId)
         console.log('greenhouseJobId - ',greenhouseJobId)
         const result = await db
-        .insert(slackChannelsCreated)
-        .values({
-            name: channelName,
-            channelId: slackChannelId,
-            createdBy: 'user_id', // Replace with actual user ID
-            description: 'Channel description', // Optional
-            isArchived: false,
-            invitedUsers: invitedUsers ? invitedUsers : [],
-            hiringroomId: hiringroomId ? hiringroomId : "", // Replace with actual hiring room ID
-            channelFormat: slackChannelFormat ? slackChannelFormat : "", // Example format
-            greenhouseCandidateId:greenhouseCandidateId ? greenhouseCandidateId : "",
-            greenhouseJobId:greenhouseJobId ? greenhouseJobId :"",
-            createdAt: new Date(),
-            modifiedAt: new Date(), // Ensure this field is included
-        })
-        .returning({
-            name: slackChannelsCreated.name,
-            channelId: slackChannelsCreated.channelId,
-            createdBy: slackChannelsCreated.createdBy, // Replace with actual user ID
-            description: slackChannelsCreated.description, // Optional
-            isArchived: slackChannelsCreated.isArchived,
-            invitedUsers: slackChannelsCreated.invitedUsers,
-            // hiringroomId: slackChannelsCreated.hiringroomId, // Replace with actual hiring room ID
-            channelFormat: slackChannelsCreated.channelFormat, // Example format
-            greenhouseCandidateId: slackChannelsCreated.greenhouseCandidateId,
-            greenhouseJobId: slackChannelsCreated.greenhouseJobId,
-            createdAt: slackChannelsCreated.createdAt,
-            // modifiedAt: slackChannelsCreated.modifiedAt, // Ensure this field is included
-        }) // Specify the fields you need to return
-        // .returning("*") // Return all fields or specify the fields you need
-        .execute();
+    .insert(slackChannelsCreated)
+    .values({
+        name: channelName,
+        channelId: slackChannelId,
+        createdBy: 'user_id', // Replace with actual user ID
+        description: 'Channel description', // Optional
+        isArchived: false,
+        invitedUsers: invitedUsers ? invitedUsers : [],
+        hiringroomId: hiringroomId ? hiringroomId : "", // Ensure this field is included
+        channelFormat: slackChannelFormat ? slackChannelFormat : "", // Example format
+        greenhouseCandidateId: greenhouseCandidateId ? greenhouseCandidateId : "",
+        greenhouseJobId: greenhouseJobId ? greenhouseJobId : "",
+        createdAt: new Date(),
+        // modifiedAt: new Date(), // Ensure this field is included
+    })
+    .returning({
+        name: slackChannelsCreated.name,
+        channelId: slackChannelsCreated.channelId,
+        createdBy: slackChannelsCreated.createdBy, // Replace with actual user ID
+        description: slackChannelsCreated.description, // Optional
+        isArchived: slackChannelsCreated.isArchived,
+        invitedUsers: slackChannelsCreated.invitedUsers,
+        hiringroomId: slackChannelsCreated.hiringroomId, // Ensure this field is included
+        channelFormat: slackChannelsCreated.channelFormat, // Example format
+        greenhouseCandidateId: slackChannelsCreated.greenhouseCandidateId,
+        greenhouseJobId: slackChannelsCreated.greenhouseJobId,
+        createdAt: slackChannelsCreated.createdAt,
+        // modifiedAt: slackChannelsCreated.modifiedAt, // Ensure this field is included
+    }).execute();
     // Assuming result is an array and we want the first (and only) record
     return result[0];
     }

@@ -7,10 +7,14 @@ import { z } from "zod";
 import { unstable_noStore as noStore } from "next/cache";
 import { protectedProcedure } from "@/server/procedures";
 import { getOrganizations } from "../organization/queries";
+import { slackChannelsCreated } from "@/server/db/schema";
 
 // Define a Zod schema with the specific enum values
 const assignmentStatusSchema = z.enum(["Active", "Inactive", "Archived"]);
 
+type GetPaginatedAssignmentsQueryProps = z.infer<
+    typeof paginatedSlackChannelCreatedPropsSchema
+>;
 const paginatedSlackChannelCreatedPropsSchema = z.object({
     page: z.coerce.number().default(1),
     per_page: z.coerce.number().default(10),
@@ -24,62 +28,62 @@ type GetPaginatedSlackChannelCreatedQueryProps = z.infer<
     typeof paginatedSlackChannelCreatedPropsSchema
 >;
 
-export async function getSlackChannelsCreated(
-    input: GetPaginatedSlackChannelCreatedQueryProps,
-) {
-    noStore();
+// export async function getSlackChannelsCreated(
+//     input: GetPaginatedSlackChannelCreatedQueryProps,
+// ) {
+//     noStore();
 
-    const { currentOrg } = await getOrganizations();
+//     const { currentOrg } = await getOrganizations();
 
-    const offset = (input.page - 1) * input.per_page;
-    const [column, order] = (input.sort?.split(".") as [
-        keyof typeof hiringrooms.$inferSelect | undefined,
-        "asc" | "desc" | undefined,
-    ]) ?? ["createdAt", "desc"];
+//     const offset = (input.page - 1) * input.per_page;
+//     const [column, order] = (input.sort?.split(".") as [
+//         keyof typeof slackChannelsCreated.$inferSelect | undefined,
+//         "asc" | "desc" | undefined,
+//     ]) ?? ["createdAt", "desc"];
 
-    const { data, total } = await db.transaction(async (tx) => {
-        const hiringroomFilter = and(
-            eq(hiringrooms.organizationId, currentOrg.id), // Primary filter by organization ID
-            or(
-                input.name
-                    ? ilike(hiringrooms.name, `%${input.name}%`)
-                    : undefined,
-                input.status ? eq(hiringrooms.status, input.status) : undefined,
-                input.ownerId
-                    ? eq(hiringrooms.ownerId, input.ownerId)
-                    : undefined,
-            ),
-        );
+//     const { data, total } = await db.transaction(async (tx) => {
+//         const slackChannelsCreatedFilter = and(
+//             eq(slackChannelsCreated.organizationId, currentOrg.id), // Primary filter by organization ID
+//             or(
+//                 input.name
+//                     ? ilike(hiringrooms.name, `%${input.name}%`)
+//                     : undefined,
+//                 input.status ? eq(hiringrooms.status, input.status) : undefined,
+//                 input.ownerId
+//                     ? eq(hiringrooms.ownerId, input.ownerId)
+//                     : undefined,
+//             ),
+//         );
 
-        const data = await tx
-            .select()
-            .from(hiringrooms)
-            .offset(offset)
-            .limit(input.per_page)
-            .where(hiringroomFilter)
-            .orderBy(
-                column && column in hiringrooms
-                    ? order === "asc"
-                        ? asc(hiringrooms[column])
-                        : desc(hiringrooms[column])
-                    : desc(hiringrooms.createdAt),
-            )
-            .execute();
+//         const data = await tx
+//             .select()
+//             .from(hiringrooms)
+//             .offset(offset)
+//             .limit(input.per_page)
+//             .where(hiringroomFilter)
+//             .orderBy(
+//                 column && column in hiringrooms
+//                     ? order === "asc"
+//                         ? asc(hiringrooms[column])
+//                         : desc(hiringrooms[column])
+//                     : desc(hiringrooms.createdAt),
+//             )
+//             .execute();
 
-        const total = await tx
-            .select({ count: count() })
-            .from(hiringrooms)
-            .where(hiringroomFilter)
-            .execute()
-            .then((res) => res[0]?.count ?? 0);
+//         const total = await tx
+//             .select({ count: count() })
+//             .from(hiringrooms)
+//             .where(hiringroomFilter)
+//             .execute()
+//             .then((res) => res[0]?.count ?? 0);
 
-        return { data, total };
-    });
+//         return { data, total };
+//     });
 
-    const pageCount = Math.ceil(total / input.per_page);
+//     const pageCount = Math.ceil(total / input.per_page);
 
-    return { data, pageCount, total };
-}
+//     return { data, pageCount, total };
+// }
 
 export async function getAssignments() {
     const { data } = await db.transaction(async (tx) => {

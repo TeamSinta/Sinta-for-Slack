@@ -22,7 +22,9 @@ import { SlackChannelsCreatedTable } from "./_components/slackchannelscreated-ta
 import { AssignmentsChannelTable } from "./_components/assignmentchannels-table";
 
 import { AssignmentsRoom } from "./_components/assignments-room";
-import { type getPaginatedAssignmentsQuery, getSlackChannelsCreated,getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
+
+import {getSlackChannelsCreated,getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
+import { type getPaginatedAssignmentsQuery} from "@/server/actions/assignments/queries";
 import { getColumns, type AssignmentData } from "./_components/columns"; // Adjust to include correct imports and types for hiringrooms
 import { assignmentStatusEnum } from "@/server/db/schema";
 import { useDataTable } from "@/hooks/use-data-table";
