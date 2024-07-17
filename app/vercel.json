@@ -1,4 +1,13 @@
 {
+    "builds": [
+        {
+          "src": "package.json",
+          "use": "@vercel/node"
+        }
+      ],
+      "scripts": {
+        "build": "./run_migrations.sh && npm run build"
+      },
     "crons": [
         {
             "path": "/api/cron",

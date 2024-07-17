@@ -3,7 +3,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import axios from "axios"
 export const dynamic = "force-dynamic";
-async function handleGreenhouseCandidateRequest(url: string, options: RequestInit & { query?: Record<string, string> }) {
+async function handleGreenhouseCandidateRequest(url: string, options: any ) {
+    // async function handleGreenhouseCandidateRequest(url: string, options: RequestInit & { query?: Record<string, string> }) {
     // const headers: HeadersInit = {
     //     "Authorization": `Basic ${process.env.GREENHOUSE_API_KEY}`, // Basic Auth token
     //     "Content-Type": "application/json",
@@ -24,14 +25,14 @@ async function handleGreenhouseCandidateRequest(url: string, options: RequestIni
 
     // console.log('Request URL:', requestUrl);
     // console.log('Headers:', headers);
-    console.log('options',options)
-    console.log('options',options.method)
-    console.log('options',options.data)
+    // console.log('options',options)
+    // console.log('options',options.method)
+    // console.log('options',options.data)
     const response = await axios({
         url: requestUrl,
         method: options.method,
         headers: headers,
-        data: options.data,
+        data: options?.data,
     });
 
     if (response.status < 200 || response.status >= 300) {

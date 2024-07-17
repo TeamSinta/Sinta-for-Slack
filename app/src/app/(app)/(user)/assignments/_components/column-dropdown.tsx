@@ -22,7 +22,8 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 
 type AssignmentStatus = "Active" | "Inactive" | "Archived";
 
-export function ColumnDropdown({ id }: AssignmentData) {
+export function ColumnDropdown({ id }: any) {
+    // export function ColumnDropdown({ id }: AssignmentData) {
     const router = useRouter();
 
     // Mutation to update the assignment status
