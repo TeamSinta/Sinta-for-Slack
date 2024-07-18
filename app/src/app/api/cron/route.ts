@@ -4,7 +4,10 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { buildSlackChannelNameForCandidate, buildSlackChannelNameForJob, createSlackChannel, getEmailsfromSlack, getSlackIdsOfGreenHouseUsers, getSlackUsersFromRecipient, inviteUsersToChannel, saveSlackChannelCreatedToDB } from "@/server/slack/core";
+import { buildSlackChannelNameForCandidate, buildSlackChannelNameForJob,
+  createSlackChannel, getEmailsfromSlack, getSlackIdsOfGreenHouseUsers,
+  getSlackUsersFromRecipient, inviteUsersToChannel,
+  saveSlackChannelCreatedToDB } from "@/server/slack/core";
 import {
     fetchGreenhouseUsers,
     fetchJobsFromGreenhouse,

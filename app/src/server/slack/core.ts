@@ -36,7 +36,7 @@ interface SlackApiResponse<T> {
     members?: T[];
 }
 
-export function generateRandomSixDigitNumber() {
+function generateRandomSixDigitNumber() {
   const min = 100000; // Minimum 6-digit number
   const max = 999999; // Maximum 6-digit number
   const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -135,6 +135,7 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
+           console.log("response", response);
             throw new Error("Failed to fetch users");
         }
 
@@ -578,7 +579,7 @@ export async function sendSlackButtonNotification(
 }
 
 
-export function getSlackUserIds(hiringroom: { recipient: any[]; }, candidates: any, userMapping: any) {
+export async function getSlackUserIds(hiringroom: { recipient: any[]; }, candidates: any, userMapping: any) {
   // function buildHiringRoomRecipients(hiringroom, candidates, userMapping){
   hiringroom.recipient.map((recipient: any) => {
       if (recipient.source === "greenhouse") {
@@ -590,7 +591,7 @@ export function getSlackUserIds(hiringroom: { recipient: any[]; }, candidates: a
       combineGreenhouseRolesAndSlackUsers(hiringroom);
   return greenHouseAndSlackRecipients;
 }
-export function getSlackIdsOfGreenHouseUsers(
+export async function getSlackIdsOfGreenHouseUsers(
   hiring_room_recipient: { reciepients: string | any[]; recipients: { source: string; value: string | string[]; }[]; },
   candidate: { recruiter: { id: string | number; }; coordinator: { id: string | number; }; },
   userMapping: Record<string, string>,
@@ -622,7 +623,7 @@ export function getSlackIdsOfGreenHouseUsers(
   });
   return slackIds;
 }
-export function getSlackUsersFromRecipient(hiringroomRecipient: { recipients: any[]; }) {
+export async function getSlackUsersFromRecipient(hiringroomRecipient: { recipients: any[]; }) {
   const slackUsers: any[] = [];
   console.log("hiring room recipient", hiringroomRecipient);
   hiringroomRecipient.recipients.forEach((recipient) => {
@@ -646,7 +647,7 @@ export function getSlackUsersFromRecipient(hiringroomRecipient: { recipients: an
   return slackUsers;
 }
 
-export function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): string {
+export async function buildSlackChannelNameForJob(slackChannelFormat: string, job: any): string {
 
   try{
        let channelName = slackChannelFormat
@@ -680,7 +681,7 @@ export function buildSlackChannelNameForJob(slackChannelFormat: string, job: any
        return "goooooooo-bucks-" + randomNumString;
    }
 }
-export function buildSlackChannelNameForCandidate(
+export async function buildSlackChannelNameForCandidate(
    slackChannelFormat: string,
    candidate: any,
 ): string {
@@ -812,7 +813,7 @@ export async function inviteUsersToChannel(channelId: any, userIds: any[], slack
       console.error("Error inviting users to Slack channel:", error);
   }
 }
-export function sanitizeChannelName(name: string) {
+function sanitizeChannelName(name: string) {
     return name
         .toLowerCase() // convert to lowercase
         .replace(/[^a-z0-9-_]/g, "-") // replace invalid characters with hyphens
