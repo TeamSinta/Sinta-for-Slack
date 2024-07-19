@@ -11,7 +11,7 @@ import {
     Zap,
     Workflow,
     Cable,
-    DoorOpen
+    DoorOpen,
 } from "lucide-react";
 import { siteUrls } from "@/config/urls";
 

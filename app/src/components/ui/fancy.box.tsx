@@ -89,10 +89,7 @@ export function FancyBox({
 
     return (
         <div className="flex-1">
-            <Popover
-                open={openCombobox}
-                onOpenChange={onComboboxOpenChange}
-            >
+            <Popover open={openCombobox} onOpenChange={onComboboxOpenChange}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
@@ -114,7 +111,7 @@ export function FancyBox({
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="overflow-y-auto max-h-[500px] w-[350px] p-0">
+                <PopoverContent className="max-h-[500px] w-[350px] overflow-y-auto p-0">
                     <Command loop>
                         <CommandInput
                             ref={inputRef}
@@ -131,9 +128,7 @@ export function FancyBox({
                                     <CommandItem
                                         key={field.value}
                                         value={field.value}
-                                        onSelect={() =>
-                                            toggleFramework(field)
-                                        }
+                                        onSelect={() => toggleFramework(field)}
                                     >
                                         <Check
                                             className={cn(

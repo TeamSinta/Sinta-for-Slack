@@ -7,9 +7,7 @@
 
 "use client";
 
-import {
-    updateWorkflowMutation,
-} from "@/server/actions/workflows/mutations";
+import { updateWorkflowMutation } from "@/server/actions/workflows/mutations";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +39,7 @@ import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackWorkflow from "./slack-workflow";
 import ConditionComponent from "./conditions";
 import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
-import { getWorkflowById } from '@/server/actions/workflows/queries'
+import { getWorkflowById } from "@/server/actions/workflows/queries";
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
@@ -121,7 +119,13 @@ interface Job {
     name: string;
 }
 
-function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string }) {
+function WorkflowSheet({
+    workflowId,
+    mode,
+}: {
+    workflowId: string;
+    mode: string;
+}) {
     const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
@@ -493,81 +497,97 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
         },
     });
     // import { db } from "@/server/db"; // Adjust the import to your actual db instance
-// import { workflows } from "@/server/db/schema"; // Adjust the import to your actual schema
-const [isFormReady, setIsFormReady] = useState(false);
+    // import { workflows } from "@/server/db/schema"; // Adjust the import to your actual schema
+    const [isFormReady, setIsFormReady] = useState(false);
 
-useEffect(() => {
-    if (mode === 'edit' && workflowId) {
-        setIsFormReady(true);
-    }
-}, [mode, workflowId]);
+    useEffect(() => {
+        if (mode === "edit" && workflowId) {
+            setIsFormReady(true);
+        }
+    }, [mode, workflowId]);
 
-useEffect(() => {
-    if (isFormReady && mode === 'edit' && workflowId) {
-        const fetchWorkflowData = async () => {
-            try {
-                const data = await getWorkflowById(workflowId);
-                console.log('DATA - ',data)
-                const formattedData = {
-                    name: data.name || "",
-                    objectField: data.objectField || "",
-                    alertType: data.alertType || "timebased",
-                    recipient: data.recipient || "",
-                    conditions: data.conditions || [],
-                    organizationId: data.organizationId || "",
-                    triggerConfig: data.triggerConfig || { apiUrl: "", processor: "" },
-                };
-                console.log('DAA - ALERT ',data?.alertType)
-                form.setValue("id",data.id || "")
-                form.setValue("conditions",data.conditions || [])
-                form.setValue("createdAt",data.createdAt || "")
-                form.setValue("id",data.id || "")
-                form.setValue("modifiedAt",data.modifiedAt || "")
-                form.setValue("name",data.name || "")
-                form.setValue("objectField",data.objectField || "")
-                form.setValue("organizationId",data.organizationId || "")
-                form.setValue("ownerId",data.ownerId || "")
-                form.setValue("recipient",data.recipient || "")
-                form.setValue("status",data.status || "ACTIVE")
-                form.setValue("alertType",data.alertType || "timebased")
-                handleSelectChange(data.objectField || "","","objectField",)
-                handleSelectChange("timebased" || "","","alertType",)
-                // handleSelectChange(data.alertType || "timebased" || "","","alertType",)
-                handleSelectChange(data.recipient || "","","recipient",)
-                handleSelectChange(data.conditions || "","","conditions",)
-                handleSelectChange(data.organizationId || "","","organizationId",)
-                handleSelectChange(data.triggerConfig || "","","triggerConfig",)
-                handleRecipientsChange(data.recipient.recipients) // to fill in
-                handleCustomMessageBodyChange(data?.recipient?.customMessageBody)
-                setSelectedRecipients(data.recipient.recipients)
-                setRecipientConfig(data.recipient);
-                form.setValue("recipient", data.recipient);
-                // handleConditionChange
-                // handleOpeningTextChange
-            // }
-            // onFieldsSelect={handleFieldsSelect}
-            // onButtonsChange={handleButtonsChange}
-            // onDeliveryOptionChange={
-            //     handleDeliveryOptionChange
-            // }
-            // onRecipientsChange={handleRecipientsChange}
-            // onCustomMessageBodyChange={
-            //     handleCustomMessageBodyChange
-                // reset(formattedData); // Reset form with fetched data
-            } catch (error) {
-                toast.error("Failed to load workflow data."+error);
-            }
-        };
+    useEffect(() => {
+        if (isFormReady && mode === "edit" && workflowId) {
+            const fetchWorkflowData = async () => {
+                try {
+                    const data = await getWorkflowById(workflowId);
+                    console.log("DATA - ", data);
+                    const formattedData = {
+                        name: data.name || "",
+                        objectField: data.objectField || "",
+                        alertType: data.alertType || "timebased",
+                        recipient: data.recipient || "",
+                        conditions: data.conditions || [],
+                        organizationId: data.organizationId || "",
+                        triggerConfig: data.triggerConfig || {
+                            apiUrl: "",
+                            processor: "",
+                        },
+                    };
+                    console.log("DAA - ALERT ", data?.alertType);
+                    form.setValue("id", data.id || "");
+                    form.setValue("conditions", data.conditions || []);
+                    form.setValue("createdAt", data.createdAt || "");
+                    form.setValue("id", data.id || "");
+                    form.setValue("modifiedAt", data.modifiedAt || "");
+                    form.setValue("name", data.name || "");
+                    form.setValue("objectField", data.objectField || "");
+                    form.setValue("organizationId", data.organizationId || "");
+                    form.setValue("ownerId", data.ownerId || "");
+                    form.setValue("recipient", data.recipient || "");
+                    form.setValue("status", data.status || "ACTIVE");
+                    form.setValue("alertType", data.alertType || "timebased");
+                    handleSelectChange(
+                        data.objectField || "",
+                        "",
+                        "objectField",
+                    );
+                    handleSelectChange("timebased" || "", "", "alertType");
+                    // handleSelectChange(data.alertType || "timebased" || "","","alertType",)
+                    handleSelectChange(data.recipient || "", "", "recipient");
+                    handleSelectChange(data.conditions || "", "", "conditions");
+                    handleSelectChange(
+                        data.organizationId || "",
+                        "",
+                        "organizationId",
+                    );
+                    handleSelectChange(
+                        data.triggerConfig || "",
+                        "",
+                        "triggerConfig",
+                    );
+                    handleRecipientsChange(data.recipient.recipients); // to fill in
+                    handleCustomMessageBodyChange(
+                        data?.recipient?.customMessageBody,
+                    );
+                    setSelectedRecipients(data.recipient.recipients);
+                    setRecipientConfig(data.recipient);
+                    form.setValue("recipient", data.recipient);
+                    // handleConditionChange
+                    // handleOpeningTextChange
+                    // }
+                    // onFieldsSelect={handleFieldsSelect}
+                    // onButtonsChange={handleButtonsChange}
+                    // onDeliveryOptionChange={
+                    //     handleDeliveryOptionChange
+                    // }
+                    // onRecipientsChange={handleRecipientsChange}
+                    // onCustomMessageBodyChange={
+                    //     handleCustomMessageBodyChange
+                    // reset(formattedData); // Reset form with fetched data
+                } catch (error) {
+                    toast.error("Failed to load workflow data." + error);
+                }
+            };
 
-        fetchWorkflowData();
-    }
-}, [isFormReady, mode, workflowId, reset]);
-
+            fetchWorkflowData();
+        }
+    }, [isFormReady, mode, workflowId, reset]);
 
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
-        console.log('on submit')
+        console.log("on submit");
         try {
             const formData = form.getValues();
             console.log("Form Data before submission:", formData);
@@ -576,23 +596,23 @@ useEffect(() => {
             const allConditions =
                 selectedAlertType === "timebased"
                     ? timeBasedConditions
-                        .map((condition) => ({
-                            ...condition,
-                            field: {
-                                value: condition.field.value,
-                                label: condition.field.label,
-                            },
-                        }))
-                        .concat(conditions)
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions)
                     : stuckStageConditions
-                        .map((condition) => ({
-                            ...condition,
-                            field: {
-                                value: condition.field.value,
-                                label: condition.field.label,
-                            },
-                        }))
-                        .concat(conditions);
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions);
 
             // Transform and include combined conditions
             const transformedData = {
@@ -600,11 +620,10 @@ useEffect(() => {
                 conditions: allConditions,
             };
 
-            if (mode == "edit"){
+            if (mode == "edit") {
                 //update db
-                await updateWorkflowMutation(transformedData)
-            }
-            else{
+                await updateWorkflowMutation(transformedData);
+            } else {
                 await mutateAsync(transformedData);
             }
 
@@ -613,11 +632,10 @@ useEffect(() => {
             });
             reset();
             setIsOpen(false);
-            if (mode == "edit"){
+            if (mode == "edit") {
                 toast.success("Workflow updated successfully");
-                router.push('/workflows')
-            }
-            else{
+                router.push("/workflows");
+            } else {
                 toast.success("Workflow created successfully");
             }
         } catch (error) {
@@ -1163,7 +1181,9 @@ useEffect(() => {
                                         handleCustomMessageBodyChange
                                     } // Add this line
                                     selectedRecipients={selectedRecipients}
-                                    setSelectedRecipients={setSelectedRecipients}
+                                    setSelectedRecipients={
+                                        setSelectedRecipients
+                                    }
                                 />
                             </div>
                         </div>
@@ -1174,7 +1194,11 @@ useEffect(() => {
                                 disabled={isMutatePending}
                                 className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
                             >
-                                {mode == "edit" ? <>Save Workflow</>:<>Submit Workflow</>}
+                                {mode == "edit" ? (
+                                    <>Save Workflow</>
+                                ) : (
+                                    <>Submit Workflow</>
+                                )}
                             </Button>
                         </div>
                     </form>

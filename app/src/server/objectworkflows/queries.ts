@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 //@ts-nocheck
@@ -19,8 +18,6 @@ import { sendSlackNotification } from "../slack/core";
 import { getSlackTeamIDByWorkflowID } from "../actions/slack/query";
 import { getSubdomainByWorkflowID } from "../actions/organization/queries";
 import { type WorkflowRecipient } from "@/types/workflows";
-
-
 
 interface Workflow {
     id: string;

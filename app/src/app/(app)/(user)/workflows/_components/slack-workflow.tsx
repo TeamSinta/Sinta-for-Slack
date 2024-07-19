@@ -51,8 +51,8 @@ interface SlackWorkflowProps {
     onButtonsChange: (buttons: ButtonAction[]) => void;
     onRecipientsChange: (recipients: Option[]) => void;
     onCustomMessageBodyChange: (customMessageBody: string) => void; // Add this line
-    selectedRecipients: any,
-    setSelectedRecipients: (selectedRecipients: any[]) => void
+    selectedRecipients: any;
+    setSelectedRecipients: (selectedRecipients: any[]) => void;
 }
 
 type Option = {
@@ -68,10 +68,10 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onRecipientsChange,
     onCustomMessageBodyChange, // Add this line
     selectedRecipients,
-    setSelectedRecipients
+    setSelectedRecipients,
 }) => {
-    console.log('sselectedRecipients ',selectedRecipients)
-    console.log('setSelectedRecipients ',setSelectedRecipients)
+    console.log("sselectedRecipients ", selectedRecipients);
+    console.log("setSelectedRecipients ", setSelectedRecipients);
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
