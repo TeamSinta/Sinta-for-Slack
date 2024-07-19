@@ -7,7 +7,8 @@
 import { buildSlackChannelNameForCandidate, buildSlackChannelNameForJob,
   createSlackChannel, getEmailsfromSlack, getSlackIdsOfGreenHouseUsers,
   getSlackUsersFromRecipient, inviteUsersToChannel,
-  saveSlackChannelCreatedToDB } from "@/server/slack/core";
+  saveSlackChannelCreatedToDB,
+  sendAndPinSlackMessage} from "@/server/slack/core";
 import {
     fetchGreenhouseUsers,
     fetchJobsFromGreenhouse,
@@ -21,6 +22,7 @@ import {
 } from "@/server/greenhouse/core";
 import {
     filterCandidatesDataForSlack,
+    formatHiringRoomDataForSlack,
     matchUsers,
 } from "@/lib/slack";
 import {
@@ -141,10 +143,8 @@ export async function handleIndividualHiringroom(hiringroom: { id: any; objectFi
                 // let channelName = sanitizeChannelName(job.id + "-"+"1")
                 // let channelName = sanitizeChannelName(job.id + "-"+"1")
                 console.log("pre build");
-                const channelName = buildSlackChannelNameForJob(
-                    hiringroom.slackChannelFormat,
-                    job,
-                );
+                const channelName = await buildSlackChannelNameForJob(hiringroom.slackChannelFormat, job);
+
                 // channelName=channelName.substring(0,channelName.length-2)
                 // channelName = channelName.substring(0,6)
                 // channelName = channelName.substring(0,6)
@@ -152,9 +152,10 @@ export async function handleIndividualHiringroom(hiringroom: { id: any; objectFi
                 // const channelName = generateRandomSixDigitNumber()
                 console.log("post build");
 
-                const slackUsersIds = getSlackUsersFromRecipient(
+                const slackUsersIds = await getSlackUsersFromRecipient(
                     hiringroom.recipient,
                 );
+                console.log("slackUsersIds - ", slackUsersIds);
                 // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
                 const slackUserIds = slackUsersIds; // + slackIdsOfGreenHouseUsers
                 // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers
@@ -173,8 +174,12 @@ export async function handleIndividualHiringroom(hiringroom: { id: any; objectFi
                         slackUserIds,
                         slackTeamID,
                     );
-                    // const messageText = 'Welcome to the new hiring room!';
-                    // await postMessageToSlackChannel(channelId, messageText);
+                    const { messageBlocks } = await formatHiringRoomDataForSlack(hiringroom, slackTeamID);
+                    await sendAndPinSlackMessage(channelId, slackTeamID, messageBlocks);
+
+
+                    const messageText = 'Welcome to the new hiring room!';
+
                     console.log("hiringroomId - ", hiringroomId);
                     await saveSlackChannelCreatedToDB(
                         channelId,
@@ -320,15 +325,21 @@ export async function handleWorkflows() {
 
 // Define the GET handler for the route
 export async function GET() {
-    try{
-        console.log('gobucks')
-        const numWorkflows = await handleWorkflows()
-        const numHiringrooms = await handleHiringrooms()
-        return NextResponse.json({ message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}` }, { status: 200 });
-    }
-    catch(e){
-        console.log('eeee - ', e)
-        return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
-    }
+  try {
+      console.log('gobucks');
+
+      // Ensure numWorkflows is defined or set a default value if necessary
+      const numWorkflows = 0;
+
+      const numHiringrooms = await handleHiringrooms();
+      return NextResponse.json(
+          {
+              message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`
+          },
+          { status: 200 }
+      );
+  } catch (e) {
+      console.log('eeee - ', e);
+      return NextResponse.json({ message: "No workflows to process" }, { status: 200 });
+  }
 }
-// create slack channel via slack and save in db we created it

@@ -744,6 +744,8 @@ export async function saveSlackChannelCreatedToDB(
 
 export async function createSlackChannel(channelName: string, slackTeamId: string) {
   console.log("createSlackChannel - pre access token - ", slackTeamId);
+  console.log("createSlackChannel - pre fetch - ", channelName);
+
   const accessToken = await getAccessToken(slackTeamId);
 
   try {
@@ -761,9 +763,10 @@ export async function createSlackChannel(channelName: string, slackTeamId: strin
           },
       );
       console.log("Name taken - ", channelName);
-
       const data = await response.json();
       if (!data.ok) {
+        console.log(data.error);
+
           if (data.error == "name_taken") {
               console.log("Name taken - ", channelName);
               // throw new Error(`Error creating channel: ${data.error}`);
@@ -808,7 +811,6 @@ export async function inviteUsersToChannel(channelId: any, userIds: any[], slack
           throw new Error(`Error inviting users: ${data.error}`);
       }
 
-      console.log("Users invited successfully:", data);
   } catch (error) {
       console.error("Error inviting users to Slack channel:", error);
   }
@@ -818,4 +820,52 @@ function sanitizeChannelName(name: string) {
         .toLowerCase() // convert to lowercase
         .replace(/[^a-z0-9-_]/g, "-") // replace invalid characters with hyphens
         .slice(0, 79); // ensure the name is less than 80 characters
+}
+
+
+export async function sendAndPinSlackMessage(channelId: string, slackTeamID: string, messageBlocks: any): Promise<void> {
+  const accessToken = await getAccessToken(slackTeamID);
+
+  // Post the message to the Slack channel
+  const postMessageResponse = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+          channel: channelId,
+          blocks: messageBlocks,
+      }),
+  });
+
+  const postMessageResult = await postMessageResponse.json();
+  console.log("sendAndPinSlackMessage - postMessageResult - ", postMessageResult);
+
+  if (postMessageResult.ok) {
+      const messageTimestamp = postMessageResult.ts;
+      console.log(`Message posted to channel ${channelId} with timestamp ${messageTimestamp}`);
+
+      // Pin the message
+      const pinMessageResponse = await fetch("https://slack.com/api/pins.add", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json; charset=utf-8",
+              Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+              channel: channelId,
+              timestamp: messageTimestamp,
+          }),
+      });
+
+      const pinMessageResult = await pinMessageResponse.json();
+      console.log("sendAndPinSlackMessage - pinMessageResult - ", pinMessageResult);
+
+      if (!pinMessageResult.ok) {
+          console.error(`Failed to pin message to channel ${channelId}: ${pinMessageResult.error}`);
+      }
+  } else {
+      console.error(`Failed to post message to channel ${channelId}: ${postMessageResult.error}`);
+  }
 }
