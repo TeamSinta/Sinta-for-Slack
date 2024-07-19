@@ -4,7 +4,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from "@/components/ui/fancy.box";

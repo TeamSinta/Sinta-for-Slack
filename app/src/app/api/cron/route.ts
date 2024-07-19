@@ -330,7 +330,7 @@ export async function GET() {
 
       // Ensure numWorkflows is defined or set a default value if necessary
       const numWorkflows = 0;
-
+      numWorkflows = await handleWorkflows();
       const numHiringrooms = await handleHiringrooms();
       return NextResponse.json(
           {

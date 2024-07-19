@@ -5,6 +5,7 @@
 
 // @ts-nocheck
 
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -124,9 +125,9 @@ interface Job {
 }
 
 function CreateHiringroomSheet() {
-    const [coordinators, setCoordinators] = useState([]);
-    const [recruiters, setRecruiters] = useState([]);
-    const [jobNames, setJobNames] = useState([]);
+    const [, setCoordinators] = useState([]);
+    const [, setRecruiters] = useState([]);
+    const [, setJobNames] = useState([]);
 
     const [format, setFormat] = useState(
         "intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}",
