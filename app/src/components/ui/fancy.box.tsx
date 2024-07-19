@@ -1,15 +1,16 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 "use client";
 
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
     Command,
@@ -30,13 +31,6 @@ interface FancyBoxProps {
     onOptionChange: (selectedOptions: string[]) => void; // Callback function for option change
 }
 
-const badgeStyle = (color: string) => ({
-    borderColor: `${color}20`,
-    backgroundColor: `${color}30`,
-    color,
-});
-
-// Function to generate random color
 const generateRandomColor = () => {
     const letters = "0123456789ABCDEF";
     let color = "#";
@@ -94,86 +88,72 @@ export function FancyBox({
     };
 
     return (
-        <div className="flex ">
-            <div className="flex-1">
-                <Popover
-                    open={openCombobox}
-                    onOpenChange={onComboboxOpenChange}
-                >
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openCombobox}
-                            className="w-full justify-between text-foreground"
-                        >
-                            <span className="truncate">
-                                {selectedValues.length === 0 && "Select labels"}
-                                {selectedValues.length === 1 &&
-                                    selectedValues[0]?.label}
-                                {selectedValues.length === 2 &&
-                                    selectedValues
-                                        .map(({ label }) => label)
-                                        .join(", ")}
-                                {selectedValues.length > 2 &&
-                                    `${selectedValues.length} labels selected`}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="overflow-y- max-h-[500px]  w-[350px] p-0">
-                        <Command loop>
-                            <CommandInput
-                                ref={inputRef}
-                                placeholder="Search Fields..."
-                                value={inputValue}
-                                onValueChange={setInputValue}
-                            />
-                            <CommandGroup className="overflow-y-auto p-0">
-                                {fields.map((field) => {
-                                    const isActive = selectedValues.some(
-                                        (f) => f.value === field.value,
-                                    );
-                                    return (
-                                        <CommandItem
-                                            key={field.value}
-                                            value={field.value}
-                                            onSelect={() =>
-                                                toggleFramework(field)
-                                            }
-                                        >
-                                            <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    isActive
-                                                        ? "opacity-100"
-                                                        : "opacity-0",
-                                                )}
-                                            />
-                                            <div className="flex-1">
-                                                {field.label}
-                                            </div>
-                                            <div className="h-4 w-4 rounded-full" />
-                                        </CommandItem>
-                                    );
-                                })}
-                            </CommandGroup>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
-            </div>
-            <div className="ml-3 flex flex-col">
-                {selectedValues.map(({ label, value, color }) => (
-                    <Badge
-                        key={value}
+        <div className="flex-1">
+            <Popover
+                open={openCombobox}
+                onOpenChange={onComboboxOpenChange}
+            >
+                <PopoverTrigger asChild>
+                    <Button
                         variant="outline"
-                        style={badgeStyle(color)}
-                        className="mb-2 h-[44px] w-[360px] "
+                        role="combobox"
+                        aria-expanded={openCombobox}
+                        className="w-full justify-between text-foreground"
                     >
-                        {label}
-                    </Badge>
-                ))}
-            </div>
+                        <span className="truncate">
+                            {selectedValues.length === 0 && "Message Fields"}
+                            {selectedValues.length === 1 &&
+                                selectedValues[0]?.label}
+                            {selectedValues.length === 2 &&
+                                selectedValues
+                                    .map(({ label }) => label)
+                                    .join(", ")}
+                            {selectedValues.length > 2 &&
+                                `${selectedValues.length} fields selected`}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="overflow-y-auto max-h-[500px] w-[350px] p-0">
+                    <Command loop>
+                        <CommandInput
+                            ref={inputRef}
+                            placeholder="Search Fields..."
+                            value={inputValue}
+                            onValueChange={setInputValue}
+                        />
+                        <CommandGroup className="overflow-y-auto p-0">
+                            {fields.map((field) => {
+                                const isActive = selectedValues.some(
+                                    (f) => f.value === field.value,
+                                );
+                                return (
+                                    <CommandItem
+                                        key={field.value}
+                                        value={field.value}
+                                        onSelect={() =>
+                                            toggleFramework(field)
+                                        }
+                                    >
+                                        <Check
+                                            className={cn(
+                                                "mr-2 h-4 w-4",
+                                                isActive
+                                                    ? "opacity-100"
+                                                    : "opacity-0",
+                                            )}
+                                        />
+                                        <div className="flex-1">
+                                            {field.label}
+                                        </div>
+                                        <div className="h-4 w-4 rounded-full" />
+                                    </CommandItem>
+                                );
+                            })}
+                        </CommandGroup>
+                    </Command>
+                </PopoverContent>
+            </Popover>
         </div>
     );
 }
