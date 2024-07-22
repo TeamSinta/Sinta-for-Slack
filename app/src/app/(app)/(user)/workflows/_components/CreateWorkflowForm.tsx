@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import WorkflowForm from './new-workflowForm';
+import React, { useState } from "react";
+import WorkflowForm from "./new-workflowForm";
 
 const CreateWorkflowForm = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -8,7 +8,7 @@ const CreateWorkflowForm = () => {
         <WorkflowForm
             // isOpen={isOpen}
             // setIsOpen={setIsOpen}'
-            workflowId=''
+            workflowId=""
             mode="create"
         />
     );

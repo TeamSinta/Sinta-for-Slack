@@ -30,7 +30,8 @@ export function ColumnDropdown({ id }: WorkflowData) {
         mutateAsync: changeStatusMutate,
         isPending: changeStatusIsPending,
     } = useMutation<unknown, unknown, { id: string; status: WorkflowStatus }>({
-        mutationFn: ({ id, status }) => updateWorkflowStatusMutation({ id, status }),
+        mutationFn: ({ id, status }) =>
+            updateWorkflowStatusMutation({ id, status }),
         onSettled: () => {
             router.refresh();
         },
@@ -104,7 +105,9 @@ export function ColumnDropdown({ id }: WorkflowData) {
                     disabled={
                         changeStatusIsPending || statusChangeIsTransitionPending
                     }
-                    onClick={() => router.push(`/workflows?edit=true&workflowId=${id}`)} // Activate
+                    onClick={() =>
+                        router.push(`/workflows?edit=true&workflowId=${id}`)
+                    } // Activate
                 >
                     Edit
                 </DropdownMenuItem>

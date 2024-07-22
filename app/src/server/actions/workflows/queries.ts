@@ -25,7 +25,11 @@ type GetPaginatedWorkflowsQueryProps = z.infer<
 >;
 export async function getWorkflowById(workflowId: string) {
     const { data } = await db.transaction(async (tx) => {
-        const data = await tx.select().from(workflows).where(eq(workflows.id, workflowId)).execute();
+        const data = await tx
+            .select()
+            .from(workflows)
+            .where(eq(workflows.id, workflowId))
+            .execute();
         return { data: data[0] }; // Assuming the result is a single workflow object
     });
     return data;
