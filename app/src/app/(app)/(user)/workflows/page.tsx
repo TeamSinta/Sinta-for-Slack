@@ -15,6 +15,9 @@ import {
     checkSlackTeamIdFilled,
 } from "@/server/actions/organization/queries";
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
+// import router, { useRouter } from "next/router";
+import { useRouter } from 'next/router';
+import WorkflowSheet from "./_components/new-workflowForm";
 
 type UsersPageProps = {
     searchParams: SearchParams;
@@ -28,6 +31,8 @@ const searchParamsSchema = z.object({
     status: z.enum(["Active", "Inactive", "Archived"]).optional(),
     role: z.string().optional(),
     operator: z.string().optional(),
+    edit:z.string().optional(),
+    workflowId:z.string().optional()
 });
 
 export default async function Workflows({ searchParams }: UsersPageProps) {
@@ -39,6 +44,8 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
     const workflowPromise = getPaginatedWorkflowsQuery(search);
     const workflowAllPromise = getPaginatedWorkflowsByOrgQuery(search);
     const workflowOrgPromise = getPaginatedWorkflowsExcludingUserQuery(search);
+    const isEdit = searchParams.edit
+    const workflowId = searchParams.workflowId as any
 
     return (
         <AppPageShell
@@ -56,8 +63,11 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
                             Created by team
                         </TabsTrigger>
                     </TabsList>
-                    {slackIntegration && greenhouseIntegration ? (
-                        <CreateWorkflowSheet />
+                    {isEdit == "true" && workflowId ? <>
+                    <WorkflowSheet workflowId={workflowId} mode={"edit"}/>
+                         </> : <></>}
+                    {!isEdit && slackIntegration && greenhouseIntegration ? (
+                        <WorkflowSheet workflowId={""} mode={"create"}/>
                     ) : (
                         <AlertIntegrationDialog />
                     )}

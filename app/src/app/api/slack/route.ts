@@ -67,10 +67,6 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
-    console.log("redirectUri  - ", redirectUri);
-    console.log("clientId  - ", clientId);
-    console.log("client secret - ", clientSecret);
-    console.log("code - ", code);
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -85,7 +81,6 @@ export async function GET(req: NextRequest) {
         console.log("url - ", url);
         const response = await fetch(url, { method: "POST" });
         const json = await response.json();
-        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&
@@ -197,7 +192,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers,
+            slackUsers
         );
         const greenhouseUserId = userMapping[user.id];
 
@@ -276,6 +271,8 @@ async function handleSlackInteraction(payload: SlackInteraction) {
         }
 
         const { action_id } = action;
+        console.log('handle slack interaction - pre access token')
+
         const accessToken = await getAccessToken(team.id);
 
         // Parse candidate ID from action_id
@@ -605,7 +602,7 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers,
+            slackUsers
         );
         const greenhouseUserId = userMapping[user.id];
 

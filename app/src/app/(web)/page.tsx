@@ -35,13 +35,7 @@ const HeroSection = () => {
                                 <div className="flex items-center space-x-2">
                                     <span className="text-2xl">👋</span>
                                     <h2 className="text-base text-xl font-bold text-purple-600 dark:text-purple-400">
-                                        {
-                                            process.env.CURRENT_ENVIRONMENT == "development"
-                                            ?
-                                            <>DEV</>
-                                            :
-                                            <>Hey</>
-                                        } there! We&#39;re Sinta
+                                        DEV there! We&#39;re Sinta
                                     </h2>
                                 </div>
                             </FallInPlace>
