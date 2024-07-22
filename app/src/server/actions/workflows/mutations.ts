@@ -78,7 +78,8 @@ export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
     try{
         // console.log('props',props)
         const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-        // console.log('workflows parse ',workflowParse)
+        console.log("workflows parse ", workflowParse);
+
         if (!workflowParse.success) {
             throw new Error("Invalid workflow data", {
                 cause: workflowParse.error.errors,
