@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use server";
 import { db } from "@/server/db";
-import { organizations, workflows, hiringrooms } from "@/server/db/schema";
-import { eq, type SQLWrapper } from "drizzle-orm";
+import { organizations, workflows } from "@/server/db/schema";
+import { eq } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {
@@ -102,6 +102,7 @@ export async function setAccessToken(
 ) {
     const { currentOrg } = await getOrganizations();
     const orgID = currentOrg.id;
+    console.log("orgID", orgID);
     const result = await db
         .update(organizations)
         .set({
@@ -114,17 +115,6 @@ export async function setAccessToken(
         .execute();
 
     return result ? "OK" : "Failed to update access token";
-}
-
-export async function checkForSlackTeamIDConflict(teamId: string | SQLWrapper) {
-    const existingOrg = await db.query.organizations.findFirst({
-        where: eq(organizations.slack_team_id, teamId),
-        columns: {
-            id: true,
-        },
-    });
-    const { currentOrg } = await getOrganizations();
-    return existingOrg && existingOrg.id !== currentOrg.id;
 }
 
 export async function getSlackTeamIDByWorkflowID(
@@ -149,40 +139,6 @@ export async function getSlackTeamIDByWorkflowID(
     // Fetch organization's Slack team ID using the organization ID from the workflow
     const organization = await db.query.organizations.findFirst({
         where: eq(organizations.id, workflow.organizationId),
-        columns: {
-            slack_team_id: true,
-        },
-    });
-
-    if (!organization) {
-        throw new Error("Organization not found.");
-    }
-
-    return organization.slack_team_id!;
-}
-
-export async function getSlackTeamIDByHiringroomID(
-    hiringroomId: string,
-): Promise<string> {
-    if (!hiringroomId) {
-        throw new Error("No hiringroom ID provided.");
-    }
-
-    // Fetch hiringroom details using the provided hiringroom ID
-    const hiringroom = await db.query.hiringrooms.findFirst({
-        where: eq(hiringrooms.id, hiringroomId),
-        columns: {
-            organizationId: true,
-        },
-    });
-
-    if (!hiringroom) {
-        throw new Error("Hiringroom not found.");
-    }
-
-    // Fetch organization's Slack team ID using the organization ID from the hiringroom
-    const organization = await db.query.organizations.findFirst({
-        where: eq(organizations.id, hiringroom.organizationId),
         columns: {
             slack_team_id: true,
         },
