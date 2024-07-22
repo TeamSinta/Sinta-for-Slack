@@ -4,42 +4,23 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { getAccessToken } from "@/server/actions/slack/query";
-import { format, parseISO } from "date-fns";
-import { db } from "@/server/db";
-import { slackChannelsCreated } from "@/server/db/schema";
+
 import { getEmailsfromSlack } from "@/server/slack/core";
-import {
-    fetchGreenhouseUsers,
-    fetchJobsFromGreenhouse,
-    fetchCandidates,
-} from "@/server/greenhouse/core";
+import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import {
-    filterCandidatesDataForSlack,
-    matchUsers,
-} from "@/lib/slack";
+import { filterProcessedForSlack, matchUsers } from "@/lib/slack";
 import {
     sendSlackButtonNotification,
+    sendSlackNotification,
 } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
-import {
-    getSlackTeamIDByWorkflowID,
-    getSlackTeamIDByHiringroomID,
-} from "@/server/actions/slack/query";
+import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
-import {
-    processCandidates,
-    processScheduledInterviews,
-} from "@/server/objectworkflows/queries";
-import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
-import {addGreenhouseSlackValue} from '@/lib/slack'
-import {getHiringrooms} from '@/server/actions/hiringrooms/queries'
 
 import { inviteUsersToChannel } from '@/server/actions/assignments/mutations'
 
@@ -434,35 +415,26 @@ export async function handleWorkflows() {
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
-            if (workflow.alertType === "timebased") {
-                const { apiUrl }: { apiUrl?: string } =
-                    workflow.triggerConfig as { apiUrl?: string };
+            if (workflow.alertType === "time-based") {
+                const { apiUrl } = workflow.triggerConfig;
+                const data = await customFetch(apiUrl); // Fetch data using custom fetch wrapper
 
-                const data = await customFetch(apiUrl ?? ""); // Fetch data using custom fetch wrapper
-                let filteredConditionsData;
+                const filteredConditionsData = filterDataWithConditions(
+                    data,
+                    workflow.conditions,
+                );
 
-                switch (workflow.objectField) {
-                    case "Scheduled Interviews":
-                        filteredConditionsData =
-                            await processScheduledInterviews(data, workflow);
-                        break;
-                    case "Candidates":
-                        filteredConditionsData = await processCandidates(
-                            data,
-                            workflow,
-                        );
-                        break;
-                    default:
-                        filteredConditionsData = filterDataWithConditions(
-                            data,
-                            workflow.conditions,
-                        );
-                        break;
-                }
                 if (filteredConditionsData.length === 0) {
                     shouldReturnNull = true; // Set flag to true
                 } else {
-                    console.log("No conditions running");
+                    const filteredSlackData = filterProcessedForSlack(
+                        filteredConditionsData,
+                        workflow.recipient,
+                    );
+                    await sendSlackNotification(
+                        filteredSlackData,
+                        workflow.recipient,
+                    );
                 }
             } else if (workflow.alertType === "stuck-in-stage") {
                 const { apiUrl, processor } = workflow.triggerConfig;
@@ -488,19 +460,20 @@ export async function handleWorkflows() {
                     greenhouseUsers,
                     slackUsers,
                 );
-
-                // const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
-
-                const filteredSlackDataWithMessage = await filterCandidatesDataForSlack(
+                // const matchGreenhouseUsers = matc
+                // console.log("filteredConditionsData", filteredConditionsData);
+                const filteredSlackData = await filterProcessedForSlack(
                     filteredConditionsData,
                     workflow.recipient,
                     slackTeamID,
-
+                    greenhouseUsers,
+                    slackUsers,
+                    userMapping,
                 );
 
-                if (filteredSlackDataWithMessage.length > 0) {
+                if (filteredSlackData.length > 0) {
                     await sendSlackButtonNotification(
-                      filteredSlackDataWithMessage,
+                        filteredSlackData,
                         workflow.recipient,
                         slackTeamID,
                         subDomain,
@@ -513,23 +486,22 @@ export async function handleWorkflows() {
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
+            console.log("hereererere");
         }
 
         if (shouldReturnNull) {
-            return false;
             return NextResponse.json(
                 { message: "No workflows to process" },
                 { status: 200 },
             );
         }
-        return workflowsLength
+
         return NextResponse.json(
             { message: "Workflows processed successfully" },
             { status: 200 },
         );
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
-        return false;
         return NextResponse.json(
             {
                 error: "Failed to process workflows",

@@ -125,7 +125,7 @@ export function FancyBox({
                         <Command loop>
                             <CommandInput
                                 ref={inputRef}
-                                placeholder="Search Fields..."
+                                placeholder="Search labels..."
                                 value={inputValue}
                                 onValueChange={setInputValue}
                             />
