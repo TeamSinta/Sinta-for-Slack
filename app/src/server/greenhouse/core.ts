@@ -172,6 +172,38 @@ export async function updateGreenhouseCandidate(
     }
 }
 
+export async function updateGreenhouseCandidate(
+    candidate: any,
+    field: string,
+    newValue: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const candidateId = candidate.id;
+        const url = `https://harvest.greenhouse.io/v1/candidates/${candidateId}`;
+        let payload: any = {};
+
+        if (field === "recruiter") {
+            payload = {
+                "recruiter": { "id": newValue }
+            };
+        } else if (field === "coordinator") {
+            payload = {
+                "coordinator": { "id": newValue }
+            };
+        }  
+
+        const response = await customFetch(url, {
+            method: "PATCH",
+            data: payload
+        });
+        console.log('respone- ',response)
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update Greenhouse candidate:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
@@ -424,6 +456,19 @@ export async function fetchGreenhouseUsers(): Promise<
         );
     } catch (error) {
         console.error("Error fetching Greenhouse users: ", error);
+        return {};
+    }
+}
+export async function fetchJobStages(): Promise<
+    Record<string, { id: string; email: string; name: string }>
+> {
+    try {
+        const job_stages = (await customFetch(
+            "https://harvest.greenhouse.io/v1/job_stages",
+        )) as any[];
+        return job_stages
+    } catch (error) {
+        console.error("Error fetching Greenhouse users: ");
         return {};
     }
 }

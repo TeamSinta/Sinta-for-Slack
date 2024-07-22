@@ -8,7 +8,6 @@
  */
 
 import { hiringrooms } from "@/server/db/schema";
-
 // const publicUrl = process.env.CURRENT_ENVIRONMENT ? process.env.SINTA_HOSTING_URL : process.env.DEV_SINTA_HOSTING_URL as string
 let publicUrl =  process.env.CURRENT_ENVIRONMENT == "production" ? process.env.SINTA_HOSTING_URL : process.env.DEV_SINTA_HOSTING_URL as string
 if(publicUrl == undefined){
