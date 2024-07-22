@@ -11,9 +11,10 @@ import {
     timestamp,
     varchar,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type AdapterAccount } from "next-auth/adapters";
 import { z } from "zod";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
  * database instance for multiple projects.
@@ -161,26 +162,11 @@ export const workflowInsertSchema = createInsertSchema(workflows, {
     alertType: z.string().min(1, "Alert type must not be empty"),
 });
 
-export const hiringroomInsertSchema = createInsertSchema(hiringrooms, {
-    name: z
-        .string()
-        .min(3, "Hiringroom name must be at least 3 characters long")
-        .max(50, "Hiringroom name must be at most 50 characters long"),
-    objectField: z.string().min(1, "Object field must not be empty"),
-    alertType: z.string().min(1, "Alert type must not be empty"),
-});
-
 export const workflowSelectSchema = createSelectSchema(workflows, {
     name: z
         .string()
         .min(3, "Workflow name must be at least 3 characters long")
         .max(50, "Workflow name must be at most 50 characters long"),
-});
-export const hiringroomSelectSchema = createSelectSchema(hiringrooms, {
-    name: z
-        .string()
-        .min(3, "Hiringroom name must be at least 3 characters long")
-        .max(50, "Hiringroom name must be at most 50 characters long"),
 });
 
 export const users = createTable("user", {

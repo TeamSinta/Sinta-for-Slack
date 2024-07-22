@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -16,16 +17,6 @@ import MessageButtons, {
 import slackLogo from "../../../../../../public/slack-logo.png";
 import Image from "next/image";
 
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-
 const fields = [
     { value: "name", label: "Candidate Name", color: "" },
     { value: "title", label: "Job Title", color: "" },
@@ -37,22 +28,12 @@ const fields = [
     { value: "coordinator_name", label: "Coordinator Name", color: "" },
 ];
 
-const variableOptions = [
-    { value: "{{Interviewer}}", label: "Interviewer" },
-    { value: "{{Role title}}", label: "Role Title" },
-    { value: "{{Job Stage}}", label: "Job Stage" },
-    { value: "{{Recruiter}}", label: "Recruiter" },
-    { value: "{{Candidate_Name}}", label: "Candidate Name" },
-];
-
 interface SlackWorkflowProps {
     onOpeningTextChange: (text: string) => void;
     onFieldsSelect: (fields: string[]) => void;
     onButtonsChange: (buttons: ButtonAction[]) => void;
+    onDeliveryOptionChange: (option: string) => void;
     onRecipientsChange: (recipients: Option[]) => void;
-    onCustomMessageBodyChange: (customMessageBody: string) => void; // Add this line
-    selectedRecipients: any;
-    setSelectedRecipients: (selectedRecipients: any[]) => void;
 }
 
 type Option = {
@@ -66,22 +47,15 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
     onFieldsSelect,
     onButtonsChange,
     onRecipientsChange,
-    onCustomMessageBodyChange, // Add this line
-    selectedRecipients,
-    setSelectedRecipients,
 }) => {
-    console.log("sselectedRecipients ", selectedRecipients);
-    console.log("setSelectedRecipients ", setSelectedRecipients);
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<ButtonAction[]>([]);
-    // const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
+    const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
     );
-    const [showMarkdownInput, setShowMarkdownInput] = useState(false); // Add this state
-    const [customMessageBody, setCustomMessageBody] = useState(""); // Add this state
 
     const handleOpeningTextChange = (
         e: React.ChangeEvent<HTMLInputElement>,
@@ -168,8 +142,8 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                         source: "greenhouse",
                     },
                     {
-                        label: ` ${greenhouseData.interviewer}`,
-                        value: greenhouseData.interviewer,
+                        label: ` ${greenhouseData.owner}`,
+                        value: greenhouseData.owner,
                         source: "greenhouse",
                     },
                 ];
@@ -183,23 +157,9 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
         void fetchData();
     }, []);
 
-    const handleCustomMessageBodyChange = (
-        e: React.ChangeEvent<HTMLTextAreaElement>,
-    ) => {
-        const value = e.target.value;
-        setCustomMessageBody(value);
-        onCustomMessageBodyChange(value);
-    };
-
-    const handleVariableSelect = (variable: string) => {
-        const value = customMessageBody + variable;
-        setCustomMessageBody(value);
-        onCustomMessageBodyChange(value);
-    };
-
     return (
         <div className="workflow-container mt-4">
-            <div className="flex items-center">
+            <div className="flex ">
                 <Label className="text-xl font-bold">
                     Configure Slack Alert{" "}
                 </Label>
@@ -229,57 +189,6 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                 />
             </div>
 
-            {/* Checkbox to Add Custom Message Body */}
-            <div className="my-4">
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="customMessageBody"
-                        checked={showMarkdownInput}
-                        onCheckedChange={() =>
-                            setShowMarkdownInput(!showMarkdownInput)
-                        }
-                    />
-                    <label
-                        htmlFor="customMessageBody"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                        Select this to add custom body message
-                    </label>
-                </div>
-            </div>
-
-            {/* Custom Message Body Input */}
-            {showMarkdownInput && (
-                <div className="my-4">
-                    <Label>Custom Message Body</Label>
-                    <textarea
-                        value={customMessageBody}
-                        onChange={handleCustomMessageBodyChange}
-                        placeholder="Enter custom message body..."
-                        className="mt-2 h-24 w-full rounded border border-gray-300 p-2"
-                    ></textarea>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">Insert Variable</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56">
-                            <DropdownMenuGroup>
-                                {variableOptions.map((option) => (
-                                    <DropdownMenuItem
-                                        key={option.value}
-                                        onClick={() =>
-                                            handleVariableSelect(option.value)
-                                        }
-                                    >
-                                        {option.label}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )}
-
             {/* Message Buttons */}
             <MessageButtons
                 buttons={buttons}
@@ -287,6 +196,28 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
                 updateButton={updateButton}
                 removeButton={removeButton}
             />
+
+            {/* Message Delivery */}
+            {/* <div className="my-4">
+                <Label>Message Delivery</Label>
+                <RadioGroup
+                    value={deliveryOption}
+                    onValueChange={handleDeliveryOptionChange}
+                    className="mt-3 flex flex-col gap-4"
+                >
+                    {deliveryOptions.map((option, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                            <RadioGroupItem
+                                value={option}
+                                id={`delivery-${option}`}
+                            />
+                            <Label htmlFor={`delivery-${option}`}>
+                                {option}
+                            </Label>
+                        </div>
+                    ))}
+                </RadioGroup>
+            </div> */}
 
             {/* Multi-Select for Recipients */}
             <div className="my-4">

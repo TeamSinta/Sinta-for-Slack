@@ -7,13 +7,13 @@
  * 3. Use the URL in the file.
  */
 
+import { hiringrooms } from "@/server/db/schema";
 // const publicUrl = process.env.CURRENT_ENVIRONMENT ? process.env.SINTA_HOSTING_URL : process.env.DEV_SINTA_HOSTING_URL as string
 let publicUrl =  process.env.CURRENT_ENVIRONMENT == "production" ? process.env.SINTA_HOSTING_URL : process.env.DEV_SINTA_HOSTING_URL as string
 if(publicUrl == undefined){
     publicUrl = "https://dev.sinta-slack.vercel.app"
 }
 export const siteUrls = {
-
     publicUrl: publicUrl,
     github: "https://github.com/msinta/",
     home: "/",
@@ -34,14 +34,14 @@ export const siteUrls = {
     assignments: {
         home: "/assignments",
     },
+    hiringrooms: {
+        home: "/hiringrooms",
+    },
     triggers: {
         home: "/triggers",
     },
     workflows: {
         home: "/workflows",
-    },
-    hiringrooms: {
-        home: "/hiringrooms",
     },
     integrations: {
         home: "/integrations",
