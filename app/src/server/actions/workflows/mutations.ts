@@ -70,32 +70,9 @@ const workflowUpdateSchema = workflowSelectSchema.pick({
 
 type UpdateWorkflowProps = z.infer<typeof workflowUpdateSchema>;
 
-
-// type UpdateWorkflowStatusProps = z.infer<typeof workflowStatusUpdateSchema>;
-
 export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
-    // await adminProcedure();
-    try{
-        // console.log('props',props)
-        const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-        console.log("workflows parse ", workflowParse);
+    await adminProcedure();
 
-        if (!workflowParse.success) {
-            throw new Error("Invalid workflow data", {
-                cause: workflowParse.error.errors,
-            });
-        }
-    
-        return await db
-            .update(workflows)
-            .set(workflowParse.data)
-            .where(eq(workflows.id, workflowParse.data.id))
-            .execute();
-    }
-    catch(e){
-        console.log('wtf  eeeee -',e)
-    }
-   
     const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
     if (!workflowParse.success) {
         throw new Error("Invalid workflow data", {

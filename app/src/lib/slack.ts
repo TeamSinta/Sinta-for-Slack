@@ -83,7 +83,6 @@ export async function matchUsers(
     greenhouseUsers: Record<string, { id: string; email: string }>,
     slackUsers: { value: string; label: string; email: string }[],
 ): Promise<Record<string, string>> {
-    console.log('WTF IN MATCH')
     // candidate -> application -> greenhouseUser role -> greenhouse User -> slackUser
     const slackUserMap = slackUsers.reduce(
         (acc: Record<string, string>, user) => {
@@ -98,12 +97,9 @@ export async function matchUsers(
     for (const greenhouseUserId in greenhouseUsers) {
         const greenhouseUser = greenhouseUsers[greenhouseUserId];
         if (greenhouseUser) {
-            // console.log('wtf - ',greenhouseUser)
             const email = greenhouseUser.email;
             // console.log('green house user -',greenhouseUser.)
             const slackId = slackUserMap[email];
-            // console.log('email - ',email)
-            // console.log('slackId - ',slackId)
             if (slackId) {
                 console.log("email - in user matching", email);
                 userMapping[greenhouseUser.id] = slackId; // Use Greenhouse user ID as the key

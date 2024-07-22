@@ -31,21 +31,13 @@ export async function customFetch(
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            const status = error.response?.status;
-            const statusText = error.response?.statusText;
-            const data = error.response?.data;
-
-            console.error("Error details:");
-            console.error("Response status:", status);
-            console.error("Response status text:", statusText);
-            console.error("Response data:", JSON.stringify(data, null, 2));
-
-            throw new Error(
-                `HTTP error! Status: ${status}, Status Text: ${statusText}, Body: ${JSON.stringify(data)}`,
-            );
+            console.error("Axios error:", error.toJSON());
+            console.error("Request config:", error.config);
+            console.error("Response status:", error.response?.status);
+            console.error("Response data:", error.response?.data);
         } else {
             console.error("Unexpected error:", error);
-            throw error;
         }
+        throw error;
     }
 }
