@@ -4,7 +4,9 @@ import { setAccessToken } from "@/server/actions/slack/query";
 import { siteUrls } from "@/config/urls";
 
 export async function POST(request: NextRequest) {
-    try{
+    console.log("in post route hiring room");
+    try {
+        console.log("MADE IT TO THE POST HIRING ROOM");
         const contentType = request.headers.get("content-type");
         if (contentType?.includes("application/json")) {
             const data = await request.json();
@@ -41,6 +43,7 @@ export async function POST(request: NextRequest) {
             //     );
             // }
         }
+
         return new NextResponse(JSON.stringify({ success: "go bucks" }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -73,6 +76,10 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
+    console.log("redirectUri  - ", redirectUri);
+    console.log("clientId  - ", clientId);
+    console.log("client secret - ", clientSecret);
+    console.log("code - ", code);
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -84,8 +91,10 @@ export async function GET(req: NextRequest) {
 
     try {
         const url = `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        console.log("url - ", url);
         const response = await fetch(url, { method: "POST" });
         const json = await response.json();
+        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&
@@ -102,6 +111,8 @@ export async function GET(req: NextRequest) {
                 json.refresh_token,
                 expiresAt,
             );
+            console.log("Access token updated:", updateResponse);
+            console.log(json);
             if (updateResponse === "OK") {
                 const url = `${siteUrls.publicUrl}/success/${json.team.id}`;
                 return NextResponse.redirect(url);

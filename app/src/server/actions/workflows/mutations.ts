@@ -86,9 +86,9 @@ type UpdateWorkflowProps = z.infer<typeof workflowUpdateSchema>;
 export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
     // await adminProcedure();
     try{
-        // console.log('props',props)
+        console.log('props',props)
         const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-        // console.log('workflows parse ',workflowParse)
+        console.log('workflows parse ',workflowParse)
         if (!workflowParse.success) {
             throw new Error("Invalid workflow data", {
                 cause: workflowParse.error.errors,
