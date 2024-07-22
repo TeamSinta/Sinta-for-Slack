@@ -8,6 +8,9 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 // src/pages/api/slack/oauth.ts
+import { db } from "@/server/db";
+import { and, eq } from "drizzle-orm";
+import { slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
@@ -682,17 +685,73 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
 }
 
 export async function POST(request: Request) {
-    const contentType = request.headers.get("content-type");
+    console.log('GOOO BUCKS1')
+    try{
+        const contentType = request.headers.get("content-type");
     if (contentType?.includes("application/json")) {
+        console.log('GOOO BUCKS122')
         const data = await request.json();
-        return handleJsonPost(data);
+        console.log('data - ',data)
+        console.log('data hasArchive- ',typeof data.hasArchive)
+        console.log('data hasDelete- ',data.hasDelete)
+        console.log('data hasDelete- ',typeof data.hasDelete)
+
+        if(data.hasArchive && !data.hasDelete){
+            console.log('delete')
+            const channelId = data.channelId
+            const slackTeamId = data.slackTeamId
+            try{
+                try{
+                    const deleteResponse = await archiveConversationInSlack(channelId, slackTeamId)
+                }
+                catch(e){
+                    console.log('e delete convo-',e)
+                }
+                try{
+                    console.log('prearchive')
+                    await archiveConversationInDB(channelId)
+                }
+                catch(e){
+                    console.log('e archive convo-',e)
+                }
+            }
+            catch(e){
+                console.log('e post slack-',e)
+            }
+        }
+        else if(data.hasDelete){
+            try{
+
+                const channelId = data.channelId
+                const slackTeamId = data.slackTeamId
+                console.log('pre delete convo- channelId -',channelId)
+                console.log('pre delete convo- slackTeamId -',slackTeamId)
+                const deleteResponse = await deleteConversationInSlack(channelId, slackTeamId)                
+            }
+            catch(e){
+                console.log('eeee-',e)
+            }
+        }
+        else{
+            console.log('deers in else')
+            return handleJsonPost(data);
+
+        }
     } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+        console.log('GOOO BUCKS13')
         const text = await request.text();
         const params = new URLSearchParams(text);
         const payloadRaw = params.get("payload");
-
+        
         if (payloadRaw) {
-            return handleSlackInteraction(JSON.parse(payloadRaw));
+            let hasDelete = payloadRaw.hasDelete 
+            if(hasDelete){
+                console.log('GOOO BUCKS')
+            }
+            else{
+                return handleSlackInteraction(JSON.parse(payloadRaw));
+
+            }
         } else {
             return new NextResponse(
                 JSON.stringify({
@@ -705,7 +764,75 @@ export async function POST(request: Request) {
             );
         }
     }
+    }
+    catch(e){console.log('eeee overal -',e)}
+    
+    // import { useState } from 'react';
+    async function archiveConversationInDB(channelId) {
+        try{
+            console.log('prearchive')
 
+            await db
+            .update(slackChannelsCreated)
+            .set({ isArchived: true })
+            .where(eq(slackChannelsCreated.channelId, channelId))
+            .execute();
+        }
+        catch(e){
+            console.log('eeee - ',e)
+        }
+    }
+
+    async function archiveConversationInSlack(channelId,slackTeamId) {
+        const accessToken = await getAccessToken(slackTeamId);
+        console.log('channelId-',channelId)
+        console.log('accessToken-',accessToken)
+        const response = await fetch('https://slack.com/api/conversations.archive', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+                channel: channelId
+            })
+        });
+    
+    
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(data.error);
+        }
+    
+        return data;
+    }
+    async function deleteConversationInSlack(channelId,slackTeamId) {
+        const accessToken = await getAccessToken(slackTeamId);
+        console.log('channelId-',channelId)
+        console.log('accessToken-',accessToken)
+        const apikey = process.env.SLACK_BOT_TOKEN
+        const apitoken = 'xoxe.xoxb-1-MS0yLTQ0MTYwOTk0MzE4NzgtNjk3Mjc2NjQ3Njk2NC02OTU2NzI4OTYzNjcxLTc0Mzg3MzA4OTczMzItNDMyZjIyYmI0Mzg2Yzg4ODIzMmRjNWUwZDk0MzA5NTFhNTE2YTBiMjE1YmRjMTM4NmE5MmJlYjRjZGE3MGQzZA'
+        console.log('api key - ',apikey)
+        const response = await fetch('https://slack.com/api/conversations.archive', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+                channel: channelId
+            })
+        });
+    
+    
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(data.error);
+        }
+    
+        return data;
+    }
+    
     return new NextResponse(
         JSON.stringify({ error: "Unsupported Content Type" }),
         {
