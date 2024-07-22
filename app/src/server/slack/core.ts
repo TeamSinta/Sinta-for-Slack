@@ -70,8 +70,7 @@ export async function getChannels(): Promise<
         const data: SlackApiResponse<SlackChannel> = await response.json();
         if (data.ok && data.channels) {
             return data.channels.map((channel) => ({
-                value: channel.id,
-                label: `#${channel.name}`,
+                ...channel
             }));
         } else {
             throw new Error(data.error ?? "Error fetching channels");
@@ -101,6 +100,8 @@ export async function getActiveUsers(): Promise<
             },
         });
         if (!response.ok) {
+            console.log('response - status ',response.status)
+            console.log('response - status ',response.statusText)
             throw new Error("Failed to fetch users");
         }
 
@@ -135,12 +136,13 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
-            console.log("response", response);
-            throw new Error("Failed to fetch users");
+            console.log('response.status-',response.status)
+            console.log('response.status-',response.statusText)
+            throw new Error("Failed to fetch users",response.statusText);
         }
 
         const data: SlackApiResponse<SlackUser> = await response.json();
-
+        console.log('pre return?')
         if (data.ok && data.members) {
             return data.members
                 .filter((member) => !member.deleted && member.profile.email)

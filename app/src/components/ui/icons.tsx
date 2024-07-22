@@ -95,4 +95,11 @@ export const Icons = {
             )}
         />
     ),
+    slack: (props: IconProps) => (
+        <img
+            src="assets/slack-new-logo.svg"
+            alt="Slack Logo"
+            className={props.className}
+        />
+    ),
 };

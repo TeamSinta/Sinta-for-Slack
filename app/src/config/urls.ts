@@ -7,8 +7,14 @@
  * 3. Use the URL in the file.
  */
 
+// const publicUrl = process.env.CURRENT_ENVIRONMENT ? process.env.SINTA_HOSTING_URL : process.env.DEV_SINTA_HOSTING_URL as string
+let publicUrl =  process.env.CURRENT_ENVIRONMENT == "production" ? process.env.SINTA_HOSTING_URL : process.env.DEV_SINTA_HOSTING_URL as string
+if(publicUrl == undefined){
+    publicUrl = "https://dev.sinta-slack.vercel.app"
+}
 export const siteUrls = {
-    publicUrl: "https://5bc1e5fa5023dc7a.ngrok.app",
+
+    publicUrl: publicUrl,
     github: "https://github.com/msinta/",
     home: "/",
     auth: {
@@ -24,6 +30,9 @@ export const siteUrls = {
     teamsinta: "https://teamsinta.vercel.app/",
     dashboard: {
         home: "/dashboard",
+    },
+    assignments: {
+        home: "/assignments",
     },
     triggers: {
         home: "/triggers",
