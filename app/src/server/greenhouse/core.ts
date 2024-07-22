@@ -98,6 +98,38 @@ interface Job {
     created_at: string;
 }
 
+export async function updateGreenhouseCandidate(
+    candidate: any,
+    field: string,
+    newValue: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const candidateId = candidate.id;
+        const url = `https://harvest.greenhouse.io/v1/candidates/${candidateId}`;
+        let payload: any = {};
+
+        if (field === "recruiter") {
+            payload = {
+                "recruiter": { "id": newValue }
+            };
+        } else if (field === "coordinator") {
+            payload = {
+                "coordinator": { "id": newValue }
+            };
+        }  
+
+        const response = await customFetch(url, {
+            method: "PATCH",
+            data: payload
+        });
+        console.log('respone- ',response)
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update Greenhouse candidate:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
@@ -167,15 +199,18 @@ export async function moveToNextStageInGreenhouse(
     greenhouseUserId: string,
 ): Promise<{ success: boolean; error?: string }> {
     try {
+        console.log('move next ')
         // Fetch the candidate details to get the current stage ID
         const candidateDetails = await fetchCandidateDetails(candidateId);
-        const application = candidateDetails.applications.find(
-            (app) => app.candidate_id.toString() === candidateId,
-        );
-        if (!application) {
-            throw new Error("Application not found for the candidate.");
-        }
+        console.log('move candidateDetails ',candidateDetails)
 
+        const application = candidateDetails.applications[0]
+        console.log('move application ',application)
+
+        if (!application) {
+            throw new Error("No application.");
+        }
+        console.log('application pre move - ',application)
         const fromStageId = application.current_stage.id;
 
         const url = `https://harvest.greenhouse.io/v1/applications/${application.id}/move`;
@@ -183,7 +218,7 @@ export async function moveToNextStageInGreenhouse(
             from_stage_id: fromStageId,
             to_stage_id: parseInt(toStageId),
         };
-
+        console.log('body - ',body)
         const response = await customFetch(url, {
             method: "POST",
             headers: {
@@ -192,7 +227,7 @@ export async function moveToNextStageInGreenhouse(
             },
             body: JSON.stringify(body),
         });
-
+        console.log('custom fetch post - ',response)
         // Assume a successful response is indicated by the presence of an "id" field in the response
         if (response.id) {
             return { success: true };
@@ -368,6 +403,19 @@ export async function fetchGreenhouseUsers(): Promise<
             },
             {},
         );
+    } catch (error) {
+        console.error("Error fetching Greenhouse users: ");
+        return {};
+    }
+}
+export async function fetchJobStages(): Promise<
+    Record<string, { id: string; email: string; name: string }>
+> {
+    try {
+        const job_stages = (await customFetch(
+            "https://harvest.greenhouse.io/v1/job_stages",
+        )) as any[];
+        return job_stages
     } catch (error) {
         console.error("Error fetching Greenhouse users: ");
         return {};
