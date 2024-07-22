@@ -106,6 +106,11 @@ const navigation: SidebarNavItems[] = [
                 href: siteUrls.dashboard.home,
             },
             {
+                label: "Assignments",
+                icon: LayoutDashboardIcon,
+                href: siteUrls.assignments.home,
+            },
+            {
                 label: "Hiring Rooms",
                 icon: DoorOpen,
                 href: siteUrls.hiringrooms.home,
