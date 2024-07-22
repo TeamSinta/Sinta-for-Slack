@@ -7,9 +7,6 @@
 
 "use client";
 
-import {
-    updateWorkflowMutation,
-} from "@/server/actions/workflows/mutations";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,8 +22,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+
 import { useRouter } from "next/navigation";
-import { createWorkflowMutation } from "@/server/actions/workflows/mutations";
+import { createHiringroomMutation } from "@/server/actions/hiringrooms/mutations";
 import { useMutation } from "@tanstack/react-query";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import {
@@ -38,14 +36,15 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
-import SlackWorkflow from "./slack-workflow";
+import SlackHiringroom from "./slack-hiringroom";
 import ConditionComponent from "./conditions";
-import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
-import { getWorkflowById } from '@/server/actions/workflows/queries'
+import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
+import SlackChannelNameFormat from "./SlackChannelNameFormat";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
 import { toast } from "sonner";
+import { handleIndividualHiringroom } from "@/app/api/cron/route"
 
 const messageButtonSchema = z.object({
     name: z.string(),
@@ -63,10 +62,10 @@ export const recipientSchema = z.object({
             value: z.string(),
         }),
     ),
-    customMessageBody: z.string().optional(), // This can be a large string
+    customMessageBody: z.string().optional(),  // This can be a large string
 });
 
-export const workflowFormSchema = z.object({
+export const hiringroomFormSchema = z.object({
     name: z.string(),
     objectField: z.string(),
     alertType: z.string(),
@@ -91,7 +90,7 @@ export const workflowFormSchema = z.object({
     organizationId: z.string(),
 });
 
-const createFeedbackFormSchema = workflowFormSchema.omit({
+const createFeedbackFormSchema = hiringroomFormSchema.omit({
     status: true,
     recipient: true,
     triggerConfig: true,
@@ -121,14 +120,123 @@ interface Job {
     name: string;
 }
 
-function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string }) {
-    const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
+function CreateHiringroomSheet() {
+    
+    const [coordinators, setCoordinators] = useState([])
+    const [recruiters, setRecruiters] = useState([])
+    const [jobNames, setJobNames] = useState([])
+
+    const [format, setFormat] = useState("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
+
+
+    const [conditionTypesWithOperators, setConditionTypesWithOperators] = useState([
+        {
+            name: "Coordinator",
+            operators: [
+                { value: "equal", label: "Equal To" },
+                { value: "notEqual", label: "Not Equal To" },
+            ],
+            values: [], // Assuming values are dynamic or not predefined
+        },
+        {
+            name: "Recruiter",
+            operators: [
+                { value: "equal", label: "Equal To" },
+                { value: "notEqual", label: "Not Equal To" },
+            ],
+            values: [], // Assuming values are dynamic or not predefined
+        },
+        {
+            name: "Job Name",
+            operators: [
+                { value: "equal", label: "Equal To" },
+                { value: "notEqual", label: "Not Equal To" },
+            ],
+            values: [], // Assuming values are dynamic or not predefined
+        }
+        // {
+        //     name: "Tags",
+        //     operators: [{ value: "equal", label: "Equal To" }],
+        //     values: [], // Assuming values are dynamic or not predefined
+        // }
+    ]) as any[];
+
+
+    useEffect(() => {
+        console.log('go bucks in use effect fetch all suers')
+        const fetchData = async () => {
+            const greenhouseUsers = await fetchAllGreenhouseUsers()
+            const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
+            const greenhouseCandidates = await fetchCandidates()
+            let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            setCoordinators(coords)
+            setRecruiters(recrus)
+            setJobNames(greenhouseJobs)
+            let tmpConditionTypesWithOperators = conditionTypesWithOperators
+
+            const coordinatorsList = coords.map(coordinator => (coordinator.name));
+            const recruitersList = recrus.map(recruiter => (recruiter.name));
+            const jobNamesList = greenhouseJobs.map(jobName => (jobName.name));
+            tmpConditionTypesWithOperators[0]['values'] = coordinatorsList
+            //recruiter 
+            tmpConditionTypesWithOperators[1]['values'] = recruitersList
+            tmpConditionTypesWithOperators[2]['values'] = jobNamesList
+            console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
+            console.log('jobNamesList ',jobNamesList)
+            setConditionTypesWithOperators(tmpConditionTypesWithOperators)
+            console.log('conditionTypesWithOperators ',conditionTypesWithOperators)
+            console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
+        }
+        fetchData()
+    }, []);
+
+    function getAllCoordinators(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
+        // Get all coordinators from jobs
+        const coordinatorSet = new Set<string>();
+        jobs.forEach(job => {
+            if (job.coordinator_ids) {
+                job.coordinator_ids.forEach(id => coordinatorSet.add(id));
+            }
+        });
+    
+        // Get all coordinators from candidates
+        candidates.forEach(candidate => {
+            if (candidate.coordinator) {
+                coordinatorSet.add(candidate.coordinator.id);
+            }
+        });
+    
+        // Create list of coordinators
+        const coordinators = users.filter(user => coordinatorSet.has(user.id));
+    
+        return coordinators;
+    }
+    function getAllRecruiters(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
+        // Get all coordinators from jobs
+        const recruiterSet = new Set<string>();
+        jobs.forEach(job => {
+            if (job.recruiter_ids) {
+                job.recruiter_ids.forEach(id => recruiterSet.add(id));
+            }
+        });
+    
+        // Get all coordinators from candidates
+        candidates.forEach(candidate => {
+            if (candidate.recruiter) {
+                recruiterSet.add(candidate.recruiter.id);
+            }
+        });
+    
+        // Create list of coordinators
+        const recruiters = users.filter(user => recruiterSet.has(user.id));
+    
+        return recruiters;
+    }
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
     ]);
-    const [timeBasedConditions, setTimeBasedConditions] = useState<
-        TimeBasedCondition[]
-    >([
+    const [timeBasedConditions, setTimeBasedConditions] = useState<TimeBasedCondition[]>([
         {
             field: { value: "", label: "" },
             condition: "",
@@ -137,9 +245,7 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
             conditionType: "main",
         },
     ]);
-    const [stuckStageConditions, setStuckStageConditions] = useState<
-        Condition[]
-    >([
+    const [stuckStageConditions, setStuckStageConditions] = useState<Condition[]>([
         {
             field: {
                 value: "when stuck-in-stage in",
@@ -213,7 +319,11 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
             setIsInitialSetupDone(true);
         }
     }, [selectedAlertType, isInitialSetupDone]);
+    const handleFormatChange = (slackFormatString: string) =>{
+        setFormat(slackFormatString)
+        form.setValue("slackChannelFormat", [...stuckStageConditions, ...newConditions]);
 
+    }
     const handleConditionChange = (
         index: number,
         key: keyof Condition,
@@ -225,15 +335,9 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
         condition[key] = value;
         setConditions(newConditions);
         if (selectedAlertType === "timebased") {
-            form.setValue("conditions", [
-                ...timeBasedConditions,
-                ...newConditions,
-            ]);
+            form.setValue("conditions", [...timeBasedConditions, ...newConditions]);
         } else {
-            form.setValue("conditions", [
-                ...stuckStageConditions,
-                ...newConditions,
-            ]);
+            form.setValue("conditions", [...stuckStageConditions, ...newConditions]);
         }
     };
 
@@ -292,15 +396,9 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
         newConditions.splice(index, 1);
         setConditions(newConditions);
         if (selectedAlertType === "timebased") {
-            form.setValue("conditions", [
-                ...timeBasedConditions,
-                ...newConditions,
-            ]);
+            form.setValue("conditions", [...timeBasedConditions, ...newConditions]);
         } else {
-            form.setValue("conditions", [
-                ...stuckStageConditions,
-                ...newConditions,
-            ]);
+            form.setValue("conditions", [...stuckStageConditions, ...newConditions]);
         }
     };
 
@@ -414,8 +512,8 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
     };
 
     const handleCustomMessageBodyChange = (customMessageBody: string) => {
-        updateRecipient("customMessageBody", customMessageBody);
-    };
+      updateRecipient("customMessageBody", customMessageBody);
+  };
 
     const updateRecipient = (
         key: keyof typeof recipientConfig,
@@ -433,6 +531,7 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
         recipient: typeof recipientConfig;
         conditions: Condition[]; // Ensure conditions is of type Condition[]
         organizationId: string;
+        slackChannelFormat: string;
         triggerConfig: {
             apiUrl: string;
             processor: string;
@@ -449,26 +548,18 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
             recipient: recipientConfig,
             conditions: [], // Initialize with an empty array of Condition[]
             organizationId: "",
+            slackChannelFormat: format,
             triggerConfig: { apiUrl: "", processor: "" },
         },
     });
 
     useEffect(() => {
-        if (
-            selectedAlertType === "timebased" ||
-            selectedAlertType === "stuck-in-stage"
-        ) {
+        if (selectedAlertType === "timebased" || selectedAlertType === "stuck-in-stage") {
             form.setValue("conditions", timeBasedConditions);
         } else {
             form.setValue("conditions", stuckStageConditions);
         }
-    }, [
-        timeBasedConditions,
-        stuckStageConditions,
-        conditions,
-        form,
-        selectedAlertType,
-    ]);
+    }, [timeBasedConditions, stuckStageConditions, conditions, form, selectedAlertType]);
 
     useEffect(() => {
         form.setValue("recipient", recipientConfig);
@@ -479,120 +570,72 @@ function WorkflowSheet({ workflowId, mode }: { workflowId: string; mode: string 
         isPending: isMutatePending,
         reset,
     } = useMutation({
-        mutationFn: createWorkflowMutation,
-        onSuccess: () => {
-            router.refresh();
-            reset();
-            setIsOpen(false);
+        mutationFn: createHiringroomMutation,
+        onSuccess: async (hiringroomValue) => {
+            console.log('hiringroomvalue - ',hiringroomValue)
+            // handleIndividualHiringroom(hiringroomValue) // to build
+            
+            // call endpoint that calls handle indiviual hiring room backend
+
+            try {
+
+                const response = await fetch("/api/hiringroom", {
+                    // const response = await fetch("https://slack.com/api/conversations.create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        // Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(hiringroomValue),
+                });
+        
+                const data = await response.json();
+                if (!data.ok) {
+                    throw new Error(`Error creating channel: ${data.error}`);
+                }
+        
+                console.log('Channel created successfully:');
+                // console.log('Channel created successfully:', data);
+                return data.channel.id; // Return the channel ID for further use
+            } catch (error) {
+                console.error('Error creating Slack channel route:', error);
+            }
+
+            // router.refresh();
+            // reset();
+            // setIsOpen(false);
         },
         onError: (error) => {
             toast.error(
                 (error as { message?: string })?.message ??
-                    "Failed to submit Workflow",
+                "Failed to submit Hiringroom",
             );
         },
     });
-    // import { db } from "@/server/db"; // Adjust the import to your actual db instance
-// import { workflows } from "@/server/db/schema"; // Adjust the import to your actual schema
-const [isFormReady, setIsFormReady] = useState(false);
-
-useEffect(() => {
-    if (mode === 'edit' && workflowId) {
-        setIsFormReady(true);
-    }
-}, [mode, workflowId]);
-
-useEffect(() => {
-    if (isFormReady && mode === 'edit' && workflowId) {
-        const fetchWorkflowData = async () => {
-            try {
-                const data = await getWorkflowById(workflowId);
-                console.log('DATA - ',data)
-                const formattedData = {
-                    name: data.name || "",
-                    objectField: data.objectField || "",
-                    alertType: data.alertType || "timebased",
-                    recipient: data.recipient || "",
-                    conditions: data.conditions || [],
-                    organizationId: data.organizationId || "",
-                    triggerConfig: data.triggerConfig || { apiUrl: "", processor: "" },
-                };
-                console.log('DAA - ALERT ',data?.alertType)
-                form.setValue("id",data.id || "")
-                form.setValue("conditions",data.conditions || [])
-                form.setValue("createdAt",data.createdAt || "")
-                form.setValue("id",data.id || "")
-                form.setValue("modifiedAt",data.modifiedAt || "")
-                form.setValue("name",data.name || "")
-                form.setValue("objectField",data.objectField || "")
-                form.setValue("organizationId",data.organizationId || "")
-                form.setValue("ownerId",data.ownerId || "")
-                form.setValue("recipient",data.recipient || "")
-                form.setValue("status",data.status || "ACTIVE")
-                form.setValue("alertType",data.alertType || "timebased")
-                handleSelectChange(data.objectField || "","","objectField",)
-                handleSelectChange("timebased" || "","","alertType",)
-                // handleSelectChange(data.alertType || "timebased" || "","","alertType",)
-                handleSelectChange(data.recipient || "","","recipient",)
-                handleSelectChange(data.conditions || "","","conditions",)
-                handleSelectChange(data.organizationId || "","","organizationId",)
-                handleSelectChange(data.triggerConfig || "","","triggerConfig",)
-                handleRecipientsChange(data.recipient.recipients) // to fill in
-                handleCustomMessageBodyChange(data?.recipient?.customMessageBody)
-                setSelectedRecipients(data.recipient.recipients)
-                setRecipientConfig(data.recipient);
-                form.setValue("recipient", data.recipient);
-                // handleConditionChange
-                // handleOpeningTextChange
-            // }
-            // onFieldsSelect={handleFieldsSelect}
-            // onButtonsChange={handleButtonsChange}
-            // onDeliveryOptionChange={
-            //     handleDeliveryOptionChange
-            // }
-            // onRecipientsChange={handleRecipientsChange}
-            // onCustomMessageBodyChange={
-            //     handleCustomMessageBodyChange
-                // reset(formattedData); // Reset form with fetched data
-            } catch (error) {
-                toast.error("Failed to load workflow data."+error);
-            }
-        };
-
-        fetchWorkflowData();
-    }
-}, [isFormReady, mode, workflowId, reset]);
-
 
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
-        console.log('on submit')
         try {
             const formData = form.getValues();
             console.log("Form Data before submission:", formData);
 
             // Combine timeBasedConditions or stuckStageConditions and additional conditions
-            const allConditions =
-                selectedAlertType === "timebased"
-                    ? timeBasedConditions
-                        .map((condition) => ({
-                            ...condition,
-                            field: {
-                                value: condition.field.value,
-                                label: condition.field.label,
-                            },
-                        }))
-                        .concat(conditions)
-                    : stuckStageConditions
-                        .map((condition) => ({
-                            ...condition,
-                            field: {
-                                value: condition.field.value,
-                                label: condition.field.label,
-                            },
-                        }))
-                        .concat(conditions);
+            const allConditions = selectedAlertType === "timebased"
+                ? timeBasedConditions.map((condition) => ({
+                    ...condition,
+                    field: {
+                        value: condition.field.value,
+                        label: condition.field.label,
+                    },
+                })).concat(conditions)
+                : stuckStageConditions.map((condition) => ({
+                    ...condition,
+                    field: {
+                        value: condition.field.value,
+                        label: condition.field.label,
+                    },
+                })).concat(conditions);
 
             // Transform and include combined conditions
             const transformedData = {
@@ -600,30 +643,17 @@ useEffect(() => {
                 conditions: allConditions,
             };
 
-            if (mode == "edit"){
-                //update db
-                await updateWorkflowMutation(transformedData)
-            }
-            else{
-                await mutateAsync(transformedData);
-            }
-
+            await mutateAsync(transformedData);
             await startAwaitableTransition(() => {
                 router.refresh();
             });
             reset();
             setIsOpen(false);
-            if (mode == "edit"){
-                toast.success("Workflow updated successfully");
-                router.push('/workflows')
-            }
-            else{
-                toast.success("Workflow created successfully");
-            }
+            toast.success("Hiringroom created successfully");
         } catch (error) {
             toast.error(
                 (error as { message?: string })?.message ??
-                    "Failed to submit Workflow",
+                "Failed to submit Hiringroom",
             );
         }
     };
@@ -634,32 +664,33 @@ useEffect(() => {
     ];
 
     const objectFieldOptions = [
-        {
-            name: "Activity Feed",
-            apiUrl: "https://harvest.greenhouse.io/v1/activity_feed",
-        },
-        {
-            name: "Applications",
-            apiUrl: "https://harvest.greenhouse.io/v1/applications",
-        },
-        {
-            name: "Approvals",
-            apiUrl: "https://harvest.greenhouse.io/v1/approvals",
-        },
+        // {
+        //     name: "Activity Feed",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/activity_feed",
+        // }, // Verify if correct
+        // {
+        //     name: "Applications",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/applications",
+        // },
+        // {
+        //     name: "Approvals",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/approvals",
+        // }, // Verify if correct
         {
             name: "Candidates",
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
         },
+
         { name: "Jobs", apiUrl: "https://harvest.greenhouse.io/v1/jobs" },
-        { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
-        {
-            name: "Scheduled Interviews",
-            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-        },
-        {
-            name: "Scorecards",
-            apiUrl: "https://harvest.greenhouse.io/v1/scorecards",
-        },
+        // { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
+        // {
+        //     name: "Scheduled Interviews",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        // },
+        // {
+        //     name: "Scorecards",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scorecards",
+        // },
     ];
 
     const timeConditionOptions = [
@@ -674,66 +705,22 @@ useEffect(() => {
         { label: "Last activity", value: "last_activity" },
         { label: "Interview End time", value: "end.date_time" },
     ];
-
-    const conditionTypesWithOperators = [
-        {
-            name: "Anonymized",
-            operators: [{ value: "equal", label: "Equal To" }],
-            values: ["True", "False"],
-        },
-        {
-            name: "Coordinator",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [],
-        },
-        {
-            name: "Following",
-            operators: [{ value: "equal", label: "Equal To" }],
-            values: ["True", "False"],
-        },
-        {
-            name: "GDPR Consent Status",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: ["Granted", "Denied"],
-        },
-        {
-            name: "Last Activity",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "before", label: "Before" },
-                { value: "after", label: "After" },
-            ],
-            values: [],
-        },
-        {
-            name: "Recruiter",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [],
-        },
-        {
-            name: "Tags",
-            operators: [{ value: "equal", label: "Equal To" }],
-            values: [],
-        },
-    ];
-
+    const handleTypeChange = (value: string) => {
+        if (value.toLowerCase().includes("candidate")) {
+          setFormat("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
+        } else if (value.toLowerCase().includes("job")) {
+          setFormat("job-{{JOB_NAME}}-{{JOB_POST_DATE}}");
+        }
+    };
+    
     const isSameDayOrTimeCondition = (condition: string) =>
         condition === "same";
 
     return (
-        <Dialog open={isOpen || mode == "edit"} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
-                    Create Workflow
+                Create Hiringroom
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
@@ -747,14 +734,14 @@ useEffect(() => {
                     />
                     <DialogTitle className=" flex flex-col items-center dark:text-white">
                         <h2 className="text-xl font-semibold">
-                            Create Workflow
+                        Create Hiringroom
                         </h2>
                         <DialogDescription className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                             Get started by filling in the basics.
                         </DialogDescription>
                     </DialogTitle>
                     <DialogDescription className="mt-1 text-sm text-gray-500 dark:text-gray-400"></DialogDescription>
-                </DialogHeader>
+                    </DialogHeader>
                 <hr className="mb-6 mt-2 border-gray-300 dark:border-gray-700" />
 
                 <div className="flex h-full flex-col gap-6 overflow-y-auto px-6">
@@ -770,7 +757,7 @@ useEffect(() => {
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
                                     Configure the general settings of the
-                                    workflow.
+                                    hiringroom.
                                 </p>
                             </div>
                             <div className="flex-1 space-y-4">
@@ -797,12 +784,15 @@ useEffect(() => {
                                     </Label>
                                     <Select
                                         value={selectedValue}
-                                        onValueChange={(value) =>
+                                        onValueChange={(value) =>{
                                             handleSelectChange(
                                                 value,
                                                 "",
                                                 "objectField",
                                             )
+                                            handleTypeChange(value)
+                                        }
+                                            
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
@@ -824,7 +814,7 @@ useEffect(() => {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                {isCandidateSelected && (
+                                {/* {isCandidateSelected && (
                                     <JobsDropdown
                                         onJobSelect={(jobId) =>
                                             handleSelectChange(
@@ -834,7 +824,7 @@ useEffect(() => {
                                             )
                                         }
                                     />
-                                )}
+                                )} */}
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
@@ -846,7 +836,7 @@ useEffect(() => {
                                     Alert Type
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Select the type of alert for this workflow.
+                                    Select the type of alert for this hiringroom.
                                 </p>
                             </div>
                             <div className="flex-1">
@@ -888,8 +878,8 @@ useEffect(() => {
                                                         : option.value ===
                                                                 "stuck-in-stage" &&
                                                             !isCandidateSelected
-                                                          ? "cursor-not-allowed bg-gray-300 text-opacity-50"
-                                                          : "hover:bg-indigo-100 hover:text-indigo-800"
+                                                        ? "cursor-not-allowed bg-gray-300 text-opacity-50"
+                                                        : "hover:bg-indigo-100 hover:text-indigo-800"
                                                 }`}
                                                 style={{ height: "40px" }}
                                             >
@@ -912,7 +902,7 @@ useEffect(() => {
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
                                     Specify conditions for triggering the
-                                    workflow.
+                                    hiringroom.
                                 </p>
                             </div>
                             <div className="flex-1 space-y-4">
@@ -1027,40 +1017,41 @@ useEffect(() => {
                                                         }
                                                     />
                                                 </div>
+
                                             </>
                                         )}
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Time Unit
-                                            </Label>
-                                            <Select
-                                                value={
-                                                    timeBasedConditions[0]
-                                                        ?.unit ?? "Days"
-                                                }
-                                                onValueChange={(value) =>
-                                                    handleConditionChangeTimeBased(
-                                                        0,
-                                                        "unit",
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Unit" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        <SelectItem value="Days">
-                                                            Days
-                                                        </SelectItem>
-                                                        <SelectItem value="Hours">
-                                                            Hours
-                                                        </SelectItem>
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                         <div className="flex-1">
+                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        Time Unit
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            timeBasedConditions[0]
+                                                                ?.unit ?? "Days"
+                                                        }
+                                                        onValueChange={(value) =>
+                                                            handleConditionChangeTimeBased(
+                                                                0,
+                                                                "unit",
+                                                                value,
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger className="w-full border border-gray-300 bg-white">
+                                                            <SelectValue placeholder="Select Unit" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectGroup>
+                                                                <SelectItem value="Days">
+                                                                    Days
+                                                                </SelectItem>
+                                                                <SelectItem value="Hours">
+                                                                    Hours
+                                                                </SelectItem>
+                                                            </SelectGroup>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
                                     </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
@@ -1082,7 +1073,7 @@ useEffect(() => {
                                             For
                                         </h1>
                                         <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Days
                                             </Label>
                                             <Input
@@ -1137,6 +1128,21 @@ useEffect(() => {
                         </div>
 
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
+                         {/* Recipient */}
+                         <div className="flex items-start gap-8">
+                            <div className="w-1/3">
+                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                    Slack Channel Format
+                                </Label>
+                                <p className="mt-2 text-sm text-gray-500">
+                                    Specify the format of the slack channel name of the hiring room.
+                                </p>
+                            </div>
+                            <div className="flex-1">
+                            <SlackChannelNameFormat format={format} setFormat={setFormat} selectedType={selectedValue}/>
+                            </div>
+                        </div>
+                        <hr className="my-2 border-gray-300 dark:border-gray-700" />
 
                         {/* Recipient */}
                         <div className="flex items-start gap-8">
@@ -1149,22 +1155,14 @@ useEffect(() => {
                                 </p>
                             </div>
                             <div className="flex-1">
-                                <SlackWorkflow
-                                    onOpeningTextChange={
-                                        handleOpeningTextChange
-                                    }
-                                    onFieldsSelect={handleFieldsSelect}
-                                    onButtonsChange={handleButtonsChange}
-                                    onDeliveryOptionChange={
-                                        handleDeliveryOptionChange
-                                    }
-                                    onRecipientsChange={handleRecipientsChange}
-                                    onCustomMessageBodyChange={
-                                        handleCustomMessageBodyChange
-                                    } // Add this line
-                                    selectedRecipients={selectedRecipients}
-                                    setSelectedRecipients={setSelectedRecipients}
-                                />
+                            <SlackHiringroom
+                              onOpeningTextChange={handleOpeningTextChange}
+                              onFieldsSelect={handleFieldsSelect}
+                              onButtonsChange={handleButtonsChange}
+                              onDeliveryOptionChange={handleDeliveryOptionChange}
+                              onRecipientsChange={handleRecipientsChange}
+                              onCustomMessageBodyChange={handleCustomMessageBodyChange} // Add this line
+                          />
                             </div>
                         </div>
 
@@ -1174,7 +1172,7 @@ useEffect(() => {
                                 disabled={isMutatePending}
                                 className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
                             >
-                                {mode == "edit" ? <>Save Workflow</>:<>Submit Workflow</>}
+                                Submit Hiringroom
                             </Button>
                         </div>
                     </form>
@@ -1184,4 +1182,4 @@ useEffect(() => {
     );
 }
 
-export default WorkflowSheet;
+export default CreateHiringroomSheet;
