@@ -31,6 +31,63 @@ export const workflowStatusEnum = pgEnum("workflow_status", [
     "Inactive",
     "Archived",
 ]);
+export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
+export const slackChannelsCreatedStatusEnum = pgEnum("slack_channels_created_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
+
+// slack_channels_created table definition
+export const slackChannelsCreated = createTable("slack_channels_created", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    channelId: varchar("channelId", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    createdBy: varchar("createdBy", { length: 255 }),
+    description: varchar("description", { length: 255 }),
+    greenhouseCandidateId: varchar("greenhouseCandidateId", { length: 255 }),
+    greenhouseJobId: varchar("greenhouseJobId", { length: 255 }),
+    isArchived: boolean("isArchived").default(false).notNull(),
+    invitedUsers: jsonb("invited_users").notNull().default(sql`'[]'`),
+    hiringroomId: varchar("hiringroomId", { length: 255 }), // Ensure this is not commented
+    channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
+});
+
+export const hiringrooms = createTable("hiringroom", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    objectField: varchar("objectField", { length: 255 }).notNull(),
+    alertType: varchar("alertType", { length: 255 }),
+    conditions: jsonb("conditions").notNull(), // Updated to JSONB
+    triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
+    recipient: jsonb("recipient").notNull(),
+    status: hiringroomStatusEnum("status").default("Active").notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    modifiedAt: timestamp("modifiedAt", { mode: "date" }),
+    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
+    ownerId: varchar("ownerId", { length: 255 })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+});
 
 export const workflows = createTable("workflow", {
     id: varchar("id", { length: 255 })
@@ -65,6 +122,37 @@ export const workflowsRelations = relations(workflows, ({ one }) => ({
     }),
 }));
 
+export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
+    owner: one(users, {
+        fields: [hiringrooms.ownerId],
+        references: [users.id],
+    }),
+    organization: one(organizations, {
+        fields: [hiringrooms.organizationId],
+        references: [organizations.id],
+    }),
+    slackChannelsCreated: many(slackChannelsCreated),
+    // slackChannelsCreated: many(slackChannelsCreated, {
+    //     fields: [slackChannelsCreated.hiringroomId],
+    //     references: [hiringrooms.id],
+    // }),
+}));
+
+export const slackChannelsCreatedRelations = relations(
+    slackChannelsCreated,
+    ({ one }) => ({
+        hiringroom: one(hiringrooms, {
+            fields: [slackChannelsCreated.hiringroomId],
+            references: [hiringrooms.id],
+        }),
+    }),
+);
+// export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
+//     hiringroom: one(hiringrooms, {
+//         fields: [slackChannelsCreated.hiringroomId],
+//         references: [hiringrooms.id],
+//     }),
+// }));
 export const workflowInsertSchema = createInsertSchema(workflows, {
     name: z
         .string()
