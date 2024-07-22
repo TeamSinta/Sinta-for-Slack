@@ -11,11 +11,7 @@
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
-import {
-    checkForSlackTeamIDConflict,
-    getAccessToken,
-    setAccessToken,
-} from "@/server/actions/slack/query";
+import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
 import {
@@ -68,6 +64,10 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
+    console.log("redirectUri  - ", redirectUri);
+    console.log("clientId  - ", clientId);
+    console.log("client secret - ", clientSecret);
+    console.log("code - ", code);
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
         console.log("url - ", url);
         const response = await fetch(url, { method: "POST" });
         const json = await response.json();
+        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&
@@ -90,14 +91,6 @@ export async function GET(req: NextRequest) {
         ) {
             // Calculate the expiry timestamp
             const expiresAt = Math.floor(Date.now() / 1000) + json.expires_in;
-
-            // Checks to see if there is a conflict fon the teamId in the DB
-            const conflict = await checkForSlackTeamIDConflict(json.team.id);
-
-            if (conflict) {
-                const conflictUrl = `${siteUrls.publicUrl}/?conflict`;
-                return NextResponse.redirect(conflictUrl);
-            }
 
             // Store access token, refresh token, and expiry time securely
             const updateResponse = await setAccessToken(
@@ -262,7 +255,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-    console.log(payload);
+
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -280,8 +273,6 @@ async function handleSlackInteraction(payload: SlackInteraction) {
         }
 
         const { action_id } = action;
-        console.log("handle slack interaction - pre access token");
-
         const accessToken = await getAccessToken(team.id);
 
         // Parse candidate ID from action_id

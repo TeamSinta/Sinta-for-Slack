@@ -11,7 +11,6 @@ import {
     Zap,
     Workflow,
     Cable,
-    DoorOpen,
 } from "lucide-react";
 import { siteUrls } from "@/config/urls";
 
@@ -104,11 +103,6 @@ const navigation: SidebarNavItems[] = [
                 label: "Dashboard",
                 icon: LayoutDashboardIcon,
                 href: siteUrls.dashboard.home,
-            },
-            {
-                label: "Hiring Rooms",
-                icon: DoorOpen,
-                href: siteUrls.hiringrooms.home,
             },
             {
                 label: "Workflows",

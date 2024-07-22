@@ -7,7 +7,7 @@ import {
     workflowInsertSchema,
     workflowSelectSchema,
 } from "@/server/db/schema";
-import { protectedProcedure } from "@/server/procedures";
+import { protectedProcedure, adminProcedure } from "@/server/procedures";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { getOrganizations } from "../organization/queries";
@@ -64,18 +64,6 @@ export async function createWorkflowMutation(props: CreateWorkflowProps) {
  */
 const workflowUpdateSchema = workflowSelectSchema.pick({
     id: true,
-    name: true,
-    objectField: true,
-    alertType: true,
-    organizationId: true,
-    triggerConfig: true,
-    recipient: true,
-    conditions: true,
-    status: true,
-    // other fields as necessary
-});
-const workflowStatusUpdateSchema = workflowSelectSchema.pick({
-    id: true,
     status: true,
     // other fields as necessary
 });
@@ -83,50 +71,20 @@ const workflowStatusUpdateSchema = workflowSelectSchema.pick({
 type UpdateWorkflowProps = z.infer<typeof workflowUpdateSchema>;
 
 export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
-    // await adminProcedure();
-    try {
-        console.log("props", props);
-        const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-        console.log("workflows parse ", workflowParse);
-        if (!workflowParse.success) {
-            throw new Error("Invalid workflow data", {
-                cause: workflowParse.error.errors,
-            });
-        }
+    await adminProcedure();
 
-        return await db
-            .update(workflows)
-            .set(workflowParse.data)
-            .where(eq(workflows.id, workflowParse.data.id))
-            .execute();
-    } catch (e) {
-        console.log("wtf  eeeee -", e);
+    const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
+    if (!workflowParse.success) {
+        throw new Error("Invalid workflow data", {
+            cause: workflowParse.error.errors,
+        });
     }
-}
-type UpdateWorkflowStatusProps = z.infer<typeof workflowStatusUpdateSchema>;
 
-export async function updateWorkflowStatusMutation(
-    props: UpdateWorkflowStatusProps,
-) {
-    // await adminProcedure();
-    try {
-        console.log("props", props);
-        const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-        console.log("workflows parse ", workflowParse);
-        if (!workflowParse.success) {
-            throw new Error("Invalid workflow data", {
-                cause: workflowParse.error.errors,
-            });
-        }
-
-        return await db
-            .update(workflows)
-            .set(workflowParse.data)
-            .where(eq(workflows.id, workflowParse.data.id))
-            .execute();
-    } catch (e) {
-        console.log("wtf  eeeee -", e);
-    }
+    return await db
+        .update(workflows)
+        .set(workflowParse.data)
+        .where(eq(workflows.id, workflowParse.data.id))
+        .execute();
 }
 
 /**
