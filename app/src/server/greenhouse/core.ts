@@ -6,7 +6,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-//@ts-nocheck
 
 import { isAfter, isBefore, isSame } from "@/lib/utils";
 import { customFetch } from "@/utils/fetch";
@@ -134,15 +133,15 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
-        )) as { id: number; name: string, created_at: string }[];
+        )) as { id: number; name: string; created_at: string }[];
         return jobs.map((job) => ({
             id: job.id,
             name: job.name,
-            created_at: job.created_at
+            created_at: job.created_at,
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
-        console.log('here1?')
+        console.log("here1?");
         return [];
     }
 };
@@ -565,25 +564,24 @@ export async function fetchAllGreenhouseUsers(): Promise<
     Record<string, { id: string; email: string }>
 > {
     try {
-        const users = (await customFetch(
+        const users = await customFetch(
             "https://harvest.greenhouse.io/v1/users",
-        ))
-        return users
-
+        );
+        return users;
     } catch (error) {
         console.error("Error fetching Greenhouse users: ", error);
         return {};
     }
 }
 
-
-export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<Job[]> => {
+export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<
+    Job[]
+> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
         )) as any[];
-        console.log('JOB  - ',jobs)
-        return jobs
+        return jobs;
     } catch (error) {
         console.error("Error fetching jobs: ", error);
         return [];
@@ -681,7 +679,12 @@ export async function filterStuckinStageDataConditions(
                 default:
                     console.warn(`Unsupported condition operator: ${operator}`);
             }
-            console.log(operator, daysInCurrentStage, thresholdDays, conditionMet)
+            console.log(
+                operator,
+                daysInCurrentStage,
+                thresholdDays,
+                conditionMet,
+            );
 
             if (conditionMet) {
                 matchedCandidates.push(candidate);
@@ -803,3 +806,64 @@ export const filterScheduledInterviewsWithConditions = (
         });
     });
 };
+
+export function buildGreenHouseUsersForCandidate(
+    hiring_room_recipient: any[],
+    cand_id: any,
+    job_id: any,
+) {
+    hiring_room_recipient.forEach((recipient) => {
+        if (recipient.source == "greenhouse") {
+        }
+    });
+}
+
+export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
+    recipient?: any[];
+    recipients?: any;
+}) {
+    const greenhouseRecipients: { value: any }[] = [];
+    let hasGreenhouse = false;
+    const greenhouseRoles: any[] = [];
+    workflowRecipient.recipients.map((rec) => {
+        if (rec.source == "greenhouse") {
+            hasGreenhouse = true;
+            greenhouseRoles.push(rec.value);
+        }
+    });
+    console.log();
+
+    if (hasGreenhouse) {
+        const candidates = filteredConditionsData;
+        // console.log('filteredConditionsData - ',filteredConditionsData)
+        console.log("candidates - ", candidates.length);
+        candidates.forEach((cand) => {
+            console.log("greenhouseRoles - ", greenhouseRoles.length);
+
+            greenhouseRoles.forEach((role) => {
+                if (role.includes("ecruiter") || role.includes("oordinator")) {
+                    if (userMapping[cand.recruiter.id]) {
+                        const newRecipient = {
+                            value: userMapping[cand.recruiter.id],
+                        };
+                        greenhouseRecipients.push(newRecipient);
+                    } else if (userMapping[cand.coordinator.id]) {
+                        const newRecipient = {
+                            value: userMapping[cand.coordinator.id],
+                        };
+                        greenhouseRecipients.push(newRecipient);
+                    }
+                }
+            });
+        });
+    }
+    const allRecipients =
+        workflowRecipient.recipients.concat(greenhouseRecipients);
+    return allRecipients;
+}
+
+export async function getAllCandidates() {
+    //https://harvest.greenhouse.io/v1/candidates
+    const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
+    const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
+}

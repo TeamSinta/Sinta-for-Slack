@@ -19,7 +19,7 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { DialogProps } from "@radix-ui/react-dialog";
+import { type DialogProps } from "@radix-ui/react-dialog";
 
 export function CommandMenu({ ...props }: DialogProps) {
     const router = useRouter();

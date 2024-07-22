@@ -13,6 +13,7 @@ if(publicUrl == undefined){
     publicUrl = "https://dev.sinta-slack.vercel.app"
 }
 export const siteUrls = {
+
     publicUrl: publicUrl,
     github: "https://github.com/msinta/",
     home: "/",

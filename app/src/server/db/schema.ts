@@ -65,8 +65,6 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
 });
 
-
-
 export const hiringrooms = createTable("hiringroom", {
     id: varchar("id", { length: 255 })
         .notNull()
@@ -131,14 +129,23 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
     organization: one(organizations, {
         fields: [hiringrooms.organizationId],
         references: [organizations.id],
-    }),    
-    // slackChannelsCreated: many(slackChannelsCreated),
+    }),
+    slackChannelsCreated: many(slackChannelsCreated),
     // slackChannelsCreated: many(slackChannelsCreated, {
     //     fields: [slackChannelsCreated.hiringroomId],
     //     references: [hiringrooms.id],
     // }),
 }));
 
+export const slackChannelsCreatedRelations = relations(
+    slackChannelsCreated,
+    ({ one }) => ({
+        hiringroom: one(hiringrooms, {
+            fields: [slackChannelsCreated.hiringroomId],
+            references: [hiringrooms.id],
+        }),
+    }),
+);
 // export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
 //     hiringroom: one(hiringrooms, {
 //         fields: [slackChannelsCreated.hiringroomId],

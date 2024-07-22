@@ -4,7 +4,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { FancyBox } from "@/components/ui/fancy.box";
@@ -13,9 +12,22 @@ import { getMockGreenhouseData } from "@/server/greenhouse/core";
 import MessageButtons, {
     type ButtonAction,
     ButtonType,
+    UpdateActionType,
 } from "./message-buttons";
 import slackLogo from "../../../../../../public/slack-logo.png";
+import sintaLogo from "../../../../../../public/sintalogo.png";
 import Image from "next/image";
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { HelpCircleIcon } from "lucide-react";
 
 const fields = [
     { value: "name", label: "Candidate Name", color: "" },
@@ -28,12 +40,20 @@ const fields = [
     { value: "coordinator_name", label: "Coordinator Name", color: "" },
 ];
 
+const variableOptions = [
+    { value: "{{Interviewer}}", label: "Interviewer" },
+    { value: "{{Role title}}", label: "Role Title" },
+    { value: "{{Job Stage}}", label: "Job Stage" },
+    { value: "{{Recruiter}}", label: "Recruiter" },
+    { value: "{{Candidate_Name}}", label: "Candidate Name" },
+];
+
 interface SlackHiringroomProps {
     onOpeningTextChange: (text: string) => void;
     onFieldsSelect: (fields: string[]) => void;
     onButtonsChange: (buttons: ButtonAction[]) => void;
-    onDeliveryOptionChange: (option: string) => void;
     onRecipientsChange: (recipients: Option[]) => void;
+    onCustomMessageBodyChange: (customMessageBody: string) => void;
 }
 
 type Option = {
@@ -47,6 +67,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     onFieldsSelect,
     onButtonsChange,
     onRecipientsChange,
+    onCustomMessageBodyChange,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
@@ -55,6 +76,10 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
+    );
+    const [showMarkdownInput, setShowMarkdownInput] = useState(false);
+    const [customMessageBody, setCustomMessageBody] = useState(
+        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and task.",
     );
 
     const handleOpeningTextChange = (
@@ -76,13 +101,13 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
 
     const handleRecipientsChange = (selectedOptions: Option[]) => {
         setSelectedRecipients(selectedOptions);
-        onRecipientsChange(selectedOptions); // Directly passing the array of objects
+        onRecipientsChange(selectedOptions);
     };
 
     const addButton = () => {
         const newButtons = [
             ...buttons,
-            { label: "", action: "", type: ButtonType.UpdateButton },
+            { label: "Button", action: "", type: ButtonType.UpdateButton },
         ];
         handleButtonsChange(newButtons);
     };
@@ -106,7 +131,6 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         setIsLoading(true);
         const fetchData = async () => {
             try {
-                // Fetch both sets of data in parallel
                 const [channelsData, usersData, greenhouseData] =
                     await Promise.all([
                         getChannels(),
@@ -114,12 +138,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                         getMockGreenhouseData(),
                     ]);
 
-                // Combine the data into a single array, incorporating greenhouseData
                 const combinedOptions = [
-                    // ...channelsData.map((channel) => ({
-                    //     ...channel,
-                    //     source: "slack",
-                    // })),
                     ...usersData.map((user) => ({ ...user, source: "slack" })),
                     {
                         label: ` ${greenhouseData.recruiter}`,
@@ -157,68 +176,207 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         void fetchData();
     }, []);
 
+    const handleCustomMessageBodyChange = (
+        e: React.ChangeEvent<HTMLTextAreaElement>,
+    ) => {
+        const value = e.target.value;
+        setCustomMessageBody(value);
+        onCustomMessageBodyChange(value);
+    };
+
+    const handleVariableSelect = (variable: string) => {
+        const value = customMessageBody + variable;
+        setCustomMessageBody(value);
+        onCustomMessageBodyChange(value);
+    };
+
+    const getButtonStyle = (button: ButtonAction) => {
+        switch (button.type) {
+            case ButtonType.AcknowledgeButton:
+            case ButtonType.LinkButton:
+                return "bg-white text-black border border-gray-300";
+            case ButtonType.UpdateButton:
+                switch (button.updateType) {
+                    case UpdateActionType.MoveToNextStage:
+                        return "bg-green-600 text-white";
+                    case UpdateActionType.RejectCandidate:
+                        return "bg-red-600 text-white";
+                    default:
+                        return "bg-white-200 text-black border border-gray-300";
+                }
+            default:
+                return "bg-gray-200 text-black border border-gray-300";
+        }
+    };
+
     return (
         <div className="hiringroom-container mt-4">
-            <div className="flex ">
+            <div className="flex items-center">
                 <Label className="text-xl font-bold">
                     Configure Slack Recipients{" "}
-                    {/* Configure Slack Alert{" "} */}
                 </Label>
                 <Image
                     src={slackLogo}
-                    alt={`slack-logo`}
+                    alt="slack-logo"
                     className="ml-2 h-7 w-7"
                 />{" "}
             </div>
-            {/* Opening Text */}
-            {/* <div className="my-4">
-                <Label>Opening Text</Label>
-                <Input
-                    value={openingText}
-                    onChange={handleOpeningTextChange}
-                    placeholder="Enter opening text..."
-                />
-            </div> */}
+            <p className="mt-2 text-sm text-gray-500">
+                Select the type of alert for this hiring room.
+            </p>
 
-            {/* Message Fields */}
-            {/* <div className="my-4">
-                <Label>Select Message Fields</Label>
-                <FancyBox
-                    selectedOptions={selectedFields}
-                    onOptionChange={handleFieldsSelect}
-                    fields={fields}
-                />
-            </div> */}
+            {/* Checkbox to Add Custom Message Body */}
+            <div className="my-4">
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id="customMessageBody"
+                        checked={showMarkdownInput}
+                        onCheckedChange={() =>
+                            setShowMarkdownInput(!showMarkdownInput)
+                        }
+                    />
+                    <label
+                        htmlFor="customMessageBody"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                        Select to customize opening message
+                    </label>
+                </div>
+            </div>
 
-            {/* Message Buttons */}
-            {/* <MessageButtons
-                buttons={buttons}
-                addButton={addButton}
-                updateButton={updateButton}
-                removeButton={removeButton}
-            /> */}
-
-            {/* Message Delivery */}
-            {/* <div className="my-4">
-                <Label>Message Delivery</Label>
-                <RadioGroup
-                    value={deliveryOption}
-                    onValueChange={handleDeliveryOptionChange}
-                    className="mt-3 flex flex-col gap-4"
-                >
-                    {deliveryOptions.map((option, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                            <RadioGroupItem
-                                value={option}
-                                id={`delivery-${option}`}
-                            />
-                            <Label htmlFor={`delivery-${option}`}>
-                                {option}
-                            </Label>
+            {/* Custom Message Body Input */}
+            {showMarkdownInput && (
+                <>
+                    <div className="mt-4 rounded-lg border border-gray-300 bg-white pb-6 shadow-sm">
+                        {/* Top Bar */}
+                        <div className="flex items-center justify-between rounded-t-lg bg-fuchsia-950 px-3 py-1 text-white">
+                            <div className="flex space-x-2">
+                                <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                                <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                                <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div className="text-sm">
+                                <HelpCircleIcon />{" "}
+                            </div>
                         </div>
-                    ))}
-                </RadioGroup>
-            </div> */}
+                        <div className="mb-2 mt-2 flex items-start px-4">
+                            <Image
+                                src={sintaLogo} // Replace this with the user profile image URL
+                                alt="user-profile"
+                                className="h-10 w-10 rounded"
+                            />
+                            <div className="ml-2 flex-1">
+                                <div className="flex items-center font-semibold text-gray-700">
+                                    Sinta
+                                    <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-500">
+                                        APP
+                                    </span>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    3:53 PM
+                                </div>
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="mb-3 ml-4 mt-2"
+                                    >
+                                        Insert Variable
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56">
+                                    <DropdownMenuGroup>
+                                        {variableOptions.map((option) => (
+                                            <DropdownMenuItem
+                                                key={option.value}
+                                                onClick={() =>
+                                                    handleVariableSelect(
+                                                        option.value,
+                                                    )
+                                                }
+                                            >
+                                                {option.label}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+
+                        <div className="ml-12 px-4">
+                            <textarea
+                                value={customMessageBody}
+                                onChange={handleCustomMessageBodyChange}
+                                placeholder="Message #channel or @user"
+                                className="text-md max-h-40 min-h-32 w-full resize-none overflow-auto rounded border border-gray-300 bg-gray-50 p-2 shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                style={{ height: "auto" }}
+                                onInput={(e) => {
+                                    e.currentTarget.style.height = "auto";
+                                    e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+                                }}
+                            ></textarea>
+                        </div>
+
+                        {selectedFields.length > 0 && (
+                            <hr className="mx-16 my-4" />
+                        )}
+
+                        <div className="ml-12 mt-2 px-4">
+                            {selectedFields.map((field) => (
+                                <div
+                                    key={field}
+                                    className="mb-2 flex items-center"
+                                >
+                                    <span className="text-sm font-medium text-gray-700">
+                                        {
+                                            fields.find(
+                                                (f) => f.value === field,
+                                            )?.label
+                                        }
+                                        :
+                                    </span>
+                                    <span className="ml-2 text-sm text-gray-500">
+                                        {"{{" + field + "}}"}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {buttons.length > 0 && <hr className="mx-16 my-4" />}
+
+                        {buttons.length > 0 && (
+                            <div className="ml-12 mt-2 flex flex-wrap gap-2 px-4">
+                                {buttons.map((button, index) => (
+                                    <button
+                                        key={index}
+                                        className={`rounded-sm px-3 py-1 text-sm ${getButtonStyle(button)}`}
+                                        type="button"
+                                    >
+                                        {button.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="my-4">
+                        <Label>Select Message Fields</Label>
+                        <FancyBox
+                            selectedOptions={selectedFields}
+                            onOptionChange={handleFieldsSelect}
+                            fields={fields}
+                        />
+                    </div>
+
+                    <MessageButtons
+                        buttons={buttons}
+                        addButton={addButton}
+                        updateButton={updateButton}
+                        removeButton={removeButton}
+                    />
+                </>
+            )}
 
             {/* Multi-Select for Recipients */}
             <div className="my-4">
