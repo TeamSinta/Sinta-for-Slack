@@ -5,7 +5,9 @@ import { setAccessToken } from "@/server/actions/slack/query";
 import { siteUrls } from "@/config/urls";
 
 export async function POST(request: NextRequest) {
+    console.log('in post route hiring room');
     try{
+        console.log('MADE IT TO THE POST HIRING ROOM')
         const contentType = request.headers.get("content-type");
         if (contentType?.includes("application/json")) {
             const data = await request.json();

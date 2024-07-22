@@ -46,10 +46,9 @@ export function AssignmentsChannelTable({ slackChannelsCreatedPromise, greenhous
 
     const slackChannelsCreatedData: SlackChannelsCreatedData[] = data.map((slack_channel) => {
         const curCand = greenhouseCandidateDict[slack_channel.greenhouseCandidateId]
-        console.log('curCand - ',curCand)
         const curJob = greenhouseJobsDict[slack_channel.greenhouseJobId]
         const curApp = curCand?.applications ? curCand.applications[0] : null
-        const appliedDate = new Date(curApp?.applied_at);
+        const appliedDate = new Date(curApp.applied_at);
         const formattedDate = `${appliedDate.getMonth() + 1}/${appliedDate.getDate()}`;
 
         return {

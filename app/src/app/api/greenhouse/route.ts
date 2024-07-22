@@ -16,6 +16,7 @@ async function handleGreenhouseCandidateRequest(url: string, options: any ) {
         "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
         // ...options.headers,
     };
+    console.log('ehaders - ',headers)
     let requestUrl = url;
     if (options.query) {
         const queryParams = new URLSearchParams(options.query).toString();
@@ -40,7 +41,9 @@ async function handleGreenhouseCandidateRequest(url: string, options: any ) {
     const respData = response.data;
     return respData;
 }
-export async function POST(request: NextRequest) {    
+export async function POST(request: NextRequest) {
+    console.log("here!"); // Check if this is being logged
+    
     try {
         const {
             url,
@@ -49,7 +52,9 @@ export async function POST(request: NextRequest) {
             url: string;
             options: RequestInit & { query?: Record<string, string> };
         } = await request.json();
+        console.log('url ----- ',url)
         if (!url) {
+            console.log('here?')
             return NextResponse.json(
                 { error: "URL not provided" },
                 { status: 400 },
@@ -58,6 +63,7 @@ export async function POST(request: NextRequest) {
 
         const apiToken = "25a7b6ef73d938fefe4972c4832c02a6";
         if (!apiToken) {
+            console.log('here??')
             return NextResponse.json(
                 { error: "API token not found for the current organization" },
                 { status: 400 },
@@ -71,8 +77,13 @@ export async function POST(request: NextRequest) {
             // ...options.headers,
         };
         if(url.includes('/v1/candidates/')){
+            // const optData = options.data
+            console.log('FOUND CANDDIATES EDIT')
+            // return NextResponse.json({});
+
             // const response = await fetch(requestUrl, { ...options, headers });
             const responseData = await handleGreenhouseCandidateRequest(url, options)
+            console.log('responise data - ',responseData)
             return NextResponse.json(responseData);
 
         }
@@ -82,9 +93,22 @@ export async function POST(request: NextRequest) {
                 const queryParams = new URLSearchParams(options.query).toString();
                 requestUrl = `${url}?${queryParams}`;
             }
+            
+            console.log('Request URL:', requestUrl);
+            console.log('Options:', options);
+            // options.headers = headers
+            // let headers = {}
+            console.log('Headers:', headers);
+            
             const response = await fetch(requestUrl, { ...options, headers });
             
+            console.log('here??? - post repsonse',response.status)
+    
+
         if (!response.ok) {
+            console.log('here??abaabababab?',response.body)
+            console.log('here??abaabababab?',response.statusText)
+
             return NextResponse.json(
                 { error: `HTTP error! Status: ${response.status}` },
                 { status: response.status },
@@ -92,6 +116,7 @@ export async function POST(request: NextRequest) {
         }
 
         const responseData = await response.json();
+        // console.log('respdata? - ',responseData)
         return NextResponse.json(responseData);
     }
 

@@ -11,10 +11,9 @@ import {
     timestamp,
     varchar,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type AdapterAccount } from "next-auth/adapters";
 import { z } from "zod";
-
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
  * database instance for multiple projects.
@@ -65,6 +64,8 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     hiringroomId: varchar("hiringroomId", { length: 255 }), // Ensure this is not commented
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
 });
+
+
 
 export const hiringrooms = createTable("hiringroom", {
     id: varchar("id", { length: 255 })
@@ -130,23 +131,14 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
     organization: one(organizations, {
         fields: [hiringrooms.organizationId],
         references: [organizations.id],
-    }),
-    slackChannelsCreated: many(slackChannelsCreated),
+    }),    
+    // slackChannelsCreated: many(slackChannelsCreated),
     // slackChannelsCreated: many(slackChannelsCreated, {
     //     fields: [slackChannelsCreated.hiringroomId],
     //     references: [hiringrooms.id],
     // }),
 }));
 
-export const slackChannelsCreatedRelations = relations(
-    slackChannelsCreated,
-    ({ one }) => ({
-        hiringroom: one(hiringrooms, {
-            fields: [slackChannelsCreated.hiringroomId],
-            references: [hiringrooms.id],
-        }),
-    }),
-);
 // export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
 //     hiringroom: one(hiringrooms, {
 //         fields: [slackChannelsCreated.hiringroomId],
@@ -162,11 +154,26 @@ export const workflowInsertSchema = createInsertSchema(workflows, {
     alertType: z.string().min(1, "Alert type must not be empty"),
 });
 
+export const hiringroomInsertSchema = createInsertSchema(hiringrooms, {
+    name: z
+        .string()
+        .min(3, "Hiringroom name must be at least 3 characters long")
+        .max(50, "Hiringroom name must be at most 50 characters long"),
+    objectField: z.string().min(1, "Object field must not be empty"),
+    alertType: z.string().min(1, "Alert type must not be empty"),
+});
+
 export const workflowSelectSchema = createSelectSchema(workflows, {
     name: z
         .string()
         .min(3, "Workflow name must be at least 3 characters long")
         .max(50, "Workflow name must be at most 50 characters long"),
+});
+export const hiringroomSelectSchema = createSelectSchema(hiringrooms, {
+    name: z
+        .string()
+        .min(3, "Hiringroom name must be at least 3 characters long")
+        .max(50, "Hiringroom name must be at most 50 characters long"),
 });
 
 export const users = createTable("user", {
