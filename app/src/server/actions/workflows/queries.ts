@@ -23,17 +23,7 @@ const paginatedWorkflowPropsSchema = z.object({
 type GetPaginatedWorkflowsQueryProps = z.infer<
     typeof paginatedWorkflowPropsSchema
 >;
-export async function getWorkflowById(workflowId: string) {
-    const { data } = await db.transaction(async (tx) => {
-        const data = await tx
-            .select()
-            .from(workflows)
-            .where(eq(workflows.id, workflowId))
-            .execute();
-        return { data: data[0] }; // Assuming the result is a single workflow object
-    });
-    return data;
-}
+
 export async function getWorkflows() {
     const { data } = await db.transaction(async (tx) => {
         const data = await tx.select().from(workflows).execute();
@@ -50,9 +40,6 @@ export async function getPaginatedWorkflowsQuery(
 
     const { user } = await protectedProcedure();
     const { currentOrg } = await getOrganizations();
-    if (!currentOrg) {
-        throw new Error("No current organization found.");
-    }
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
@@ -111,9 +98,6 @@ export async function getPaginatedWorkflowsByOrgQuery(
     noStore();
 
     const { currentOrg } = await getOrganizations();
-    if (!currentOrg) {
-        throw new Error("No current organization found.");
-    }
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
@@ -171,10 +155,6 @@ export async function getPaginatedWorkflowsExcludingUserQuery(
     noStore();
     const { user } = await protectedProcedure();
     const { currentOrg } = await getOrganizations();
-
-    if (!currentOrg) {
-        throw new Error("No current organization found.");
-    }
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [
