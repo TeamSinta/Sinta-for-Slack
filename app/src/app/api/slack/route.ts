@@ -14,7 +14,7 @@ import { slackChannelsCreated } from "@/server/db/schema"; // Assuming Hiringroo
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
-import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
+import { checkForSlackTeamIDConflict, getAccessToken, setAccessToken } from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
 import {
@@ -89,6 +89,14 @@ export async function GET(req: NextRequest) {
         ) {
             // Calculate the expiry timestamp
             const expiresAt = Math.floor(Date.now() / 1000) + json.expires_in;
+
+            // Checks to see if there is a conflict fon the teamId in the DB
+            const conflict = await checkForSlackTeamIDConflict(json.team.id);
+
+            if (conflict) {
+                const conflictUrl = `${siteUrls.publicUrl}/?conflict`;
+                return NextResponse.redirect(conflictUrl);
+            }
 
             // Store access token, refresh token, and expiry time securely
             const updateResponse = await setAccessToken(
@@ -192,7 +200,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers
+            slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
 
@@ -253,7 +261,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-
+    console.log(payload);
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -271,7 +279,7 @@ async function handleSlackInteraction(payload: SlackInteraction) {
         }
 
         const { action_id } = action;
-        console.log('handle slack interaction - pre access token')
+        console.log("handle slack interaction - pre access token");
 
         const accessToken = await getAccessToken(team.id);
 
@@ -602,7 +610,7 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers
+            slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
 
