@@ -27,24 +27,24 @@ export const supportInfos: SupportInfo[] = [
         title: "Say Hello",
         description:
             "Get in touch with us to learn more about our products and services.",
-        email: "team@sintahr.com",
-        buttonHref: `mailto:team@sintahr.com`,
+        email: "hello@example.com",
+        buttonHref: `mailto:hello@example.com`,
         buttonText: "Get in touch",
     },
     {
         title: "Tech Support",
         description:
             "Get help with any technical issues you are facing. Our team will help you resolve any issues.",
-        email: "team@sintahr.comm",
-        buttonHref: `mailto:team@sintahr.com`,
+        email: "tech@example.com",
+        buttonHref: `mailto:tech@example.com`,
         buttonText: "Get in touch",
     },
     {
         title: "Sales",
         description:
             "Get help with any sales-related questions. Our team will help you with any sales inquiries.",
-        email: "mohamed@sintahr.com",
-        buttonHref: `mailto:team@sintahr.com`,
+        email: "sales@example.com",
+        buttonHref: `mailto:sales@example.com`,
         buttonText: "Get in touch",
     },
     {
