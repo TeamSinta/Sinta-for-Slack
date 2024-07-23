@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-// import { type DialogProps } from "@radix-ui/react-alert-dialog";
+import { type DialogProps } from "@radix-ui/react-alert-dialog";
 import { CircleIcon, LaptopIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -19,7 +19,6 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { DialogProps } from "@radix-ui/react-dialog";
 
 export function CommandMenu({ ...props }: DialogProps) {
     const router = useRouter();

@@ -47,7 +47,10 @@ type NewUserProfileFormProps = {
     currentStep: number;
 };
 
-export function NewUserProfileForm({ user }: NewUserProfileFormProps) {
+export function NewUserProfileForm({
+    user,
+    currentStep,
+}: NewUserProfileFormProps) {
     const router = useRouter();
 
     const form = useForm<ProfileFormSchema>({
@@ -68,7 +71,7 @@ export function NewUserProfileForm({ user }: NewUserProfileFormProps) {
             await mutateAsync();
 
             await startAwaitableTransition(() => {
-                document.cookie = `${new_user_setup_step_cookie}${user.id}=2; path=/`;
+                document.cookie = `${new_user_setup_step_cookie}${user.id}=${currentStep + 1}; path=/`;
                 router.refresh();
             });
 
@@ -103,7 +106,7 @@ export function NewUserProfileForm({ user }: NewUserProfileFormProps) {
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Erlich Bachman"
+                                            placeholder="alidotm"
                                             {...field}
                                         />
                                     </FormControl>

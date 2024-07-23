@@ -6,7 +6,6 @@ import {
     membersToOrganizations,
     orgRequests,
     organizations,
-    workflows,
 } from "@/server/db/schema";
 import { protectedProcedure } from "@/server/procedures";
 import { and, asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
@@ -59,6 +58,7 @@ export async function getOrgRequestsQuery() {
         })
         .execute();
 }
+
 /**
  * Check if the slack_team_id is filled for the current organization.
  * @returns A boolean indicating if the slack_team_id is set.
@@ -67,7 +67,7 @@ export async function checkSlackTeamIdFilled() {
     const { currentOrg } = await getOrganizations(); // Fetch the current organization context
 
     if (!currentOrg) {
-        return null; // Return null or any default value to indicate no organization
+        throw new Error("No current organization found.");
     }
 
     const org = await db.query.organizations.findFirst({
@@ -78,72 +78,6 @@ export async function checkSlackTeamIdFilled() {
     });
 
     return org ? org.slack_team_id : null; // Return the slack_team_id or null if not found
-}
-
-/**
- * Check if the greenhouse_api_token is filled for the current organization.
- * @returns A boolean indicating if the greenhouse_api_token is set.
- */
-export async function checkGreenhouseTeamIdFilled() {
-    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
-
-    if (!currentOrg) {
-        return null; // Return null or any default value to indicate no organization
-    }
-
-    const org = await db.query.organizations.findFirst({
-        where: eq(organizations.id, currentOrg.id), // Properly use 'eq' for condition
-        columns: {
-            greenhouse_api_token: true, // We only need to fetch the greenhouse_api_token
-        },
-    });
-
-    return org ? org.greenhouse_api_token : null; // Return the greenhouse_api_token or null if not found
-}
-
-/**
- * @returns A boolean indicating if there are any active workflows.
- */
-export async function Checktoseeworkflows() {
-    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
-
-    if (!currentOrg) {
-        return false; // Return false if no organization found
-    }
-
-    const activeWorkflows = await db.query.workflows.findMany({
-        where: eq(workflows.organizationId, currentOrg.id), // Properly use 'eq' for condition
-        columns: {
-            id: true, // We only need to check if there's at least one workflow
-        },
-    });
-
-    return activeWorkflows.length > 0; // Return true if there's at least one workflow, false otherwise
-}
-
-/**
- * Fetch the first 5 workflows for the current organization.
- * @returns An array of workflows with their names.
- */
-export async function getFirstFiveWorkflows() {
-    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
-
-    if (!currentOrg) {
-        return []; // Return an empty array if no organization found
-    }
-
-    const workflowFilter = eq(workflows.organizationId, currentOrg.id);
-
-    const workflowsList = await db.query.workflows.findMany({
-        where: workflowFilter, // Apply the filter
-        columns: {
-            name: true, // Fetch the name of the workflows
-        },
-        limit: 5, // Limit to the first 5 workflows
-        orderBy: desc(workflows.createdAt), // Order by creation date, descending
-    });
-
-    return workflowsList;
 }
 
 /**
@@ -276,38 +210,4 @@ export async function getPaginatedOrgMembersQuery(
     const pageCount = Math.ceil(total / input.per_page);
 
     return { data, pageCount, total };
-}
-
-export async function getSubdomainByWorkflowID(
-    workflowId: string,
-): Promise<string> {
-    if (!workflowId) {
-        throw new Error("No workflow ID provided.");
-    }
-
-    // Fetch workflow details using the provided workflow ID
-    const workflow = await db.query.workflows.findFirst({
-        where: eq(workflows.id, workflowId),
-        columns: {
-            organizationId: true,
-        },
-    });
-
-    if (!workflow) {
-        throw new Error("Workflow not found.");
-    }
-
-    // Fetch organization's subdomain using the organization ID from the workflow
-    const organization = await db.query.organizations.findFirst({
-        where: eq(organizations.id, workflow.organizationId),
-        columns: {
-            greenhouse_subdomain: true,
-        },
-    });
-
-    if (!organization) {
-        throw new Error("Organization not found.");
-    }
-
-    return organization.greenhouse_subdomain!;
 }

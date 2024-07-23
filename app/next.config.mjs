@@ -11,15 +11,6 @@ const nextConfig = {
     experimental: {
         optimizePackageImports: ["lucide-react"],
     },
-    transpilePackages: ["@radix-ui/react-dialog"],
-
-    images: {
-        domains: ["assets-global.website-files.com", "uploads-ssl.webflow.com"],
-    },
-
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
 export default nextConfig;
