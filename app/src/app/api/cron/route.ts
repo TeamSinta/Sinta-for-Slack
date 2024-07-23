@@ -294,8 +294,6 @@ export async function handleWorkflows() {
                     slackUsers,
                 );
 
-                // const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
-
                 const filteredSlackDataWithMessage =
                     await filterCandidatesDataForSlack(
                         filteredConditionsData,
