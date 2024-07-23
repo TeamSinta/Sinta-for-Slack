@@ -1,59 +1,130 @@
-import { NextResponse } from "next/server";
-import { fetchScheduledInterviews, fetchScorecard } from "@/hooks/mock-data";
-import { checkSlackTeamIdFilled } from "@/server/actions/organization/queries";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
+import { type NextRequest, NextResponse } from "next/server";
+import axios from "axios"
 export const dynamic = "force-dynamic";
+async function handleGreenhouseCandidateRequest(url: string, options: any ) {
+    // async function handleGreenhouseCandidateRequest(url: string, options: RequestInit & { query?: Record<string, string> }) {
+    // const headers: HeadersInit = {
+    //     "Authorization": `Basic ${process.env.GREENHOUSE_API_KEY}`, // Basic Auth token
+    //     "Content-Type": "application/json",
+    //     "On-Behalf-Of": options.headers?.['On-Behalf-Of'] || "", // Use provided On-Behalf-Of or default
+    // };
+    const headers: HeadersInit = {
+        "Authorization": `Basic MjVhN2I2ZWY3M2Q5MzhmZWZlNDk3MmM0ODMyYzAyYTYtODo=`, // Basic Auth token
+        "Content-Type": "application/json",
+        "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
+        // ...options.headers,
+    };
+    console.log('ehaders - ',headers)
+    let requestUrl = url;
+    if (options.query) {
+        const queryParams = new URLSearchParams(options.query).toString();
+        requestUrl = `${url}?${queryParams}`;
+    }
 
-export async function GET() {
+    // console.log('Request URL:', requestUrl);
+    // console.log('Headers:', headers);
+    // console.log('options',options)
+    // console.log('options',options.method)
+    // console.log('options',options.data)
+    const response = await axios({
+        url: requestUrl,
+        method: options.method,
+        headers: headers,
+        data: options?.data,
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+        throw new Error(`HTTP error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`);
+    }
+    const respData = response.data;
+    return respData;
+}
+export async function POST(request: NextRequest) {
+    console.log("here!"); // Check if this is being logged
+    
     try {
-        const slackTeamId = await checkSlackTeamIdFilled();
-
-        const interviews = await fetchScheduledInterviews();
-
-        let responseMessage = "No interviews found for today.";
-
-        if (!slackTeamId) {
-            console.error("Slack team ID not found, cannot send messages.");
-            return new NextResponse(
-                JSON.stringify({
-                    error: "Slack team ID is required but was not found.",
-                }),
-                {
-                    status: 400,
-                },
+        const {
+            url,
+            options,
+        }: {
+            url: string;
+            options: RequestInit & { query?: Record<string, string> };
+        } = await request.json();
+        console.log('url ----- ',url)
+        if (!url) {
+            console.log('here?')
+            return NextResponse.json(
+                { error: "URL not provided" },
+                { status: 400 },
             );
         }
-        for (const interview of interviews) {
-            const scorecardId = interview?.interviewers?.[0]?.scorecard_id;
-            if (scorecardId) {
-                const scorecard = await fetchScorecard(scorecardId);
-                if (scorecard) {
-                    // Prepare data for sending the Slack message
-                    const interviewData = {
-                        teamId: slackTeamId ?? null,
-                        questions: scorecard.questions,
-                        interviewStep: scorecard.interview,
-                        overallRecommendation: scorecard.overall_recommendation,
-                        interviewer: scorecard.interviewer,
-                        scorecard_id: scorecard.id,
-                    };
-                    // Send Slack message
-                    // await sendSlackMessage(interviewData); // Assume interview ID is the post ID
-                    responseMessage = "Scorecard notification sent.";
-                }
+
+        const apiToken = "25a7b6ef73d938fefe4972c4832c02a6";
+        if (!apiToken) {
+            console.log('here??')
+            return NextResponse.json(
+                { error: "API token not found for the current organization" },
+                { status: 400 },
+            );
+        }
+        // console.log('options - ',options)
+        const headers: HeadersInit = {
+            "Authorization": `Basic MjVhN2I2ZWY3M2Q5MzhmZWZlNDk3MmM0ODMyYzAyYTYtODo=`, // Basic Auth token
+            "Content-Type": "application/json",
+            "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
+            // ...options.headers,
+        };
+        if(url.includes('/v1/candidates/')){
+            // const optData = options.data
+            console.log('FOUND CANDDIATES EDIT')
+            // return NextResponse.json({});
+
+            // const response = await fetch(requestUrl, { ...options, headers });
+            const responseData = await handleGreenhouseCandidateRequest(url, options)
+            console.log('responise data - ',responseData)
+            return NextResponse.json(responseData);
+
+        }
+        else{
+            let requestUrl = url;
+            if (options.query) {
+                const queryParams = new URLSearchParams(options.query).toString();
+                requestUrl = `${url}?${queryParams}`;
             }
+            
+            console.log('Request URL:', requestUrl);
+            console.log('Options:', options);
+            // options.headers = headers
+            // let headers = {}
+            console.log('Headers:', headers);
+            
+            const response = await fetch(requestUrl, { ...options, headers });
+            
+            console.log('here??? - post repsonse',response.status)
+    
+
+        if (!response.ok) {
+            console.log('here??abaabababab?',response.body)
+            console.log('here??abaabababab?',response.statusText)
+
+            return NextResponse.json(
+                { error: `HTTP error! Status: ${response.status}` },
+                { status: response.status },
+            );
         }
 
-        return new NextResponse(JSON.stringify({ message: responseMessage }), {
-            status: 200,
-        });
+        const responseData = await response.json();
+        // console.log('respdata? - ',responseData)
+        return NextResponse.json(responseData);
+    }
+
     } catch (error) {
-        console.error("Failed to send scorecard notifications:", error);
-        return new NextResponse(
-            JSON.stringify({ error: "Internal server error" }),
-            {
-                status: 500,
-            },
+        console.log('errorr - ',error)
+        return NextResponse.json(
+            { error: (error as Error).message },
+            { status: 500 },
         );
     }
 }

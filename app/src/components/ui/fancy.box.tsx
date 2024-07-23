@@ -110,7 +110,7 @@ export function FancyBox({
                             <span className="truncate">
                                 {selectedValues.length === 0 && "Select labels"}
                                 {selectedValues.length === 1 &&
-                                    selectedValues[0].label}
+                                    selectedValues[0]?.label}
                                 {selectedValues.length === 2 &&
                                     selectedValues
                                         .map(({ label }) => label)
@@ -125,7 +125,7 @@ export function FancyBox({
                         <Command loop>
                             <CommandInput
                                 ref={inputRef}
-                                placeholder="Search labels..."
+                                placeholder="Search Fields..."
                                 value={inputValue}
                                 onValueChange={setInputValue}
                             />

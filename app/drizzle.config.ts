@@ -3,9 +3,10 @@ import { env } from "@/env.js";
 
 export default {
     schema: "./src/server/db/schema.ts",
-    dialect: "postgresql",  // Assumed correct from your dialect setting
+    out: "./drizzle",
+    dialect: "postgresql", // Assumed correct from your dialect setting
     dbCredentials: {
-        url: env.DATABASE_URL,  // Changed from connectionString to url
+        url: env.DATABASE_URL, // Changed from connectionString to url
     },
     tablesFilter: ["teamsinta-saas*"],
 } satisfies Config;

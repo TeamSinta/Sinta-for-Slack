@@ -5,7 +5,7 @@
  */
 
 export const siteConfig = {
-    name: "TeamSinta",
+    name: "Team Sinta 🥳",
     contactEmail: "team@teamsinta.com",
     noReplyEmail: "team@teamsinta.com",
 } as const;

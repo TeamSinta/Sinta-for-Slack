@@ -11,26 +11,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontalIcon } from "lucide-react";
 import { toast } from "sonner";
-import { type WorkflowData } from "./columns";
+import { type HiringroomData } from "./columns";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
-    deleteWorkflowMutation,
-    updateWorkflowMutation,
-} from "@/server/actions/workflows/mutations";
+    deleteHiringroomMutation,
+    updateHiringroomMutation,
+} from "@/server/actions/hiringrooms/mutations";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 
-type WorkflowStatus = "Active" | "Inactive" | "Archived";
+type HiringroomStatus = "Active" | "Inactive" | "Archived";
 
-export function ColumnDropdown({ id }: WorkflowData) {
+export function ColumnDropdown({ id }: HiringroomData) {
     const router = useRouter();
 
-    // Mutation to update the workflow status
+    // Mutation to update the hiringroom status
     const {
         mutateAsync: changeStatusMutate,
         isPending: changeStatusIsPending,
-    } = useMutation<unknown, unknown, { id: string; status: WorkflowStatus }>({
-        mutationFn: ({ id, status }) => updateWorkflowMutation({ id, status }),
+    } = useMutation<unknown, unknown, { id: string; status: HiringroomStatus }>({
+        mutationFn: ({ id, status }) => updateHiringroomMutation({ id, status }),
         onSettled: () => {
             router.refresh();
         },
@@ -41,7 +41,7 @@ export function ColumnDropdown({ id }: WorkflowData) {
         startAwaitableStatusChangeTransition,
     ] = useAwaitableTransition();
 
-    const onStatusChange = (newStatus: WorkflowStatus) => {
+    const onStatusChange = (newStatus: HiringroomStatus) => {
         toast.promise(
             async () => {
                 await changeStatusMutate({ id: id, status: newStatus });
@@ -50,39 +50,39 @@ export function ColumnDropdown({ id }: WorkflowData) {
                 });
             },
             {
-                loading: "Updating workflow status...",
-                success: "Workflow status updated!",
+                loading: "Updating hiringroom status...",
+                success: "Hiringroom status updated!",
                 error: "Failed to update status, check your permissions.",
             },
         );
     };
 
-    // Mutation to delete a workflow
+    // Mutation to delete a hiringroom
     const {
-        mutateAsync: removeWorkflowMutate,
-        isPending: removeWorkflowIsPending,
+        mutateAsync: removeHiringroomMutate,
+        isPending: removeHiringroomIsPending,
     } = useMutation({
-        mutationFn: ({}: { workflowId: string }) =>
-            deleteWorkflowMutation({ id }),
+        mutationFn: ({}: { hiringroomId: string }) =>
+            deleteHiringroomMutation({ id }),
     });
 
     const [
-        removeWorkflowIsTransitionPending,
-        startAwaitableRemoveWorkflowTransition,
+        removeHiringroomIsTransitionPending,
+        startAwaitableRemoveHiringroomTransition,
     ] = useAwaitableTransition();
 
-    const onRemoveWorkflow = async () => {
+    const onRemoveHiringroom = async () => {
         toast.promise(
             async () => {
-                await removeWorkflowMutate({ workflowId: id });
-                await startAwaitableRemoveWorkflowTransition(() => {
+                await removeHiringroomMutate({ hiringroomId: id });
+                await startAwaitableRemoveHiringroomTransition(() => {
                     router.refresh();
-                    toast.success("Workflow removed successfully!");
+                    toast.success("Hiringroom removed successfully!");
                 });
             },
             {
-                loading: "Removing workflow...",
-                error: "Failed to remove workflow.",
+                loading: "Removing hiringroom...",
+                error: "Failed to remove hiringroom.",
             },
         );
     };
@@ -121,10 +121,10 @@ export function ColumnDropdown({ id }: WorkflowData) {
 
                 <DropdownMenuItem
                     disabled={
-                        removeWorkflowIsPending ||
-                        removeWorkflowIsTransitionPending
+                        removeHiringroomIsPending ||
+                        removeHiringroomIsTransitionPending
                     }
-                    onClick={onRemoveWorkflow}
+                    onClick={onRemoveHiringroom}
                     className="text-red-600"
                 >
                     Remove
