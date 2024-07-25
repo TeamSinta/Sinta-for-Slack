@@ -910,3 +910,26 @@ export async function sendAndPinSlackMessage(
         );
     }
 }
+
+export async function postWelcomeMessage(channelId, candidateID, slackTeamId) {
+  const accessToken = await getAccessToken(slackTeamId);
+
+  const welcomeMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
+
+  try {
+      await fetch("https://slack.com/api/chat.postMessage", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+              channel: channelId,
+              text: welcomeMessage,
+          }),
+      });
+  } catch (error) {
+      console.error("Error posting welcome message:", error);
+      throw error;
+  }
+}

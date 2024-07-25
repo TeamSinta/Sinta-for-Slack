@@ -29,7 +29,7 @@ import {
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
 } from "@/server/greenhouse/core";
-import { getEmailsfromSlack } from "@/server/slack/core";
+import { createSlackChannel, getEmailsfromSlack, inviteUsersToChannel, postWelcomeMessage } from "@/server/slack/core";
 
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
@@ -226,8 +226,8 @@ async function fetchCandidateData(view_id, accessToken) {
                     options: candidates.map(candidate => ({
                         text: {
                             type: 'plain_text',
-                            text: `Name: ${candidate.name}/ Stage: ${candidate.stage}/${candidate.job}`
-                        },
+                            text: `${candidate.name} - *Stage:* ${candidate.stage} / *Job:* ${candidate.job}`
+                          },
                         value: candidate.id.toString()
                     }))
                 },
@@ -345,6 +345,61 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+async function handleDebriefSubmission(payload) {
+  const { team, user, view } = payload;
+  const values = view.state.values;
+
+  console.log("debrief submission", values);
+
+  const candidateBlock = values.candidate_block.candidate_input;
+  const nameInput = values.name_block.name_input.value;
+  const recipients = values.recipients_block.recipients_input.selected_users;
+
+  if (!candidateBlock || !candidateBlock.selected_option) {
+      await updateModalWithError(view.id, view.hash, accessToken, 'Please select a valid candidate');
+      return new NextResponse(JSON.stringify({ error: "Please select a valid candidate" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+      });
+  }
+
+  const candidateID = candidateBlock.selected_option.value; // Get candidateID
+  const candidateText = candidateBlock.selected_option.text.text; // Get candidate text
+  const candidateName = candidateText.split(' - ')[0].trim(); // Extract the candidate name
+
+  const slackTeamId = team.id;
+
+  // Generate the channel name
+  const channelName = nameInput
+      ? `debrief-${nameInput.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}`
+      : `debrief-${candidateName.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}-${new Date().toISOString().split('T')[0].replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}`;
+
+  // Continue with creating the Slack channel and inviting users if no errors
+  try {
+      const channelId = await createSlackChannel(channelName, slackTeamId);
+
+      await inviteUsersToChannel(channelId, recipients, slackTeamId);
+
+      await postWelcomeMessage(channelId, candidateID, slackTeamId);
+
+      return new NextResponse(null, {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+      console.error(error);
+      return new NextResponse(
+          JSON.stringify({ error: "Failed to create debrief room" }),
+          {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+          },
+      );
+  }
+}
+
+
+
 
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
@@ -406,13 +461,15 @@ async function handleSlackInteraction(payload: SlackInteraction) {
             );
             return openModal(modalPayload, accessToken);
         }
-    } else if (type === "view_submission") {
-        if (payload.view.callback_id === "submit_move_to_next_stage") {
-            return handleMoveToNextStageSubmission(payload);
-        } else if (payload.view.callback_id === "submit_reject_candidate") {
-            return handleRejectCandidateSubmission(payload);
-        }
-    }
+    }  else if (type === 'view_submission') {
+      if (payload.view.callback_id === 'submit_move_to_next_stage') {
+          return handleMoveToNextStageSubmission(payload);
+      } else if (payload.view.callback_id === 'submit_reject_candidate') {
+          return handleRejectCandidateSubmission(payload);
+      } else if (payload.view.callback_id === 'debrief_modal') {
+          return handleDebriefSubmission(payload);
+      }
+  }
 
 
     return new NextResponse(
@@ -903,7 +960,6 @@ export async function POST(request) {
       const command = params.get("command");
       const trigger_id = params.get("trigger_id");
       const team_id = params.get("team_id");
-      console.log(params)
       if (command === "/debrief" && trigger_id) {
           return handleDebriefCommand(trigger_id, team_id);
       }
