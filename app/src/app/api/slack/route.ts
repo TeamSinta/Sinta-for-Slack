@@ -19,7 +19,7 @@ import {
 
 import { siteUrls } from "@/config/urls";
 import {
-  fetchActiveCandidates,
+    fetchActiveCandidates,
     fetchCandidateDetails,
     fetchEmailTemplates,
     fetchGreenhouseUsers,
@@ -29,7 +29,12 @@ import {
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
 } from "@/server/greenhouse/core";
-import { createSlackChannel, getEmailsfromSlack, inviteUsersToChannel, postWelcomeMessage } from "@/server/slack/core";
+import {
+    createSlackChannel,
+    getEmailsfromSlack,
+    inviteUsersToChannel,
+    postWelcomeMessage,
+} from "@/server/slack/core";
 
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
@@ -182,89 +187,87 @@ async function updateSlackMessage(
 }
 
 async function fetchCandidateData(view_id, accessToken) {
-  const candidates = await fetchActiveCandidates(); // Fetch active candidates
+    const candidates = await fetchActiveCandidates(); // Fetch active candidates
 
-
-
-  const updatePayload = {
-      view_id: view_id,
-      view: {
-          type: 'modal',
-          callback_id: 'debrief_modal',
-          title: {
-              type: 'plain_text',
-              text: 'Create Debrief'
-          },
-          blocks: [
-              {
-                  type: 'input',
-                  block_id: 'name_block',
-                  element: {
-                      type: 'plain_text_input',
-                      action_id: 'name_input',
-                      placeholder: {
-                          type: 'plain_text',
-                          text: 'Enter debrief name (optional)'
-                      }
-                  },
-                  label: {
-                      type: 'plain_text',
-                      text: 'Name'
-                  },
-                  optional: true
-              },
-              {
-                type: 'input',
-                block_id: 'candidate_block',
-                element: {
-                    type: 'static_select',
-                    action_id: 'candidate_input',
-                    placeholder: {
-                        type: 'plain_text',
-                        text: 'Select a candidate'
-                    },
-                    options: candidates.map(candidate => ({
-                        text: {
-                            type: 'plain_text',
-                            text: `${candidate.name} - *Stage:* ${candidate.stage} / *Job:* ${candidate.job}`
-                          },
-                        value: candidate.id.toString()
-                    }))
-                },
-                label: {
-                    type: 'plain_text',
-                    text: 'Candidate'
-                }
+    const updatePayload = {
+        view_id: view_id,
+        view: {
+            type: "modal",
+            callback_id: "debrief_modal",
+            title: {
+                type: "plain_text",
+                text: "Create Debrief",
             },
-              {
-                  type: 'input',
-                  block_id: 'recipients_block',
-                  element: {
-                      type: 'multi_users_select',
-                      action_id: 'recipients_input',
-                      placeholder: {
-                          type: 'plain_text',
-                          text: 'Select recipients'
-                      }
-                  },
-                  label: {
-                      type: 'plain_text',
-                      text: 'Recipients/Debrief Team'
-                  }
-              }
-          ],
-          submit: {
-              type: 'plain_text',
-              text: 'Create'
-          },
-          close: {
-              type: 'plain_text',
-              text: 'Cancel'
-          }
-      }
-  };
+            blocks: [
+                {
+                    type: "input",
+                    block_id: "name_block",
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "name_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Enter debrief name (optional)",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Name",
+                    },
+                    optional: true,
+                },
+                {
+                    type: "input",
+                    block_id: "candidate_block",
+                    element: {
+                        type: "static_select",
+                        action_id: "candidate_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select a candidate",
+                        },
+                        options: candidates.map((candidate) => ({
+                            text: {
+                                type: "plain_text",
+                                text: `${candidate.name} - *Stage:* ${candidate.stage} / *Job:* ${candidate.job}`,
+                            },
+                            value: candidate.id.toString(),
+                        })),
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Candidate",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "recipients_block",
+                    element: {
+                        type: "multi_users_select",
+                        action_id: "recipients_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select recipients",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Recipients/Debrief Team",
+                    },
+                },
+            ],
+            submit: {
+                type: "plain_text",
+                text: "Create",
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+            },
+        },
+    };
 
-  return updateModal(updatePayload, accessToken);  // Update the modal with the new candidate options
+    return updateModal(updatePayload, accessToken); // Update the modal with the new candidate options
 }
 async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
     try {
@@ -346,60 +349,69 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
     }
 }
 async function handleDebriefSubmission(payload) {
-  const { team, user, view } = payload;
-  const values = view.state.values;
+    const { team, user, view } = payload;
+    const values = view.state.values;
 
-  console.log("debrief submission", values);
+    console.log("debrief submission", values);
 
-  const candidateBlock = values.candidate_block.candidate_input;
-  const nameInput = values.name_block.name_input.value;
-  const recipients = values.recipients_block.recipients_input.selected_users;
+    const candidateBlock = values.candidate_block.candidate_input;
+    const nameInput = values.name_block.name_input.value;
+    const recipients = values.recipients_block.recipients_input.selected_users;
 
-  if (!candidateBlock || !candidateBlock.selected_option) {
-      await updateModalWithError(view.id, view.hash, accessToken, 'Please select a valid candidate');
-      return new NextResponse(JSON.stringify({ error: "Please select a valid candidate" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-      });
-  }
+    if (!candidateBlock || !candidateBlock.selected_option) {
+        await updateModalWithError(
+            view.id,
+            view.hash,
+            accessToken,
+            "Please select a valid candidate",
+        );
+        return new NextResponse(
+            JSON.stringify({ error: "Please select a valid candidate" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
 
-  const candidateID = candidateBlock.selected_option.value; // Get candidateID
-  const candidateText = candidateBlock.selected_option.text.text; // Get candidate text
-  const candidateName = candidateText.split(' - ')[0].trim(); // Extract the candidate name
+    const candidateID = candidateBlock.selected_option.value; // Get candidateID
+    const candidateText = candidateBlock.selected_option.text.text; // Get candidate text
+    const candidateName = candidateText.split(" - ")[0].trim(); // Extract the candidate name
 
-  const slackTeamId = team.id;
+    const slackTeamId = team.id;
 
-  // Generate the channel name
-  const channelName = nameInput
-      ? `debrief-${nameInput.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}`
-      : `debrief-${candidateName.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}-${new Date().toISOString().split('T')[0].replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}`;
+    // Generate the channel name
+    const channelName = nameInput
+        ? `debrief-${nameInput.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase()}`
+        : `debrief-${candidateName.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase()}-${new Date()
+              .toISOString()
+              .split("T")[0]
+              .replace(/[^a-zA-Z0-9-]/g, "")
+              .toLowerCase()}`;
 
-  // Continue with creating the Slack channel and inviting users if no errors
-  try {
-      const channelId = await createSlackChannel(channelName, slackTeamId);
+    // Continue with creating the Slack channel and inviting users if no errors
+    try {
+        const channelId = await createSlackChannel(channelName, slackTeamId);
 
-      await inviteUsersToChannel(channelId, recipients, slackTeamId);
+        await inviteUsersToChannel(channelId, recipients, slackTeamId);
 
-      await postWelcomeMessage(channelId, candidateID, slackTeamId);
+        await postWelcomeMessage(channelId, candidateID, slackTeamId);
 
-      return new NextResponse(null, {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-      console.error(error);
-      return new NextResponse(
-          JSON.stringify({ error: "Failed to create debrief room" }),
-          {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-          },
-      );
-  }
+        return new NextResponse(null, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
+    } catch (error) {
+        console.error(error);
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to create debrief room" }),
+            {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
 }
-
-
-
 
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
@@ -461,16 +473,15 @@ async function handleSlackInteraction(payload: SlackInteraction) {
             );
             return openModal(modalPayload, accessToken);
         }
-    }  else if (type === 'view_submission') {
-      if (payload.view.callback_id === 'submit_move_to_next_stage') {
-          return handleMoveToNextStageSubmission(payload);
-      } else if (payload.view.callback_id === 'submit_reject_candidate') {
-          return handleRejectCandidateSubmission(payload);
-      } else if (payload.view.callback_id === 'debrief_modal') {
-          return handleDebriefSubmission(payload);
-      }
-  }
-
+    } else if (type === "view_submission") {
+        if (payload.view.callback_id === "submit_move_to_next_stage") {
+            return handleMoveToNextStageSubmission(payload);
+        } else if (payload.view.callback_id === "submit_reject_candidate") {
+            return handleRejectCandidateSubmission(payload);
+        } else if (payload.view.callback_id === "debrief_modal") {
+            return handleDebriefSubmission(payload);
+        }
+    }
 
     return new NextResponse(
         JSON.stringify({ error: "Unhandled interaction type" }),
@@ -483,49 +494,54 @@ async function handleSlackInteraction(payload: SlackInteraction) {
 
 // Function to open a modal in response to a button click
 async function openModal(modalPayload, accessToken) {
-  const response = await fetch("https://slack.com/api/views.open", {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(modalPayload),
-  });
+    const response = await fetch("https://slack.com/api/views.open", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(modalPayload),
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (response.ok) {
-    return { status: 200, view_id: data.view.id };
-}  else {
-      return new NextResponse(JSON.stringify({ error: "Failed to open modal" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-      });
-  }
+    if (response.ok) {
+        return { status: 200, view_id: data.view.id };
+    } else {
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to open modal" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
 }
 
-
 async function updateModal(updatePayload, accessToken) {
-  const response = await fetch("https://slack.com/api/views.update", {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(updatePayload),
-  });
+    const response = await fetch("https://slack.com/api/views.update", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(updatePayload),
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  console.log("update modal response", data);
+    console.log("update modal response", data);
 
-  if (!response.ok) {
-      console.error("Failed to update modal", await response.json());
-      return new NextResponse(JSON.stringify({ error: "Failed to update modal" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-      });
-  }
+    if (!response.ok) {
+        console.error("Failed to update modal", await response.json());
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to update modal" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
 }
 
 async function createMoveToNextStageModal(
@@ -855,136 +871,136 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
 }
 
 async function handleDebriefCommand(trigger_id, slackTeamId) {
-  const accessToken = await getAccessToken(slackTeamId);
+    const accessToken = await getAccessToken(slackTeamId);
 
-  const modalPayload = {
-      trigger_id: trigger_id,
-      view: {
-          type: 'modal',
-          callback_id: 'debrief_modal',
-          title: {
-              type: 'plain_text',
-              text: 'Create Debrief'
-          },
-          blocks: [
-              {
-                  type: 'input',
-                  block_id: 'name_block',
-                  element: {
-                      type: 'plain_text_input',
-                      action_id: 'name_input',
-                      placeholder: {
-                          type: 'plain_text',
-                          text: 'Enter debrief name (optional)'
-                      }
-                  },
-                  label: {
-                      type: 'plain_text',
-                      text: 'Name'
-                  },
-                  optional: true
-              },
-              {
-                  type: 'input',
-                  block_id: 'candidate_block',
-                  element: {
-                      type: 'external_select',
-                      action_id: 'candidate',
-                      placeholder: {
-                          type: 'plain_text',
-                          text: 'Loading candidates...'
-                      }
-                  },
-                  label: {
-                      type: 'plain_text',
-                      text: 'Candidate'
-                  }
-              },
-              {
-                  type: 'input',
-                  block_id: 'recipients_block',
-                  element: {
-                      type: 'multi_users_select',
-                      action_id: 'recipients_input',
-                      placeholder: {
-                          type: 'plain_text',
-                          text: 'Select recipients'
-                      }
-                  },
-                  label: {
-                      type: 'plain_text',
-                      text: 'Recipients/Debrief Team'
-                  }
-              }
-          ],
-          submit: {
-              type: 'plain_text',
-              text: 'Create'
-          },
-          close: {
-              type: 'plain_text',
-              text: 'Cancel'
-          }
-      }
-  };
+    const modalPayload = {
+        trigger_id: trigger_id,
+        view: {
+            type: "modal",
+            callback_id: "debrief_modal",
+            title: {
+                type: "plain_text",
+                text: "Create Debrief",
+            },
+            blocks: [
+                {
+                    type: "input",
+                    block_id: "name_block",
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "name_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Enter debrief name (optional)",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Name",
+                    },
+                    optional: true,
+                },
+                {
+                    type: "input",
+                    block_id: "candidate_block",
+                    element: {
+                        type: "external_select",
+                        action_id: "candidate",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Loading candidates...",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Candidate",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "recipients_block",
+                    element: {
+                        type: "multi_users_select",
+                        action_id: "recipients_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select recipients",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Recipients/Debrief Team",
+                    },
+                },
+            ],
+            submit: {
+                type: "plain_text",
+                text: "Create",
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+            },
+        },
+    };
 
-  const { status, view_id, error } = await openModal(modalPayload, accessToken);
+    const { status, view_id, error } = await openModal(
+        modalPayload,
+        accessToken,
+    );
 
-  if (status === 200) {
-    await fetchCandidateData(view_id, accessToken);  // Fetch candidate data once the modal is opened
-    return new NextResponse(null, {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-    });
-} else {
-    return new NextResponse(JSON.stringify({ error: error }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-    });
+    if (status === 200) {
+        await fetchCandidateData(view_id, accessToken); // Fetch candidate data once the modal is opened
+        return new NextResponse(null, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
+    } else {
+        return new NextResponse(JSON.stringify({ error: error }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
 }
-}
-
-
-
 
 export async function POST(request) {
-  const contentType = request.headers.get("content-type");
+    const contentType = request.headers.get("content-type");
 
-  if (contentType?.includes("application/json")) {
-      const data = await request.json();
-      return handleJsonPost(data);
-  } else if (contentType?.includes("application/x-www-form-urlencoded")) {
-      const text = await request.text();
-      const params = new URLSearchParams(text);
+    if (contentType?.includes("application/json")) {
+        const data = await request.json();
+        return handleJsonPost(data);
+    } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+        const text = await request.text();
+        const params = new URLSearchParams(text);
 
-      const command = params.get("command");
-      const trigger_id = params.get("trigger_id");
-      const team_id = params.get("team_id");
-      if (command === "/debrief" && trigger_id) {
-          return handleDebriefCommand(trigger_id, team_id);
-      }
+        const command = params.get("command");
+        const trigger_id = params.get("trigger_id");
+        const team_id = params.get("team_id");
+        if (command === "/debrief" && trigger_id) {
+            return handleDebriefCommand(trigger_id, team_id);
+        }
 
-      const payloadRaw = params.get("payload");
-      if (payloadRaw) {
-          return handleSlackInteraction(JSON.parse(payloadRaw));
-      } else {
-          return new NextResponse(
-              JSON.stringify({
-                  error: "Unrecognized form-urlencoded request",
-              }),
-              {
-                  status: 400,
-                  headers: { "Content-Type": "application/json" },
-              },
-          );
-      }
-  }
+        const payloadRaw = params.get("payload");
+        if (payloadRaw) {
+            return handleSlackInteraction(JSON.parse(payloadRaw));
+        } else {
+            return new NextResponse(
+                JSON.stringify({
+                    error: "Unrecognized form-urlencoded request",
+                }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        }
+    }
 
-  return new NextResponse(
-      JSON.stringify({ error: "Unsupported Content Type" }),
-      {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-      },
-  );
+    return new NextResponse(
+        JSON.stringify({ error: "Unsupported Content Type" }),
+        {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+        },
+    );
 }
