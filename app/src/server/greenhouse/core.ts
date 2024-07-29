@@ -193,6 +193,32 @@ export async function fetchCandidateDetails(candidateId: string): Promise<any> {
     }
 }
 
+export async function fetchActiveCandidates() {
+    const candidates = await fetchCandidates();
+    if (!candidates) {
+        return [];
+    }
+
+    return candidates
+        .filter((candidate) =>
+            candidate.applications.some((app) => app.status === "active"),
+        )
+        .map((candidate) => {
+            const activeApplications = candidate.applications.filter(
+                (app) => app.status === "active",
+            );
+            return {
+                id: candidate.id,
+                name: `${candidate.first_name} ${candidate.last_name}`,
+                stage: activeApplications[0]?.current_stage?.name || "N/A",
+                job: activeApplications
+                    .map((app) => app.jobs.map((job) => job.name))
+                    .flat()
+                    .join(", "),
+            };
+        });
+}
+
 export async function moveToNextStageInGreenhouse(
     candidateId: string,
     toStageId: string,

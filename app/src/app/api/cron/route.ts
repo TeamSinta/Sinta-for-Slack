@@ -407,14 +407,13 @@ export async function handleWorkflows(){
                     slackUsers,
                 );
 
-                // const greenHouseAndSlackRecipients= combineGreenhouseRolesAndSlackUsers(workflow)
+                const filteredSlackDataWithMessage =
+                    await filterCandidatesDataForSlack(
+                        filteredConditionsData,
+                        workflow.recipient,
+                        slackTeamID,
+                    );
 
-                const filteredSlackDataWithMessage = await filterCandidatesDataForSlack(
-                    filteredConditionsData,
-                    workflow.recipient,
-                    slackTeamID,
-
-                );
 
                 if (filteredSlackDataWithMessage.length > 0) {
                     await sendSlackButtonNotification(
