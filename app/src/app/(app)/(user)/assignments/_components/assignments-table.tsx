@@ -6,43 +6,43 @@
 import { DataTable } from "@/app/(app)/_components/data-table";
 import { type ColumnDef } from "@tanstack/react-table";
 import React, { useMemo } from "react";
-import { getColumns, type HiringroomData } from "./columns"; // Adjust to include correct imports and types for hiringrooms
-import { hiringroomStatusEnum } from "@/server/db/schema";
+import { getColumns, type AssignmentData } from "./columns"; // Adjust to include correct imports and types for hiringrooms
+import { assignmentStatusEnum } from "@/server/db/schema";
 import { useDataTable } from "@/hooks/use-data-table";
 import type {
     DataTableFilterableColumn,
     DataTableSearchableColumn,
 } from "@/types/data-table";
-import { type getPaginatedHiringroomsQuery } from "@/server/actions/hiringrooms/queries";
+import { type getPaginatedAssignmentsQuery } from "@/server/actions/hiringrooms/queries";
 
-const filterableColumns: DataTableFilterableColumn<HiringroomData>[] = [
+const filterableColumns: DataTableFilterableColumn<AssignmentData>[] = [
     {
         id: "status",
         title: "Status",
-        options: hiringroomStatusEnum.enumValues.map((v) => ({
+        options: assignmentStatusEnum.enumValues.map((v) => ({
             label: v,
             value: v,
         })),
     },
 ];
 
-type HiringroomsTableProps = {
-    hiringroomsPromise: ReturnType<typeof getPaginatedHiringroomsQuery>;
+type AssignmentsTableProps = {
+    assignmentsPromise: ReturnType<typeof getPaginatedAssignmentsQuery>;
 };
 
-const searchableColumns: DataTableSearchableColumn<HiringroomData>[] = [
+const searchableColumns: DataTableSearchableColumn<AssignmentData>[] = [
     { id: "name", placeholder: "Search by hiringroom name..." },
 ];
 
-export function HiringroomsTable({ hiringroomsPromise }: HiringroomsTableProps) {
-    const { data, pageCount, total } = React.use(hiringroomsPromise);
+export function AssignmentsTable({ assignmentsPromise }: AssignmentsTableProps) {
+    const { data, pageCount, total } = React.use(assignmentsPromise);
 
-    const columns = useMemo<ColumnDef<HiringroomData, unknown>[]>(
+    const columns = useMemo<ColumnDef<AssignmentData, unknown>[]>(
         () => getColumns(),
         [],
     );
 
-    const hiringroomsData: HiringroomData[] = data.map((hiringroom) => {
+    const assignmentsData: AssignmentData[] = data.map((hiringroom) => {
         return {
             id: hiringroom.id,
             name: hiringroom.name,
@@ -58,7 +58,7 @@ export function HiringroomsTable({ hiringroomsPromise }: HiringroomsTableProps) 
     });
 
     const { table } = useDataTable({
-        data: hiringroomsData,
+        data: assignmentsData,
         columns,
         pageCount,
         searchableColumns,

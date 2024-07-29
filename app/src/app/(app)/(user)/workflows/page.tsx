@@ -2,6 +2,7 @@ import { AppPageShell } from "../../_components/page-shell";
 import { WorkflowsPageConfig } from "./_constants/page-config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
+import CreateWorkflowSheet from "./_components/new-workflowForm";
 import {
     getPaginatedWorkflowsByOrgQuery,
     getPaginatedWorkflowsExcludingUserQuery,
@@ -15,6 +16,7 @@ import {
 } from "@/server/actions/organization/queries";
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
 // import router, { useRouter } from "next/router";
+import { useRouter } from 'next/router';
 import WorkflowSheet from "./_components/new-workflowForm";
 
 type UsersPageProps = {
@@ -29,8 +31,8 @@ const searchParamsSchema = z.object({
     status: z.enum(["Active", "Inactive", "Archived"]).optional(),
     role: z.string().optional(),
     operator: z.string().optional(),
-    edit: z.string().optional(),
-    workflowId: z.string().optional(),
+    edit:z.string().optional(),
+    workflowId:z.string().optional()
 });
 
 export default async function Workflows({ searchParams }: UsersPageProps) {
@@ -42,8 +44,8 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
     const workflowPromise = getPaginatedWorkflowsQuery(search);
     const workflowAllPromise = getPaginatedWorkflowsByOrgQuery(search);
     const workflowOrgPromise = getPaginatedWorkflowsExcludingUserQuery(search);
-    const isEdit = searchParams.edit;
-    const workflowId = searchParams.workflowId as any;
+    const isEdit = searchParams.edit
+    const workflowId = searchParams.workflowId as any
 
     return (
         <AppPageShell
@@ -61,18 +63,11 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
                             Created by team
                         </TabsTrigger>
                     </TabsList>
-                    {isEdit == "true" && workflowId ? (
-                        <>
-                            <WorkflowSheet
-                                workflowId={workflowId}
-                                mode={"edit"}
-                            />
-                        </>
-                    ) : (
-                        <></>
-                    )}
+                    {isEdit == "true" && workflowId ? <>
+                    <WorkflowSheet workflowId={workflowId} mode={"edit"}/>
+                         </> : <></>}
                     {!isEdit && slackIntegration && greenhouseIntegration ? (
-                        <WorkflowSheet workflowId={""} mode={"create"} />
+                        <WorkflowSheet workflowId={""} mode={"create"}/>
                     ) : (
                         <AlertIntegrationDialog />
                     )}

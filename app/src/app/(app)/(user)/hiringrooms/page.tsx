@@ -15,6 +15,7 @@ import {
     checkSlackTeamIdFilled,
 } from "@/server/actions/organization/queries";
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
+import { hiringrooms, slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 
 type UsersPageProps = {
     searchParams: SearchParams;
@@ -38,8 +39,7 @@ export default async function Hiringrooms({ searchParams }: UsersPageProps) {
 
     const hiringroomPromise = getPaginatedHiringroomsQuery(search);
     const hiringroomAllPromise = getPaginatedHiringroomsByOrgQuery(search);
-    const hiringroomOrgPromise =
-        getPaginatedHiringroomsExcludingUserQuery(search);
+    const hiringroomOrgPromise = getPaginatedHiringroomsExcludingUserQuery(search);
 
     return (
         <AppPageShell
@@ -65,15 +65,11 @@ export default async function Hiringrooms({ searchParams }: UsersPageProps) {
                 </div>
                 <TabsContent value="all">
                     <div className="w-full space-y-5">
-                        <HiringroomsTable
-                            hiringroomsPromise={hiringroomAllPromise}
-                        />
+                        <HiringroomsTable hiringroomsPromise={hiringroomAllPromise} />
                     </div>
                 </TabsContent>
                 <TabsContent value="created_team">
-                    <HiringroomsTable
-                        hiringroomsPromise={hiringroomOrgPromise}
-                    />
+                    <HiringroomsTable hiringroomsPromise={hiringroomOrgPromise} />
                 </TabsContent>
                 <TabsContent value="created_me">
                     <HiringroomsTable hiringroomsPromise={hiringroomPromise} />
