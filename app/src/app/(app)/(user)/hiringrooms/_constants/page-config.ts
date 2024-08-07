@@ -1,5 +1,5 @@
 export const HiringroomsPageConfig = {
-    title: "Hiringrooms",
+    title: "Hiring Rooms",
     description:
-        "Manage your integrations settings here, setup connections to Slack, Greenhouse, and more!",
+        "Create and manage dedicated Slack channels for hiring.",
 } as const;

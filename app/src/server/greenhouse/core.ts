@@ -161,30 +161,30 @@ export async function fetchCandidateDetails(candidateId: string): Promise<any> {
 }
 
 export async function fetchActiveCandidates() {
-    const candidates = await fetchCandidates();
-    if (!candidates) {
-        return [];
-    }
+  const candidates = await fetchCandidates();
+  if (!candidates) {
+      return [];
+  }
 
-    return candidates
-        .filter((candidate) =>
-            candidate.applications.some((app) => app.status === "active"),
-        )
-        .map((candidate) => {
-            const activeApplications = candidate.applications.filter(
-                (app) => app.status === "active",
-            );
-            return {
-                id: candidate.id,
-                name: `${candidate.first_name} ${candidate.last_name}`,
-                stage: activeApplications[0]?.current_stage?.name || "N/A",
-                job: activeApplications
-                    .map((app) => app.jobs.map((job) => job.name))
-                    .flat()
-                    .join(", "),
-            };
-        });
+  return candidates
+      .filter((candidate) =>
+          candidate.applications.some((app) => app.status === "active")
+      )
+      .map((candidate) => {
+          const activeApplications = candidate.applications.filter(
+              (app) => app.status === "active"
+          );
+          return activeApplications.map((app) => ({
+              id: app.id, // Using the application ID here
+              name: `${candidate.first_name} ${candidate.last_name}`,
+              stage: app.current_stage?.name || "N/A",
+              job: app.jobs.map((job) => job.name).join(", ")
+          }));
+      })
+      .flat();
 }
+
+
 
 export async function moveToNextStageInGreenhouse(
     candidateId: string,
@@ -618,8 +618,15 @@ export async function filterStuckinStageDataConditions(
 
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
-    const operator = condition.operator;
+    const operator = condition.condition;
 
+
+    console.log("stageName", stageName);
+    console.log("thresholdDays", thresholdDays);
+    console.log("operator", operator
+    );
+    console.log("candidates", candidates);
+    console.log("conditions", conditions);
     for (const candidate of candidates) {
         const candidateId = candidate.id;
         const activityFeed = await fetchActivityFeed(candidateId);
@@ -632,7 +639,7 @@ export async function filterStuckinStageDataConditions(
                 currentStage,
                 activityFeed.activities,
             );
-
+            console.log(daysInCurrentStage, "days in current stage");
             let conditionMet = false;
 
             switch (operator) {

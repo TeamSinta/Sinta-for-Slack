@@ -394,13 +394,17 @@ async function handleDebriefSubmission(payload) {
         const channelId = await createSlackChannel(channelName, slackTeamId);
 
         await inviteUsersToChannel(channelId, recipients, slackTeamId);
-
+        const responseToSlack = new NextResponse(
+          JSON.stringify({ response_action: 'clear' }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
         await postWelcomeMessage(channelId, candidateID, slackTeamId);
 
-        return new NextResponse(null, {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
+        return responseToSlack;
+
     } catch (error) {
         console.error(error);
         return new NextResponse(

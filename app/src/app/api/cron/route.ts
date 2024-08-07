@@ -238,7 +238,7 @@ export async function handleWorkflows() {
         let shouldReturnNull = false; // Flag to determine whether to return null
 
         for (const workflow of workflows) {
-            if (workflow.alertType === "timebased") {
+            if (workflow.alertType === "time-based") {
                 const { apiUrl }: { apiUrl?: string } =
                     workflow.triggerConfig as { apiUrl?: string };
 
@@ -282,32 +282,28 @@ export async function handleWorkflows() {
                         data,
                         workflow.conditions,
                     );
+                    console.log("filteredConditionsData - ",filteredConditionsData);
                 const slackTeamID = await getSlackTeamIDByWorkflowID(
                     workflow.id,
                 );
                 const subDomain = await getSubdomainByWorkflowID(workflow.id);
 
-                const greenhouseUsers = await fetchGreenhouseUsers();
-                const slackUsers = await getEmailsfromSlack(slackTeamID);
-                const userMapping = await matchUsers(
-                    greenhouseUsers,
-                    slackUsers,
-                );
+
 
                 const filteredSlackDataWithMessage =
                     await filterCandidatesDataForSlack(
                         filteredConditionsData,
                         workflow.recipient,
                         slackTeamID,
-                    );
 
+                    );
+                console.log("filteredSlackDataWithMessage - ",filteredSlackDataWithMessage);
                 if (filteredSlackDataWithMessage.length > 0) {
                     await sendSlackButtonNotification(
                         filteredSlackDataWithMessage,
                         workflow.recipient,
                         slackTeamID,
                         subDomain,
-                        userMapping,
                         filteredConditionsData,
                     );
                 } else {
@@ -348,9 +344,10 @@ export async function GET() {
         console.log("gobucks");
 
         // Ensure numWorkflows is defined or set a default value if necessary
-        const numWorkflows = 0;
+        let numWorkflows = 0;
+        const numHiringrooms = 0;
         numWorkflows = await handleWorkflows();
-        const numHiringrooms = await handleHiringrooms();
+        // const numHiringrooms = await handleHiringrooms();
         return NextResponse.json(
             {
                 message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`,

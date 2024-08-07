@@ -213,7 +213,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         <div className="hiringroom-container mt-4">
             <div className="flex items-center">
                 <Label className="text-xl font-bold">
-                    Configure Slack Recipients{" "}
+                    Configure Message & Room Members{" "}
                 </Label>
                 <Image
                     src={slackLogo}
