@@ -116,9 +116,9 @@ const navigation: SidebarNavItems[] = [
                 href: siteUrls.workflows.home,
             },
             {
-                label: "Triggers",
+                label: "Customize",
                 icon: Workflow,
-                href: siteUrls.triggers.home,
+                href: siteUrls.customize.home,
             },
             {
                 label: "Integrations",
