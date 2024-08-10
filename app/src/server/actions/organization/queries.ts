@@ -6,6 +6,7 @@ import {
     membersToOrganizations,
     orgRequests,
     organizations,
+    userPreferences,
     workflows,
 } from "@/server/db/schema";
 import { protectedProcedure } from "@/server/procedures";
@@ -310,4 +311,46 @@ export async function getSubdomainByWorkflowID(
     }
 
     return organization.greenhouse_subdomain!;
+}
+
+
+/**
+ * Get User Preferences by Role
+ * @param role - The role of the user (Interviewer, Recruiter, Hiring Manager)
+ * @returns The user preferences for the specified role
+ */
+
+const getUserPreferencesSchema = z.object({
+  role: z.enum(["Interviewer", "Recruiter", "Hiring Manager"]),
+});
+
+type GetUserPreferencesProps = z.infer<typeof getUserPreferencesSchema>;
+
+export async function getUserPreferencesQuery({
+  role,
+}: GetUserPreferencesProps) {
+  const { user } = await protectedProcedure();
+  const { currentOrg } = await getOrganizations();
+
+  // Fetch the user preferences from the database
+  const preferences = await db.query.userPreferences.findFirst({
+      where: and(
+          eq(userPreferences.userId, user.id),
+          eq(userPreferences.organizationId, currentOrg.id),
+          eq(userPreferences.role, role),
+      ),
+  });
+
+  if (!preferences) {
+    // Return default preferences if none exist
+    return {
+        upcomingInterviews: false,
+        pendingFeedback: false,
+        videoConferenceLink: false,
+        resourcesEnabled: false,
+        resources: [],
+    };
+}
+
+  return preferences;
 }

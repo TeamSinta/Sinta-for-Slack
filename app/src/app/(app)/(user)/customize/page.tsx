@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
@@ -9,17 +9,50 @@ import recruiterimage from "../../../../../public/recruiter.png";
 import hiringmanagerimage from "../../../../../public/hiring_manager.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react"; // Icon for the remove button
+import { Trash2 } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getUserPreferencesQuery } from "@/server/actions/organization/queries";
+import { saveUserPreferencesMutation } from "@/server/actions/organization/mutations";
+import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
+import { useRouter } from "next/navigation";
 
 export default function CustomizeDashboard() {
   const [selectedRole, setSelectedRole] = useState<string | null>("Interviewer");
   const [resourcesEnabled, setResourcesEnabled] = useState<boolean>(false);
-  const [upcomingInterviews, setUpcomingInterviews] = useState<boolean>(true);
-  const [pendingFeedback, setPendingFeedback] = useState<boolean>(true);
-  const [meetingLink, setMeetingLink] = useState<boolean>(true);
-
-  // State to manage the list of resource buttons
+  const [upcomingInterviews, setUpcomingInterviews] = useState<boolean>(false);
+  const [pendingFeedback, setPendingFeedback] = useState<boolean>(false);
+  const [meetingLink, setMeetingLink] = useState<boolean>(false);
   const [resourceLinks, setResourceLinks] = useState<{ label: string; link: string }[]>([]);
+  const [isUpdatePending, startAwaitableUpdateTransition] =
+        useAwaitableTransition();
+
+  const router = useRouter();
+  // Fetch existing preferences on component mount
+  const { data: existingPreferences, isLoading } = useQuery({
+    queryKey: ["userPreferences", selectedRole],
+    queryFn: () => getUserPreferencesQuery({ role: selectedRole }),
+    enabled: !!selectedRole,
+  });
+
+  // Use useEffect to handle data setting when the query succeeds
+  useEffect(() => {
+    if (existingPreferences) {
+      setUpcomingInterviews(existingPreferences.upcomingInterviews);
+      setPendingFeedback(existingPreferences.pendingFeedback);
+      setMeetingLink(existingPreferences.videoConferenceLink);
+      setResourceLinks(existingPreferences.resources || []);
+      setResourcesEnabled(existingPreferences.resources && existingPreferences.resources.length > 0);
+    }
+  }, [existingPreferences]);
+
+  // Set up the mutation
+  const { mutateAsync: savePreferences, isLoading: isSaving } = useMutation({
+    mutationFn: saveUserPreferencesMutation,
+    onSettled: () => {
+      toast.dismiss();
+    },
+  });
 
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
@@ -29,33 +62,53 @@ export default function CustomizeDashboard() {
     const updatedLinks = [...resourceLinks];
     updatedLinks[index][field] = value;
     setResourceLinks(updatedLinks);
+    setResourcesEnabled(updatedLinks.length > 0);
   };
 
   const handleAddResource = () => {
-    setResourceLinks([...resourceLinks, { label: "", link: "" }]);
+    const updatedLinks = [...resourceLinks, { label: "", link: "" }];
+    setResourceLinks(updatedLinks);
+    setResourcesEnabled(true);
   };
 
   const handleRemoveResource = (index: number) => {
     const updatedLinks = [...resourceLinks];
     updatedLinks.splice(index, 1);
     setResourceLinks(updatedLinks);
+    setResourcesEnabled(updatedLinks.length > 0);
   };
 
-  const handleUpdate = () => {
-    alert(`${selectedRole} Dashboard updated!`);
-    console.log({
+  const handleUpdate = async () => {
+    const preferences = {
+      role: selectedRole!,
       upcomingInterviews,
       pendingFeedback,
+      videoConferenceLink: meetingLink,
       resourcesEnabled,
-      resourceLinks,
-    });
+      resources: resourceLinks,
+    };
+
+    toast.promise(
+      async () => {
+        await savePreferences(preferences);
+        await startAwaitableUpdateTransition(() => {
+          router.refresh();
+      });
+      },
+
+      {
+        loading: "Saving preferences...",
+        success: "Preferences saved successfully!",
+        error: "Failed to save preferences. Please try again.",
+      }
+    );
   };
 
   return (
     <div className="w-full space-y-8 pl-8">
       <header className="flex w-full flex-col gap-1 border-border pt-6">
         <h1 className="font-heading text-2xl font-bold">Customize Slack Home</h1>
-        <p className="max-w-xl text-muted-foreground">Customize content displayed Slack home dashboard.</p>
+        <p className="max-w-xl text-muted-foreground">Customize content displayed on the Slack home dashboard.</p>
       </header>
 
       {/* Role Selection Section */}
@@ -78,20 +131,20 @@ export default function CustomizeDashboard() {
                 className="flex flex-col items-center cursor-pointer"
                 onClick={() => handleRoleSelect(role)}
               >
-<div
-  className={`relative border-2 rounded-lg mb-2 flex justify-center items-center ${
-    selectedRole === role ? "border-indigo-500" : "border-transparent"
-  }`}
-  style={{ width: 200, height: 200, overflow: 'hidden' }}
->
-  <Image
-    src={image}
-    alt={role}
-    layout="fill"
-    objectFit="contain"
-    className="rounded-lg"
-  />
-</div>
+                <div
+                  className={`relative border-2 rounded-lg mb-2 flex justify-center items-center ${
+                    selectedRole === role ? "border-indigo-500" : "border-transparent"
+                  }`}
+                  style={{ width: 200, height: 200, overflow: 'hidden' }}
+                >
+                  <Image
+                    src={image}
+                    alt={role}
+                    layout="fill"
+                    objectFit="contain"
+                    className="rounded-lg"
+                  />
+                </div>
                 <p className="text-center font-semibold">{role}</p>
               </div>
             ))}
@@ -109,27 +162,42 @@ export default function CustomizeDashboard() {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col space-y-4  pt-8">
-              <div className="flex items-center justify-between">
-                <p className="text-md ">Upcoming Interviews</p>
+            <div className="flex flex-col space-y-4 pt-8">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Upcoming Interviews</p>
+                  <p className="text-sm text-muted-foreground">
+                    Toggle to show or hide upcoming interviews for this user on their dashboard.
+                  </p>
+                </div>
                 <Switch
-                  className="data-[state=checked]:bg-indigo-500 "
+                  className="data-[state=checked]:bg-indigo-500"
                   checked={upcomingInterviews}
                   onCheckedChange={setUpcomingInterviews}
                 />
               </div>
-              <div className="flex items-center justify-between">
-             < p className="text-md font-regular ">Pending Feedback</p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Pending Feedback</p>
+                  <p className="text-sm text-muted-foreground">
+                    Enable this to show pending feedback tasks for this user on their dashboard.
+                  </p>
+                </div>
                 <Switch
-                  className="data-[state=checked]:bg-indigo-500 "
+                  className="data-[state=checked]:bg-indigo-500"
                   checked={pendingFeedback}
                   onCheckedChange={setPendingFeedback}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-md ">Video Conference Link</p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Video Conference Link</p>
+                  <p className="text-sm text-muted-foreground">
+                    Display a link to the video conference for upcoming interviews on the dashboard.
+                  </p>
+                </div>
                 <Switch
-                  className="data-[state=checked]:bg-indigo-500 "
+                  className="data-[state=checked]:bg-indigo-500"
                   checked={meetingLink}
                   onCheckedChange={setMeetingLink}
                 />
@@ -137,7 +205,13 @@ export default function CustomizeDashboard() {
             </div>
           </CardContent>
           <div className="flex justify-end p-4">
-            <Button className="ml-2  bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700" onClick={handleUpdate}>Update</Button>
+            <Button
+              className="ml-2 bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+              onClick={handleUpdate}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Update"}
+            </Button>
           </div>
         </Card>
       )}
@@ -153,7 +227,7 @@ export default function CustomizeDashboard() {
               </p>
             </div>
             <Switch
-              className="data-[state=checked]:bg-indigo-500 "
+              className="data-[state=checked]:bg-indigo-500"
               checked={resourcesEnabled}
               onCheckedChange={() => setResourcesEnabled(!resourcesEnabled)}
             />
@@ -205,7 +279,13 @@ export default function CustomizeDashboard() {
               </div>
             </CardContent>
             <div className="flex justify-end p-4">
-              <Button className="ml-2 bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700" onClick={handleUpdate}>Update</Button>
+              <Button
+                className="ml-2 bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+                onClick={handleUpdate}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Update"}
+              </Button>
             </div>
           </>
         )}

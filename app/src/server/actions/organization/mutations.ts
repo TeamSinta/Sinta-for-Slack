@@ -8,6 +8,8 @@ import {
     orgRequestInsertSchema,
     orgRequests,
     organizations,
+    userPreferences,
+    userPreferencesInsertSchema,
 } from "@/server/db/schema";
 import { protectedProcedure } from "@/server/procedures";
 import { and, eq } from "drizzle-orm";
@@ -426,4 +428,80 @@ export async function removeUserMutation({ memberId }: RemoveUserProps) {
         return result;
     }
     throw new Error("You are not an admin of this organization");
+}
+
+
+/**
+ * Save or Update User Preferences
+ * @param userId - The ID of the user
+ * @param organizationId - The ID of the organization
+ * @param role - The role of the user (Interviewer, Recruiter, Hiring Manager)
+ * @param preferences - The user's preferences to be saved
+ * @returns The saved or updated preferences
+ */
+type SaveUserPreferencesProps = Omit<typeof userPreferences.$inferInsert, "id">;
+
+export async function saveUserPreferencesMutation({ ...props }: SaveUserPreferencesProps) {
+  const { user } = await protectedProcedure();
+  const { currentOrg } = await getOrganizations(); // Get the current organization context
+
+  if (!currentOrg) {
+      throw new Error("No organization found for the current user.");
+  }
+
+  // Construct the full preferences object including userId and organizationId
+  const preferencesData = {
+      ...props,
+      userId: user.id, // Use the authenticated user's ID
+      organizationId: currentOrg.id, // Use the current organization ID
+  };
+
+  // Validate the input data
+  const preferencesParse = await userPreferencesInsertSchema.safeParseAsync(preferencesData);
+
+  if (!preferencesParse.success) {
+      throw new Error("Invalid preferences data", {
+          cause: preferencesParse.error.errors,
+      });
+  }
+
+  // Check if preferences already exist for this user, organization, and role
+  const existingPref = await db.query.userPreferences.findFirst({
+      where: and(
+          eq(userPreferences.userId, user.id),
+          eq(userPreferences.organizationId, currentOrg.id),
+          eq(userPreferences.role, preferencesParse.data.role),
+      ),
+  });
+
+  if (existingPref) {
+      // Update the existing preferences
+      const updatedPref = await db
+          .update(userPreferences)
+          .set({
+              upcomingInterviews: preferencesParse.data.upcomingInterviews,
+              pendingFeedback: preferencesParse.data.pendingFeedback,
+              videoConferenceLink: preferencesParse.data.videoConferenceLink,
+              resources: preferencesParse.data.resources,
+              updatedAt: new Date(),
+          })
+          .where(eq(userPreferences.id, existingPref.id))
+          .returning()
+          .execute();
+
+      return updatedPref[0];
+  } else {
+      // Insert new preferences
+      const newPref = await db
+          .insert(userPreferences)
+          .values({
+              ...preferencesParse.data,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+          })
+          .returning()
+          .execute();
+
+      return newPref[0];
+  }
 }
