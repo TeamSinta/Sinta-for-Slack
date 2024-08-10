@@ -311,29 +311,31 @@ export const membersToOrganizationsRoleEnum = pgEnum("org-member-role", [
 ]);
 
 export const membersToOrganizations = createTable(
-    "membersToOrganizations",
-    {
-        id: varchar("id", { length: 255 }).default(sql`gen_random_uuid()`),
-        memberId: varchar("memberId", { length: 255 })
-            .notNull()
-            .references(() => users.id, { onDelete: "cascade" }),
-        memberEmail: varchar("memberEmail", { length: 255 }).notNull(),
-        organizationId: varchar("organizationId", { length: 255 })
-            .notNull()
-            .references(() => organizations.id, { onDelete: "cascade" }),
-        role: membersToOrganizationsRoleEnum("role")
-            .default("Interviewer")
-            .notNull(),
-        createdAt: timestamp("createdAt", { mode: "date" })
-            .notNull()
-            .defaultNow(),
-    },
-    (mto) => ({
-        compoundKey: primaryKey({
-            columns: [mto.id, mto.memberId, mto.organizationId],
-        }),
-    }),
+  "membersToOrganizations",
+  {
+      id: varchar("id", { length: 255 }).default(sql`gen_random_uuid()`),
+      memberId: varchar("memberId", { length: 255 })
+          .notNull()
+          .references(() => users.id, { onDelete: "cascade" }),
+      memberEmail: varchar("memberEmail", { length: 255 }).notNull(),
+      organizationId: varchar("organizationId", { length: 255 })
+          .notNull()
+          .references(() => organizations.id, { onDelete: "cascade" }),
+      role: membersToOrganizationsRoleEnum("role")
+          .default("Interviewer")
+          .notNull(),
+      slack_user_id: varchar("slack_user_id", { length: 255 }), // New column
+      createdAt: timestamp("createdAt", { mode: "date" })
+          .notNull()
+          .defaultNow(),
+  },
+  (mto) => ({
+      compoundKey: primaryKey({
+          columns: [mto.id, mto.memberId, mto.organizationId],
+      }),
+  }),
 );
+
 
 export const membersToOrganizationsRelations = relations(
     membersToOrganizations,
