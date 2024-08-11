@@ -395,16 +395,15 @@ async function handleDebriefSubmission(payload) {
 
         await inviteUsersToChannel(channelId, recipients, slackTeamId);
         const responseToSlack = new NextResponse(
-          JSON.stringify({ response_action: 'clear' }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
+            JSON.stringify({ response_action: "clear" }),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            },
         );
         await postWelcomeMessage(channelId, candidateID, slackTeamId);
 
         return responseToSlack;
-
     } catch (error) {
         console.error(error);
         return new NextResponse(
@@ -420,7 +419,7 @@ async function handleDebriefSubmission(payload) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-    console.log("this is an actions - ",payload);
+    console.log("this is an actions - ", payload);
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {

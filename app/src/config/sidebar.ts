@@ -116,16 +116,15 @@ const navigation: SidebarNavItems[] = [
                 href: siteUrls.workflows.home,
             },
             {
-              label: "Integrations",
-              icon: Cable,
-              href: siteUrls.integrations.home,
-          },
+                label: "Integrations",
+                icon: Cable,
+                href: siteUrls.integrations.home,
+            },
             {
                 label: "Slack Home",
                 icon: Workflow,
                 href: siteUrls.customize.home,
             },
-
         ],
     },
     {

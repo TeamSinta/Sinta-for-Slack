@@ -282,22 +282,25 @@ export async function handleWorkflows() {
                         data,
                         workflow.conditions,
                     );
-                    console.log("filteredConditionsData - ",filteredConditionsData);
+                console.log(
+                    "filteredConditionsData - ",
+                    filteredConditionsData,
+                );
                 const slackTeamID = await getSlackTeamIDByWorkflowID(
                     workflow.id,
                 );
                 const subDomain = await getSubdomainByWorkflowID(workflow.id);
-
-
 
                 const filteredSlackDataWithMessage =
                     await filterCandidatesDataForSlack(
                         filteredConditionsData,
                         workflow.recipient,
                         slackTeamID,
-
                     );
-                console.log("filteredSlackDataWithMessage - ",filteredSlackDataWithMessage);
+                console.log(
+                    "filteredSlackDataWithMessage - ",
+                    filteredSlackDataWithMessage,
+                );
                 if (filteredSlackDataWithMessage.length > 0) {
                     await sendSlackButtonNotification(
                         filteredSlackDataWithMessage,

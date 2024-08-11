@@ -13,12 +13,14 @@ import { db } from "@/server/db";
 import { addGreenhouseSlackValue, matchUsers } from "@/lib/slack";
 import { getOrganizations } from "../actions/organization/queries";
 import { getAccessToken } from "../actions/slack/query";
-import { combineGreenhouseRolesAndSlackUsers, fetchGreenhouseUsers } from "../greenhouse/core";
+import {
+    combineGreenhouseRolesAndSlackUsers,
+    fetchGreenhouseUsers,
+} from "../greenhouse/core";
 import { format, parseISO } from "date-fns";
 import { slackChannelsCreated } from "../db/schema";
-import { OpenAI } from 'openai';
+import { OpenAI } from "openai";
 import { env } from "@/env";
-
 
 interface SlackChannel {
     id: string;
@@ -366,7 +368,6 @@ export async function sendSlackButtonNotification(
     const greenhouseUsers = await fetchGreenhouseUsers();
     const slackUsers = await getEmailsfromSlack(slackTeamID);
     const userMapping = await matchUsers(greenhouseUsers, slackUsers);
-
 
     const accessToken = await getAccessToken(slackTeamID);
     const greenhouseRecipients = [];
@@ -918,73 +919,70 @@ export async function sendAndPinSlackMessage(
     }
 }
 
-
 const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+    apiKey: env.OPENAI_API_KEY,
 });
 
 export async function postWelcomeMessage(channelId, candidateID, slackTeamId) {
-  const accessToken = await getAccessToken(slackTeamId);
+    const accessToken = await getAccessToken(slackTeamId);
 
-  try {
-    // Post initial welcome message
-    const initialMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
-    await fetch('https://slack.com/api/chat.postMessage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        channel: channelId,
-        text: initialMessage,
-      }),
-    });
+    try {
+        // Post initial welcome message
+        const initialMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
+        await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+                text: initialMessage,
+            }),
+        });
 
+        // Fetch scorecards
+        const scorecards = await fetchScorecards(candidateID);
 
-    // Fetch scorecards
-    const scorecards = await fetchScorecards(candidateID);
+        // Generate the prompt for OpenAI
+        const prompt = generatePrompt(scorecards);
 
-    // Generate the prompt for OpenAI
-    const prompt = generatePrompt(scorecards);
+        const response = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: prompt },
+            ],
+        });
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant.' },
-        { role: 'user', content: prompt },
-      ],
-    });
+        console.log("OpenAI response:", response);
+        console.log("OpenAI response:", response.choices[0].message.content);
 
-    console.log('OpenAI response:', response);
-    console.log('OpenAI response:', response.choices[0].message.content);
+        const formattedMessage = JSON.parse(
+            response.choices[0].message.content.trim(),
+        );
+        console.log("Formatted message:", formattedMessage);
 
-
-    const formattedMessage = JSON.parse(response.choices[0].message.content.trim());
-    console.log('Formatted message:', formattedMessage);
-
-    // Post the detailed message
-    await fetch('https://slack.com/api/chat.postMessage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        channel: channelId,
-        blocks: formattedMessage.blocks,
-      }),
-    });
-
-  } catch (error) {
-    console.error('Error posting messages:', error);
-    throw error;
-  }
+        // Post the detailed message
+        await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+                blocks: formattedMessage.blocks,
+            }),
+        });
+    } catch (error) {
+        console.error("Error posting messages:", error);
+        throw error;
+    }
 }
 
-
 function generatePrompt(scorecards) {
-  let prompt = `Generate a Slack message summarizing the following interview feedback in Slack Block Kit JSON format. The message should include a welcome message, candidate details, and feedback for each interviewer with buttons for actions. Use the following structure and ensure the message is formatted for Slack with dividers and emojis. Only return me an answer in block kit, do not add any additonal context or words:
+    let prompt = `Generate a Slack message summarizing the following interview feedback in Slack Block Kit JSON format. The message should include a welcome message, candidate details, and feedback for each interviewer with buttons for actions. Use the following structure and ensure the message is formatted for Slack with dividers and emojis. Only return me an answer in block kit, do not add any additonal context or words:
   {
     "blocks": [
       {
@@ -1029,13 +1027,14 @@ function generatePrompt(scorecards) {
     ]
   }`;
 
-  let interviewer_blocks = scorecards.map((scorecard, index) => {
-    return `
+    let interviewer_blocks = scorecards
+        .map((scorecard, index) => {
+            return `
     {
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Interviewer ${index + 1}*:\\n*Overall Recommendation*: ${scorecard.overall_recommendation}\\n\\n:key: *Key Takeaways*:\\n- ${scorecard.key_takeaways}\\n\\n:clipboard: *Interview Attributes*:\\n${scorecard.attributes.map(attr => `- ${attr}`).join('\\n')}"
+        "text": "*Interviewer ${index + 1}*:\\n*Overall Recommendation*: ${scorecard.overall_recommendation}\\n\\n:key: *Key Takeaways*:\\n- ${scorecard.key_takeaways}\\n\\n:clipboard: *Interview Attributes*:\\n${scorecard.attributes.map((attr) => `- ${attr}`).join("\\n")}"
       },
       "accessory": {
         "type": "button",
@@ -1050,44 +1049,44 @@ function generatePrompt(scorecards) {
     {
       "type": "divider"
     }`;
-  }).join(',');
+        })
+        .join(",");
 
-  prompt = prompt.replace('{interviewer_blocks}', interviewer_blocks);
+    prompt = prompt.replace("{interviewer_blocks}", interviewer_blocks);
 
-  return prompt;
+    return prompt;
 }
 
-
-
-
 async function fetchScorecards(candidateID) {
-  // Implement your logic to fetch the scorecards for the given candidateID
-  // This is a placeholder function and should be replaced with your actual data fetching logic
-  return [
-    {
-      overall_recommendation: 'Strongly recommend',
-      key_takeaways: 'Emphasizes teamwork and connecting the right people to the right opportunities. Handled a technical call by honestly informing the client that he wasn’t the best person for the job and promised to involve the right person in the next call.',
-      attributes: [
-        'Passionate: Very passionate about his work',
-        'Experience: Worked at Miro for over 4 years',
-        'Location: Based in Amsterdam',
-        'Salary Expectation: Open to a salary between 100-200K',
-        'Travel: Willing to travel as he did in his previous job'
-      ]
-    },
-    {
-      overall_recommendation: 'No scorecard submitted yet',
-      key_takeaways: '',
-      attributes: []
-    },
-    {
-      overall_recommendation: 'Do not recommend',
-      key_takeaways: 'Good technical knowledge but concerns about time management.',
-      attributes: [
-        'Experience: Several years in technical roles',
-        'Concerns: Poor time management',
-        'Final Recommendation: Do not recommend'
-      ]
-    }
-  ];
+    // Implement your logic to fetch the scorecards for the given candidateID
+    // This is a placeholder function and should be replaced with your actual data fetching logic
+    return [
+        {
+            overall_recommendation: "Strongly recommend",
+            key_takeaways:
+                "Emphasizes teamwork and connecting the right people to the right opportunities. Handled a technical call by honestly informing the client that he wasn’t the best person for the job and promised to involve the right person in the next call.",
+            attributes: [
+                "Passionate: Very passionate about his work",
+                "Experience: Worked at Miro for over 4 years",
+                "Location: Based in Amsterdam",
+                "Salary Expectation: Open to a salary between 100-200K",
+                "Travel: Willing to travel as he did in his previous job",
+            ],
+        },
+        {
+            overall_recommendation: "No scorecard submitted yet",
+            key_takeaways: "",
+            attributes: [],
+        },
+        {
+            overall_recommendation: "Do not recommend",
+            key_takeaways:
+                "Good technical knowledge but concerns about time management.",
+            attributes: [
+                "Experience: Several years in technical roles",
+                "Concerns: Poor time management",
+                "Final Recommendation: Do not recommend",
+            ],
+        },
+    ];
 }

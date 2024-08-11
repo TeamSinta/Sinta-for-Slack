@@ -313,7 +313,6 @@ export async function getSubdomainByWorkflowID(
     return organization.greenhouse_subdomain!;
 }
 
-
 /**
  * Get User Preferences by Role
  * @param role - The role of the user (Interviewer, Recruiter, Hiring Manager)
@@ -321,98 +320,96 @@ export async function getSubdomainByWorkflowID(
  */
 
 const getUserPreferencesSchema = z.object({
-  role: z.enum(["Interviewer", "Recruiter", "Hiring Manager"]),
+    role: z.enum(["Interviewer", "Recruiter", "Hiring Manager"]),
 });
 
 type GetUserPreferencesProps = z.infer<typeof getUserPreferencesSchema>;
 
 export async function getUserPreferencesQuery({
-  role,
+    role,
 }: GetUserPreferencesProps) {
-  const { user } = await protectedProcedure();
-  const { currentOrg } = await getOrganizations();
+    const { user } = await protectedProcedure();
+    const { currentOrg } = await getOrganizations();
 
-  // Fetch the user preferences from the database
-  const preferences = await db.query.userPreferences.findFirst({
-      where: and(
-          eq(userPreferences.userId, user.id),
-          eq(userPreferences.organizationId, currentOrg.id),
-          eq(userPreferences.role, role),
-      ),
-  });
+    // Fetch the user preferences from the database
+    const preferences = await db.query.userPreferences.findFirst({
+        where: and(
+            eq(userPreferences.userId, user.id),
+            eq(userPreferences.organizationId, currentOrg.id),
+            eq(userPreferences.role, role),
+        ),
+    });
 
-  if (!preferences) {
-    // Return default preferences if none exist
-    return {
-        upcomingInterviews: false,
-        pendingFeedback: false,
-        videoConferenceLink: false,
-        resourcesEnabled: false,
-        resources: [],
-    };
+    if (!preferences) {
+        // Return default preferences if none exist
+        return {
+            upcomingInterviews: false,
+            pendingFeedback: false,
+            videoConferenceLink: false,
+            resourcesEnabled: false,
+            resources: [],
+        };
+    }
+
+    return preferences;
 }
-
-  return preferences;
-}
-
 
 export async function getUserPreferences(userId: string, teamId: string) {
-  // Step 1: Retrieve the organization ID using the Slack team ID
-  const organization = await db.query.organizations.findFirst({
-    where: eq(organizations.slack_team_id, teamId),
-  });
+    // Step 1: Retrieve the organization ID using the Slack team ID
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, teamId),
+    });
 
-  if (!organization) {
-    throw new Error('Organization not found for the provided team ID');
-  }
+    if (!organization) {
+        throw new Error("Organization not found for the provided team ID");
+    }
 
-  const organizationId = organization.id;
+    const organizationId = organization.id;
 
-  // Step 2: Retrieve the user's role from the membersToOrganizations table
-  const member = await db.query.membersToOrganizations.findFirst({
-    where: and(
-      eq(membersToOrganizations.slack_user_id, userId),
-      eq(membersToOrganizations.organizationId, organizationId)
-    ),
-  });
+    // Step 2: Retrieve the user's role from the membersToOrganizations table
+    const member = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.slack_user_id, userId),
+            eq(membersToOrganizations.organizationId, organizationId),
+        ),
+    });
 
-  if (!member) {
-    throw new Error('User not found in the membersToOrganizations table');
-  }
+    if (!member) {
+        throw new Error("User not found in the membersToOrganizations table");
+    }
 
-  // Step 3: Adjust the role if it's "Admin" to match it with "Interviewer"
-  let role = member.role;
-  if (role === "Admin") {
-    role = "Interviewer";
-  }
+    // Step 3: Adjust the role if it's "Admin" to match it with "Interviewer"
+    let role = member.role;
+    if (role === "Admin") {
+        role = "Interviewer";
+    }
 
-  console.log('User role:', role);
-  console.log('Organization ID:', organizationId);
-  console.log('User ID:', userId);
+    console.log("User role:", role);
+    console.log("Organization ID:", organizationId);
+    console.log("User ID:", userId);
 
-  // Step 4: Retrieve the user preferences based on their role and organization ID
-  const preferences = await db.query.userPreferences.findFirst({
-    where: and(
-      eq(userPreferences.organizationId, organizationId),
-      eq(userPreferences.role, role)
-    ),
-  });
+    // Step 4: Retrieve the user preferences based on their role and organization ID
+    const preferences = await db.query.userPreferences.findFirst({
+        where: and(
+            eq(userPreferences.organizationId, organizationId),
+            eq(userPreferences.role, role),
+        ),
+    });
 
-  if (!preferences) {
-    throw new Error('User preferences not found');
-  }
+    if (!preferences) {
+        throw new Error("User preferences not found");
+    }
 
-  // Step 5: Return the preferences
-  return {
-    upcomingInterviews: preferences.upcomingInterviews,
-    pendingFeedback: preferences.pendingFeedback,
-    videoConferenceLink: preferences.videoConferenceLink,
-    resourcesEnabled: preferences.resources.length > 0,
-    resources: preferences.resources,
-    role: preferences.role,
-  };
+    // Step 5: Return the preferences
+    return {
+        upcomingInterviews: preferences.upcomingInterviews,
+        pendingFeedback: preferences.pendingFeedback,
+        videoConferenceLink: preferences.videoConferenceLink,
+        resourcesEnabled: preferences.resources.length > 0,
+        resources: preferences.resources,
+        role: preferences.role,
+    };
 }
-
 
 /**
  * Get User Email by Slack User ID and Slack Team ID
@@ -421,31 +418,33 @@ export async function getUserPreferences(userId: string, teamId: string) {
  * @returns The user's email if found, otherwise null
  */
 export async function getUserEmailBySlackIdAndTeamId(
-  slackUserId: string,
-  slackTeamId: string
+    slackUserId: string,
+    slackTeamId: string,
 ): Promise<string | null> {
-  // Find the organization by the Slack team ID
-  const organization = await db.query.organizations.findFirst({
-      where: eq(organizations.slack_team_id, slackTeamId),
-  });
+    // Find the organization by the Slack team ID
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, slackTeamId),
+    });
 
-  if (!organization) {
-      throw new Error("Organization not found for the provided Slack team ID");
-  }
+    if (!organization) {
+        throw new Error(
+            "Organization not found for the provided Slack team ID",
+        );
+    }
 
-  const organizationId = organization.id;
+    const organizationId = organization.id;
 
-  // Find the member in the organization by Slack user ID
-  const member = await db.query.membersToOrganizations.findFirst({
-      where: and(
-          eq(membersToOrganizations.slack_user_id, slackUserId),
-          eq(membersToOrganizations.organizationId, organizationId)
-      ),
-  });
+    // Find the member in the organization by Slack user ID
+    const member = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.slack_user_id, slackUserId),
+            eq(membersToOrganizations.organizationId, organizationId),
+        ),
+    });
 
-  if (!member) {
-      return null;
-  }
+    if (!member) {
+        return null;
+    }
 
-  return member.memberEmail;
+    return member.memberEmail;
 }
