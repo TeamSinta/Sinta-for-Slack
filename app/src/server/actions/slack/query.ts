@@ -203,12 +203,22 @@ export async function isUserMemberOfOrg({
   slackUserId: string;
   slackTeamId: string;
 }): Promise<boolean> {
-  const member = await db.query.membersToOrganizations.findFirst({
-      where: and(
-          eq(membersToOrganizations.slack_user_id, slackUserId),
-          eq(membersToOrganizations.organizationId, slackTeamId)
-      ),
+  // Step 1: Retrieve the organization based on the slack_team_id
+  const organization = await db.query.organizations.findFirst({
+    where: eq(organizations.slack_team_id, slackTeamId),
   });
 
-  return !!member;
+  if (!organization) {
+    return false; // Organization not found
+  }
+
+  // Step 2: Check if the user is a member of the found organization
+  const member = await db.query.membersToOrganizations.findFirst({
+    where: and(
+      eq(membersToOrganizations.slack_user_id, slackUserId),
+      eq(membersToOrganizations.organizationId, organization.id)
+    ),
+  });
+
+  return !!member; // Return true if the user is a member, false otherwise
 }

@@ -573,6 +573,29 @@ async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
     return response as ActivityFeed;
 }
 
+
+// Fetch all scheduled interviews from Greenhouse
+export async function fetchScheduledInterviews(): Promise<any[]> {
+  try {
+      const interviews = await customFetch(
+          "https://harvest.greenhouse.io/v1/scheduled_interviews",
+      );
+      return interviews;
+  } catch (error) {
+      console.error("Error fetching scheduled interviews from Greenhouse: ", error);
+      return [];
+  }
+}
+
+// Filter the scheduled interviews for the specific user
+export function filterInterviewsForUser(interviews: any[], userEmail: string): any[] {
+  return interviews.filter(interview =>
+      interview.interviewers.some(interviewer => interviewer.email === userEmail) &&
+      (interview.status === 'awaiting_feedback' || interview.status === 'scheduled')
+  );
+}
+
+
 function calculateTimeInCurrentStage(
     currentStage: string,
     activities: Activity[],
