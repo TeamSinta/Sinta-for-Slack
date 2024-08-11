@@ -420,7 +420,7 @@ async function handleDebriefSubmission(payload) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-    console.log(payload);
+    console.log("this is an actions - ",payload);
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {

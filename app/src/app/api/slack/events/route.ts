@@ -3,16 +3,15 @@ import { getAccessToken, isUserMemberOfOrg } from '@/server/actions/slack/query'
 import { getUserEmailBySlackIdAndTeamId, getUserPreferences } from '@/server/actions/organization/queries';
 import { fetchScheduledInterviews, filterInterviewsForUser } from '@/server/greenhouse/core';
 
+
 async function handleSlackEvent(data: any) {
   console.log('Slack Event:', data.event);
 
   const userId = data?.event?.user;
   const teamId = data?.event?.view?.team_id;
   const tab = data?.event?.tab;
+  const action = data?.actions?.[0]?.action_id;
 
-  console.log('User ID:', userId);
-  console.log('Team ID:', teamId);
-  console.log('Tab:', tab);
 
   // If the tab is not 'home', return a 200 response immediately
   if (tab !== 'home') {
@@ -27,6 +26,26 @@ async function handleSlackEvent(data: any) {
       throw new Error("Invalid userId, teamId, or tab not 'home'");
   }
 
+  // Handle tab switching actions
+  if (action) {
+      switch (action) {
+          case 'home_tab':
+              return loadUserDashboard(userId, teamId, 'home');
+          case 'dealrooms_tab':
+              return loadUserDashboard(userId, teamId, 'dealrooms');
+          case 'candidate_rooms_tab':
+              return loadUserDashboard(userId, teamId, 'candidate_rooms');
+          case 'debrief_rooms_tab':
+              return loadUserDashboard(userId, teamId, 'debrief_rooms');
+          default:
+              console.error("Unknown action_id:", action);
+              return new NextResponse(
+                  JSON.stringify({ error: 'Unknown action_id' }),
+                  { status: 400, headers: { 'Content-Type': 'application/json' } }
+              );
+      }
+  }
+
   // Perform your database operations or other logic here
   const isMember = await isUserMemberOfOrg({
       slackUserId: userId,
@@ -38,7 +57,7 @@ async function handleSlackEvent(data: any) {
   if (!isMember) {
       return showInviteScreen(userId, teamId);
   } else {
-      return loadUserDashboard(userId, teamId);
+      return loadUserDashboard(userId, teamId, "home");
   }
 }
 
@@ -139,115 +158,156 @@ async function showInviteScreen(userId: string, teamId: string) {
 
 
 
-export async function loadUserDashboard(userId: string, teamId: string) {
+export async function loadUserDashboard(userId: string, teamId: string, p0: string) {
   try {
-    // Step 1: Get user email and preferences
-    const userEmail = await getUserEmailBySlackIdAndTeamId(userId, teamId);
-    if (!userEmail) {
-      throw new Error("User email not found");
-    }
-
-    const preferences = await getUserPreferences(userId, teamId);
-
-    // Step 2: Initialize blocks with the dashboard header
-    const blocks: any[] = [
-      {
-        "type": "header",
-        "text": {
-          "type": "plain_text",
-          "text": `Welcome to Your ${preferences.role} Dashboard :house_with_garden:`,
-          "emoji": true
-        }
-      },
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": `Hi <@${userId}>, here is a quick overview of your upcoming interviews and pending tasks.`
-        }
-      },
-      {
-        "type": "divider"
+      // Step 1: Get user email and preferences
+      const userEmail = await getUserEmailBySlackIdAndTeamId(userId, teamId);
+      if (!userEmail) {
+          throw new Error('User email not found');
       }
-    ];
 
-    // Step 3: Fetch all scheduled interviews from Greenhouse
-    const allInterviews = await fetchScheduledInterviews();
-    const userInterviews = filterInterviewsForUser(allInterviews, userEmail);
+      const preferences = await getUserPreferences(userId, teamId);
 
-    // Step 4: Filter and display Upcoming Interviews
-    if (preferences.upcomingInterviews) {
-      const upcomingInterviews = userInterviews.filter(
-        (interview) => interview.status === "scheduled"
-      );
-
-      if (upcomingInterviews.length > 0) {
-        blocks.push({
+      // Step 2: Initialize blocks with the tab switcher and dashboard header
+      const blocks: any[] = [
+        {
           "type": "header",
           "text": {
-            "type": "plain_text",
-            "text": ":calendar: Upcoming Interview\n---",
-            "emoji": true
-          }
-        });
-
-        upcomingInterviews.forEach((interview) => {
-          const interviewDate = new Date(interview.start.date_time);
-          const formattedDate = interviewDate.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric"
-          });
-          const formattedTime = interviewDate.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit"
-          });
-          const duration = getInterviewDuration(interview.start.date_time, interview.end.date_time);
-
-          const interviewBlock = {
-            "type": "section",
-            "text": {
-              "type": "mrkdwn",
-              "text": `*${interview.interviewers[0].name}*\n*Type:* ${interview.interview.name}\n*Date:* ${formattedDate}\n*Time:* ${formattedTime}\n*Duration:* ${duration}`
-            },
-            "accessory": interview.video_conferencing_url
-              ? {
-                  "type": "button",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "Join Zoom Meeting",
-                    "emoji": true
+              "type": "plain_text",
+              "text": `Welcome to Sinta :wave:`,
+              "emoji": true,
+          },
+      },
+        {
+          "type": "context",
+          "elements": [
+              {
+                  "type": "mrkdwn",
+                  "text": "_Switch Views...Coming Soon:_"
+              }
+          ]
+      },
+          {
+              "type": "actions",
+              "elements": [
+                  {
+                      "type": "button",
+                      "text": {
+                          "type": "plain_text",
+                          "text": ":house_with_garden: Home",
+                          "emoji": true,
+                      },
+                      "action_id": "home_tab",
+                      "style": preferences.selectedTab === 'home_tab' ? 'primary' : undefined,
                   },
-                  "url": interview.video_conferencing_url,
-                  "style": "primary"
-                }
-              : undefined
-          };
+                  {
+                      "type": "button",
+                      "text": {
+                          "type": "plain_text",
+                          "text": "Dealrooms",
+                          "emoji": true,
+                      },
+                      "action_id": "dealrooms_tab",
+                  },
+                  {
+                      "type": "button",
+                      "text": {
+                          "type": "plain_text",
+                          "text": "Candidate Channels",
+                          "emoji": true,
+                      },
+                      "action_id": "candidate_rooms_tab",
+                  },
+                  {
+                      "type": "button",
+                      "text": {
+                          "type": "plain_text",
+                          "text": "Debrief Rooms",
+                          "emoji": true,
+                      },
+                      "action_id": "debrief_rooms_tab",
+                  },
+              ],
+          },
+          {
+              "type": "divider",
+          },
+      ];
 
-          blocks.push(interviewBlock);
+      // Always default to the Home tab if none is selected
+      const selectedTab = preferences.selectedTab || 'home_tab';
 
-          // blocks.push({
-          //   "type": "actions",
-          //   "elements": [
-          //     {
-          //       "type": "button",
-          //       "text": {
-          //         "type": "plain_text",
-          //         "text": "Request Reschedule",
-          //         "emoji": true
-          //       },
-          //       "url": interview.rescheduleLink || "#",
-          //       "style": "danger"
-          //     }
-          //   ]
-          // });
-        });
+      // Step 3: Add content based on the selected tab
+      if (selectedTab === 'home_tab') {
+          blocks.push({
+              "type": "header",
+              "text": {
+                  "type": "plain_text",
+                  "text": `${preferences.role}'s Home Dashboard :house_with_garden:`,
+                  "emoji": true,
+              },
+          });
 
-        blocks.push({ "type": "divider" });
-      }
-    }
+          blocks.push({
+              "type": "section",
+              "text": {
+                  "type": "mrkdwn",
+                  "text": `Hi <@${userId}>,\n\ here is a quick overview of your upcoming interviews and pending tasks.`,
+              },
+          });
 
-    // Step 5: Filter and display Pending Feedback
+
+
+          // Step 4: Fetch all scheduled interviews from Greenhouse
+          const allInterviews = await fetchScheduledInterviews();
+          const userInterviews = filterInterviewsForUser(allInterviews, userEmail);
+
+          // Step 5: Filter and display Upcoming Interviews
+          if (preferences.upcomingInterviews) {
+              const upcomingInterviews = userInterviews.filter(
+                  interview => interview.status === 'scheduled'
+              );
+
+              if (upcomingInterviews.length > 0) {
+                  blocks.push({
+                      "type": "header",
+                      "text": {
+                          "type": "plain_text",
+                          "text": "Upcoming Interviews :calendar: ",
+                          "emoji": true,
+                      },
+                  });
+
+                  upcomingInterviews.forEach(interview => {
+                      const duration = getInterviewDuration(interview.start.date_time, interview.end.date_time);
+                      const interviewBlock = {
+                          "type": "section",
+                          "text": {
+                              "type": "mrkdwn",
+                              "text": `*${interview.interviewers[0].name}*\n*Type:* ${interview.interview.name}\n*Date:* ${new Date(interview.start.date_time).toLocaleDateString()}\n*Time:* ${new Date(interview.start.date_time).toLocaleTimeString()}\n*Duration:* ${duration}\n*Location:* ${interview.location || 'TBD'}`,
+                          },
+                      };
+
+                      if (interview.video_conferencing_url) {
+                          interviewBlock['accessory'] = {
+                              "type": "button",
+                              "text": {
+                                  "type": "plain_text",
+                                  "text": "Join Zoom Meeting",
+                                  "emoji": true,
+                              },
+                              "url": interview.video_conferencing_url,
+                              "style": "primary",
+                          };
+                      }
+
+                      blocks.push(interviewBlock);
+                  });
+
+              }
+          }
+
+          // Step 6: Filter and display Pending Feedback
     if (preferences.pendingFeedback) {
       const pendingFeedback = userInterviews.filter(
         (interview) => interview.status === "awaiting_feedback"
@@ -257,7 +317,7 @@ export async function loadUserDashboard(userId: string, teamId: string) {
         "type": "header",
         "text": {
           "type": "plain_text",
-          "text": ":pencil2: Pending Feedback",
+          "text": "Pending Feedback :pencil2:",
           "emoji": true
         }
       });
@@ -301,62 +361,71 @@ export async function loadUserDashboard(userId: string, teamId: string) {
 
       blocks.push({ "type": "divider" });
     }
+          // Step 7: Display Resources section if enabled
+          if (preferences.resourcesEnabled && preferences.resources.length > 0) {
+              blocks.push({
+                  "type": "header",
+                  "text": {
+                      "type": "plain_text",
+                      "text": "Resources :book: ",
+                      "emoji": true,
+                  },
+              });
 
-    // Step 6: Display Resources section if enabled
-    if (preferences.resourcesEnabled && preferences.resources.length > 0) {
-      blocks.push({
-        "type": "header",
-        "text": {
-          "type": "plain_text",
-          "text": ":book: Resources",
-          "emoji": true
-        }
-      });
+              blocks.push({
+                  "type": "section",
+                  "text": {
+                      "type": "mrkdwn",
+                      "text": "Here are some useful links to help you with your interviews:",
+                  },
+              });
 
-      blocks.push({
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": "Here are some useful links to help you with your interviews:"
-        }
-      });
+              const resourceButtons = preferences.resources.map(resource => ({
+                  "type": "button",
+                  "text": {
+                      "type": "plain_text",
+                      "text": resource.label,
+                      "emoji": true,
+                  },
+                  "url": resource.link,
+                  "style": "primary",
+              }));
 
-      const resourceButtons = preferences.resources.map((resource) => ({
-        "type": "button",
-        "text": {
-          "type": "plain_text",
-          "text": resource.label,
-          "emoji": true
-        },
-        "url": resource.link,
-        "style": "primary"
-      }));
+              blocks.push({
+                  "type": "actions",
+                  "elements": resourceButtons,
+              });
 
-      blocks.push({
-        "type": "actions",
-        "elements": resourceButtons
-      });
+          }
+      } else {
+          // Step 8: Handle non-home tabs
+          blocks.push({
+              "type": "section",
+              "text": {
+                  "type": "mrkdwn",
+                  "text": "Coming soon...",
+              },
+          });
+      }
 
-    }
+      // Step 9: Update Slack Home Tab with the constructed blocks
+      await updateSlackHomeTab(userId, teamId, blocks);
 
-    // Pretty print the blocks array for debugging
-    console.log(JSON.stringify(blocks, null, 2));
+      return new NextResponse(
+          JSON.stringify({ "success": true }),
+          { "status": 200 }
+      );
 
-    // Step 7: Update Slack Home Tab with the constructed blocks
-    await updateSlackHomeTab(userId, teamId, blocks);
-
-    return new NextResponse(
-      JSON.stringify({ "success": true }),
-      { "status": 200 }
-    );
   } catch (error) {
-    console.error("Error loading dashboard:", error);
-    return new NextResponse(
-      JSON.stringify({ "error": "Internal server error" }),
-      { "status": 500 }
-    );
+      console.error('Error loading dashboard:', error);
+      return new NextResponse(
+          JSON.stringify({ "error": "Internal server error" }),
+          { "status": 500 }
+      );
   }
 }
+
+
 
 function getInterviewDuration(start: string, end: string): string {
   const startTime = new Date(start);
