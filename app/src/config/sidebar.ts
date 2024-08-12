@@ -9,6 +9,7 @@ import {
     UserRoundPlusIcon,
     UsersRoundIcon,
     Zap,
+    Ticket,
     Workflow,
     DoorOpen,
     Cable,
@@ -107,7 +108,7 @@ const navigation: SidebarNavItems[] = [
             },
             {
                 label: "Assignments",
-                icon: LayoutDashboardIcon,
+                icon: Ticket,
                 href: siteUrls.assignments.home,
             },
             {
