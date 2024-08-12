@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { type NextRequest, NextResponse } from "next/server";
-import axios from "axios"
+import axios from "axios";
 export const dynamic = "force-dynamic";
-async function handleGreenhouseCandidateRequest(url: string, options: any ) {
+async function handleGreenhouseCandidateRequest(url: string, options: any) {
     // async function handleGreenhouseCandidateRequest(url: string, options: RequestInit & { query?: Record<string, string> }) {
     // const headers: HeadersInit = {
     //     "Authorization": `Basic ${process.env.GREENHOUSE_API_KEY}`, // Basic Auth token
@@ -11,12 +11,12 @@ async function handleGreenhouseCandidateRequest(url: string, options: any ) {
     //     "On-Behalf-Of": options.headers?.['On-Behalf-Of'] || "", // Use provided On-Behalf-Of or default
     // };
     const headers: HeadersInit = {
-        "Authorization": `Basic MjVhN2I2ZWY3M2Q5MzhmZWZlNDk3MmM0ODMyYzAyYTYtODo=`, // Basic Auth token
+        Authorization: `Basic MjVhN2I2ZWY3M2Q5MzhmZWZlNDk3MmM0ODMyYzAyYTYtODo=`, // Basic Auth token
         "Content-Type": "application/json",
         "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
         // ...options.headers,
     };
-    console.log('ehaders - ',headers)
+    console.log("ehaders - ", headers);
     let requestUrl = url;
     if (options.query) {
         const queryParams = new URLSearchParams(options.query).toString();
@@ -36,14 +36,16 @@ async function handleGreenhouseCandidateRequest(url: string, options: any ) {
     });
 
     if (response.status < 200 || response.status >= 300) {
-        throw new Error(`HTTP error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`);
+        throw new Error(
+            `HTTP error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`,
+        );
     }
     const respData = response.data;
     return respData;
 }
 export async function POST(request: NextRequest) {
     console.log("here!"); // Check if this is being logged
-    
+
     try {
         const {
             url,
@@ -52,9 +54,9 @@ export async function POST(request: NextRequest) {
             url: string;
             options: RequestInit & { query?: Record<string, string> };
         } = await request.json();
-        console.log('url ----- ',url)
+        console.log("url ----- ", url);
         if (!url) {
-            console.log('here?')
+            console.log("here?");
             return NextResponse.json(
                 { error: "URL not provided" },
                 { status: 400 },
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
 
         const apiToken = "25a7b6ef73d938fefe4972c4832c02a6";
         if (!apiToken) {
-            console.log('here??')
+            console.log("here??");
             return NextResponse.json(
                 { error: "API token not found for the current organization" },
                 { status: 400 },
@@ -71,57 +73,58 @@ export async function POST(request: NextRequest) {
         }
         // console.log('options - ',options)
         const headers: HeadersInit = {
-            "Authorization": `Basic MjVhN2I2ZWY3M2Q5MzhmZWZlNDk3MmM0ODMyYzAyYTYtODo=`, // Basic Auth token
+            Authorization: `Basic MjVhN2I2ZWY3M2Q5MzhmZWZlNDk3MmM0ODMyYzAyYTYtODo=`, // Basic Auth token
             "Content-Type": "application/json",
             "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
             // ...options.headers,
         };
-        if(url.includes('/v1/candidates/')){
+        if (url.includes("/v1/candidates/")) {
             // const optData = options.data
-            console.log('FOUND CANDDIATES EDIT')
+            console.log("FOUND CANDDIATES EDIT");
             // return NextResponse.json({});
 
             // const response = await fetch(requestUrl, { ...options, headers });
-            const responseData = await handleGreenhouseCandidateRequest(url, options)
-            console.log('responise data - ',responseData)
+            const responseData = await handleGreenhouseCandidateRequest(
+                url,
+                options,
+            );
+            console.log("responise data - ", responseData);
             return NextResponse.json(responseData);
-
-        }
-        else{
+        } else {
             let requestUrl = url;
             if (options.query) {
-                const queryParams = new URLSearchParams(options.query).toString();
+                const queryParams = new URLSearchParams(
+                    options.query,
+                ).toString();
                 requestUrl = `${url}?${queryParams}`;
             }
-            
-            console.log('Request URL:', requestUrl);
-            console.log('Options:', options);
+
+            console.log("Request URL:", requestUrl);
+            console.log("Options:", options);
             // options.headers = headers
             // let headers = {}
-            console.log('Headers:', headers);
-            
+            console.log("Headers:", headers);
+
             const response = await fetch(requestUrl, { ...options, headers });
-            
-            console.log('here??? - post repsonse',response.status)
-    
 
-        if (!response.ok) {
-            console.log('here??abaabababab?',response.body)
-            console.log('here??abaabababab?',response.statusText)
+            console.log("here??? - post repsonse", response.status);
 
-            return NextResponse.json(
-                { error: `HTTP error! Status: ${response.status}` },
-                { status: response.status },
-            );
+            if (!response.ok) {
+                console.log("here??abaabababab?", response.body);
+                console.log("here??abaabababab?", response.statusText);
+
+                return NextResponse.json(
+                    { error: `HTTP error! Status: ${response.status}` },
+                    { status: response.status },
+                );
+            }
+
+            const responseData = await response.json();
+            // console.log('respdata? - ',responseData)
+            return NextResponse.json(responseData);
         }
-
-        const responseData = await response.json();
-        // console.log('respdata? - ',responseData)
-        return NextResponse.json(responseData);
-    }
-
     } catch (error) {
-        console.log('errorr - ',error)
+        console.log("errorr - ", error);
         return NextResponse.json(
             { error: (error as Error).message },
             { status: 500 },

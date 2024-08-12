@@ -43,7 +43,13 @@ export const ourFileRouter = {
                 where: and(
                     eq(membersToOrganizations.memberId, user.id),
                     eq(membersToOrganizations.organizationId, currentOrg.id),
-                    eq(membersToOrganizations.role, "Admin" as "Interviewer" | "Recruiter" | "Hiring Manager"),
+                    eq(
+                        membersToOrganizations.role,
+                        "Admin" as
+                            | "Interviewer"
+                            | "Recruiter"
+                            | "Hiring Manager",
+                    ),
                 ),
             });
 

@@ -83,7 +83,6 @@ function formatCondition(condition: Condition): string {
 }
 
 export const columns: ColumnDef<SlackChannelsCreatedData>[] = [
-
     // {
     //     accessorKey: "objectField",
     //     header: "Object Field",
@@ -112,18 +111,18 @@ export const columns: ColumnDef<SlackChannelsCreatedData>[] = [
         accessorKey: "appliedDate",
         header: "App. Date",
         // cell: ({ row }) => (
-            // <span className="text-muted-foreground">
-                // {row.original.createdAt ? format(new Date(row.original.createdAt), "PP") : ""}
-            // </span>
+        // <span className="text-muted-foreground">
+        // {row.original.createdAt ? format(new Date(row.original.createdAt), "PP") : ""}
+        // </span>
         // ),
     },
     {
         accessorKey: "isArchived",
         header: "Archived",
         // cell: ({ row }) => (
-            // <div className="flex flex-wrap gap-2">
-                // {row.original.isArchived}
-            // </div>
+        // <div className="flex flex-wrap gap-2">
+        // {row.original.isArchived}
+        // </div>
         // ),
     },
     {
@@ -134,13 +133,11 @@ export const columns: ColumnDef<SlackChannelsCreatedData>[] = [
         accessorKey: "invitedUsers",
         header: "Invited Users",
         cell: ({ row }) => {
-            const invUsers = row.original.invitedUsers as any []
-            return (
-                invUsers.map((invUser)=>(
-                    <div>{invUser}</div>
-                    // <div>{invUsers.length} - users, {invUsers.toString()}</div>
-                ))
-            )
+            const invUsers = row.original.invitedUsers as any[];
+            return invUsers.map((invUser) => (
+                <div>{invUser}</div>
+                // <div>{invUsers.length} - users, {invUsers.toString()}</div>
+            ));
             // let invitedUsers = row.original.invitedUsers as any[]
             // // if(row.original.conditions && row.original.conditions.length){
             // //     invitedUsers = row.original.invitedUsers.map(formatCondition);

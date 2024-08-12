@@ -4,7 +4,6 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { ColumnDropdown } from "./column-dropdown";
 import { type ReactNode } from "react";
 
-
 type Recipient = {
     source: string;
     value: string;
@@ -108,18 +107,18 @@ export const columns: ColumnDef<AssignmentChannelsData>[] = [
         accessorKey: "createdAt",
         header: "Created At",
         // cell: ({ row }) => (
-            // <span className="text-muted-foreground">
-                // {row.original.createdAt ? format(new Date(row.original.createdAt), "PP") : ""}
-            // </span>
+        // <span className="text-muted-foreground">
+        // {row.original.createdAt ? format(new Date(row.original.createdAt), "PP") : ""}
+        // </span>
         // ),
     },
     {
         accessorKey: "isArchived",
         header: "Archived",
         // cell: ({ row }) => (
-            // <div className="flex flex-wrap gap-2">
-                // {row.original.isArchived}
-            // </div>
+        // <div className="flex flex-wrap gap-2">
+        // {row.original.isArchived}
+        // </div>
         // ),
     },
     // {

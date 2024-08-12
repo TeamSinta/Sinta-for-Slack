@@ -6,8 +6,6 @@
 import React from "react";
 // Adjust to include correct imports and types for hiringrooms
 
-
-
 // const filterableColumns: DataTableFilterableColumn<AssignmentData>[] = [
 //     {
 //         id: "status",
@@ -60,7 +58,7 @@ export function AssignmentsSettings() {
 
     return (
         <>
-        go bucks - assignment settings
+            go bucks - assignment settings
             {/* <DataTable
                 table={table}
                 columns={columns}

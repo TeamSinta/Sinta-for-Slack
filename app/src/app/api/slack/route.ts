@@ -281,7 +281,7 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers
+            slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
 
@@ -426,7 +426,7 @@ async function handleSlackInteraction(payload: SlackInteraction) {
         }
 
         const { action_id } = action;
-        console.log('handle slack interaction - pre access token')
+        console.log("handle slack interaction - pre access token");
 
         const accessToken = await getAccessToken(team.id);
 
@@ -792,7 +792,7 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
         const greenhouseUsers = await fetchGreenhouseUsers();
         const userMapping = await matchSlackToGreenhouseUsers(
             greenhouseUsers,
-            slackUsers
+            slackUsers,
         );
         const greenhouseUserId = userMapping[user.id];
 
@@ -956,142 +956,149 @@ async function handleDebriefCommand(trigger_id, slackTeamId) {
 }
 
 export async function POST(request: NextRequest): Promise<void | Response> {
-  try {
-      const contentType = request.headers.get("content-type");
+    try {
+        const contentType = request.headers.get("content-type");
 
-      if (contentType?.includes("application/json")) {
-          const data = await request.json();
+        if (contentType?.includes("application/json")) {
+            const data = await request.json();
 
-          if (data.hasArchive && !data.hasDelete) {
-              const channelId = data.channelId;
-              const slackTeamId = data.slackTeamId;
+            if (data.hasArchive && !data.hasDelete) {
+                const channelId = data.channelId;
+                const slackTeamId = data.slackTeamId;
 
-              try {
-                  await archiveConversationInSlack(channelId, slackTeamId);
-                  await archiveConversationInDB(channelId);
-              } catch (e) {
-                  console.error("Error during archiving:", e);
-                  return new NextResponse(
-                      JSON.stringify({ error: "Error during archiving" }),
-                      { status: 500 }
-                  );
-              }
+                try {
+                    await archiveConversationInSlack(channelId, slackTeamId);
+                    await archiveConversationInDB(channelId);
+                } catch (e) {
+                    console.error("Error during archiving:", e);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Error during archiving" }),
+                        { status: 500 },
+                    );
+                }
 
-              return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
-          } else if (data.hasDelete) {
-              try {
-                  const channelId = data.channelId;
-                  const slackTeamId = data.slackTeamId;
-                  await deleteConversationInSlack(channelId, slackTeamId);
-              } catch (e) {
-                  console.error("Error during deletion:", e);
-                  return new NextResponse(
-                      JSON.stringify({ error: "Error during deletion" }),
-                      { status: 500 }
-                  );
-              }
+                return new NextResponse(JSON.stringify({ success: true }), {
+                    status: 200,
+                });
+            } else if (data.hasDelete) {
+                try {
+                    const channelId = data.channelId;
+                    const slackTeamId = data.slackTeamId;
+                    await deleteConversationInSlack(channelId, slackTeamId);
+                } catch (e) {
+                    console.error("Error during deletion:", e);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Error during deletion" }),
+                        { status: 500 },
+                    );
+                }
 
-              return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
-          } else {
-              return handleJsonPost(data);
-          }
-      } else if (contentType?.includes("application/x-www-form-urlencoded")) {
-          const text = await request.text();
-          const params = new URLSearchParams(text);
+                return new NextResponse(JSON.stringify({ success: true }), {
+                    status: 200,
+                });
+            } else {
+                return handleJsonPost(data);
+            }
+        } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+            const text = await request.text();
+            const params = new URLSearchParams(text);
 
-          const command = params.get("command");
-          const trigger_id = params.get("trigger_id");
-          const team_id = params.get("team_id");
+            const command = params.get("command");
+            const trigger_id = params.get("trigger_id");
+            const team_id = params.get("team_id");
 
-          if (command === "/debrief" && trigger_id) {
-              return handleDebriefCommand(trigger_id, team_id);
-          }
+            if (command === "/debrief" && trigger_id) {
+                return handleDebriefCommand(trigger_id, team_id);
+            }
 
-          const payloadRaw = params.get("payload");
+            const payloadRaw = params.get("payload");
 
-          if (payloadRaw) {
-              return handleSlackInteraction(JSON.parse(payloadRaw));
-          } else {
-              return new NextResponse(
-                  JSON.stringify({ error: "Unrecognized form-urlencoded request" }),
-                  { status: 400 }
-              );
-          }
-      }
-  } catch (e) {
-      console.error("Error handling POST request:", e);
-      return new NextResponse(
-          JSON.stringify({ error: "Internal server error" }),
-          { status: 500 }
-      );
-  }
+            if (payloadRaw) {
+                return handleSlackInteraction(JSON.parse(payloadRaw));
+            } else {
+                return new NextResponse(
+                    JSON.stringify({
+                        error: "Unrecognized form-urlencoded request",
+                    }),
+                    { status: 400 },
+                );
+            }
+        }
+    } catch (e) {
+        console.error("Error handling POST request:", e);
+        return new NextResponse(
+            JSON.stringify({ error: "Internal server error" }),
+            { status: 500 },
+        );
+    }
 }
 
+// import { useState } from 'react';
+async function archiveConversationInDB(channelId) {
+    try {
+        console.log("prearchive");
 
-
-
-    // import { useState } from 'react';
-    async function archiveConversationInDB(channelId) {
-        try{
-            console.log('prearchive')
-
-            await db
+        await db
             .update(slackChannelsCreated)
             .set({ isArchived: true })
             .where(eq(slackChannelsCreated.channelId, channelId))
             .execute();
-        }
-        catch(e){
-            console.log('eeee - ',e)
-        }
+    } catch (e) {
+        console.log("eeee - ", e);
     }
+}
 
-    async function archiveConversationInSlack(channelId,slackTeamId) {
-        const accessToken = await getAccessToken(slackTeamId);
-        console.log('channelId-',channelId)
-        console.log('accessToken-',accessToken)
-        const response = await fetch('https://slack.com/api/conversations.archive', {
-            method: 'POST',
+async function archiveConversationInSlack(channelId, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
+    console.log("channelId-", channelId);
+    console.log("accessToken-", accessToken);
+    const response = await fetch(
+        "https://slack.com/api/conversations.archive",
+        {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': `Bearer ${accessToken}`
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({
-                channel: channelId
-            })
-        });
+                channel: channelId,
+            }),
+        },
+    );
 
-
-        const data = await response.json();
-        if (!data.ok) {
-            throw new Error(data.error);
-        }
-
-        return data;
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(data.error);
     }
-    async function deleteConversationInSlack(channelId,slackTeamId) {
-        const accessToken = await getAccessToken(slackTeamId);
-        console.log('channelId-',channelId)
-        console.log('accessToken-',accessToken)
-        const apikey = process.env.SLACK_BOT_TOKEN
-        const apitoken = 'xoxe.xoxb-1-MS0yLTQ0MTYwOTk0MzE4NzgtNjk3Mjc2NjQ3Njk2NC02OTU2NzI4OTYzNjcxLTc0Mzg3MzA4OTczMzItNDMyZjIyYmI0Mzg2Yzg4ODIzMmRjNWUwZDk0MzA5NTFhNTE2YTBiMjE1YmRjMTM4NmE5MmJlYjRjZGE3MGQzZA'
-        console.log('api key - ',apikey)
-        const response = await fetch('https://slack.com/api/conversations.archive', {
-            method: 'POST',
+
+    return data;
+}
+async function deleteConversationInSlack(channelId, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
+    console.log("channelId-", channelId);
+    console.log("accessToken-", accessToken);
+    const apikey = process.env.SLACK_BOT_TOKEN;
+    const apitoken =
+        "xoxe.xoxb-1-MS0yLTQ0MTYwOTk0MzE4NzgtNjk3Mjc2NjQ3Njk2NC02OTU2NzI4OTYzNjcxLTc0Mzg3MzA4OTczMzItNDMyZjIyYmI0Mzg2Yzg4ODIzMmRjNWUwZDk0MzA5NTFhNTE2YTBiMjE1YmRjMTM4NmE5MmJlYjRjZGE3MGQzZA";
+    console.log("api key - ", apikey);
+    const response = await fetch(
+        "https://slack.com/api/conversations.archive",
+        {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': `Bearer ${accessToken}`
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({
-                channel: channelId
-            })
-        });
+                channel: channelId,
+            }),
+        },
+    );
 
-
-        const data = await response.json();
-        if (!data.ok) {
-            throw new Error(data.error);
-        }
-
-        return data;
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(data.error);
     }
+
+    return data;
+}

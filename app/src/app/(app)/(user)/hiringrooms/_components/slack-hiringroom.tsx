@@ -8,10 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import {
-    type ButtonAction,
-    ButtonType,
-} from "./message-buttons";
+import { type ButtonAction, ButtonType } from "./message-buttons";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import Image from "next/image";
 

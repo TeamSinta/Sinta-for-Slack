@@ -11,7 +11,7 @@ export async function customFetch(
     const apiUrl = isNode ? `${baseUrl}/api/greenhouse/` : "/api/greenhouse/";
 
     try {
-        console.log('api url  ', apiUrl);
+        console.log("api url  ", apiUrl);
         const response = await axios.post(
             apiUrl,
             { url, options },

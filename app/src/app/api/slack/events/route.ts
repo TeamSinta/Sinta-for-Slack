@@ -173,11 +173,7 @@ async function showInviteScreen(userId: string, teamId: string) {
     return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
 }
 
-async function loadUserDashboard(
-    userId: string,
-    teamId: string,
-    p0: string,
-) {
+async function loadUserDashboard(userId: string, teamId: string, p0: string) {
     try {
         // Step 1: Get user email and preferences
         const userEmail = await getUserEmailBySlackIdAndTeamId(userId, teamId);

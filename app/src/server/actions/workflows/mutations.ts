@@ -63,7 +63,7 @@ export async function createWorkflowMutation(props: CreateWorkflowProps) {
  * Update a workflow
  */
 const workflowUpdateSchema = workflowSelectSchema.pick({
-    id:true,
+    id: true,
     name: true,
     objectField: true,
     alertType: true,
@@ -71,21 +71,20 @@ const workflowUpdateSchema = workflowSelectSchema.pick({
     triggerConfig: true,
     recipient: true,
     conditions: true,
-    status:true
+    status: true,
     // other fields as necessary
 });
 const workflowStatusUpdateSchema = workflowSelectSchema.pick({
-    id:true,
-    status:true
+    id: true,
+    status: true,
     // other fields as necessary
 });
-
 
 type UpdateWorkflowProps = z.infer<typeof workflowUpdateSchema>;
 
 export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
     // await adminProcedure();
-    try{
+    try {
         // console.log('props',props)
         const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
         // console.log('workflows parse ',workflowParse)
@@ -94,42 +93,40 @@ export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
                 cause: workflowParse.error.errors,
             });
         }
-    
+
         return await db
             .update(workflows)
             .set(workflowParse.data)
             .where(eq(workflows.id, workflowParse.data.id))
             .execute();
+    } catch (e) {
+        console.log("wtf  eeeee -", e);
     }
-    catch(e){
-        console.log('wtf  eeeee -',e)
-    }
-   
 }
 type UpdateWorkflowStatusProps = z.infer<typeof workflowStatusUpdateSchema>;
 
-export async function updateWorkflowStatusMutation(props: UpdateWorkflowStatusProps) {
+export async function updateWorkflowStatusMutation(
+    props: UpdateWorkflowStatusProps,
+) {
     // await adminProcedure();
-    try{
-        console.log('props',props)
+    try {
+        console.log("props", props);
         const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-        console.log('workflows parse ',workflowParse)
+        console.log("workflows parse ", workflowParse);
         if (!workflowParse.success) {
             throw new Error("Invalid workflow data", {
                 cause: workflowParse.error.errors,
             });
         }
-    
+
         return await db
             .update(workflows)
             .set(workflowParse.data)
             .where(eq(workflows.id, workflowParse.data.id))
             .execute();
+    } catch (e) {
+        console.log("wtf  eeeee -", e);
     }
-    catch(e){
-        console.log('wtf  eeeee -',e)
-    }
-   
 }
 
 /**

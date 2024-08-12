@@ -84,7 +84,7 @@ type GetPaginatedSlackChannelCreatedQueryProps = z.infer<
 export async function getAssignments() {
     const { data } = await db.transaction(async (tx) => {
         // const data = await tx.select().from(assignments).execute();
-        const data = {} as any
+        const data = {} as any;
         return { data };
     });
 
@@ -147,13 +147,13 @@ export async function getPaginatedAssignmentsQuery(
     // const pageCount = Math.ceil(total / input.per_page);
 
     // return { data, pageCount, total };
-    return {}
+    return {};
 }
 
 export async function getPaginatedAssignmentsByOrgQuery(
     input: GetPaginatedAssignmentsQueryProps,
 ) {
-    return {}
+    return {};
     // noStore();
 
     // const { currentOrg } = await getOrganizations();
@@ -263,5 +263,5 @@ export async function getPaginatedAssignmentsExcludingUserQuery(
     // const pageCount = Math.ceil(total / input.per_page);
 
     // return { data, pageCount, total };
-    return {}
+    return {};
 }

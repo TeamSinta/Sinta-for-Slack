@@ -34,7 +34,9 @@ const searchableColumns: DataTableSearchableColumn<AssignmentData>[] = [
     { id: "name", placeholder: "Search by hiringroom name..." },
 ];
 
-export function AssignmentsTable({ assignmentsPromise }: AssignmentsTableProps) {
+export function AssignmentsTable({
+    assignmentsPromise,
+}: AssignmentsTableProps) {
     const { data, pageCount, total } = React.use(assignmentsPromise);
 
     const columns = useMemo<ColumnDef<AssignmentData, unknown>[]>(

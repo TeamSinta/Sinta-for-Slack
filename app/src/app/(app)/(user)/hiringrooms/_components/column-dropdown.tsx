@@ -29,12 +29,15 @@ export function ColumnDropdown({ id }: HiringroomData) {
     const {
         mutateAsync: changeStatusMutate,
         isPending: changeStatusIsPending,
-    } = useMutation<unknown, unknown, { id: string; status: HiringroomStatus }>({
-        mutationFn: ({ id, status }) => updateHiringroomMutation({ id, status }),
-        onSettled: () => {
-            router.refresh();
+    } = useMutation<unknown, unknown, { id: string; status: HiringroomStatus }>(
+        {
+            mutationFn: ({ id, status }) =>
+                updateHiringroomMutation({ id, status }),
+            onSettled: () => {
+                router.refresh();
+            },
         },
-    });
+    );
 
     const [
         statusChangeIsTransitionPending,

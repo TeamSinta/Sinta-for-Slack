@@ -101,7 +101,7 @@ interface Job {
 export async function updateGreenhouseCandidate(
     candidate: any,
     field: string,
-    newValue: string
+    newValue: string,
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const candidateId = candidate.id;
@@ -110,19 +110,19 @@ export async function updateGreenhouseCandidate(
 
         if (field === "recruiter") {
             payload = {
-                "recruiter": { "id": newValue }
+                recruiter: { id: newValue },
             };
         } else if (field === "coordinator") {
             payload = {
-                "coordinator": { "id": newValue }
+                coordinator: { id: newValue },
             };
-        }  
+        }
 
         const response = await customFetch(url, {
             method: "PATCH",
-            data: payload
+            data: payload,
         });
-        console.log('respone- ',response)
+        console.log("respone- ", response);
         return { success: true };
     } catch (error) {
         console.error("Failed to update Greenhouse candidate:", error);
@@ -134,15 +134,15 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
-        )) as { id: number; name: string, created_at: string }[];
+        )) as { id: number; name: string; created_at: string }[];
         return jobs.map((job) => ({
             id: job.id,
             name: job.name,
-            created_at: job.created_at
+            created_at: job.created_at,
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
-        console.log('here1?')
+        console.log("here1?");
         return [];
     }
 };
@@ -573,25 +573,25 @@ export async function fetchAllGreenhouseUsers(): Promise<
     Record<string, { id: string; email: string }>
 > {
     try {
-        const users = (await customFetch(
+        const users = await customFetch(
             "https://harvest.greenhouse.io/v1/users",
-        ))
-        return users
-
+        );
+        return users;
     } catch (error) {
         console.error("Error fetching Greenhouse users: ", error);
         return {};
     }
 }
 
-
-export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<Job[]> => {
+export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<
+    Job[]
+> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
         )) as any[];
-        console.log('JOB  - ',jobs)
-        return jobs
+        console.log("JOB  - ", jobs);
+        return jobs;
     } catch (error) {
         console.error("Error fetching jobs: ", error);
         return [];
@@ -725,7 +725,12 @@ export async function filterStuckinStageDataConditions(
                 default:
                     console.warn(`Unsupported condition operator: ${operator}`);
             }
-            console.log(operator, daysInCurrentStage, thresholdDays, conditionMet)
+            console.log(
+                operator,
+                daysInCurrentStage,
+                thresholdDays,
+                conditionMet,
+            );
 
             if (conditionMet) {
                 matchedCandidates.push(candidate);

@@ -6,11 +6,10 @@ import {
 } from "@/server/actions/organization/queries";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 
-
 import { AssignmentsRoom } from "./_components/assignments-room";
 
-import {getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
-import { type getPaginatedAssignmentsQuery} from "@/server/actions/assignments/queries";
+import { getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
+import { type getPaginatedAssignmentsQuery } from "@/server/actions/assignments/queries";
 import { type AssignmentData } from "./_components/columns"; // Adjust to include correct imports and types for hiringrooms
 import { assignmentStatusEnum } from "@/server/db/schema";
 import type {
@@ -19,8 +18,6 @@ import type {
 } from "@/types/data-table";
 import { type SearchParams } from "@/types/data-table";
 import { z } from "zod";
-
-
 
 const mockData = {
     welcomeText: "Welcome to your Sinta Launchpad!",
@@ -67,7 +64,7 @@ const searchableColumns: DataTableSearchableColumn<AssignmentData>[] = [
 type UsersPageProps = {
     searchParams: SearchParams;
 };
-    
+
 const searchParamsSchema = z.object({
     page: z.coerce.number().default(1),
     per_page: z.coerce.number().default(10),
@@ -77,11 +74,12 @@ const searchParamsSchema = z.object({
     role: z.string().optional(),
     operator: z.string().optional(),
 });
-export default async function AssignmentsPage({searchParams}:UsersPageProps) {
+export default async function AssignmentsPage({
+    searchParams,
+}: UsersPageProps) {
     const slackIntegration = await checkSlackTeamIdFilled();
     const greenhouseIntegration = await checkGreenhouseTeamIdFilled();
     const workflowsExist = await Checktoseeworkflows();
-
 
     // let searchParamsX = {
     //     page: 1,
@@ -94,12 +92,11 @@ export default async function AssignmentsPage({searchParams}:UsersPageProps) {
     // }
     // const search = searchParamsSchema.parse(searchParams);
     const search = searchParamsSchema.parse(searchParams);
-    
-    const slackChannelsCreatedPromise = getSlackChannelsCreatedPromise(search)
-    
+
+    const slackChannelsCreatedPromise = getSlackChannelsCreatedPromise(search);
+
     // const workflows = workflowsExist ? await getFirstFiveWorkflows() : [];
 
-    
     // const renderConnectCard = () => (
     //     <Card className="rounded-lg bg-background">
     //         <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
@@ -262,17 +259,17 @@ export default async function AssignmentsPage({searchParams}:UsersPageProps) {
     //     </Card>
     // );
 
- 
     return (
         <AppPageShell
             title="Assignments"
             description="Overview of your account usage and potential features"
         >
             <Tabs defaultValue="all" className="w-full space-y-5">
-              
                 <TabsContent value="all">
                     <div className="w-full space-y-5">
-                    <AssignmentsRoom assignmentsPromise={slackChannelsCreatedPromise}></AssignmentsRoom>
+                        <AssignmentsRoom
+                            assignmentsPromise={slackChannelsCreatedPromise}
+                        ></AssignmentsRoom>
                         {/* <AssignmentsTable assignmentsPromise={slackChannelsCreatedPromise} /> */}
                         {/* <AssignmentsTable hiringroomsPromise={hiringroomAllPromise} /> */}
                     </div>

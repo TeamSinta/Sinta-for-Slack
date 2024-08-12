@@ -36,7 +36,7 @@ export type AssignmentData = {
     alertType: string;
     objectField: string;
     ownerId: string;
-    isArchived:boolean;
+    isArchived: boolean;
     triggerConfig: TriggerConfig;
 };
 

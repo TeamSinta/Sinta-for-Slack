@@ -35,11 +35,10 @@ export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
     "Inactive",
     "Archived",
 ]);
-export const slackChannelsCreatedStatusEnum = pgEnum("slack_channels_created_status", [
-    "Active",
-    "Inactive",
-    "Archived",
-]);
+export const slackChannelsCreatedStatusEnum = pgEnum(
+    "slack_channels_created_status",
+    ["Active", "Inactive", "Archived"],
+);
 export const assignmentStatusEnum = pgEnum("assignment_status", [
     "Active",
     "Inactive",
@@ -60,12 +59,12 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
     greenhouseCandidateId: varchar("greenhouseCandidateId", { length: 255 }),
     greenhouseJobId: varchar("greenhouseJobId", { length: 255 }),
     isArchived: boolean("isArchived").default(false).notNull(),
-    invitedUsers: jsonb("invited_users").notNull().default(sql`'[]'`),
+    invitedUsers: jsonb("invited_users")
+        .notNull()
+        .default(sql`'[]'`),
     hiringroomId: varchar("hiringroomId", { length: 255 }), // Ensure this is not commented
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
 });
-
-
 
 export const hiringrooms = createTable("hiringroom", {
     id: varchar("id", { length: 255 })

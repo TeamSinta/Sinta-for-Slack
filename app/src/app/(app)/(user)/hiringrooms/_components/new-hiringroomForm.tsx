@@ -38,7 +38,12 @@ import {
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackHiringroom from "./slack-hiringroom";
 import ConditionComponent from "./conditions";
-import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
+import {
+    fetchJobsFromGreenhouse,
+    fetchAllGreenhouseJobsFromGreenhouse,
+    fetchAllGreenhouseUsers,
+    fetchCandidates,
+} from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
 import SlackChannelNameFormat from "./SlackChannelNameFormat";
 import Image from "next/image";
@@ -60,7 +65,7 @@ export const recipientSchema = z.object({
             value: z.string(),
         }),
     ),
-    customMessageBody: z.string().optional(),  // This can be a large string
+    customMessageBody: z.string().optional(), // This can be a large string
 });
 
 export const hiringroomFormSchema = z.object({
@@ -119,122 +124,153 @@ interface Job {
 }
 
 function CreateHiringroomSheet() {
-    
-    const [coordinators, setCoordinators] = useState([])
-    const [recruiters, setRecruiters] = useState([])
-    const [jobNames, setJobNames] = useState([])
+    const [coordinators, setCoordinators] = useState([]);
+    const [recruiters, setRecruiters] = useState([]);
+    const [jobNames, setJobNames] = useState([]);
 
-    const [format, setFormat] = useState("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
+    const [format, setFormat] = useState(
+        "intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}",
+    );
 
-
-    const [conditionTypesWithOperators, setConditionTypesWithOperators] = useState([
-        {
-            name: "Coordinator",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [], // Assuming values are dynamic or not predefined
-        },
-        {
-            name: "Recruiter",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [], // Assuming values are dynamic or not predefined
-        },
-        {
-            name: "Job Name",
-            operators: [
-                { value: "equal", label: "Equal To" },
-                { value: "notEqual", label: "Not Equal To" },
-            ],
-            values: [], // Assuming values are dynamic or not predefined
-        }
-        // {
-        //     name: "Tags",
-        //     operators: [{ value: "equal", label: "Equal To" }],
-        //     values: [], // Assuming values are dynamic or not predefined
-        // }
-    ]) as any[];
-
+    const [conditionTypesWithOperators, setConditionTypesWithOperators] =
+        useState([
+            {
+                name: "Coordinator",
+                operators: [
+                    { value: "equal", label: "Equal To" },
+                    { value: "notEqual", label: "Not Equal To" },
+                ],
+                values: [], // Assuming values are dynamic or not predefined
+            },
+            {
+                name: "Recruiter",
+                operators: [
+                    { value: "equal", label: "Equal To" },
+                    { value: "notEqual", label: "Not Equal To" },
+                ],
+                values: [], // Assuming values are dynamic or not predefined
+            },
+            {
+                name: "Job Name",
+                operators: [
+                    { value: "equal", label: "Equal To" },
+                    { value: "notEqual", label: "Not Equal To" },
+                ],
+                values: [], // Assuming values are dynamic or not predefined
+            },
+            // {
+            //     name: "Tags",
+            //     operators: [{ value: "equal", label: "Equal To" }],
+            //     values: [], // Assuming values are dynamic or not predefined
+            // }
+        ]) as any[];
 
     useEffect(() => {
-        console.log('go bucks in use effect fetch all suers')
+        console.log("go bucks in use effect fetch all suers");
         const fetchData = async () => {
-            const greenhouseUsers = await fetchAllGreenhouseUsers()
-            const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
-            const greenhouseCandidates = await fetchCandidates()
-            const coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
-            const recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
-            setCoordinators(coords)
-            setRecruiters(recrus)
-            setJobNames(greenhouseJobs)
-            const tmpConditionTypesWithOperators = conditionTypesWithOperators
+            const greenhouseUsers = await fetchAllGreenhouseUsers();
+            const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse();
+            const greenhouseCandidates = await fetchCandidates();
+            const coords = getAllCoordinators(
+                greenhouseUsers,
+                greenhouseJobs,
+                greenhouseCandidates,
+            );
+            const recrus = getAllRecruiters(
+                greenhouseUsers,
+                greenhouseJobs,
+                greenhouseCandidates,
+            );
+            setCoordinators(coords);
+            setRecruiters(recrus);
+            setJobNames(greenhouseJobs);
+            const tmpConditionTypesWithOperators = conditionTypesWithOperators;
 
-            const coordinatorsList = coords.map(coordinator => (coordinator.name));
-            const recruitersList = recrus.map(recruiter => (recruiter.name));
-            const jobNamesList = greenhouseJobs.map(jobName => (jobName.name));
-            tmpConditionTypesWithOperators[0].values = coordinatorsList
-            //recruiter 
-            tmpConditionTypesWithOperators[1].values = recruitersList
-            tmpConditionTypesWithOperators[2].values = jobNamesList
-            console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
-            console.log('jobNamesList ',jobNamesList)
-            setConditionTypesWithOperators(tmpConditionTypesWithOperators)
-            console.log('conditionTypesWithOperators ',conditionTypesWithOperators)
-            console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
-        }
-        fetchData()
+            const coordinatorsList = coords.map(
+                (coordinator) => coordinator.name,
+            );
+            const recruitersList = recrus.map((recruiter) => recruiter.name);
+            const jobNamesList = greenhouseJobs.map((jobName) => jobName.name);
+            tmpConditionTypesWithOperators[0].values = coordinatorsList;
+            //recruiter
+            tmpConditionTypesWithOperators[1].values = recruitersList;
+            tmpConditionTypesWithOperators[2].values = jobNamesList;
+            console.log(
+                "tmpConditionTypesWithOperators ",
+                tmpConditionTypesWithOperators,
+            );
+            console.log("jobNamesList ", jobNamesList);
+            setConditionTypesWithOperators(tmpConditionTypesWithOperators);
+            console.log(
+                "conditionTypesWithOperators ",
+                conditionTypesWithOperators,
+            );
+            console.log(
+                "tmpConditionTypesWithOperators ",
+                tmpConditionTypesWithOperators,
+            );
+        };
+        fetchData();
     }, []);
 
-    function getAllCoordinators(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
+    function getAllCoordinators(
+        users: GreenhouseUser[],
+        jobs: GreenhouseJob[],
+        candidates: GreenhouseCandidate[],
+    ) {
         // Get all coordinators from jobs
         const coordinatorSet = new Set<string>();
-        jobs.forEach(job => {
+        jobs.forEach((job) => {
             if (job.coordinator_ids) {
-                job.coordinator_ids.forEach(id => coordinatorSet.add(id));
+                job.coordinator_ids.forEach((id) => coordinatorSet.add(id));
             }
         });
-    
+
         // Get all coordinators from candidates
-        candidates.forEach(candidate => {
+        candidates.forEach((candidate) => {
             if (candidate.coordinator) {
                 coordinatorSet.add(candidate.coordinator.id);
             }
         });
-    
+
         // Create list of coordinators
-        const coordinators = users.filter(user => coordinatorSet.has(user.id));
-    
+        const coordinators = users.filter((user) =>
+            coordinatorSet.has(user.id),
+        );
+
         return coordinators;
     }
-    function getAllRecruiters(users: GreenhouseUser[], jobs: GreenhouseJob[], candidates: GreenhouseCandidate[]) {
+    function getAllRecruiters(
+        users: GreenhouseUser[],
+        jobs: GreenhouseJob[],
+        candidates: GreenhouseCandidate[],
+    ) {
         // Get all coordinators from jobs
         const recruiterSet = new Set<string>();
-        jobs.forEach(job => {
+        jobs.forEach((job) => {
             if (job.recruiter_ids) {
-                job.recruiter_ids.forEach(id => recruiterSet.add(id));
+                job.recruiter_ids.forEach((id) => recruiterSet.add(id));
             }
         });
-    
+
         // Get all coordinators from candidates
-        candidates.forEach(candidate => {
+        candidates.forEach((candidate) => {
             if (candidate.recruiter) {
                 recruiterSet.add(candidate.recruiter.id);
             }
         });
-    
+
         // Create list of coordinators
-        const recruiters = users.filter(user => recruiterSet.has(user.id));
-    
+        const recruiters = users.filter((user) => recruiterSet.has(user.id));
+
         return recruiters;
     }
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
     ]);
-    const [timeBasedConditions, setTimeBasedConditions] = useState<TimeBasedCondition[]>([
+    const [timeBasedConditions, setTimeBasedConditions] = useState<
+        TimeBasedCondition[]
+    >([
         {
             field: { value: "", label: "" },
             condition: "",
@@ -243,7 +279,9 @@ function CreateHiringroomSheet() {
             conditionType: "main",
         },
     ]);
-    const [stuckStageConditions, setStuckStageConditions] = useState<Condition[]>([
+    const [stuckStageConditions, setStuckStageConditions] = useState<
+        Condition[]
+    >([
         {
             field: {
                 value: "when stuck-in-stage in",
@@ -317,11 +355,13 @@ function CreateHiringroomSheet() {
             setIsInitialSetupDone(true);
         }
     }, [selectedAlertType, isInitialSetupDone]);
-    const handleFormatChange = (slackFormatString: string) =>{
-        setFormat(slackFormatString)
-        form.setValue("slackChannelFormat", [...stuckStageConditions, ...newConditions]);
-
-    }
+    const handleFormatChange = (slackFormatString: string) => {
+        setFormat(slackFormatString);
+        form.setValue("slackChannelFormat", [
+            ...stuckStageConditions,
+            ...newConditions,
+        ]);
+    };
     const handleConditionChange = (
         index: number,
         key: keyof Condition,
@@ -333,9 +373,15 @@ function CreateHiringroomSheet() {
         condition[key] = value;
         setConditions(newConditions);
         if (selectedAlertType === "timebased") {
-            form.setValue("conditions", [...timeBasedConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...timeBasedConditions,
+                ...newConditions,
+            ]);
         } else {
-            form.setValue("conditions", [...stuckStageConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...stuckStageConditions,
+                ...newConditions,
+            ]);
         }
     };
 
@@ -394,9 +440,15 @@ function CreateHiringroomSheet() {
         newConditions.splice(index, 1);
         setConditions(newConditions);
         if (selectedAlertType === "timebased") {
-            form.setValue("conditions", [...timeBasedConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...timeBasedConditions,
+                ...newConditions,
+            ]);
         } else {
-            form.setValue("conditions", [...stuckStageConditions, ...newConditions]);
+            form.setValue("conditions", [
+                ...stuckStageConditions,
+                ...newConditions,
+            ]);
         }
     };
 
@@ -510,8 +562,8 @@ function CreateHiringroomSheet() {
     };
 
     const handleCustomMessageBodyChange = (customMessageBody: string) => {
-      updateRecipient("customMessageBody", customMessageBody);
-  };
+        updateRecipient("customMessageBody", customMessageBody);
+    };
 
     const updateRecipient = (
         key: keyof typeof recipientConfig,
@@ -552,12 +604,21 @@ function CreateHiringroomSheet() {
     });
 
     useEffect(() => {
-        if (selectedAlertType === "timebased" || selectedAlertType === "stuck-in-stage") {
+        if (
+            selectedAlertType === "timebased" ||
+            selectedAlertType === "stuck-in-stage"
+        ) {
             form.setValue("conditions", timeBasedConditions);
         } else {
             form.setValue("conditions", stuckStageConditions);
         }
-    }, [timeBasedConditions, stuckStageConditions, conditions, form, selectedAlertType]);
+    }, [
+        timeBasedConditions,
+        stuckStageConditions,
+        conditions,
+        form,
+        selectedAlertType,
+    ]);
 
     useEffect(() => {
         form.setValue("recipient", recipientConfig);
@@ -570,13 +631,12 @@ function CreateHiringroomSheet() {
     } = useMutation({
         mutationFn: createHiringroomMutation,
         onSuccess: async (hiringroomValue) => {
-            console.log('hiringroomvalue - ',hiringroomValue)
+            console.log("hiringroomvalue - ", hiringroomValue);
             // handleIndividualHiringroom(hiringroomValue) // to build
-            
+
             // call endpoint that calls handle indiviual hiring room backend
 
             try {
-
                 const response = await fetch("/api/hiringroom", {
                     // const response = await fetch("https://slack.com/api/conversations.create", {
                     method: "POST",
@@ -586,17 +646,17 @@ function CreateHiringroomSheet() {
                     },
                     body: JSON.stringify(hiringroomValue),
                 });
-        
+
                 const data = await response.json();
                 if (!data.ok) {
                     throw new Error(`Error creating channel: ${data.error}`);
                 }
-        
-                console.log('Channel created successfully:');
+
+                console.log("Channel created successfully:");
                 // console.log('Channel created successfully:', data);
                 return data.channel.id; // Return the channel ID for further use
             } catch (error) {
-                console.error('Error creating Slack channel route:', error);
+                console.error("Error creating Slack channel route:", error);
             }
 
             // router.refresh();
@@ -606,7 +666,7 @@ function CreateHiringroomSheet() {
         onError: (error) => {
             toast.error(
                 (error as { message?: string })?.message ??
-                "Failed to submit Hiringroom",
+                    "Failed to submit Hiringroom",
             );
         },
     });
@@ -619,21 +679,26 @@ function CreateHiringroomSheet() {
             console.log("Form Data before submission:", formData);
 
             // Combine timeBasedConditions or stuckStageConditions and additional conditions
-            const allConditions = selectedAlertType === "timebased"
-                ? timeBasedConditions.map((condition) => ({
-                    ...condition,
-                    field: {
-                        value: condition.field.value,
-                        label: condition.field.label,
-                    },
-                })).concat(conditions)
-                : stuckStageConditions.map((condition) => ({
-                    ...condition,
-                    field: {
-                        value: condition.field.value,
-                        label: condition.field.label,
-                    },
-                })).concat(conditions);
+            const allConditions =
+                selectedAlertType === "timebased"
+                    ? timeBasedConditions
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions)
+                    : stuckStageConditions
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions);
 
             // Transform and include combined conditions
             const transformedData = {
@@ -651,7 +716,7 @@ function CreateHiringroomSheet() {
         } catch (error) {
             toast.error(
                 (error as { message?: string })?.message ??
-                "Failed to submit Hiringroom",
+                    "Failed to submit Hiringroom",
             );
         }
     };
@@ -705,12 +770,14 @@ function CreateHiringroomSheet() {
     ];
     const handleTypeChange = (value: string) => {
         if (value.toLowerCase().includes("candidate")) {
-          setFormat("intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}");
+            setFormat(
+                "intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}",
+            );
         } else if (value.toLowerCase().includes("job")) {
-          setFormat("job-{{JOB_NAME}}-{{JOB_POST_DATE}}");
+            setFormat("job-{{JOB_NAME}}-{{JOB_POST_DATE}}");
         }
     };
-    
+
     const isSameDayOrTimeCondition = (condition: string) =>
         condition === "same";
 
@@ -718,7 +785,7 @@ function CreateHiringroomSheet() {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
-                Create Hiringroom
+                    Create Hiringroom
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
@@ -732,14 +799,14 @@ function CreateHiringroomSheet() {
                     />
                     <DialogTitle className=" flex flex-col items-center dark:text-white">
                         <h2 className="text-xl font-semibold">
-                        Create Hiringroom
+                            Create Hiringroom
                         </h2>
                         <DialogDescription className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                             Get started by filling in the basics.
                         </DialogDescription>
                     </DialogTitle>
                     <DialogDescription className="mt-1 text-sm text-gray-500 dark:text-gray-400"></DialogDescription>
-                    </DialogHeader>
+                </DialogHeader>
                 <hr className="mb-6 mt-2 border-gray-300 dark:border-gray-700" />
 
                 <div className="flex h-full flex-col gap-6 overflow-y-auto px-6">
@@ -782,16 +849,14 @@ function CreateHiringroomSheet() {
                                     </Label>
                                     <Select
                                         value={selectedValue}
-                                        onValueChange={(value) =>{
+                                        onValueChange={(value) => {
                                             handleSelectChange(
                                                 value,
                                                 "",
                                                 "objectField",
-                                            )
-                                            handleTypeChange(value)
-                                        }
-                                            
-                                        }
+                                            );
+                                            handleTypeChange(value);
+                                        }}
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
                                             <SelectValue placeholder="Select Greenhouse Object" />
@@ -834,7 +899,8 @@ function CreateHiringroomSheet() {
                                     Alert Type
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Select the type of alert for this hiringroom.
+                                    Select the type of alert for this
+                                    hiringroom.
                                 </p>
                             </div>
                             <div className="flex-1">
@@ -876,8 +942,8 @@ function CreateHiringroomSheet() {
                                                         : option.value ===
                                                                 "stuck-in-stage" &&
                                                             !isCandidateSelected
-                                                        ? "cursor-not-allowed bg-gray-300 text-opacity-50"
-                                                        : "hover:bg-indigo-100 hover:text-indigo-800"
+                                                          ? "cursor-not-allowed bg-gray-300 text-opacity-50"
+                                                          : "hover:bg-indigo-100 hover:text-indigo-800"
                                                 }`}
                                                 style={{ height: "40px" }}
                                             >
@@ -1015,41 +1081,40 @@ function CreateHiringroomSheet() {
                                                         }
                                                     />
                                                 </div>
-
                                             </>
                                         )}
-                                         <div className="flex-1">
-                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Time Unit
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            timeBasedConditions[0]
-                                                                ?.unit ?? "Days"
-                                                        }
-                                                        onValueChange={(value) =>
-                                                            handleConditionChangeTimeBased(
-                                                                0,
-                                                                "unit",
-                                                                value,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                            <SelectValue placeholder="Select Unit" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectGroup>
-                                                                <SelectItem value="Days">
-                                                                    Days
-                                                                </SelectItem>
-                                                                <SelectItem value="Hours">
-                                                                    Hours
-                                                                </SelectItem>
-                                                            </SelectGroup>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                        <div className="flex-1">
+                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Time Unit
+                                            </Label>
+                                            <Select
+                                                value={
+                                                    timeBasedConditions[0]
+                                                        ?.unit ?? "Days"
+                                                }
+                                                onValueChange={(value) =>
+                                                    handleConditionChangeTimeBased(
+                                                        0,
+                                                        "unit",
+                                                        value,
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
+                                                    <SelectValue placeholder="Select Unit" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        <SelectItem value="Days">
+                                                            Days
+                                                        </SelectItem>
+                                                        <SelectItem value="Hours">
+                                                            Hours
+                                                        </SelectItem>
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 )}
                                 {selectedAlertType === "stuck-in-stage" && (
@@ -1071,7 +1136,7 @@ function CreateHiringroomSheet() {
                                             For
                                         </h1>
                                         <div className="flex-1">
-                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Days
                                             </Label>
                                             <Input
@@ -1126,18 +1191,23 @@ function CreateHiringroomSheet() {
                         </div>
 
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
-                         {/* Recipient */}
-                         <div className="flex items-start gap-8">
+                        {/* Recipient */}
+                        <div className="flex items-start gap-8">
                             <div className="w-1/3">
                                 <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                                     Slack Channel Format
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Specify the format of the slack channel name of the hiring room.
+                                    Specify the format of the slack channel name
+                                    of the hiring room.
                                 </p>
                             </div>
                             <div className="flex-1">
-                            <SlackChannelNameFormat format={format} setFormat={setFormat} selectedType={selectedValue}/>
+                                <SlackChannelNameFormat
+                                    format={format}
+                                    setFormat={setFormat}
+                                    selectedType={selectedValue}
+                                />
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
@@ -1153,14 +1223,20 @@ function CreateHiringroomSheet() {
                                 </p>
                             </div>
                             <div className="flex-1">
-                            <SlackHiringroom
-                              onOpeningTextChange={handleOpeningTextChange}
-                              onFieldsSelect={handleFieldsSelect}
-                              onButtonsChange={handleButtonsChange}
-                              onDeliveryOptionChange={handleDeliveryOptionChange}
-                              onRecipientsChange={handleRecipientsChange}
-                              onCustomMessageBodyChange={handleCustomMessageBodyChange} // Add this line
-                          />
+                                <SlackHiringroom
+                                    onOpeningTextChange={
+                                        handleOpeningTextChange
+                                    }
+                                    onFieldsSelect={handleFieldsSelect}
+                                    onButtonsChange={handleButtonsChange}
+                                    onDeliveryOptionChange={
+                                        handleDeliveryOptionChange
+                                    }
+                                    onRecipientsChange={handleRecipientsChange}
+                                    onCustomMessageBodyChange={
+                                        handleCustomMessageBodyChange
+                                    } // Add this line
+                                />
                             </div>
                         </div>
 
