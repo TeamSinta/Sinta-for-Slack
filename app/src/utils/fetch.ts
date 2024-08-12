@@ -37,9 +37,9 @@ export async function customFetch(
             const data = error.response?.data;
 
             console.error("Error details:");
-            console.error("Response status:", status);
-            console.error("Response status text:", statusText);
-            console.error("Response data:", JSON.stringify(data, null, 2));
+            // console.error("Response status:", status);
+            // console.error("Response status text:", statusText);
+            // console.error("Response data:", JSON.stringify(data, null, 2));
 
             throw new Error(
                 `HTTP error! Status: ${status}, Status Text: ${statusText}, Body: ${JSON.stringify(data)}`,

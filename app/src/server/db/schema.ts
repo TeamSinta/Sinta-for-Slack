@@ -131,7 +131,7 @@ export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
     organization: one(organizations, {
         fields: [hiringrooms.organizationId],
         references: [organizations.id],
-    }),    
+    }),
     // slackChannelsCreated: many(slackChannelsCreated),
     // slackChannelsCreated: many(slackChannelsCreated, {
     //     fields: [slackChannelsCreated.hiringroomId],

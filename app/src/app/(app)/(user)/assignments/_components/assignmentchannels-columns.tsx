@@ -1,18 +1,9 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
-import { format } from "date-fns";
-import slackLogo from "../../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
-import Image, { type StaticImageData } from "next/image";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 
-const logoMap: Record<string, StaticImageData> = {
-    slack: slackLogo,
-    greenhouse: greenhouseLogo,
-};
 
 type Recipient = {
     source: string;

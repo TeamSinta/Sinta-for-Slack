@@ -1,8 +1,6 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from "@/components/ui/select";
 
 const candidateTokens = [
   { label: "CANDIDATE_NAME", example: '"John Doe" for John Doe' },

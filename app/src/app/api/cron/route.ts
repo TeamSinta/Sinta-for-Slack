@@ -6,13 +6,10 @@
 
 //@ts-nocheck
 
-import { getAccessToken
- } from "@/server/actions/slack/query";
+
 import { format, parseISO } from 'date-fns';
-import { db } from "@/server/db";
-import {
-slackChannelsCreated
-} from "@/server/db/schema";
+
+
 import { getEmailsfromSlack } from "@/server/slack/core";
 import { fetchGreenhouseUsers, fetchJobsFromGreenhouse, fetchCandidates } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
@@ -190,7 +187,7 @@ export async function handleIndividualHiringroom(hiringroom){
     // return
     const allJobs = await fetchJobsFromGreenhouse()
     console.log('indivi room1')
-    let allCandidates = await fetchCandidates()
+    const allCandidates = await fetchCandidates()
     console.log('indivi room2')
     const greenhouseUsers = await fetchGreenhouseUsers();
     console.log('hiring room3 - past green house')
@@ -457,9 +454,9 @@ export async function GET() {
 
         // Ensure numWorkflows is defined or set a default value if necessary
         let numWorkflows = 0;
-        const numHiringrooms = 0;
+        let numHiringrooms = 0;
         numWorkflows = await handleWorkflows();
-        const numHiringrooms = await handleHiringrooms();
+        numHiringrooms = await handleHiringrooms();
         return NextResponse.json(
             {
                 message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`,

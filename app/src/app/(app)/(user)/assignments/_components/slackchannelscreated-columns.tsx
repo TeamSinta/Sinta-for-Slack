@@ -1,13 +1,11 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
-import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
-import Image, { type StaticImageData } from "next/image";
-import { ReactNode } from "react";
+import { type StaticImageData } from "next/image";
+import { type ReactNode } from "react";
 
 const logoMap: Record<string, StaticImageData> = {
     slack: slackLogo,
@@ -136,7 +134,7 @@ export const columns: ColumnDef<SlackChannelsCreatedData>[] = [
         accessorKey: "invitedUsers",
         header: "Invited Users",
         cell: ({ row }) => {
-            let invUsers = row.original.invitedUsers as any []
+            const invUsers = row.original.invitedUsers as any []
             return (
                 invUsers.map((invUser)=>(
                     <div>{invUser}</div>

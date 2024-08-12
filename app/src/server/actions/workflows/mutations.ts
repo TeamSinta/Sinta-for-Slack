@@ -7,7 +7,7 @@ import {
     workflowInsertSchema,
     workflowSelectSchema,
 } from "@/server/db/schema";
-import { protectedProcedure, adminProcedure } from "@/server/procedures";
+import { protectedProcedure } from "@/server/procedures";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { getOrganizations } from "../organization/queries";

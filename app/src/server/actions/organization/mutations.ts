@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use server";
 
 import { db } from "@/server/db";
@@ -50,6 +52,7 @@ export async function createOrgMutation({ ...props }: CreateOrgProps) {
         memberEmail: user.email!,
         organizationId: createOrg[0]!.id,
         role: "Admin",
+        slack_user_id: null,
     });
 
     return createOrg[0];

@@ -41,10 +41,8 @@ import ConditionComponent from "./conditions";
 import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
 import StagesDropdown from "./stages-dropdown";
 import SlackChannelNameFormat from "./SlackChannelNameFormat";
-import JobsDropdown from "./job-select";
 import Image from "next/image";
 import { toast } from "sonner";
-import { handleIndividualHiringroom } from "@/app/api/cron/route"
 
 const messageButtonSchema = z.object({
     name: z.string(),
@@ -168,20 +166,20 @@ function CreateHiringroomSheet() {
             const greenhouseUsers = await fetchAllGreenhouseUsers()
             const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
             const greenhouseCandidates = await fetchCandidates()
-            let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
-            let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            const coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            const recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             setCoordinators(coords)
             setRecruiters(recrus)
             setJobNames(greenhouseJobs)
-            let tmpConditionTypesWithOperators = conditionTypesWithOperators
+            const tmpConditionTypesWithOperators = conditionTypesWithOperators
 
             const coordinatorsList = coords.map(coordinator => (coordinator.name));
             const recruitersList = recrus.map(recruiter => (recruiter.name));
             const jobNamesList = greenhouseJobs.map(jobName => (jobName.name));
-            tmpConditionTypesWithOperators[0]['values'] = coordinatorsList
+            tmpConditionTypesWithOperators[0].values = coordinatorsList
             //recruiter 
-            tmpConditionTypesWithOperators[1]['values'] = recruitersList
-            tmpConditionTypesWithOperators[2]['values'] = jobNamesList
+            tmpConditionTypesWithOperators[1].values = recruitersList
+            tmpConditionTypesWithOperators[2].values = jobNamesList
             console.log('tmpConditionTypesWithOperators ',tmpConditionTypesWithOperators)
             console.log('jobNamesList ',jobNamesList)
             setConditionTypesWithOperators(tmpConditionTypesWithOperators)

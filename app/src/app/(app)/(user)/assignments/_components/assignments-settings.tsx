@@ -3,17 +3,10 @@
 
 "use client";
 
-import { DataTable } from "@/app/(app)/_components/data-table";
-import { type ColumnDef } from "@tanstack/react-table";
-import React, { useMemo } from "react";
-import { getColumns, type AssignmentData } from "./columns"; // Adjust to include correct imports and types for hiringrooms
-import { assignmentStatusEnum } from "@/server/db/schema";
-import { useDataTable } from "@/hooks/use-data-table";
-import type {
-    DataTableFilterableColumn,
-    DataTableSearchableColumn,
-} from "@/types/data-table";
-import { type getPaginatedAssignmentsQuery } from "@/server/actions/hiringrooms/queries";
+import React from "react";
+// Adjust to include correct imports and types for hiringrooms
+
+
 
 // const filterableColumns: DataTableFilterableColumn<AssignmentData>[] = [
 //     {

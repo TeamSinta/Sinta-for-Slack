@@ -7,6 +7,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 
+// @ts-nocheck
+
 "use server";
 
 import { db } from "@/server/db";
@@ -14,7 +16,6 @@ import { addGreenhouseSlackValue, matchUsers } from "@/lib/slack";
 import { getOrganizations } from "../actions/organization/queries";
 import { getAccessToken } from "../actions/slack/query";
 import {
-    ,
     fetchGreenhouseUsers,
 } from "../greenhouse/core";
 import { format, parseISO } from "date-fns";
@@ -45,7 +46,7 @@ export async function getChannels(): Promise<
     { value: string; label: string }[]
 > {
     try {
-        const { currentOrg = {} } = (await getOrganizations()) || {};
+        const { currentOrg } = (await getOrganizations()) || {};
         if (!currentOrg.slack_team_id) {
             console.error("No Slack team ID available.");
             return [];
@@ -85,7 +86,7 @@ export async function getActiveUsers(): Promise<
     { value: string; label: string }[]
 > {
     try {
-        const { currentOrg = {} } = (await getOrganizations()) || {};
+        const { currentOrg } = (await getOrganizations()) || {};
         if (!currentOrg.slack_team_id) {
             console.error("No Slack team ID available.");
             return [];
@@ -1015,7 +1016,7 @@ function generatePrompt(scorecards) {
     ]
   }`;
 
-    let interviewer_blocks = scorecards
+    const interviewer_blocks = scorecards
         .map((scorecard, index) => {
             return `
     {

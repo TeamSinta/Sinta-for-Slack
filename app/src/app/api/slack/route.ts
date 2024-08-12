@@ -9,7 +9,7 @@
 // @ts-nocheck
 // src/pages/api/slack/oauth.ts
 import { db } from "@/server/db";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 
 import type { NextRequest } from "next/server"; // Only used as a type
@@ -24,7 +24,6 @@ import {
     fetchGreenhouseUsers,
     fetchRejectReasons,
     fetchStagesForJob,
-    getAllCandidates,
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
 } from "@/server/greenhouse/core";
@@ -349,7 +348,7 @@ async function handleDebriefSubmission(payload) {
     const nameInput = values.name_block.name_input.value;
     const recipients = values.recipients_block.recipients_input.selected_users;
 
-    if (!candidateBlock || !candidateBlock.selected_option) {
+    if (!candidateBlock?.selected_option) {
         await updateModalWithError(
             view.id,
             view.hash,
@@ -956,94 +955,80 @@ async function handleDebriefCommand(trigger_id, slackTeamId) {
     }
 }
 
-export async function POST(request) {
-    const contentType = request.headers.get("content-type");
-    if (contentType?.includes("application/json")) {
-        console.log('GOOO BUCKS122')
-        const data = await request.json();
-        console.log('data - ',data)
-        console.log('data hasArchive- ',typeof data.hasArchive)
-        console.log('data hasDelete- ',data.hasDelete)
-        console.log('data hasDelete- ',typeof data.hasDelete)
+export async function POST(request: NextRequest): Promise<void | Response> {
+  try {
+      const contentType = request.headers.get("content-type");
 
-        if(data.hasArchive && !data.hasDelete){
-            console.log('delete')
-            const channelId = data.channelId
-            const slackTeamId = data.slackTeamId
-            try{
-                try{
-                    const deleteResponse = await archiveConversationInSlack(channelId, slackTeamId)
-                }
-                catch(e){
-                    console.log('e delete convo-',e)
-                }
-                try{
-                    console.log('prearchive')
-                    await archiveConversationInDB(channelId)
-                }
-                catch(e){
-                    console.log('e archive convo-',e)
-                }
-            }
-            catch(e){
-                console.log('e post slack-',e)
-            }
-        }
-        else if(data.hasDelete){
-            try{
+      if (contentType?.includes("application/json")) {
+          const data = await request.json();
 
-                const channelId = data.channelId
-                const slackTeamId = data.slackTeamId
-                console.log('pre delete convo- channelId -',channelId)
-                console.log('pre delete convo- slackTeamId -',slackTeamId)
-                const deleteResponse = await deleteConversationInSlack(channelId, slackTeamId)
-            }
-            catch(e){
-                console.log('eeee-',e)
-            }
-        }
-        else{
-            console.log('deers in else')
-            return handleJsonPost(data);
+          if (data.hasArchive && !data.hasDelete) {
+              const channelId = data.channelId;
+              const slackTeamId = data.slackTeamId;
 
-        }
-    } else if (contentType?.includes("application/x-www-form-urlencoded")) {
-        console.log('GOOO BUCKS13')
-        const text = await request.text();
-        const params = new URLSearchParams(text);
+              try {
+                  await archiveConversationInSlack(channelId, slackTeamId);
+                  await archiveConversationInDB(channelId);
+              } catch (e) {
+                  console.error("Error during archiving:", e);
+                  return new NextResponse(
+                      JSON.stringify({ error: "Error during archiving" }),
+                      { status: 500 }
+                  );
+              }
 
-        const command = params.get("command");
-        const trigger_id = params.get("trigger_id");
-        const team_id = params.get("team_id");
-        if (command === "/debrief" && trigger_id) {
-            return handleDebriefCommand(trigger_id, team_id);
-        }
+              return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
+          } else if (data.hasDelete) {
+              try {
+                  const channelId = data.channelId;
+                  const slackTeamId = data.slackTeamId;
+                  await deleteConversationInSlack(channelId, slackTeamId);
+              } catch (e) {
+                  console.error("Error during deletion:", e);
+                  return new NextResponse(
+                      JSON.stringify({ error: "Error during deletion" }),
+                      { status: 500 }
+                  );
+              }
 
-        const payloadRaw = params.get("payload");
+              return new NextResponse(JSON.stringify({ success: true }), { status: 200 });
+          } else {
+              return handleJsonPost(data);
+          }
+      } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+          const text = await request.text();
+          const params = new URLSearchParams(text);
 
-        if (payloadRaw) {
-            let hasDelete = payloadRaw.hasDelete
-            if(hasDelete){
-                console.log('GOOO BUCKS')
-            }
-            else{
-                return handleSlackInteraction(JSON.parse(payloadRaw));
+          const command = params.get("command");
+          const trigger_id = params.get("trigger_id");
+          const team_id = params.get("team_id");
 
-            }
-        } else {
-            return new NextResponse(
-                JSON.stringify({
-                    error: "Unrecognized form-urlencoded request",
-                }),
-                {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
-    }
-    }
-    catch(e){console.log('eeee overal -',e)}
+          if (command === "/debrief" && trigger_id) {
+              return handleDebriefCommand(trigger_id, team_id);
+          }
+
+          const payloadRaw = params.get("payload");
+
+          if (payloadRaw) {
+              return handleSlackInteraction(JSON.parse(payloadRaw));
+          } else {
+              return new NextResponse(
+                  JSON.stringify({ error: "Unrecognized form-urlencoded request" }),
+                  { status: 400 }
+              );
+          }
+      }
+  } catch (e) {
+      console.error("Error handling POST request:", e);
+      return new NextResponse(
+          JSON.stringify({ error: "Internal server error" }),
+          { status: 500 }
+      );
+  }
+}
+
+
+
 
     // import { useState } from 'react';
     async function archiveConversationInDB(channelId) {
@@ -1110,12 +1095,3 @@ export async function POST(request) {
 
         return data;
     }
-
-    return new NextResponse(
-        JSON.stringify({ error: "Unsupported Content Type" }),
-        {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        },
-    );
-}

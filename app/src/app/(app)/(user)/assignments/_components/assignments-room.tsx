@@ -2,28 +2,19 @@
 // @ts-nocheck
 
 "use client";
-import { Icons } from "@/components/ui/icons";
-import { toast } from "sonner";
 import { getEmailsfromSlack,getChannels } from "@/server/slack/core";
-import { AssignmentsTable } from "./assignments-table";
 
-import { SlackChannelsCreatedTable } from "../_components/slackchannelscreated-table";
 import { AssignmentsChannelTable } from "../_components/assignmentchannels-table";
-import { AssignmentsSettings } from "../_components/assignments-settings";
 import {
-    filterCandidatesDataForSlack,
     matchUsers,
 } from "@/lib/slack";
 
-import { DataTable } from "@/app/(app)/_components/data-table";
-import { type ColumnDef } from "@tanstack/react-table";
-import React, { useEffect, useMemo, useState } from "react";
-import { getColumns, type AssignmentData } from "./columns"; // Adjust to include correct imports and types for hiringrooms
-import { assignmentStatusEnum } from "@/server/db/schema";
+import React, { useEffect, useState } from "react";
+// Adjust to include correct imports and types for hiringrooms
 import { updateGreenhouseCandidate } from "@/server/greenhouse/core";
 
-import { type getPaginatedAssignmentsQuery, getSlackChannelsCreated,getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
-import { fetchJobsFromGreenhouse,fetchAllGreenhouseJobsFromGreenhouse,fetchGreenhouseUsers, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
+import { getSlackChannelsCreated } from "@/server/actions/hiringrooms/queries";
+import {fetchAllGreenhouseJobsFromGreenhouse,fetchGreenhouseUsers, fetchAllGreenhouseUsers, fetchCandidates} from "@/server/greenhouse/core";
 import { createSlackChannel, inviteUsersToChannel, saveSlackChannelCreatedToDB} from "@/server/actions/assignments/mutations"
 
 export function AssignmentsRoom({assignmentsPromise}: any) {
@@ -59,7 +50,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
 
     useEffect(()=>{
         const getAllSlackChannels = async()=>{
-            let slackResp = await getChannels()
+            const slackResp = await getChannels()
             console.log('slack resp - ',slackResp)
             setAllSlackChannels(slackResp)
         }
@@ -124,8 +115,8 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse()
             const greenhouseCandidates = await fetchCandidates()
             setCandidates(greenhouseCandidates)
-            let coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
-            let recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            const coords = getAllCoordinators(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
+            const recrus = getAllRecruiters(greenhouseUsers, greenhouseJobs, greenhouseCandidates)
             const initialRecruiterCounts = getRecruiterCounts(greenhouseCandidates);
             const initialCoordinatorCounts = getCoordinatorCounts(greenhouseCandidates);
             
@@ -140,7 +131,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             // const greenhouseUsers = await fetchAllGreenhouseUsers()
             // console.log('slackUsers users - ',slackUsers)
             // console.log('greenhouse users - ',greenhouseUsers)
-            let tmpUserMapping = await matchUsers(
+            const tmpUserMapping = await matchUsers(
                 greenhouseUsersDict,
                 slackUsers,
             ) as any;
@@ -195,7 +186,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
                 sortedCandidates[i].curJobHiringTeamCombinedUsers = uniqueUsers
             })
             const slackChannelsCreated = await getSlackChannelsCreated()
-            let slackChannelsDict = slackChannelsCreated.reduce((acc, channel) => {
+            const slackChannelsDict = slackChannelsCreated.reduce((acc, channel) => {
                 if(channel.isArchived){
                     return acc
                 }
@@ -258,8 +249,8 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
     }
     useEffect(()=>{
         // jobMap[jobId] = 
-        let candMap = {}
-        let jobMap = {}
+        const candMap = {}
+        const jobMap = {}
         candidates.forEach((cand)=>{
             candMap[cand.id]={
                 hiring
@@ -313,7 +304,7 @@ export function AssignmentsRoom({assignmentsPromise}: any) {
             const slackChannelDB = await saveSlackChannelCreatedToDB(slackChannelId, slackUserIds, channelName, hiringroomId, hiringroomSlackChannelFormat, greenhouseCandidateId, greenhouseJobId)
             console.log('post slack channel db -',slackChannelDB)
             // update ui
-            let tmpSlackChannelsCreatedDict = slackChannelsCreatedDict
+            const tmpSlackChannelsCreatedDict = slackChannelsCreatedDict
             tmpSlackChannelsCreatedDict[candidate.id] = slackChannelDB
             setCandidateDict(tmpSlackChannelsCreatedDict)
         }

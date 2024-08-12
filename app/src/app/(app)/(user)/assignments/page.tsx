@@ -1,38 +1,22 @@
 import { AppPageShell } from "@/app/(app)/_components/page-shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import homepageicon from "../../../../../public/fistbump.png";
-import slackLogo from "../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../public/greenhouseLogo.png";
-import { CheckCircleIcon, ArrowUpRight, Zap, Cable } from "lucide-react";
-import { StatusIndicator } from "./_components/statusIndicator";
-import Image from "next/image";
-import Link from "next/link";
 import {
     checkGreenhouseTeamIdFilled,
     checkSlackTeamIdFilled,
     Checktoseeworkflows,
-    getFirstFiveWorkflows,
 } from "@/server/actions/organization/queries";
-import {fetchCandidates} from '@/server/greenhouse/core'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
-import { Button } from "@/components/ui/button";
-import { AssignmentsTable } from "./_components/assignments-table";
-import { SlackChannelsCreatedTable } from "./_components/slackchannelscreated-table";
-import { AssignmentsChannelTable } from "./_components/assignmentchannels-table";
 
 import { AssignmentsRoom } from "./_components/assignments-room";
 
-import {getSlackChannelsCreated,getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
+import {getSlackChannelsCreatedPromise } from "@/server/actions/hiringrooms/queries";
 import { type getPaginatedAssignmentsQuery} from "@/server/actions/assignments/queries";
-import { getColumns, type AssignmentData } from "./_components/columns"; // Adjust to include correct imports and types for hiringrooms
+import { type AssignmentData } from "./_components/columns"; // Adjust to include correct imports and types for hiringrooms
 import { assignmentStatusEnum } from "@/server/db/schema";
-import { useDataTable } from "@/hooks/use-data-table";
 import type {
     DataTableFilterableColumn,
     DataTableSearchableColumn,
 } from "@/types/data-table";
-import { channel } from "diagnostics_channel";
 import { type SearchParams } from "@/types/data-table";
 import { z } from "zod";
 

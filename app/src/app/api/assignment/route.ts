@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { handleIndividualHiringroom } from "../cron/route";
-import { except } from "drizzle-orm/pg-core";
 import { setAccessToken } from "@/server/actions/slack/query";
 import { siteUrls } from "@/config/urls";
 

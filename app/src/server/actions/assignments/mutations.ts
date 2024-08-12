@@ -7,10 +7,6 @@ import { db } from "@/server/db";
 //     assignmentInsertSchema,
 //     assignmentSelectSchema,
 // } from "@/server/db/schema";
-import { protectedProcedure, adminProcedure } from "@/server/procedures";
-import { eq } from "drizzle-orm";
-import type { z } from "zod";
-import { getOrganizations } from "../organization/queries";
 import { getAccessToken } from "../slack/query";
 import { slackChannelsCreated } from "@/server/db/schema";
 // import { createSlackChannel } from "@/app/api/cron/route";

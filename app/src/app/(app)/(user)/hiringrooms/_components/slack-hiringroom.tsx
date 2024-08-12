@@ -4,13 +4,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
-import { FancyBox } from "@/components/ui/fancy.box";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import MessageButtons, {
+import {
     type ButtonAction,
     ButtonType,
 } from "./message-buttons";
