@@ -312,10 +312,9 @@ export const organizationsRelations = relations(
 );
 
 export const membersToOrganizationsRoleEnum = pgEnum("org-member-role", [
-    "Viewer",
-    "Developer",
-    "Billing",
-    "Admin",
+    "Interviewer",
+    "Recruiter",
+    "Hiring Manager",
 ]);
 
 export const membersToOrganizations = createTable(
@@ -330,8 +329,9 @@ export const membersToOrganizations = createTable(
             .notNull()
             .references(() => organizations.id, { onDelete: "cascade" }),
         role: membersToOrganizationsRoleEnum("role")
-            .default("Viewer")
+            .default("Interviewer")
             .notNull(),
+        slack_user_id: varchar("slack_user_id", { length: 255 }), // New column
         createdAt: timestamp("createdAt", { mode: "date" })
             .notNull()
             .defaultNow(),
@@ -360,6 +360,49 @@ export const membersToOrganizationsRelations = relations(
 export const membersToOrganizationsInsertSchema = createInsertSchema(
     membersToOrganizations,
 );
+
+export const userPreferences = createTable("user_preferences", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    userId: varchar("userId", { length: 255 })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+    role: membersToOrganizationsRoleEnum("role").notNull(),
+    upcomingInterviews: boolean("upcomingInterviews").default(false).notNull(),
+    pendingFeedback: boolean("pendingFeedback").default(false).notNull(),
+    videoConferenceLink: boolean("videoConferenceLink")
+        .default(false)
+        .notNull(),
+    resources: jsonb("resources")
+        .default(sql`'[]'`)
+        .notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow().notNull(),
+});
+
+export const userPreferencesInsertSchema = createInsertSchema(userPreferences, {
+    userId: z.string().uuid(),
+    organizationId: z.string().uuid(),
+    role: z.enum(["Interviewer", "Recruiter", "Hiring Manager"]),
+    upcomingInterviews: z.boolean().default(true),
+    pendingFeedback: z.boolean().default(true),
+    videoConferenceLink: z.boolean().default(true),
+    resources: z
+        .array(
+            z.object({
+                label: z.string().min(1),
+                link: z.string().url(),
+            }),
+        )
+        .default([]),
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
+});
 
 export const orgRequests = createTable(
     "orgRequest",

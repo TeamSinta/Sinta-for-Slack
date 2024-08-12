@@ -207,16 +207,14 @@ export async function fetchActiveCandidates() {
             const activeApplications = candidate.applications.filter(
                 (app) => app.status === "active",
             );
-            return {
-                id: candidate.id,
+            return activeApplications.map((app) => ({
+                id: app.id, // Using the application ID here
                 name: `${candidate.first_name} ${candidate.last_name}`,
-                stage: activeApplications[0]?.current_stage?.name || "N/A",
-                job: activeApplications
-                    .map((app) => app.jobs.map((job) => job.name))
-                    .flat()
-                    .join(", "),
-            };
-        });
+                stage: app.current_stage?.name || "N/A",
+                job: app.jobs.map((job) => job.name).join(", "),
+            }));
+        })
+        .flat();
 }
 
 export async function moveToNextStageInGreenhouse(
@@ -607,6 +605,37 @@ async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
     return response as ActivityFeed;
 }
 
+// Fetch all scheduled interviews from Greenhouse
+export async function fetchScheduledInterviews(): Promise<any[]> {
+    try {
+        const interviews = await customFetch(
+            "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        );
+        return interviews;
+    } catch (error) {
+        console.error(
+            "Error fetching scheduled interviews from Greenhouse: ",
+            error,
+        );
+        return [];
+    }
+}
+
+// Filter the scheduled interviews for the specific user
+export function filterInterviewsForUser(
+    interviews: any[],
+    userEmail: string,
+): any[] {
+    return interviews.filter(
+        (interview) =>
+            interview.interviewers.some(
+                (interviewer) => interviewer.email === userEmail,
+            ) &&
+            (interview.status === "awaiting_feedback" ||
+                interview.status === "scheduled"),
+    );
+}
+
 function calculateTimeInCurrentStage(
     currentStage: string,
     activities: Activity[],
@@ -652,8 +681,13 @@ export async function filterStuckinStageDataConditions(
 
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
-    const operator = condition.operator;
+    const operator = condition.condition;
 
+    console.log("stageName", stageName);
+    console.log("thresholdDays", thresholdDays);
+    console.log("operator", operator);
+    console.log("candidates", candidates);
+    console.log("conditions", conditions);
     for (const candidate of candidates) {
         const candidateId = candidate.id;
         const activityFeed = await fetchActivityFeed(candidateId);
@@ -666,7 +700,7 @@ export async function filterStuckinStageDataConditions(
                 currentStage,
                 activityFeed.activities,
             );
-
+            console.log(daysInCurrentStage, "days in current stage");
             let conditionMet = false;
 
             switch (operator) {

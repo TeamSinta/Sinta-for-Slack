@@ -1148,7 +1148,7 @@ function CreateHiringroomSheet() {
                         <div className="flex items-start gap-8">
                             <div className="w-1/3">
                                 <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                                    Recipient
+                                    Members
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
                                     Specify the recipient of the alert.

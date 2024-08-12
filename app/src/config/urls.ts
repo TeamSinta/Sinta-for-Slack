@@ -25,11 +25,10 @@ export const siteUrls = {
     dashboard: {
         home: "/dashboard",
     },
+    customize: {
+        home: "/customize",
     assignments: {
         home: "/assignments",
-    },
-    triggers: {
-        home: "/triggers",
     },
     workflows: {
         home: "/workflows",

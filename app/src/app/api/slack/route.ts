@@ -385,13 +385,16 @@ async function handleDebriefSubmission(payload) {
         const channelId = await createSlackChannel(channelName, slackTeamId);
 
         await inviteUsersToChannel(channelId, recipients, slackTeamId);
-
+        const responseToSlack = new NextResponse(
+            JSON.stringify({ response_action: "clear" }),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
         await postWelcomeMessage(channelId, candidateID, slackTeamId);
 
-        return new NextResponse(null, {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
+        return responseToSlack;
     } catch (error) {
         console.error(error);
         return new NextResponse(
@@ -407,7 +410,6 @@ async function handleDebriefSubmission(payload) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -994,7 +996,7 @@ export async function POST(request) {
                 const slackTeamId = data.slackTeamId
                 console.log('pre delete convo- channelId -',channelId)
                 console.log('pre delete convo- slackTeamId -',slackTeamId)
-                const deleteResponse = await deleteConversationInSlack(channelId, slackTeamId)                
+                const deleteResponse = await deleteConversationInSlack(channelId, slackTeamId)
             }
             catch(e){
                 console.log('eeee-',e)
@@ -1020,7 +1022,7 @@ export async function POST(request) {
         const payloadRaw = params.get("payload");
 
         if (payloadRaw) {
-            let hasDelete = payloadRaw.hasDelete 
+            let hasDelete = payloadRaw.hasDelete
             if(hasDelete){
                 console.log('GOOO BUCKS')
             }
@@ -1042,7 +1044,7 @@ export async function POST(request) {
     }
     }
     catch(e){console.log('eeee overal -',e)}
-    
+
     // import { useState } from 'react';
     async function archiveConversationInDB(channelId) {
         try{
@@ -1073,13 +1075,13 @@ export async function POST(request) {
                 channel: channelId
             })
         });
-    
-    
+
+
         const data = await response.json();
         if (!data.ok) {
             throw new Error(data.error);
         }
-    
+
         return data;
     }
     async function deleteConversationInSlack(channelId,slackTeamId) {
@@ -1099,16 +1101,16 @@ export async function POST(request) {
                 channel: channelId
             })
         });
-    
-    
+
+
         const data = await response.json();
         if (!data.ok) {
             throw new Error(data.error);
         }
-    
+
         return data;
     }
-    
+
     return new NextResponse(
         JSON.stringify({ error: "Unsupported Content Type" }),
         {
