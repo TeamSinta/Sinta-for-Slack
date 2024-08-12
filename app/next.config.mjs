@@ -17,9 +17,9 @@ const nextConfig = {
         domains: ["assets-global.website-files.com", "uploads-ssl.webflow.com"],
     },
 
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

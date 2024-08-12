@@ -121,17 +121,6 @@ export async function setAccessToken(
     return result ? "OK" : "Failed to update access token";
 }
 
-export async function checkForSlackTeamIDConflict(teamId: string | SQLWrapper) {
-    const existingOrg = await db.query.organizations.findFirst({
-        where: eq(organizations.slack_team_id, teamId),
-        columns: {
-            id: true,
-        },
-    });
-    const { currentOrg } = await getOrganizations();
-    return existingOrg && existingOrg.id !== currentOrg.id;
-}
-
 export async function getSlackTeamIDByWorkflowID(
     workflowId: string,
 ): Promise<string> {

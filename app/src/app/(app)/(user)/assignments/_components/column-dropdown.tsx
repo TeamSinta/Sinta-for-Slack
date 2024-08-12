@@ -11,26 +11,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontalIcon } from "lucide-react";
 import { toast } from "sonner";
-import { type HiringroomData } from "./columns";
+import { type AssignmentData } from "./columns";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
-    deleteHiringroomMutation,
-    updateHiringroomMutation,
-} from "@/server/actions/hiringrooms/mutations";
+    deleteAssignmentMutation,
+    updateAssignmentMutation,
+} from "@/server/actions/assignments/mutations";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 
-type HiringroomStatus = "Active" | "Inactive" | "Archived";
+type AssignmentStatus = "Active" | "Inactive" | "Archived";
 
-export function ColumnDropdown({ id }: HiringroomData) {
+export function ColumnDropdown({ id }: any) {
+    // export function ColumnDropdown({ id }: AssignmentData) {
     const router = useRouter();
 
-    // Mutation to update the hiringroom status
+    // Mutation to update the assignment status
     const {
         mutateAsync: changeStatusMutate,
         isPending: changeStatusIsPending,
-    } = useMutation<unknown, unknown, { id: string; status: HiringroomStatus }>({
-        mutationFn: ({ id, status }) => updateHiringroomMutation({ id, status }),
+    } = useMutation<unknown, unknown, { id: string; status: AssignmentStatus }>({
+        mutationFn: ({ id, status }) => updateAssignmentMutation({ id, status }),
         onSettled: () => {
             router.refresh();
         },
@@ -41,7 +42,7 @@ export function ColumnDropdown({ id }: HiringroomData) {
         startAwaitableStatusChangeTransition,
     ] = useAwaitableTransition();
 
-    const onStatusChange = (newStatus: HiringroomStatus) => {
+    const onStatusChange = (newStatus: AssignmentStatus) => {
         toast.promise(
             async () => {
                 await changeStatusMutate({ id: id, status: newStatus });
@@ -50,39 +51,39 @@ export function ColumnDropdown({ id }: HiringroomData) {
                 });
             },
             {
-                loading: "Updating hiringroom status...",
-                success: "Hiringroom status updated!",
+                loading: "Updating assignment status...",
+                success: "Assignment status updated!",
                 error: "Failed to update status, check your permissions.",
             },
         );
     };
 
-    // Mutation to delete a hiringroom
+    // Mutation to delete a assignment
     const {
-        mutateAsync: removeHiringroomMutate,
-        isPending: removeHiringroomIsPending,
+        mutateAsync: removeAssignmentMutate,
+        isPending: removeAssignmentIsPending,
     } = useMutation({
-        mutationFn: ({}: { hiringroomId: string }) =>
-            deleteHiringroomMutation({ id }),
+        mutationFn: ({}: { assignmentId: string }) =>
+            deleteAssignmentMutation({ id }),
     });
 
     const [
-        removeHiringroomIsTransitionPending,
-        startAwaitableRemoveHiringroomTransition,
+        removeAssignmentIsTransitionPending,
+        startAwaitableRemoveAssignmentTransition,
     ] = useAwaitableTransition();
 
-    const onRemoveHiringroom = async () => {
+    const onRemoveAssignment = async () => {
         toast.promise(
             async () => {
-                await removeHiringroomMutate({ hiringroomId: id });
-                await startAwaitableRemoveHiringroomTransition(() => {
+                await removeAssignmentMutate({ assignmentId: id });
+                await startAwaitableRemoveAssignmentTransition(() => {
                     router.refresh();
-                    toast.success("Hiringroom removed successfully!");
+                    toast.success("Assignment removed successfully!");
                 });
             },
             {
-                loading: "Removing hiringroom...",
-                error: "Failed to remove hiringroom.",
+                loading: "Removing assignment...",
+                error: "Failed to remove assignment.",
             },
         );
     };
@@ -121,10 +122,10 @@ export function ColumnDropdown({ id }: HiringroomData) {
 
                 <DropdownMenuItem
                     disabled={
-                        removeHiringroomIsPending ||
-                        removeHiringroomIsTransitionPending
+                        removeAssignmentIsPending ||
+                        removeAssignmentIsTransitionPending
                     }
-                    onClick={onRemoveHiringroom}
+                    onClick={onRemoveAssignment}
                     className="text-red-600"
                 >
                     Remove
