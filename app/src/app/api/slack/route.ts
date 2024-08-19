@@ -7,15 +7,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+
 // src/pages/api/slack/oauth.ts
+import { db } from "@/server/db";
+import { eq } from "drizzle-orm";
+import { slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
-import {
-    checkForSlackTeamIDConflict,
-    getAccessToken,
-    setAccessToken,
-} from "@/server/actions/slack/query";
+import { checkForSlackTeamIDConflict, getAccessToken, setAccessToken } from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
 import {
@@ -25,7 +25,6 @@ import {
     fetchGreenhouseUsers,
     fetchRejectReasons,
     fetchStagesForJob,
-    getAllCandidates,
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
 } from "@/server/greenhouse/core";
@@ -358,7 +357,7 @@ async function handleDebriefSubmission(payload) {
     const nameInput = values.name_block.name_input.value;
     const recipients = values.recipients_block.recipients_input.selected_users;
 
-    if (!candidateBlock || !candidateBlock.selected_option) {
+    if (!candidateBlock?.selected_option) {
         await updateModalWithError(
             view.id,
             view.hash,
@@ -394,13 +393,16 @@ async function handleDebriefSubmission(payload) {
         const channelId = await createSlackChannel(channelName, slackTeamId);
 
         await inviteUsersToChannel(channelId, recipients, slackTeamId);
-
+        const responseToSlack = new NextResponse(
+            JSON.stringify({ response_action: "clear" }),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
         await postWelcomeMessage(channelId, candidateID, slackTeamId);
 
-        return new NextResponse(null, {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
+        return responseToSlack;
     } catch (error) {
         console.error(error);
         return new NextResponse(
@@ -416,7 +418,6 @@ async function handleDebriefSubmission(payload) {
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-    console.log(payload);
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -963,44 +964,150 @@ async function handleDebriefCommand(trigger_id, slackTeamId) {
     }
 }
 
-export async function POST(request) {
-    const contentType = request.headers.get("content-type");
+export async function POST(request: NextRequest): Promise<void | Response> {
+    try {
+        const contentType = request.headers.get("content-type");
 
-    if (contentType?.includes("application/json")) {
-        const data = await request.json();
-        return handleJsonPost(data);
-    } else if (contentType?.includes("application/x-www-form-urlencoded")) {
-        const text = await request.text();
-        const params = new URLSearchParams(text);
+        if (contentType?.includes("application/json")) {
+            const data = await request.json();
 
-        const command = params.get("command");
-        const trigger_id = params.get("trigger_id");
-        const team_id = params.get("team_id");
-        if (command === "/debrief" && trigger_id) {
-            return handleDebriefCommand(trigger_id, team_id);
+            if (data.hasArchive && !data.hasDelete) {
+                const channelId = data.channelId;
+                const slackTeamId = data.slackTeamId;
+
+                try {
+                    await archiveConversationInSlack(channelId, slackTeamId);
+                    await archiveConversationInDB(channelId);
+                } catch (e) {
+                    console.error("Error during archiving:", e);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Error during archiving" }),
+                        { status: 500 },
+                    );
+                }
+
+                return new NextResponse(JSON.stringify({ success: true }), {
+                    status: 200,
+                });
+            } else if (data.hasDelete) {
+                try {
+                    const channelId = data.channelId;
+                    const slackTeamId = data.slackTeamId;
+                    await deleteConversationInSlack(channelId, slackTeamId);
+                } catch (e) {
+                    console.error("Error during deletion:", e);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Error during deletion" }),
+                        { status: 500 },
+                    );
+                }
+
+                return new NextResponse(JSON.stringify({ success: true }), {
+                    status: 200,
+                });
+            } else {
+                return handleJsonPost(data);
+            }
+        } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+            const text = await request.text();
+            const params = new URLSearchParams(text);
+
+            const command = params.get("command");
+            const trigger_id = params.get("trigger_id");
+            const team_id = params.get("team_id");
+
+            if (command === "/debrief" && trigger_id) {
+                return handleDebriefCommand(trigger_id, team_id);
+            }
+
+            const payloadRaw = params.get("payload");
+
+            if (payloadRaw) {
+                return handleSlackInteraction(JSON.parse(payloadRaw));
+            } else {
+                return new NextResponse(
+                    JSON.stringify({
+                        error: "Unrecognized form-urlencoded request",
+                    }),
+                    { status: 400 },
+                );
+            }
         }
-
-        const payloadRaw = params.get("payload");
-        if (payloadRaw) {
-            return handleSlackInteraction(JSON.parse(payloadRaw));
-        } else {
-            return new NextResponse(
-                JSON.stringify({
-                    error: "Unrecognized form-urlencoded request",
-                }),
-                {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
+    } catch (e) {
+        console.error("Error handling POST request:", e);
+        return new NextResponse(
+            JSON.stringify({ error: "Internal server error" }),
+            { status: 500 },
+        );
     }
+}
 
-    return new NextResponse(
-        JSON.stringify({ error: "Unsupported Content Type" }),
+// import { useState } from 'react';
+async function archiveConversationInDB(channelId) {
+    try {
+        console.log("prearchive");
+
+        await db
+            .update(slackChannelsCreated)
+            .set({ isArchived: true })
+            .where(eq(slackChannelsCreated.channelId, channelId))
+            .execute();
+    } catch (e) {
+        console.log("eeee - ", e);
+    }
+}
+
+async function archiveConversationInSlack(channelId, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
+    console.log("channelId-", channelId);
+    console.log("accessToken-", accessToken);
+    const response = await fetch(
+        "https://slack.com/api/conversations.archive",
         {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+            }),
         },
     );
+
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(data.error);
+    }
+
+    return data;
+}
+async function deleteConversationInSlack(channelId, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
+    console.log("channelId-", channelId);
+    console.log("accessToken-", accessToken);
+    const apikey = process.env.SLACK_BOT_TOKEN;
+    const apitoken =
+        "xoxe.xoxb-1-MS0yLTQ0MTYwOTk0MzE4NzgtNjk3Mjc2NjQ3Njk2NC02OTU2NzI4OTYzNjcxLTc0Mzg3MzA4OTczMzItNDMyZjIyYmI0Mzg2Yzg4ODIzMmRjNWUwZDk0MzA5NTFhNTE2YTBiMjE1YmRjMTM4NmE5MmJlYjRjZGE3MGQzZA";
+    console.log("api key - ", apikey);
+    const response = await fetch(
+        "https://slack.com/api/conversations.archive",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+            }),
+        },
+    );
+
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(data.error);
+    }
+
+    return data;
 }
