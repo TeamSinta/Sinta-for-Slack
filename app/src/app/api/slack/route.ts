@@ -15,7 +15,11 @@ import { slackChannelsCreated } from "@/server/db/schema"; // Assuming Hiringroo
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
-import { checkForSlackTeamIDConflict, getAccessToken, setAccessToken } from "@/server/actions/slack/query";
+import {
+    checkForSlackTeamIDConflict,
+    getAccessToken,
+    setAccessToken,
+} from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
 import {
