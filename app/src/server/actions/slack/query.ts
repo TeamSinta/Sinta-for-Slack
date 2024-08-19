@@ -7,7 +7,7 @@ import {
     hiringrooms,
     membersToOrganizations,
 } from "@/server/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, SQLWrapper } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {
@@ -119,6 +119,17 @@ export async function setAccessToken(
         .execute();
 
     return result ? "OK" : "Failed to update access token";
+}
+
+export async function checkForSlackTeamIDConflict(teamId: string | SQLWrapper) {
+    const existingOrg = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, teamId),
+        columns: {
+            id: true,
+        },
+    });
+    const { currentOrg } = await getOrganizations();
+    return existingOrg && existingOrg.id !== currentOrg.id;
 }
 
 export async function getSlackTeamIDByWorkflowID(

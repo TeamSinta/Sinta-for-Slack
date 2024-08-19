@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+
 // src/pages/api/slack/oauth.ts
 import { db } from "@/server/db";
 import { eq } from "drizzle-orm";
@@ -14,7 +15,11 @@ import { slackChannelsCreated } from "@/server/db/schema"; // Assuming Hiringroo
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
-import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
+import {
+    checkForSlackTeamIDConflict,
+    getAccessToken,
+    setAccessToken,
+} from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
 import {
@@ -95,6 +100,14 @@ export async function GET(req: NextRequest) {
         ) {
             // Calculate the expiry timestamp
             const expiresAt = Math.floor(Date.now() / 1000) + json.expires_in;
+
+            // Checks to see if there is a conflict fon the teamId in the DB
+            const conflict = await checkForSlackTeamIDConflict(json.team.id);
+
+            if (conflict) {
+                const conflictUrl = `${siteUrls.publicUrl}/?conflict`;
+                return NextResponse.redirect(conflictUrl);
+            }
 
             // Store access token, refresh token, and expiry time securely
             const updateResponse = await setAccessToken(

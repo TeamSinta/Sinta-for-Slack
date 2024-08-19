@@ -507,3 +507,113 @@ const getPrimaryPhone = (phones: { value: string; type: string }[]): string => {
     const phone = phones.find((phone) => phone.type === "mobile") ?? phones[0];
     return phone ? phone.value : "No phone number";
 };
+
+export async function formatHiringRoomDataForSlack(
+    hiringRoomData: any,
+    slackTeamID: string,
+): Promise<any> {
+    const greenhouseUsers = await fetchGreenhouseUsers();
+    const slackUsers = await getEmailsfromSlack(slackTeamID);
+    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+
+    const messageFields = hiringRoomData.recipient.messageFields.map(
+        (field: string) => {
+            let fieldName: string;
+            switch (field) {
+                case "title":
+                    fieldName = "Role";
+                    break;
+                default:
+                    fieldName =
+                        field.charAt(0).toUpperCase() +
+                        field.slice(1).replace(/_/g, " ");
+                    break;
+            }
+            const fieldValue = hiringRoomData[field] ?? "Not provided";
+            return { fieldName, fieldValue };
+        },
+    );
+
+    let customMessageBody = hiringRoomData.recipient.customMessageBody;
+    customMessageBody = customMessageBody.replace(/{{(.*?)}}/g, "*{{$1}}*");
+
+    // Group message fields into rows of 2
+    const groupedMessageFields = [];
+    for (let i = 0; i < messageFields.length; i += 2) {
+        groupedMessageFields.push(messageFields.slice(i, i + 2));
+    }
+
+    const messageBlocks = [
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: customMessageBody,
+            },
+        },
+        {
+            type: "divider",
+        },
+        ...groupedMessageFields.map((group) => ({
+            type: "section",
+            fields: group.map(({ fieldName, fieldValue }) => ({
+                type: "mrkdwn",
+                text: `*${fieldName}*: ${String(fieldValue)}`,
+            })),
+        })),
+        {
+            type: "context",
+            elements: [
+                {
+                    type: "mrkdwn",
+                    text: `*Last Modified:* ${new Date().toLocaleString()}`,
+                },
+            ],
+        },
+        {
+            type: "divider",
+        },
+        {
+            type: "actions",
+            elements: hiringRoomData.recipient.messageButtons.map(
+                (button: any) => {
+                    const buttonElement: any = {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: button.label || "button",
+                            emoji: true,
+                        },
+                        value: `${button.updateType ?? button.type}`, // Include type in the value
+                    };
+
+                    if (button.type === "UpdateButton") {
+                        if (button.updateType === "MoveToNextStage") {
+                            buttonElement.style = "primary";
+                            buttonElement.action_id = `move_to_next_stage`;
+                        } else if (button.updateType === "RejectCandidate") {
+                            buttonElement.style = "danger";
+                            buttonElement.action_id = `reject_candidate`;
+                        }
+                    } else if (button.linkType === "Dynamic") {
+                        const baseURL = `https://${subDomain}.greenhouse.io`;
+                        if (button.action === "candidateRecord") {
+                            buttonElement.url = `${baseURL}/people`;
+                        } else if (button.action === "jobRecord") {
+                            buttonElement.url = `${baseURL}/sdash`;
+                        }
+                        buttonElement.type = "button";
+                    } else {
+                        buttonElement.action_id =
+                            button.action ||
+                            `${button.type.toLowerCase()}_action`;
+                    }
+
+                    return buttonElement;
+                },
+            ),
+        },
+    ];
+
+    return { messageBlocks };
+}

@@ -124,9 +124,9 @@ interface Job {
 }
 
 function CreateHiringroomSheet() {
-    const [coordinators, setCoordinators] = useState([]);
-    const [recruiters, setRecruiters] = useState([]);
-    const [jobNames, setJobNames] = useState([]);
+    const [, setCoordinators] = useState([]);
+    const [, setRecruiters] = useState([]);
+    const [, setJobNames] = useState([]);
 
     const [format, setFormat] = useState(
         "intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}",
@@ -785,7 +785,7 @@ function CreateHiringroomSheet() {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
-                    Create Hiringroom
+                    Create Hiring Room
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
@@ -799,7 +799,7 @@ function CreateHiringroomSheet() {
                     />
                     <DialogTitle className=" flex flex-col items-center dark:text-white">
                         <h2 className="text-xl font-semibold">
-                            Create Hiringroom
+                            Create Hiring Room
                         </h2>
                         <DialogDescription className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                             Get started by filling in the basics.
@@ -1216,7 +1216,7 @@ function CreateHiringroomSheet() {
                         <div className="flex items-start gap-8">
                             <div className="w-1/3">
                                 <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                                    Members
+                                    Recipient
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
                                     Specify the recipient of the alert.
@@ -1246,7 +1246,7 @@ function CreateHiringroomSheet() {
                                 disabled={isMutatePending}
                                 className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
                             >
-                                Submit Hiringroom
+                                Submit Hiring Room
                             </Button>
                         </div>
                     </form>

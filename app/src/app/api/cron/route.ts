@@ -3,12 +3,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-
-//@ts-nocheck
-
-import { format, parseISO } from "date-fns";
-
-import { getEmailsfromSlack } from "@/server/slack/core";
+// @ts-nocheck
+import {
+    createSlackChannel,
+    getEmailsfromSlack,
+    saveSlackChannelCreatedToDB,
+    sendAndPinSlackMessage,
+} from "@/server/slack/core";
 import {
     fetchGreenhouseUsers,
     fetchJobsFromGreenhouse,
@@ -20,7 +21,11 @@ import {
     filterDataWithConditions,
     filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
-import { filterCandidatesDataForSlack, matchUsers } from "@/lib/slack";
+import {
+    filterCandidatesDataForSlack,
+    formatHiringRoomDataForSlack,
+    matchUsers,
+} from "@/lib/slack";
 import { sendSlackButtonNotification } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 import {
@@ -329,18 +334,26 @@ export async function handleIndividualHiringroom(hiringroom) {
                         slackUserIds,
                         slackTeamID,
                     );
-                    // const messageText = 'Welcome to the new hiring room!';
-                    // await postMessageToSlackChannel(channelId, messageText);
+                    const { messageBlocks } =
+                        await formatHiringRoomDataForSlack(
+                            hiringroom,
+                            slackTeamID,
+                        );
+                    await sendAndPinSlackMessage(
+                        channelId,
+                        slackTeamID,
+                        messageBlocks,
+                    );
+
+                    const messageText = "Welcome to the new hiring room!";
+
                     console.log("hiringroomId - ", hiringroomId);
-                    console.log("channelName - ", channelName);
                     await saveSlackChannelCreatedToDB(
                         channelId,
                         slackUserIds,
                         channelName,
                         hiringroomId,
                         hiringroom.slackChannelFormat,
-                        "",
-                        job.id,
                     );
                 }
             }
