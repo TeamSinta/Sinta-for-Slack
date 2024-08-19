@@ -79,7 +79,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     );
     const [showMarkdownInput, setShowMarkdownInput] = useState(false);
     const [customMessageBody, setCustomMessageBody] = useState(
-        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and task.",
+        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and task. ",
     );
 
     const handleOpeningTextChange = (
