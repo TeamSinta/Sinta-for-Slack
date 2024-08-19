@@ -6,17 +6,21 @@
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
 // @ts-nocheck
 
 "use server";
 
 import { db } from "@/server/db";
-import { addGreenhouseSlackValue } from "@/lib/slack";
+import { addGreenhouseSlackValue, matchUsers } from "@/lib/slack";
 import { getOrganizations } from "../actions/organization/queries";
 import { getAccessToken } from "../actions/slack/query";
-import { combineGreenhouseRolesAndSlackUsers } from "../greenhouse/core";
+import { fetchGreenhouseUsers } from "../greenhouse/core";
 import { format, parseISO } from "date-fns";
 import { slackChannelsCreated } from "../db/schema";
+import { OpenAI } from "openai";
+import { env } from "@/env";
+import { combineGreenhouseRolesAndSlackUsers } from "@/app/api/cron/route";
 
 interface SlackChannel {
     id: string;
@@ -36,21 +40,16 @@ interface SlackApiResponse<T> {
     members?: T[];
 }
 
-function generateRandomSixDigitNumber() {
-    const min = 100000; // Minimum 6-digit number
-    const max = 999999; // Maximum 6-digit number
-    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    return randomNumber.toString(); // Convert to string
-}
 export async function getChannels(): Promise<
     { value: string; label: string }[]
 > {
     try {
-        const { currentOrg = {} } = (await getOrganizations()) || {};
+        const { currentOrg } = (await getOrganizations()) || {};
         if (!currentOrg.slack_team_id) {
             console.error("No Slack team ID available.");
             return [];
         }
+
         const accessToken = await getAccessToken(currentOrg.slack_team_id);
         const response = await fetch(
             "https://slack.com/api/conversations.list",
@@ -70,8 +69,7 @@ export async function getChannels(): Promise<
         const data: SlackApiResponse<SlackChannel> = await response.json();
         if (data.ok && data.channels) {
             return data.channels.map((channel) => ({
-                value: channel.id,
-                label: `#${channel.name}`,
+                ...channel,
             }));
         } else {
             throw new Error(data.error ?? "Error fetching channels");
@@ -86,7 +84,7 @@ export async function getActiveUsers(): Promise<
     { value: string; label: string }[]
 > {
     try {
-        const { currentOrg = {} } = (await getOrganizations()) || {};
+        const { currentOrg } = (await getOrganizations()) || {};
         if (!currentOrg.slack_team_id) {
             console.error("No Slack team ID available.");
             return [];
@@ -101,6 +99,8 @@ export async function getActiveUsers(): Promise<
             },
         });
         if (!response.ok) {
+            console.log("response - status ", response.status);
+            console.log("response - status ", response.statusText);
             throw new Error("Failed to fetch users");
         }
 
@@ -135,12 +135,13 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
-            console.log("response", response);
-            throw new Error("Failed to fetch users");
+            console.log("response.status-", response.status);
+            console.log("response.status-", response.statusText);
+            throw new Error("Failed to fetch users", response.statusText);
         }
 
         const data: SlackApiResponse<SlackUser> = await response.json();
-
+        console.log("pre return?");
         if (data.ok && data.members) {
             return data.members
                 .filter((member) => !member.deleted && member.profile.email)
@@ -173,9 +174,9 @@ export async function sendSlackNotification(
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
-    console.log("filteredSlackData", filteredSlackData);
 
     for (const recipient of allRecipients) {
+        console.log("Recipient:", recipient);
         const channel =
             recipient.source === "greenhouse"
                 ? recipient.slackValue
@@ -202,10 +203,6 @@ export async function sendSlackNotification(
                     ...filteredSlackData
                         .map((data) => {
                             const interviewId = data.interview_id;
-                            const candidateId = data.candidate_id;
-                            const buttonLinkid = interviewId || candidateId; // Use either interview_id or candidate_id
-                            if (!buttonLinkid) return []; // Protect against undefined id
-
                             return [
                                 {
                                     type: "section",
@@ -213,11 +210,8 @@ export async function sendSlackNotification(
                                         type: "mrkdwn",
                                         text: workflowRecipient.messageFields
                                             .map((field: string) => {
-                                                if (
-                                                    field === "interview_id" ||
-                                                    field === "candidate_id"
-                                                )
-                                                    return ""; // Skip IDs in the message
+                                                if (field === "interview_id")
+                                                    return ""; // Skip interview_id in the message
                                                 let fieldName: string;
                                                 switch (field) {
                                                     case "title":
@@ -249,12 +243,12 @@ export async function sendSlackNotification(
                                     type: "section",
                                     text: {
                                         type: "mrkdwn",
-                                        text: data.customMessageBody as string,
+                                        text: data.customMessageBody,
                                     },
                                 },
                                 {
                                     type: "actions",
-                                    block_id: `block_id_${buttonLinkid}`,
+                                    block_id: `block_id_${interviewId}`,
                                     elements:
                                         workflowRecipient.messageButtons.map(
                                             (button) => {
@@ -265,7 +259,7 @@ export async function sendSlackNotification(
                                                         text: button.label,
                                                         emoji: true,
                                                     },
-                                                    value: `${button.updateType ?? button.type}_${buttonLinkid}`, // Include ID in the value
+                                                    value: `${button.updateType ?? button.type}_${interviewId}`, // Include interviewId in the value
                                                 };
 
                                                 if (
@@ -278,14 +272,14 @@ export async function sendSlackNotification(
                                                     ) {
                                                         buttonElement.style =
                                                             "primary";
-                                                        buttonElement.action_id = `move_to_next_stage_${buttonLinkid}`;
+                                                        buttonElement.action_id = `move_to_next_stage_${interviewId}`;
                                                     } else if (
                                                         button.updateType ===
                                                         "RejectCandidate"
                                                     ) {
                                                         buttonElement.style =
                                                             "danger";
-                                                        buttonElement.action_id = `reject_candidate_${buttonLinkid}`;
+                                                        buttonElement.action_id = `reject_candidate_${interviewId}`;
                                                     }
                                                 } else if (
                                                     button.linkType ===
@@ -296,19 +290,19 @@ export async function sendSlackNotification(
                                                         button.action ===
                                                         "candidateRecord"
                                                     ) {
-                                                        buttonElement.url = `${baseURL}/people/${candidateId}`;
+                                                        buttonElement.url = `${baseURL}/people/${interviewId}`;
                                                     } else if (
                                                         button.action ===
                                                         "jobRecord"
                                                     ) {
-                                                        buttonElement.url = `${baseURL}/sdash/${buttonLinkid}`;
+                                                        buttonElement.url = `${baseURL}/sdash/${interviewId}`;
                                                     }
                                                     buttonElement.type =
                                                         "button";
                                                 } else {
                                                     buttonElement.action_id =
                                                         button.action ||
-                                                        `${button.type.toLowerCase()}_action_${buttonLinkid}`;
+                                                        `${button.type.toLowerCase()}_action_${interviewId}`;
                                                 }
 
                                                 return buttonElement;
@@ -334,11 +328,8 @@ export async function sendSlackNotification(
                 blocks: blocks,
             }),
         });
-        console.log("channel", channel);
-        console.log("attachments", JSON.stringify(attachments, null, 2));
-        console.log("blocks", JSON.stringify(blocks, null, 2));
 
-        console.log("Response Slack message sent:", response);
+        console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
@@ -354,13 +345,17 @@ export async function sendSlackButtonNotification(
     workflowRecipient: WorkflowRecipient,
     slackTeamID: string,
     subDomain: string, // Adding sub-domain as a parameter
-    userMapping: Record<string, string>,
     filteredConditionsData,
 ): Promise<void> {
     console.log(
         "filtered filteredConditionsData dagat-",
         filteredConditionsData,
     );
+
+    const greenhouseUsers = await fetchGreenhouseUsers();
+    const slackUsers = await getEmailsfromSlack(slackTeamID);
+    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+
     const accessToken = await getAccessToken(slackTeamID);
     const greenhouseRecipients = [];
     let hasGreenhouse = false;
@@ -911,12 +906,16 @@ export async function sendAndPinSlackMessage(
     }
 }
 
+const openai = new OpenAI({
+    apiKey: env.OPENAI_API_KEY,
+});
+
 export async function postWelcomeMessage(channelId, candidateID, slackTeamId) {
     const accessToken = await getAccessToken(slackTeamId);
 
-    const welcomeMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
-
     try {
+        // Post initial welcome message
+        const initialMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
         await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
@@ -925,11 +924,156 @@ export async function postWelcomeMessage(channelId, candidateID, slackTeamId) {
             },
             body: JSON.stringify({
                 channel: channelId,
-                text: welcomeMessage,
+                text: initialMessage,
+            }),
+        });
+
+        // Fetch scorecards
+        const scorecards = await fetchScorecards(candidateID);
+
+        // Generate the prompt for OpenAI
+        const prompt = generatePrompt(scorecards);
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: prompt },
+            ],
+        });
+
+        console.log("OpenAI response:", response);
+        console.log("OpenAI response:", response.choices[0].message.content);
+
+        const formattedMessage = JSON.parse(
+            response.choices[0].message.content.trim(),
+        );
+        console.log("Formatted message:", formattedMessage);
+
+        // Post the detailed message
+        await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+                blocks: formattedMessage.blocks,
             }),
         });
     } catch (error) {
-        console.error("Error posting welcome message:", error);
+        console.error("Error posting messages:", error);
         throw error;
     }
+}
+
+function generatePrompt(scorecards) {
+    let prompt = `Generate a Slack message summarizing the following interview feedback in Slack Block Kit JSON format. The message should include a welcome message, candidate details, and feedback for each interviewer with buttons for actions. Use the following structure and ensure the message is formatted for Slack with dividers and emojis. Only return me an answer in block kit, do not add any additonal context or words:
+  {
+    "blocks": [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Welcome to the debrief room for candidate *{candidate_name}*."
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Position:* {position}"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Interview Stage:* {stage}"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Date of Application:* {application_date}"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Total Interviews Conducted:* {total_interviews}"
+          }
+        ]
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Here is a summary of the interview feedback:"
+        }
+      },
+      {interviewer_blocks}
+    ]
+  }`;
+
+    const interviewer_blocks = scorecards
+        .map((scorecard, index) => {
+            return `
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Interviewer ${index + 1}*:\\n*Overall Recommendation*: ${scorecard.overall_recommendation}\\n\\n:key: *Key Takeaways*:\\n- ${scorecard.key_takeaways}\\n\\n:clipboard: *Interview Attributes*:\\n${scorecard.attributes.map((attr) => `- ${attr}`).join("\\n")}"
+      },
+      "accessory": {
+        "type": "button",
+        "action_id": "expand_scorecard_interviewer_${index + 1}",
+        "text": {
+          "type": "plain_text",
+          "text": "View Full Scorecard",
+          "emoji": true
+        }
+      }
+    },
+    {
+      "type": "divider"
+    }`;
+        })
+        .join(",");
+
+    prompt = prompt.replace("{interviewer_blocks}", interviewer_blocks);
+
+    return prompt;
+}
+
+async function fetchScorecards(candidateID) {
+    // Implement your logic to fetch the scorecards for the given candidateID
+    // This is a placeholder function and should be replaced with your actual data fetching logic
+    return [
+        {
+            overall_recommendation: "Strongly recommend",
+            key_takeaways:
+                "Emphasizes teamwork and connecting the right people to the right opportunities. Handled a technical call by honestly informing the client that he wasn’t the best person for the job and promised to involve the right person in the next call.",
+            attributes: [
+                "Passionate: Very passionate about his work",
+                "Experience: Worked at Miro for over 4 years",
+                "Location: Based in Amsterdam",
+                "Salary Expectation: Open to a salary between 100-200K",
+                "Travel: Willing to travel as he did in his previous job",
+            ],
+        },
+        {
+            overall_recommendation: "No scorecard submitted yet",
+            key_takeaways: "",
+            attributes: [],
+        },
+        {
+            overall_recommendation: "Do not recommend",
+            key_takeaways:
+                "Good technical knowledge but concerns about time management.",
+            attributes: [
+                "Experience: Several years in technical roles",
+                "Concerns: Poor time management",
+                "Final Recommendation: Do not recommend",
+            ],
+        },
+    ];
 }

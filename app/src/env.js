@@ -34,6 +34,7 @@ export const env = createEnv({
         UPLOADTHING_ID: z.string(),
         VERCEL_SLACK_HOOK: z.string(),
         GREENHOUSE_API_HARVEST: z.string(),
+        OPENAI_API_KEY: z.string(),
     },
 
     /**
@@ -66,6 +67,7 @@ export const env = createEnv({
         UPLOADTHING_ID: process.env.UPLOADTHING_ID,
         VERCEL_SLACK_HOOK: process.env.VERCEL_SLACK_HOOK,
         GREENHOUSE_API_HARVEST: process.env.GREENHOUSE_API_HARVEST,
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
