@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use server";
 import { db } from "@/server/db";
-import { organizations, workflows, hiringrooms } from "@/server/db/schema";
-import { eq, type SQLWrapper } from "drizzle-orm";
+import {
+    organizations,
+    workflows,
+    hiringrooms,
+    membersToOrganizations,
+} from "@/server/db/schema";
+import { and, eq, SQLWrapper } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {
@@ -193,4 +198,31 @@ export async function getSlackTeamIDByHiringroomID(
     }
 
     return organization.slack_team_id!;
+}
+
+export async function isUserMemberOfOrg({
+    slackUserId,
+    slackTeamId,
+}: {
+    slackUserId: string;
+    slackTeamId: string;
+}): Promise<boolean> {
+    // Step 1: Retrieve the organization based on the slack_team_id
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, slackTeamId),
+    });
+
+    if (!organization) {
+        return false; // Organization not found
+    }
+
+    // Step 2: Check if the user is a member of the found organization
+    const member = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.slack_user_id, slackUserId),
+            eq(membersToOrganizations.organizationId, organization.id),
+        ),
+    });
+
+    return !!member; // Return true if the user is a member, false otherwise
 }

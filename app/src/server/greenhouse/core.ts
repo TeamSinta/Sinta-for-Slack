@@ -6,6 +6,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+//@ts-nocheck
 
 import { isAfter, isBefore, isSame } from "@/lib/utils";
 import { customFetch } from "@/utils/fetch";
@@ -97,6 +98,38 @@ interface Job {
     created_at: string;
 }
 
+export async function updateGreenhouseCandidate(
+    candidate: any,
+    field: string,
+    newValue: string,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const candidateId = candidate.id;
+        const url = `https://harvest.greenhouse.io/v1/candidates/${candidateId}`;
+        let payload: any = {};
+
+        if (field === "recruiter") {
+            payload = {
+                recruiter: { id: newValue },
+            };
+        } else if (field === "coordinator") {
+            payload = {
+                coordinator: { id: newValue },
+            };
+        }
+
+        const response = await customFetch(url, {
+            method: "PATCH",
+            data: payload,
+        });
+        console.log("respone- ", response);
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update Greenhouse candidate:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
@@ -174,16 +207,14 @@ export async function fetchActiveCandidates() {
             const activeApplications = candidate.applications.filter(
                 (app) => app.status === "active",
             );
-            return {
-                id: candidate.id,
+            return activeApplications.map((app) => ({
+                id: app.id, // Using the application ID here
                 name: `${candidate.first_name} ${candidate.last_name}`,
-                stage: activeApplications[0]?.current_stage?.name || "N/A",
-                job: activeApplications
-                    .map((app) => app.jobs.map((job) => job.name))
-                    .flat()
-                    .join(", "),
-            };
-        });
+                stage: app.current_stage?.name || "N/A",
+                job: app.jobs.map((job) => job.name).join(", "),
+            }));
+        })
+        .flat();
 }
 
 export async function moveToNextStageInGreenhouse(
@@ -559,6 +590,7 @@ export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
         )) as any[];
+        console.log("JOB  - ", jobs);
         return jobs;
     } catch (error) {
         console.error("Error fetching jobs: ", error);
@@ -571,6 +603,37 @@ async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
         {},
     );
     return response as ActivityFeed;
+}
+
+// Fetch all scheduled interviews from Greenhouse
+export async function fetchScheduledInterviews(): Promise<any[]> {
+    try {
+        const interviews = await customFetch(
+            "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        );
+        return interviews;
+    } catch (error) {
+        console.error(
+            "Error fetching scheduled interviews from Greenhouse: ",
+            error,
+        );
+        return [];
+    }
+}
+
+// Filter the scheduled interviews for the specific user
+export function filterInterviewsForUser(
+    interviews: any[],
+    userEmail: string,
+): any[] {
+    return interviews.filter(
+        (interview) =>
+            interview.interviewers.some(
+                (interviewer) => interviewer.email === userEmail,
+            ) &&
+            (interview.status === "awaiting_feedback" ||
+                interview.status === "scheduled"),
+    );
 }
 
 function calculateTimeInCurrentStage(
@@ -618,8 +681,13 @@ export async function filterStuckinStageDataConditions(
 
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
-    const operator = condition.operator;
+    const operator = condition.condition;
 
+    console.log("stageName", stageName);
+    console.log("thresholdDays", thresholdDays);
+    console.log("operator", operator);
+    console.log("candidates", candidates);
+    console.log("conditions", conditions);
     for (const candidate of candidates) {
         const candidateId = candidate.id;
         const activityFeed = await fetchActivityFeed(candidateId);
@@ -632,7 +700,7 @@ export async function filterStuckinStageDataConditions(
                 currentStage,
                 activityFeed.activities,
             );
-
+            console.log(daysInCurrentStage, "days in current stage");
             let conditionMet = false;
 
             switch (operator) {
@@ -784,64 +852,3 @@ export const filterScheduledInterviewsWithConditions = (
         });
     });
 };
-
-export function buildGreenHouseUsersForCandidate(
-    hiring_room_recipient: any[],
-    cand_id: any,
-    job_id: any,
-) {
-    hiring_room_recipient.forEach((recipient) => {
-        if (recipient.source == "greenhouse") {
-        }
-    });
-}
-
-export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
-    recipient?: any[];
-    recipients?: any;
-}) {
-    const greenhouseRecipients: { value: any }[] = [];
-    let hasGreenhouse = false;
-    const greenhouseRoles: any[] = [];
-    workflowRecipient.recipients.map((rec) => {
-        if (rec.source == "greenhouse") {
-            hasGreenhouse = true;
-            greenhouseRoles.push(rec.value);
-        }
-    });
-    console.log();
-
-    if (hasGreenhouse) {
-        const candidates = filteredConditionsData;
-        // console.log('filteredConditionsData - ',filteredConditionsData)
-        console.log("candidates - ", candidates.length);
-        candidates.forEach((cand) => {
-            console.log("greenhouseRoles - ", greenhouseRoles.length);
-
-            greenhouseRoles.forEach((role) => {
-                if (role.includes("ecruiter") || role.includes("oordinator")) {
-                    if (userMapping[cand.recruiter.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.recruiter.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    } else if (userMapping[cand.coordinator.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.coordinator.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    }
-                }
-            });
-        });
-    }
-    const allRecipients =
-        workflowRecipient.recipients.concat(greenhouseRecipients);
-    return allRecipients;
-}
-
-export async function getAllCandidates() {
-    //https://harvest.greenhouse.io/v1/candidates
-    const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
-    const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
-}
