@@ -16,6 +16,7 @@ import {
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
 // import router, { useRouter } from "next/router";
 import WorkflowSheet from "./_components/new-workflowForm";
+import { WorkflowDialog } from "./_components/workflow-dialog";
 
 type UsersPageProps = {
     searchParams: SearchParams;
@@ -72,7 +73,9 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
                         <></>
                     )}
                     {!isEdit && slackIntegration && greenhouseIntegration ? (
-                        <WorkflowSheet workflowId={""} mode={"create"} />
+                        // <WorkflowSheet workflowId={""} mode={"create"} />
+                        <WorkflowDialog />
+
                     ) : (
                         <AlertIntegrationDialog />
                     )}
