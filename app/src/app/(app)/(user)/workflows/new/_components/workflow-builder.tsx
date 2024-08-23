@@ -49,7 +49,7 @@ export function WorkflowBuilder() {
             <Link href="/workflows">
               <MoveLeft />
             </Link>
-            <h1 className="font-heading text-lg font-bold">Prepare offer with updated pricing</h1>
+            <h1 className="font-heading text-lg font-bold">Remind team to close out stale candidates</h1>
             <span className="ml-4 px-2 py-1 text-sm font-medium text-white bg-red-500 rounded">FAILED</span>
           </div>
           <div className="flex items-center space-x-4">
@@ -60,7 +60,6 @@ export function WorkflowBuilder() {
             <Button variant="outline"
             className="text-indigo-600 border-indigo-600 rounded hover:bg-indigo-100 hover:text-indigo-600">Run test</Button>
             <div className="flex items-center space-x-1">
-
               <Switch className="data-[state=checked]:bg-green-500"
               />
             </div>
@@ -79,7 +78,11 @@ export function WorkflowBuilder() {
             {steps.map((step, index) => (
               <div key={step.id} className="flex flex-col items-center space-y-2 w-full relative">
                 {/* Step Card */}
-                <div className={`w-full max-w-xl bg-white shadow p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`} onClick={() => handleElementClick(step)}>
+                <div className={`relative w-full max-w-xl bg-white shadow p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`} onClick={() => handleElementClick(step)}>
+                  {/* Top Left Label */}
+                  <div className={`absolute top-0 left-0 -mt-4 -ml-2 bg-indigo-100 text-black px-3 py-1 rounded-tl-md rounded-br-md`}>
+                    <span className="text-xs font-semibold">{step.label}</span>
+                  </div>
                   <div className="flex items-center">
                     <span className="text-2xl mr-4">{step.icon}</span>
                     <div>
@@ -89,14 +92,13 @@ export function WorkflowBuilder() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="block text-xs text-gray-500 mb-1">{step.label}</span>
                     <span className={`text-sm ${step.status === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{step.status === 'valid' ? '✔️' : '❌'}</span>
                   </div>
                 </div>
                 {/* Popover to Add Step */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="text-blue-500 mt-2">
+                    <button className="text-indigo-500 mt-2">
                       <PlusCircleIcon className="h-6 w-6" />
                     </button>
                   </PopoverTrigger>
@@ -114,7 +116,7 @@ export function WorkflowBuilder() {
                 </Popover>
                 {/* Connecting Line */}
                 {index < steps.length - 1 && (
-                  <div className="w-px h-12 bg-gray-300"></div>
+                  <div className="w-px h-12 bg-indigo-300"></div>
                 )}
               </div>
             ))}
