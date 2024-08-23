@@ -7,7 +7,6 @@ const messages = [
     "Loading Workflow",
     "Connecting Integrations",
     "Fetching Data",
-    "Preparing Environment"
 ];
 
 export default function LoadingSpinner() {
