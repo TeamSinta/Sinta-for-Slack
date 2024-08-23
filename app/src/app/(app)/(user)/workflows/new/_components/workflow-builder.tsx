@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Select,
   SelectContent,
@@ -75,63 +76,85 @@ export function WorkflowBuilder() {
 
           {/* Step Elements */}
           <div className="relative flex flex-col items-center space-y-2">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex flex-col items-center space-y-2 w-full relative">
-                {/* Step Card */}
-                <div className={`relative w-full max-w-xl bg-white shadow p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`} onClick={() => handleElementClick(step)}>
-                  {/* Top Left Label */}
-                  <div className={`absolute top-0 left-0 -mt-4 -ml-2 bg-indigo-100 text-black px-3 py-1 rounded-tl-md rounded-br-md`}>
-                    <span className="text-xs font-semibold">{step.label}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-4">{step.icon}</span>
-                    <div>
-                      <span className="font-semibold">{step.name}</span>
-                      <p className="text-sm text-gray-500">{step.description}</p>
-                      {step.error && <p className="text-sm text-red-500">{step.error}</p>}
+            <AnimatePresence>
+              {steps.map((step, index) => (
+                <motion.div
+                  key={step.id}
+                  className="flex flex-col items-center space-y-2 w-full relative"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Step Card */}
+                  <motion.div
+                    className={`relative w-full max-w-xl bg-white shadow p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`}
+                    onClick={() => handleElementClick(step)}
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Top Left Label */}
+                    <div className={`absolute top-0 left-0 -mt-4 -ml-2 bg-indigo-100 text-black px-3 py-1 rounded-tl-md rounded-br-md`}>
+                      <span className="text-xs font-semibold">{step.label}</span>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`text-sm ${step.status === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{step.status === 'valid' ? '✔️' : '❌'}</span>
-                  </div>
-                </div>
-                {/* Popover to Add Step */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button className="text-indigo-500 mt-2">
-                      <PlusCircleIcon className="h-6 w-6" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-4 shadow-lg rounded-lg">
-                    <Select onValueChange={addStep}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Add Step" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Action">Add Action</SelectItem>
-                        <SelectItem value="Trigger">Add Trigger</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </PopoverContent>
-                </Popover>
-                {/* Connecting Line */}
-                {index < steps.length - 1 && (
-                  <div className="w-px h-12 bg-indigo-300"></div>
-                )}
-              </div>
-            ))}
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-4">{step.icon}</span>
+                      <div>
+                        <span className="font-semibold">{step.name}</span>
+                        <p className="text-sm text-gray-500">{step.description}</p>
+                        {step.error && <p className="text-sm text-red-500">{step.error}</p>}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm ${step.status === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{step.status === 'valid' ? '✔️' : '❌'}</span>
+                    </div>
+                  </motion.div>
+                  {/* Popover to Add Step */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="text-indigo-500 mt-2">
+                        <PlusCircleIcon className="h-6 w-6" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-4 shadow-lg rounded-lg">
+                      <Select onValueChange={addStep}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Add Step" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Action">Add Action</SelectItem>
+                          <SelectItem value="Trigger">Add Trigger</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </PopoverContent>
+                  </Popover>
+                  {/* Connecting Line */}
+                  {index < steps.length - 1 && (
+                    <div className="w-px h-12 bg-indigo-300"></div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Sidebar */}
-        {selectedElement && (
-          <div className="w-[400px] bg-white shadow-lg h-screen p-6">
-            <h2 className="text-xl font-semibold">{selectedElement.name}</h2>
-            <p className="text-gray-600">{selectedElement.type}</p>
-            {/* Add more fields and configurations here */}
-            <Button variant="outline" className="mt-4" onClick={() => setSelectedElement(null)}>Close</Button>
-          </div>
-        )}
+        <AnimatePresence>
+          {selectedElement && (
+            <motion.div
+              className="w-[400px] bg-white shadow-lg h-screen p-6"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-semibold">{selectedElement.name}</h2>
+              <p className="text-gray-600">{selectedElement.type}</p>
+              {/* Add more fields and configurations here */}
+              <Button variant="outline" className="mt-4" onClick={() => setSelectedElement(null)}>Close</Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
   );
