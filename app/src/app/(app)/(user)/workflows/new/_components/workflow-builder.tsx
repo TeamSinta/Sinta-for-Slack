@@ -9,16 +9,16 @@ import {
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, PlusCircleIcon } from 'lucide-react';
+import { Archive, CopyCheck, MoveLeft, PlusCircleIcon, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 
 export function WorkflowBuilder() {
   const [steps, setSteps] = useState([
-    { id: 1, type: 'Trigger', name: 'Form Submission', status: 'valid', description: 'Client submits a form', icon: '📄' },
-    { id: 2, type: 'Action', name: 'Time Delay', status: 'valid', description: 'Time Delay 20 Seconds', icon: '⏰' },
-    { id: 3, type: 'Action', name: 'Twilio', status: 'valid', description: 'Send Text Message', icon: '📱' },
-    { id: 4, type: 'Action', name: 'Slack', status: 'invalid', description: 'Send Message to Slack Channel', icon: '💬', error: 'Invalid Slack Channel' },
+    { id: 1, type: 'Trigger', name: 'Form Submission', status: 'valid', description: 'Client submits a form', icon: '📄', label: 'Trigger 1' },
+    { id: 2, type: 'Action', name: 'Time Delay', status: 'valid', description: 'Time Delay 20 Seconds', icon: '⏰', label: 'Action 2' },
+    { id: 3, type: 'Action', name: 'Twilio', status: 'valid', description: 'Send Text Message', icon: '📱', label: 'Action 3' },
+    { id: 4, type: 'Action', name: 'Slack', status: 'invalid', description: 'Send Message to Slack Channel', icon: '💬', label: 'Action 4', error: 'Invalid Slack Channel' },
   ]);
 
   const [selectedElement, setSelectedElement] = useState(null);
@@ -30,7 +30,8 @@ export function WorkflowBuilder() {
       name: `New ${type}`,
       status: 'valid',
       description: 'New step description',
-      icon: type === 'Action' ? '🔧' : '🚀'
+      icon: type === 'Action' ? '🔧' : '🚀',
+      label: `${type} ${steps.length + 1}`
     };
     setSteps([...steps, newStep]);
   };
@@ -42,7 +43,7 @@ export function WorkflowBuilder() {
   return (
     <>
       {/* Top Bar */}
-      <header className="w-full p-4 bg-white border-b border-border">
+      <header className="w-[114%] ml-[130px] rounded p-4 bg-white border-b border-border shadow">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Link href="/workflows">
@@ -53,27 +54,32 @@ export function WorkflowBuilder() {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-gray-500 text-xs">All changes saved</span>
-            <button className="text-gray-500">📂</button>
-            <button className="text-gray-500">🖨️</button>
-            <button className="text-gray-500">⏰</button>
-            <Button variant="outline">Run test</Button>
+            <button className="text-gray-600"><CopyCheck className='w-4 h-4'/></button>
+            <button className="text-gray-600"><Archive className='w-4 h-4'/></button>
+            <button className="text-gray-600"><Trash2 className='w-4 h-4'/></button>
+            <Button variant="outline"
+            className="text-indigo-600 border-indigo-600 rounded hover:bg-indigo-100 hover:text-indigo-600">Run test</Button>
             <div className="flex items-center space-x-1">
-              <span>Off</span>
-              <Switch className='bg-purple-400' />
+
+              <Switch className="data-[state=checked]:bg-green-500"
+              />
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex w-[115%] ml-[130px] h-screen">
+      <div className="flex w-[114%] ml-[130px] h-screen">
         {/* Canvas Area */}
-        <div className="flex-grow bg-gray-50 shadow-xl p-6 relative">
+        <div className="flex-grow bg-gray-50 shadow p-6 relative">
           {/* Dot Background */}
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-          <div className="relative flex flex-col items-center space-y-6">
+
+          {/* Step Elements */}
+          <div className="relative flex flex-col items-center space-y-2">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex flex-col items-center space-y-2 w-full">
-                <div className={`w-full max-w-xl bg-white shadow-md p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`} onClick={() => handleElementClick(step)}>
+              <div key={step.id} className="flex flex-col items-center space-y-2 w-full relative">
+                {/* Step Card */}
+                <div className={`w-full max-w-xl bg-white shadow p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`} onClick={() => handleElementClick(step)}>
                   <div className="flex items-center">
                     <span className="text-2xl mr-4">{step.icon}</span>
                     <div>
@@ -82,8 +88,12 @@ export function WorkflowBuilder() {
                       {step.error && <p className="text-sm text-red-500">{step.error}</p>}
                     </div>
                   </div>
-                  <span className={`text-sm ${step.status === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{step.status === 'valid' ? '✔️' : '❌'}</span>
+                  <div className="text-right">
+                    <span className="block text-xs text-gray-500 mb-1">{step.label}</span>
+                    <span className={`text-sm ${step.status === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{step.status === 'valid' ? '✔️' : '❌'}</span>
+                  </div>
                 </div>
+                {/* Popover to Add Step */}
                 <Popover>
                   <PopoverTrigger asChild>
                     <button className="text-blue-500 mt-2">
@@ -102,6 +112,10 @@ export function WorkflowBuilder() {
                     </Select>
                   </PopoverContent>
                 </Popover>
+                {/* Connecting Line */}
+                {index < steps.length - 1 && (
+                  <div className="w-px h-12 bg-gray-300"></div>
+                )}
               </div>
             ))}
           </div>
