@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -24,10 +21,13 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { HelpCircleIcon } from "lucide-react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const fields = [
     { value: "name", label: "Candidate Name", color: "" },
@@ -46,6 +46,13 @@ const variableOptions = [
     { value: "{{Job Stage}}", label: "Job Stage" },
     { value: "{{Recruiter}}", label: "Recruiter" },
     { value: "{{Candidate_Name}}", label: "Candidate Name" },
+];
+
+const specialVariableOptions = [
+    { value: "{{All Job Stages}}", label: "All Job Stages" },
+    { value: "{{All Interviewers}}", label: "All Interviewers" },
+    { value: "{{All Competencies}}", label: "All Competencies" },
+    { value: "{{All}}", label: "All (Job Stages, Interviewers, Competencies)" },
 ];
 
 interface SlackHiringroomProps {
@@ -77,9 +84,9 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
     );
-    const [showMarkdownInput, setShowMarkdownInput] = useState(false);
+    const [showQuillEditor, setShowQuillEditor] = useState(false);
     const [customMessageBody, setCustomMessageBody] = useState(
-        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and task. ",
+        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
     );
 
     const handleOpeningTextChange = (
@@ -161,8 +168,8 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                         source: "greenhouse",
                     },
                     {
-                        label: ` ${greenhouseData.owner}`,
-                        value: greenhouseData.owner,
+                        label: ` ${greenhouseData.interviewer}`,
+                        value: greenhouseData.interviewer,
                         source: "greenhouse",
                     },
                 ];
@@ -176,10 +183,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         void fetchData();
     }, []);
 
-    const handleCustomMessageBodyChange = (
-        e: React.ChangeEvent<HTMLTextAreaElement>,
-    ) => {
-        const value = e.target.value;
+    const handleCustomMessageBodyChange = (value: string) => {
         setCustomMessageBody(value);
         onCustomMessageBodyChange(value);
     };
@@ -230,9 +234,9 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                 <div className="flex items-center space-x-2">
                     <Checkbox
                         id="customMessageBody"
-                        checked={showMarkdownInput}
+                        checked={showQuillEditor}
                         onCheckedChange={() =>
-                            setShowMarkdownInput(!showMarkdownInput)
+                            setShowQuillEditor(!showQuillEditor)
                         }
                     />
                     <label
@@ -245,7 +249,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
             </div>
 
             {/* Custom Message Body Input */}
-            {showMarkdownInput && (
+            {showQuillEditor && (
                 <>
                     <div className="mt-4 rounded-lg border border-gray-300 bg-white pb-6 shadow-sm">
                         {/* Top Bar */}
@@ -300,22 +304,50 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuGroup>
+                                    <DropdownMenuLabel className="mt-2 text-xs font-semibold text-gray-500">
+                                        Special Variables
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuGroup>
+                                        {specialVariableOptions.map(
+                                            (option) => (
+                                                <DropdownMenuItem
+                                                    key={option.value}
+                                                    onClick={() =>
+                                                        handleVariableSelect(
+                                                            option.value,
+                                                        )
+                                                    }
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuItem>
+                                            ),
+                                        )}
+                                    </DropdownMenuGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
 
                         <div className="ml-12 px-4">
-                            <textarea
-                                value={customMessageBody}
-                                onChange={handleCustomMessageBodyChange}
-                                placeholder="Message #channel or @user"
-                                className="text-md max-h-40 min-h-32 w-full resize-none overflow-auto rounded border border-gray-300 bg-gray-50 p-2 shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                style={{ height: "auto" }}
-                                onInput={(e) => {
-                                    e.currentTarget.style.height = "auto";
-                                    e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
-                                }}
-                            ></textarea>
+                            <div className="resize-y overflow-auto rounded-lg border border-gray-300 bg-white p-2 shadow-sm focus:outline-none">
+                                <ReactQuill
+                                    value={customMessageBody}
+                                    onChange={handleCustomMessageBodyChange}
+                                    modules={{
+                                        toolbar: [
+                                            ["bold", "italic", "underline"],
+                                            [{ link: "link" }],
+                                        ],
+                                    }}
+                                    formats={[
+                                        "bold",
+                                        "italic",
+                                        "underline",
+                                        "link",
+                                    ]}
+                                    className="text-md min-h-32 w-full bg-white"
+                                    style={{ height: "auto" }}
+                                />
+                            </div>
                         </div>
 
                         {selectedFields.length > 0 && (
@@ -350,7 +382,9 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                                 {buttons.map((button, index) => (
                                     <button
                                         key={index}
-                                        className={`rounded-sm px-3 py-1 text-sm ${getButtonStyle(button)}`}
+                                        className={`rounded-sm px-3 py-1 text-sm ${getButtonStyle(
+                                            button,
+                                        )}`}
                                         type="button"
                                     >
                                         {button.label}
