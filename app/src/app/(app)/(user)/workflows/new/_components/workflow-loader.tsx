@@ -12,7 +12,7 @@ export default function WorkflowLoader() {
         // Simulate a loading delay (e.g., fetching data or loading resources)
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 3000); // 6 seconds delay to match the message rotation
+        }, 1000); // 6 seconds delay to match the message rotation
 
         return () => clearTimeout(timer); // Clean up the timeout
     }, []);

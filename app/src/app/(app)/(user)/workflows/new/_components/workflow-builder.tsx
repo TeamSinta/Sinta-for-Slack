@@ -7,132 +7,212 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Archive, CopyCheck, MoveLeft, PlusCircleIcon, Trash2 } from 'lucide-react';
+import { MoveLeft, PlusCircleIcon, MoveHorizontal, Filter } from 'lucide-react'; // Grip icon for dragging
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
+import Image from 'next/image';
+import greenhouselogo from '../../../../../../../public/greenhouselogo.png';
+import slacklogo from '../../../../../../../public/slack-logo.png';
+import filterIcon from '../../../../../../../public/filter.png'; // Placeholder for the condition icon
+import Actions from './actions'; // Import your Actions component
+import TriggersComponent from './triggers';
+import ConditionsComponent from './conditons';
 
 export function WorkflowBuilder() {
   const [steps, setSteps] = useState([
-    { id: 1, type: 'Trigger', name: 'Form Submission', status: 'valid', description: 'Client submits a form', icon: '📄', label: 'Trigger 1' },
-    { id: 2, type: 'Action', name: 'Time Delay', status: 'valid', description: 'Time Delay 20 Seconds', icon: '⏰', label: 'Action 2' },
-    { id: 3, type: 'Action', name: 'Twilio', status: 'valid', description: 'Send Text Message', icon: '📱', label: 'Action 3' },
-    { id: 4, type: 'Action', name: 'Slack', status: 'invalid', description: 'Send Message to Slack Channel', icon: '💬', label: 'Action 4', error: 'Invalid Slack Channel' },
+    { id: 1, type: 'Trigger', name: '', status: 'skeleton', description: '', icon: greenhouselogo, label: 'Trigger' },
+    { id: 2, type: 'Action', name: '', status: 'skeleton', description: '', icon: slacklogo, label: 'Action' },
   ]);
 
   const [selectedElement, setSelectedElement] = useState(null);
-
-  const addStep = (type) => {
-    const newStep = {
-      id: steps.length + 1,
-      type: type,
-      name: `New ${type}`,
-      status: 'valid',
-      description: 'New step description',
-      icon: type === 'Action' ? '🔧' : '🚀',
-      label: `${type} ${steps.length + 1}`
-    };
-    setSteps([...steps, newStep]);
-  };
+  const [sidebarWidth, setSidebarWidth] = useState(500); // Default width set wider when first opened
+  const minSidebarWidth = 400; // Minimum width of the sidebar
+  const maxSidebarWidth = 800; // Maximum width of the sidebar
 
   const handleElementClick = (element) => {
     setSelectedElement(element);
   };
 
+  const saveStep = (id, data) => {
+    const updatedSteps = steps.map(step =>
+      step.id === id
+        ? { ...step, ...data, status: 'valid' }
+        : step
+    );
+    setSteps(updatedSteps);
+    setSelectedElement(null);
+  };
+
+  const addConditionStep = (index, data) => {
+    const newConditionStep = {
+      id: steps.length + 1,
+      type: 'Condition',
+      name: data?.name || '',
+      status: data ? 'valid' : 'skeleton',
+      description: data?.description || '',
+      icon: filterIcon,
+      label: `Condition`,
+    };
+    setSteps([
+      ...steps.slice(0, index + 1),
+      newConditionStep,
+      ...steps.slice(index + 1),
+    ]);
+  };
+
+  const startResizing = (e) => {
+    e.preventDefault(); // Prevent text selection during drag
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const doDrag = (event) => {
+      const newWidth = startWidth + startX - event.clientX;
+      setSidebarWidth(Math.min(Math.max(newWidth, minSidebarWidth), maxSidebarWidth));
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener('mousemove', doDrag);
+      document.removeEventListener('mouseup', stopDrag);
+    };
+
+    document.addEventListener('mousemove', doDrag);
+    document.addEventListener('mouseup', stopDrag);
+  };
+
+  const handleSaveActions = (data) => {
+    // Save the action step
+    saveStep(2, {
+      name: "Slack Action",
+      description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+    });
+  };
+  const handleSaveTriggers = (data) => {
+    // Save the action step
+    saveStep(1, {
+      name: "Greenhouse Trigger",
+      description: `Trigger: ${data.description.substring(0, 50)}...`,
+    });
+  };
+
+  const handleSaveConditions = (data) => {
+    // Save each condition as a separate step
+    data.forEach((condition, index) => {
+      addConditionStep(index, {
+        name: `Condition: ${condition.field}`,
+        description: `${condition.field} ${condition.condition} ${condition.value}`,
+      });
+    });
+  };
+
   return (
     <>
       {/* Top Bar */}
-      <header className="w-[114%] ml-[130px] rounded p-4 bg-white border-b border-border shadow">
+      <header className="w-[112%] ml-[50px] flex-none p-4 bg-white border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Link href="/workflows">
               <MoveLeft />
             </Link>
-            <h1 className="font-heading text-lg font-bold">Remind team to close out stale candidates</h1>
-            <span className="ml-4 px-2 py-1 text-sm font-medium text-white bg-red-500 rounded">FAILED</span>
+            <h1 className="font-heading text-lg font-bold">New Workflow</h1>
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-gray-500 text-xs">All changes saved</span>
-            <button className="text-gray-600"><CopyCheck className='w-4 h-4'/></button>
-            <button className="text-gray-600"><Archive className='w-4 h-4'/></button>
-            <button className="text-gray-600"><Trash2 className='w-4 h-4'/></button>
-            <Button variant="outline"
-            className="text-indigo-600 border-indigo-600 rounded hover:bg-indigo-100 hover:text-indigo-600">Run test</Button>
+            <Button variant="outline" className="text-indigo-600 border-indigo-600 rounded hover:bg-indigo-100 hover:text-indigo-600">Run test</Button>
             <div className="flex items-center space-x-1">
-              <Switch className="data-[state=checked]:bg-green-500"
-              />
+              <Switch className="data-[state=checked]:bg-green-500" />
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex w-[114%] ml-[130px] h-screen">
+      <div className="flex h-[calc(100vh-64px)] w-[112%] ml-[50px]">
         {/* Canvas Area */}
-        <div className="flex-grow bg-gray-50 shadow p-6 relative">
+        <div className={`flex-grow bg-gray-50 shadow-inner overflow-y-auto p-6 relative ${selectedElement ? 'pr-0' : 'pr-8'}`}>
           {/* Dot Background */}
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
           {/* Step Elements */}
-          <div className="relative flex flex-col items-center space-y-2">
+          <div className="relative flex flex-col items-center space-y-3 mt-8 mr-[20px]">
             <AnimatePresence>
               {steps.map((step, index) => (
-                <motion.div
-                  key={step.id}
-                  className="flex flex-col items-center space-y-2 w-full relative"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {/* Step Card */}
+                <React.Fragment key={step.id}>
                   <motion.div
-                    className={`relative w-full max-w-xl bg-white shadow p-4 rounded-lg flex justify-between items-center cursor-pointer border-l-4 ${step.status === 'valid' ? 'border-green-500' : 'border-red-500'}`}
-                    onClick={() => handleElementClick(step)}
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ duration: 0.2 }}
+                    className="flex flex-col items-center w-full relative"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    {/* Top Left Label */}
-                    <div className={`absolute top-0 left-0 -mt-4 -ml-2 bg-indigo-100 text-black px-3 py-1 rounded-tl-md rounded-br-md`}>
-                      <span className="text-xs font-semibold">{step.label}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-4">{step.icon}</span>
-                      <div>
-                        <span className="font-semibold">{step.name}</span>
-                        <p className="text-sm text-gray-500">{step.description}</p>
-                        {step.error && <p className="text-sm text-red-500">{step.error}</p>}
+                    {/* Step Card */}
+                    <motion.div
+                      className={`relative w-full max-w-xl p-4 rounded-lg flex justify-between items-center cursor-pointer border-2 ${
+                        step.status === 'skeleton' ? 'border-dashed border-gray-300 bg-gray-100' : 'border-l-4 border-green-500 bg-white shadow'
+                      }`}
+                      onClick={() => handleElementClick(step)}
+                      whileHover={{ scale: 1.03 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ height: '80px' }}
+                    >
+                      {/* Top Left Label */}
+                      <div className={`absolute top-0 left-0 -mt-4 -ml-2 ${step.status === 'skeleton' ? 'bg-gray-200 text-gray-500' : 'bg-indigo-100 text-black'} px-3 py-1 rounded-tl-md rounded-br-md`}>
+                        <span className="text-xs font-semibold">{step.label}</span>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <span className={`text-sm ${step.status === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{step.status === 'valid' ? '✔️' : '❌'}</span>
-                    </div>
+                      {/* Skeleton or Filled Card */}
+                      {step.status === 'skeleton' ? (
+                        <div className="flex items-center">
+                          <Image src={step.icon} alt={`${step.type} Icon`} width={20} height={20} className="mr-4 text-gray-400" />
+                          <div>
+                            <span className="font-semibold text-gray-400">Click to add {step.type.toLowerCase()} details</span>
+                            <p className="text-sm text-gray-400">Enter details here...</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <Image src={step.icon} alt={`${step.type} Icon`} width={30} height={30} className="mr-4" />
+                          <div>
+                            <span className="font-semibold">{step.name}</span>
+                            <p className="text-sm text-gray-500">{step.description}</p>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
                   </motion.div>
-                  {/* Popover to Add Step */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button className="text-indigo-500 mt-2">
-                        <PlusCircleIcon className="h-6 w-6" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-4 shadow-lg rounded-lg">
-                      <Select onValueChange={addStep}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Add Step" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Action">Add Action</SelectItem>
-                          <SelectItem value="Trigger">Add Trigger</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </PopoverContent>
-                  </Popover>
-                  {/* Connecting Line */}
+                  {/* Plus Button with Lines */}
                   {index < steps.length - 1 && (
-                    <div className="w-px h-12 bg-indigo-300"></div>
+                    <div className="flex flex-col items-center ">
+                      <div className="w-px h-4 mb-1 bg-indigo-300"></div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="text-indigo-500">
+                            <PlusCircleIcon className="h-6 w-6" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-4 shadow-lg rounded-lg">
+                          <Select onValueChange={(value) => value === 'Condition' && addConditionStep(index)}>
+                            <SelectTrigger className="w-full flex items-center space-x-2">
+                              <PlusCircleIcon className="h-5 w-5 text-gray-500" />
+                              <SelectValue placeholder="Add Step" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Condition">
+                                <div className="flex items-start">
+                                  <Filter className="h-5 w-5 text-gray-600 mr-2" />
+                                  <div>
+                                    <p className="font-medium">Add Condition</p>
+                                    <p className="text-sm text-gray-500">Set up a rule to refine your workflow</p>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </PopoverContent>
+                      </Popover>
+                      <div className="w-px h-4 mt-1 bg-indigo-300"></div>
+                    </div>
                   )}
-                </motion.div>
+                </React.Fragment>
               ))}
             </AnimatePresence>
           </div>
@@ -142,16 +222,32 @@ export function WorkflowBuilder() {
         <AnimatePresence>
           {selectedElement && (
             <motion.div
-              className="w-[400px] bg-white shadow-lg h-screen p-6"
+              className="bg-white shadow-lg h-full p-6 relative flex overflow-y-auto"
+              style={{ width: sidebarWidth }}
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 100 }}
               transition={{ duration: 0.3 }}
             >
-              <h2 className="text-xl font-semibold">{selectedElement.name}</h2>
-              <p className="text-gray-600">{selectedElement.type}</p>
-              {/* Add more fields and configurations here */}
-              <Button variant="outline" className="mt-4" onClick={() => setSelectedElement(null)}>Close</Button>
+              {/* Left side for dragging with hover effect */}
+              <div
+                className="absolute left-0 top-0 h-full w-1 cursor-ew-resize hover:bg-indigo-500"
+                onMouseDown={startResizing}
+              />
+              <div
+                className="absolute left-[-13px] top-1/2 transform -translate-y-1/2 z-10 flex justify-center items-center"
+              >
+                <div className="bg-gray-200 p-1 rounded-full shadow cursor-ew-resize" onMouseDown={startResizing}>
+                  <MoveHorizontal className="text-gray-600" size={16} />
+                </div>
+              </div>
+              <div className="flex-grow">
+
+                {selectedElement.type === 'Trigger' && <TriggersComponent onSaveTrigger={handleSaveTriggers} />}
+                {selectedElement.type === 'Action' && <Actions onSaveActions={handleSaveActions} />}
+
+                {selectedElement.type === 'Condition' && <ConditionsComponent onSaveConditions={handleSaveConditions} />}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
