@@ -3,6 +3,11 @@ import { type ClassValue, clsx } from "clsx";
 import { env } from "process";
 import { twMerge } from "tailwind-merge";
 
+
+const TRIGGER_STORAGE_KEY = 'workflowTriggers';
+const ACTION_STORAGE_KEY = 'workflowActions';
+const CONDITIONS_STORAGE_KEY = 'workflowConditions';
+
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
@@ -67,4 +72,45 @@ export const isSame = (date: string, value: number, unit: string): boolean => {
         );
     }
     return false;
+};
+
+
+// Save trigger data to local storage
+export const saveTriggerData = (data) => {
+    localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(data));
+};
+
+// Get trigger data from local storage
+export const getTriggerData = () => {
+    const storedData = localStorage.getItem(TRIGGER_STORAGE_KEY);
+    return storedData ? JSON.parse(storedData) : {};
+};
+
+// Save action data to local storage
+export const saveActionData = (data) => {
+    localStorage.setItem(ACTION_STORAGE_KEY, JSON.stringify(data));
+};
+
+// Get action data from local storage
+export const getActionData = () => {
+    const storedData = localStorage.getItem(ACTION_STORAGE_KEY);
+    return storedData ? JSON.parse(storedData) : {};
+};
+
+// Save conditions data to local storage
+export const saveConditionsData = (data) => {
+    localStorage.setItem(CONDITIONS_STORAGE_KEY, JSON.stringify(data));
+};
+
+// Get conditions data from local storage
+export const getConditionsData = () => {
+    const storedData = localStorage.getItem(CONDITIONS_STORAGE_KEY);
+    return storedData ? JSON.parse(storedData) : [];
+};
+
+// Clear all workflow data from local storage
+export const clearWorkflowStorage = () => {
+    localStorage.removeItem(TRIGGER_STORAGE_KEY);
+    localStorage.removeItem(ACTION_STORAGE_KEY);
+    localStorage.removeItem(CONDITIONS_STORAGE_KEY);
 };

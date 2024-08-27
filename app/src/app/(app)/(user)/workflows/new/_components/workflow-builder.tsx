@@ -8,19 +8,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { MoveLeft, PlusCircleIcon, MoveHorizontal, Filter } from 'lucide-react'; // Grip icon for dragging
+import { MoveLeft, PlusCircleIcon, MoveHorizontal, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
 import greenhouselogo from '../../../../../../../public/greenhouselogo.png';
 import slacklogo from '../../../../../../../public/slack-logo.png';
-import filterIcon from '../../../../../../../public/filter.png'; // Placeholder for the condition icon
-import Actions from './actions'; // Import your Actions component
+import filterIcon from '../../../../../../../public/filter.png';
+import Actions from './actions';
 import TriggersComponent from './triggers';
 import ConditionsComponent from './conditons';
+import WorkflowPublishModal from './workflow-modal';
 
-// Local storage keys
 const localStorageKeyTriggers = 'workflowTriggers';
 const localStorageKeyActions = 'workflowActions';
 const localStorageKeyConditions = 'workflowConditions';
@@ -37,7 +36,6 @@ export function WorkflowBuilder() {
   const maxSidebarWidth = 800; // Maximum width of the sidebar
 
   useEffect(() => {
-    // Load data from localStorage when component mounts
     const loadStepsFromLocalStorage = () => {
       const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
       const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
@@ -81,7 +79,7 @@ export function WorkflowBuilder() {
         });
       });
 
-      // Add action step
+      // Add action step at the end
       if (actionData.recipients) {
         newSteps.push({
           id: newSteps.length + 1,
@@ -124,7 +122,7 @@ export function WorkflowBuilder() {
     setSelectedElement(null);
   };
 
-  const addConditionStep = (index, data) => {
+  const addConditionStep = (data) => {
     const newConditionStep = {
       id: steps.length + 1,
       type: 'Condition',
@@ -134,13 +132,27 @@ export function WorkflowBuilder() {
       icon: filterIcon,
       label: `Condition`,
     };
+
+    // Find the last condition or trigger step index
+    const lastConditionIndex = steps.map(step => step.type).lastIndexOf('Condition');
+    const insertIndex = lastConditionIndex !== -1 ? lastConditionIndex + 1 : 1;
+
     setSteps((prevSteps) => {
-      const validSteps = prevSteps.filter(step => step.status !== 'skeleton' || step.type !== 'Condition');
-      return [
-        ...validSteps.slice(0, index + 1),
-        newConditionStep,
-        ...validSteps.slice(index + 1),
-      ];
+      const updatedSteps = [...prevSteps];
+      updatedSteps.splice(insertIndex, 0, newConditionStep);
+      return updatedSteps;
+    });
+
+    // Ensure that the action step is always the last step
+    moveActionStepToEnd();
+  };
+
+  const moveActionStepToEnd = () => {
+    setSteps((prevSteps) => {
+      const actionStep = prevSteps.find(step => step.type === 'Action');
+      const otherSteps = prevSteps.filter(step => step.type !== 'Action');
+
+      return [...otherSteps, actionStep];
     });
   };
 
@@ -164,24 +176,19 @@ export function WorkflowBuilder() {
   };
 
   const handleSaveActions = (data) => {
-    // Find the index where the action should be inserted (after the last condition)
     const lastConditionIndex = steps.map(step => step.type).lastIndexOf('Condition');
+    const actionIndex = lastConditionIndex !== -1 ? lastConditionIndex + 1 : steps.length - 1;
 
-    const actionIndex = lastConditionIndex + 1; // Action should follow the last condition
-
-    // Check if the action step already exists in the steps array
     const actionExists = steps.some(step => step.type === 'Action' && step.status === 'valid');
 
     if (actionExists) {
-        // Update the existing action step
         saveStep(actionIndex, {
             name: "Slack Action",
             description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
         });
     } else {
-        // Insert a new action step after the last condition step
         const newActionStep = {
-            id: steps.length + 1,
+            id: steps.length,
             type: 'Action',
             name: "Slack Action",
             status: 'valid',
@@ -192,79 +199,41 @@ export function WorkflowBuilder() {
 
         setSteps(prevSteps => {
             const updatedSteps = [...prevSteps];
-            updatedSteps.splice(actionIndex, 1, newActionStep);
+            updatedSteps[updatedSteps.length - 1] = newActionStep;
             return updatedSteps;
         });
     }
 
-    setSelectedElement(null); // Close the sidebar after saving
-};
+    setSelectedElement(null);
+  };
+
   const handleSaveTriggers = (data) => {
-    // Save to localStorage
     localStorage.setItem(localStorageKeyTriggers, JSON.stringify(data));
 
-    // Save the trigger step
     saveStep(1, {
       name: "Greenhouse Trigger",
       description: `Trigger: ${data.description.substring(0, 50)}...`,
     });
-
-    // Reload conditions and actions based on the trigger being saved
-    const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
-    const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
-
-    const triggerIndex = steps.findIndex(step => step.type === 'Trigger');
-    const newSteps = steps.filter(step => step.type !== 'Condition');
-
-    // Add conditions after the trigger
-    conditionsData.forEach((condition, index) => {
-      newSteps.splice(triggerIndex + 1 + index, 0, {
-        id: newSteps.length + 1,
-        type: 'Condition',
-        name: `Condition: ${condition.field}`,
-        status: 'valid',
-        description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
-        icon: filterIcon,
-        label: `Condition`,
-      });
-    });
-
-    // Add action step at the end
-    newSteps.push({
-      id: newSteps.length + 1,
-      type: 'Action',
-      name: "Slack Action",
-      status: 'valid',
-      description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...`,
-      icon: slacklogo,
-      label: 'Action'
-    });
-
-    setSteps(newSteps);
   };
 
   const handleSaveConditions = (data) => {
-    // Save to localStorage
     localStorage.setItem(localStorageKeyConditions, JSON.stringify(data));
 
-    // Find the index where the conditions should be inserted (between triggers and actions)
-    const triggerIndex = steps.findIndex(step => step.type === 'Trigger');
-
-    // Remove any existing skeleton condition steps
     setSteps((prevSteps) => prevSteps.filter(step => step.type !== 'Condition' || step.status !== 'skeleton'));
 
-    // Save each condition as a separate step
-    data.forEach((condition, index) => {
-      addConditionStep(triggerIndex + 1 + index, {
+    data.forEach((condition) => {
+      addConditionStep({
         name: `Condition: ${condition.field}`,
         description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
       });
     });
+
+    // Ensure that the action step is always the last step
+    moveActionStepToEnd();
   };
 
   return (
     <>
-      {/* Top Bar */}
       <header className="w-[112%] ml-[50px] flex-none p-4 bg-white border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -275,7 +244,7 @@ export function WorkflowBuilder() {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-gray-500 text-xs">All changes saved</span>
-            <Button variant="outline" className="text-indigo-600 border-indigo-600 rounded hover:bg-indigo-100 hover:text-indigo-600">Run test</Button>
+            <WorkflowPublishModal />
             <div className="flex items-center space-x-1">
               <Switch className="data-[state=checked]:bg-green-500" />
             </div>
@@ -284,12 +253,9 @@ export function WorkflowBuilder() {
       </header>
 
       <div className="flex h-[calc(100vh-64px)] w-[112%] ml-[50px]">
-        {/* Canvas Area */}
         <div className={`flex-grow bg-gray-50 shadow-inner overflow-y-auto p-6 relative ${selectedElement ? 'pr-0' : 'pr-8'}`}>
-          {/* Dot Background */}
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
-          {/* Step Elements */}
           <div className="relative flex flex-col items-center space-y-3 mt-8 mr-[20px]">
             <AnimatePresence>
               {steps.map((step, index) => (
@@ -301,7 +267,6 @@ export function WorkflowBuilder() {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {/* Step Card */}
                     <motion.div
                       className={`relative w-full max-w-xl p-4 rounded-lg flex justify-between items-center cursor-pointer border-2 ${
                         step.status === 'skeleton' ? 'border-dashed border-gray-300 bg-gray-100' : 'border-l-4 border-green-500 bg-white shadow'
@@ -311,11 +276,9 @@ export function WorkflowBuilder() {
                       transition={{ duration: 0.2 }}
                       style={{ height: '80px' }}
                     >
-                      {/* Top Left Label */}
                       <div className={`absolute top-0 left-0 -mt-4 -ml-2 ${step.status === 'skeleton' ? 'bg-gray-200 text-gray-500' : 'bg-indigo-100 text-black'} px-3 py-1 rounded-tl-md rounded-br-md`}>
                         <span className="text-xs font-semibold">{step.label}</span>
                       </div>
-                      {/* Skeleton or Filled Card */}
                       {step.status === 'skeleton' ? (
                         <div className="flex items-center">
                           <Image src={step.icon} alt={`${step.type} Icon`} width={20} height={20} className="mr-4 text-gray-400" />
@@ -335,7 +298,6 @@ export function WorkflowBuilder() {
                       )}
                     </motion.div>
                   </motion.div>
-                  {/* Plus Button with Lines */}
                   {index < steps.length - 1 && (
                     <div className="flex flex-col items-center ">
                       <div className="w-px h-4 mb-1 bg-indigo-300"></div>
@@ -374,7 +336,6 @@ export function WorkflowBuilder() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <AnimatePresence>
           {selectedElement && (
             <motion.div
@@ -385,7 +346,6 @@ export function WorkflowBuilder() {
               exit={{ opacity: 0, x: 100 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Left side for dragging with hover effect */}
               <div
                 className="absolute left-0 top-0 h-full w-1 cursor-ew-resize hover:bg-indigo-500"
                 onMouseDown={startResizing}

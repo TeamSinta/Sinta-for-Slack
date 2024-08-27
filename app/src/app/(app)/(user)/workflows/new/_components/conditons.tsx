@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,10 +8,18 @@ import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 
 const localStorageKey = 'workflowConditions';
 
-const saveConditionsData = (data) => {
+const saveConditionsData = (newConditions) => {
     const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || [];
-    const updatedData = [...storedData, ...data];
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+    const updatedData = [...storedData, ...newConditions];
+
+    // Filter out duplicate conditions
+    const uniqueData = updatedData.filter((condition, index, self) =>
+        index === self.findIndex((c) => (
+            c.field === condition.field && c.condition === condition.condition && c.value === condition.value
+        ))
+    );
+
+    localStorage.setItem(localStorageKey, JSON.stringify(uniqueData));
 };
 
 const getConditionsData = () => {
@@ -81,9 +88,19 @@ const ConditionsComponent = ({ onSaveConditions }) => {
 
   const handleSave = () => {
     if (isSaveEnabled) {
-      saveConditionsData(conditions); // Save to local storage
+      const existingConditions = getConditionsData();
+      const updatedConditions = [...existingConditions, ...conditions];
 
-      onSaveConditions(conditions); // Call the original save handler
+      // Filter out duplicate conditions before saving
+      const uniqueConditions = updatedConditions.filter((condition, index, self) =>
+        index === self.findIndex((c) => (
+            c.field === condition.field && c.condition === condition.condition && c.value === condition.value
+        ))
+      );
+
+      saveConditionsData(uniqueConditions); // Save to local storage
+
+      onSaveConditions(uniqueConditions); // Call the original save handler
 
       // Reset conditions after saving
       setConditions([{ id: 1, field: '', condition: '', value: '' }]);
