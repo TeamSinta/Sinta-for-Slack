@@ -9,18 +9,18 @@ import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 const localStorageKey = 'workflowConditions';
 
 const saveConditionsData = (newConditions) => {
-    const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || [];
-    const updatedData = [...storedData, ...newConditions];
+  const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || [];
 
-    // Filter out duplicate conditions
-    const uniqueData = updatedData.filter((condition, index, self) =>
-        index === self.findIndex((c) => (
-            c.field === condition.field && c.condition === condition.condition && c.value === condition.value
-        ))
-    );
+  // Filter out duplicate conditions before saving
+  const updatedData = [...storedData, ...newConditions].filter((condition, index, self) =>
+      index === self.findIndex((c) => (
+          c.field === condition.field && c.condition === condition.condition && c.value === condition.value
+      ))
+  );
 
-    localStorage.setItem(localStorageKey, JSON.stringify(uniqueData));
+  localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
 };
+
 
 const getConditionsData = () => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || [];
@@ -88,24 +88,24 @@ const ConditionsComponent = ({ onSaveConditions }) => {
 
   const handleSave = () => {
     if (isSaveEnabled) {
-      const existingConditions = getConditionsData();
-      const updatedConditions = [...existingConditions, ...conditions];
+        const existingConditions = getConditionsData();
+        const newConditions = conditions.filter(condition => condition.field && condition.condition && condition.value);
 
-      // Filter out duplicate conditions before saving
-      const uniqueConditions = updatedConditions.filter((condition, index, self) =>
-        index === self.findIndex((c) => (
-            c.field === condition.field && c.condition === condition.condition && c.value === condition.value
-        ))
-      );
+        // Merge new and existing conditions and remove duplicates
+        const updatedConditions = [...existingConditions, ...newConditions].filter((condition, index, self) =>
+            index === self.findIndex((c) => (
+                c.field === condition.field && c.condition === condition.condition && c.value === condition.value
+            ))
+        );
 
-      saveConditionsData(uniqueConditions); // Save to local storage
+        saveConditionsData(updatedConditions); // Save unique conditions to local storage
+        onSaveConditions(updatedConditions); // Update WorkflowBuilder with the new conditions
 
-      onSaveConditions(uniqueConditions); // Call the original save handler
-
-      // Reset conditions after saving
-      setConditions([{ id: 1, field: '', condition: '', value: '' }]);
+        // Reset the conditions form after saving
+        setConditions([{ id: 1, field: '', condition: '', value: '' }]);
     }
-  };
+};
+
 
   return (
     <div className="conditions-sidebar p-2 flex flex-col justify-between h-full">

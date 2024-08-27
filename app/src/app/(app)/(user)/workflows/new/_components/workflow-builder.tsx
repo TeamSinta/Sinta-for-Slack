@@ -37,76 +37,79 @@ export function WorkflowBuilder() {
 
   useEffect(() => {
     const loadStepsFromLocalStorage = () => {
-      const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
-      const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
-      const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
+        const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
+        const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
+        const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
 
-      const newSteps = [];
+        const newSteps = [];
 
-      // Add trigger step
-      if (triggerData.event) {
-        newSteps.push({
-          id: 1,
-          type: 'Trigger',
-          name: "Greenhouse Trigger",
-          status: 'valid',
-          description: `${triggerData.event} - ${triggerData.trigger}`,
-          icon: greenhouselogo,
-          label: 'Trigger'
-        });
-      } else {
-        newSteps.push({
-          id: 1,
-          type: 'Trigger',
-          name: '',
-          status: 'skeleton',
-          description: '',
-          icon: greenhouselogo,
-          label: 'Trigger'
-        });
-      }
+        // Add trigger step
+        if (triggerData.event) {
+            newSteps.push({
+                id: 1,
+                type: 'Trigger',
+                name: "Greenhouse Trigger",
+                status: 'valid',
+                description: `${triggerData.event} - ${triggerData.trigger}`,
+                icon: greenhouselogo,
+                label: 'Trigger'
+            });
+        } else {
+            newSteps.push({
+                id: 1,
+                type: 'Trigger',
+                name: '',
+                status: 'skeleton',
+                description: '',
+                icon: greenhouselogo,
+                label: 'Trigger'
+            });
+        }
 
-      // Add condition steps
-      conditionsData.forEach((condition, index) => {
-        newSteps.push({
-          id: newSteps.length + 1,
-          type: 'Condition',
-          name: `Condition: ${condition.field}`,
-          status: 'valid',
-          description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
-          icon: filterIcon,
-          label: `Condition`,
+        // Add condition steps
+        conditionsData.forEach((condition, index) => {
+            newSteps.push({
+                id: newSteps.length + 1,
+                type: 'Condition',
+                name: `Condition: ${condition.field}`,
+                status: 'valid',
+                description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
+                icon: filterIcon,
+                label: 'Condition',
+            });
         });
-      });
 
-      // Add action step at the end
-      if (actionData.recipients) {
-        newSteps.push({
-          id: newSteps.length + 1,
-          type: 'Action',
-          name: "Slack Action",
-          status: 'valid',
-          description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...`,
-          icon: slacklogo,
-          label: 'Action'
-        });
-      } else {
-        newSteps.push({
-          id: newSteps.length + 1,
-          type: 'Action',
-          name: '',
-          status: 'skeleton',
-          description: '',
-          icon: slacklogo,
-          label: 'Action'
-        });
-      }
+        // Add action step
+        if (actionData.recipients) {
+            newSteps.push({
+                id: newSteps.length + 1,
+                type: 'Action',
+                name: "Slack Action",
+                status: 'valid',
+                description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...`,
+                icon: slacklogo,
+                label: 'Action'
+            });
+        } else {
+            newSteps.push({
+                id: newSteps.length + 1,
+                type: 'Action',
+                name: '',
+                status: 'skeleton',
+                description: '',
+                icon: slacklogo,
+                label: 'Action'
+            });
+        }
 
-      setSteps(newSteps);
+        // Ensure no duplication in rendering
+        console.log('Final Steps:', newSteps); // Debugging log
+        setSteps(newSteps);
     };
 
     loadStepsFromLocalStorage();
-  }, []);
+}, []);
+
 
   const handleElementClick = (element) => {
     setSelectedElement(element);
@@ -122,30 +125,33 @@ export function WorkflowBuilder() {
     setSelectedElement(null);
   };
 
-  const addConditionStep = (data) => {
-    const newConditionStep = {
-      id: steps.length + 1,
-      type: 'Condition',
-      name: data?.name || '',
-      status: data ? 'valid' : 'skeleton',
-      description: data?.description || '',
-      icon: filterIcon,
-      label: `Condition`,
-    };
+  const addConditionStep = () => {
+    const existingConditionStep = steps.find(step => step.type === 'Condition' && step.status === 'skeleton');
 
-    // Find the last condition or trigger step index
-    const lastConditionIndex = steps.map(step => step.type).lastIndexOf('Condition');
-    const insertIndex = lastConditionIndex !== -1 ? lastConditionIndex + 1 : 1;
+    // Only add a new skeleton step if there are no existing skeleton condition steps
+    if (!existingConditionStep && !steps.some(step => step.type === 'Condition' && step.status === 'valid')) {
+      const newConditionStep = {
+        id: steps.length + 1,
+        type: 'Condition',
+        name: '',
+        status: 'skeleton',
+        description: '',
+        icon: filterIcon,
+        label: 'Condition',
+      };
 
-    setSteps((prevSteps) => {
-      const updatedSteps = [...prevSteps];
-      updatedSteps.splice(insertIndex, 0, newConditionStep);
-      return updatedSteps;
-    });
+      setSteps((prevSteps) => {
+        const actionStepIndex = prevSteps.findIndex(step => step.type === 'Action');
+        const stepsBeforeAction = prevSteps.slice(0, actionStepIndex);
+        const stepsAfterAction = prevSteps.slice(actionStepIndex);
 
-    // Ensure that the action step is always the last step
-    moveActionStepToEnd();
+        return [...stepsBeforeAction, newConditionStep, ...stepsAfterAction];
+      });
+
+      moveActionStepToEnd();
+    }
   };
+
 
   const moveActionStepToEnd = () => {
     setSteps((prevSteps) => {
@@ -217,20 +223,45 @@ export function WorkflowBuilder() {
   };
 
   const handleSaveConditions = (data) => {
-    localStorage.setItem(localStorageKeyConditions, JSON.stringify(data));
+    // Retrieve existing conditions from local storage
+    const existingConditions = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
 
-    setSteps((prevSteps) => prevSteps.filter(step => step.type !== 'Condition' || step.status !== 'skeleton'));
+    // Combine new and existing conditions, ensuring no duplicates
+    const mergedConditions = [...existingConditions, ...data].filter((condition, index, self) =>
+      index === self.findIndex((c) => (
+        c.field === condition.field && c.condition === condition.condition && c.value === condition.value
+      ))
+    );
 
-    data.forEach((condition) => {
-      addConditionStep({
-        name: `Condition: ${condition.field}`,
-        description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
-      });
-    });
+    // Save the unique conditions back to local storage
+    localStorage.setItem(localStorageKeyConditions, JSON.stringify(mergedConditions));
 
-    // Ensure that the action step is always the last step
-    moveActionStepToEnd();
+    // Clear existing condition steps from the state
+    const filteredSteps = steps.filter(step => step.type !== 'Condition' || step.status === 'skeleton');
+
+    // Add new conditions as separate steps
+    const newSteps = mergedConditions.map((condition, index) => ({
+      id: index + 2,
+      type: 'Condition',
+      name: `Condition: ${condition.field}`,
+      status: 'valid',
+      description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
+      icon: filterIcon,
+      label: 'Condition',
+    }));
+
+    // Reorder steps to ensure that conditions come before actions
+    const triggerStep = filteredSteps.find(step => step.type === 'Trigger');
+    const actionStep = filteredSteps.find(step => step.type === 'Action');
+
+    // Combine steps in the correct order, ensuring no duplication
+    const finalSteps = [triggerStep, ...newSteps, actionStep].filter(Boolean);
+
+    setSteps(finalSteps);
   };
+
+
+
 
   return (
     <>

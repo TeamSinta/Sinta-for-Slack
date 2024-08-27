@@ -50,20 +50,28 @@ export const WorkflowPublishModal = () => {
 
   const handleOpenModal = () => {
     const combinedSteps = [
-      { id: 1, type: 'Trigger', ...triggerData },
-      ...conditionsData.map((condition, index) => ({
-        id: index + 2,
-        type: 'Condition',
-        field: condition.field,
-        condition: condition.condition,
-        value: condition.value.name || condition.value,
-        description: `${condition.field} ${condition.condition} ${condition.value.name || condition.value}`
-      })),
-      { id: conditionsData.length + 2, type: 'Action', ...actionData, description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...` }
+        { id: 1, type: 'Trigger', ...triggerData },
+        ...conditionsData.map((condition, index) => ({
+            id: index + 2,
+            type: 'Condition',
+            field: condition.field,
+            condition: condition.condition,
+            value: condition.value.name || condition.value,
+            description: `${condition.field} ${condition.condition} ${condition.value.name || condition.value}`
+        })),
+        {
+            id: conditionsData.length + 2,
+            type: 'Action',
+            ...actionData,
+            description: actionData.customMessageBody
+                ? `Alert: ${actionData.customMessageBody.substring(0, 50)}...`
+                : 'No custom message body found'
+        }
     ];
 
     setSteps(combinedSteps);
-  };
+};
+
 
   const handlePublish = async () => {
     setIsRunningTest(true);
