@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Select,
@@ -20,6 +20,11 @@ import Actions from './actions'; // Import your Actions component
 import TriggersComponent from './triggers';
 import ConditionsComponent from './conditons';
 
+// Local storage keys
+const localStorageKeyTriggers = 'workflowTriggers';
+const localStorageKeyActions = 'workflowActions';
+const localStorageKeyConditions = 'workflowConditions';
+
 export function WorkflowBuilder() {
   const [steps, setSteps] = useState([
     { id: 1, type: 'Trigger', name: '', status: 'skeleton', description: '', icon: greenhouselogo, label: 'Trigger' },
@@ -30,6 +35,80 @@ export function WorkflowBuilder() {
   const [sidebarWidth, setSidebarWidth] = useState(500); // Default width set wider when first opened
   const minSidebarWidth = 400; // Minimum width of the sidebar
   const maxSidebarWidth = 800; // Maximum width of the sidebar
+
+  useEffect(() => {
+    // Load data from localStorage when component mounts
+    const loadStepsFromLocalStorage = () => {
+      const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
+      const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
+      const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
+
+      const newSteps = [];
+
+      // Add trigger step
+      if (triggerData.event) {
+        newSteps.push({
+          id: 1,
+          type: 'Trigger',
+          name: "Greenhouse Trigger",
+          status: 'valid',
+          description: `${triggerData.event} - ${triggerData.trigger}`,
+          icon: greenhouselogo,
+          label: 'Trigger'
+        });
+      } else {
+        newSteps.push({
+          id: 1,
+          type: 'Trigger',
+          name: '',
+          status: 'skeleton',
+          description: '',
+          icon: greenhouselogo,
+          label: 'Trigger'
+        });
+      }
+
+      // Add condition steps
+      conditionsData.forEach((condition, index) => {
+        newSteps.push({
+          id: newSteps.length + 1,
+          type: 'Condition',
+          name: `Condition: ${condition.field}`,
+          status: 'valid',
+          description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
+          icon: filterIcon,
+          label: `Condition`,
+        });
+      });
+
+      // Add action step
+      if (actionData.recipients) {
+        newSteps.push({
+          id: newSteps.length + 1,
+          type: 'Action',
+          name: "Slack Action",
+          status: 'valid',
+          description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...`,
+          icon: slacklogo,
+          label: 'Action'
+        });
+      } else {
+        newSteps.push({
+          id: newSteps.length + 1,
+          type: 'Action',
+          name: '',
+          status: 'skeleton',
+          description: '',
+          icon: slacklogo,
+          label: 'Action'
+        });
+      }
+
+      setSteps(newSteps);
+    };
+
+    loadStepsFromLocalStorage();
+  }, []);
 
   const handleElementClick = (element) => {
     setSelectedElement(element);
@@ -55,11 +134,14 @@ export function WorkflowBuilder() {
       icon: filterIcon,
       label: `Condition`,
     };
-    setSteps([
-      ...steps.slice(0, index + 1),
-      newConditionStep,
-      ...steps.slice(index + 1),
-    ]);
+    setSteps((prevSteps) => {
+      const validSteps = prevSteps.filter(step => step.status !== 'skeleton' || step.type !== 'Condition');
+      return [
+        ...validSteps.slice(0, index + 1),
+        newConditionStep,
+        ...validSteps.slice(index + 1),
+      ];
+    });
   };
 
   const startResizing = (e) => {
@@ -82,26 +164,100 @@ export function WorkflowBuilder() {
   };
 
   const handleSaveActions = (data) => {
-    // Save the action step
-    saveStep(2, {
-      name: "Slack Action",
-      description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
-    });
-  };
+    // Find the index where the action should be inserted (after the last condition)
+    const lastConditionIndex = steps.map(step => step.type).lastIndexOf('Condition');
+
+    const actionIndex = lastConditionIndex + 1; // Action should follow the last condition
+
+    // Check if the action step already exists in the steps array
+    const actionExists = steps.some(step => step.type === 'Action' && step.status === 'valid');
+
+    if (actionExists) {
+        // Update the existing action step
+        saveStep(actionIndex, {
+            name: "Slack Action",
+            description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+        });
+    } else {
+        // Insert a new action step after the last condition step
+        const newActionStep = {
+            id: steps.length + 1,
+            type: 'Action',
+            name: "Slack Action",
+            status: 'valid',
+            description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+            icon: slacklogo,
+            label: 'Action',
+        };
+
+        setSteps(prevSteps => {
+            const updatedSteps = [...prevSteps];
+            updatedSteps.splice(actionIndex, 1, newActionStep);
+            return updatedSteps;
+        });
+    }
+
+    setSelectedElement(null); // Close the sidebar after saving
+};
   const handleSaveTriggers = (data) => {
-    // Save the action step
+    // Save to localStorage
+    localStorage.setItem(localStorageKeyTriggers, JSON.stringify(data));
+
+    // Save the trigger step
     saveStep(1, {
       name: "Greenhouse Trigger",
       description: `Trigger: ${data.description.substring(0, 50)}...`,
     });
+
+    // Reload conditions and actions based on the trigger being saved
+    const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
+    const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
+
+    const triggerIndex = steps.findIndex(step => step.type === 'Trigger');
+    const newSteps = steps.filter(step => step.type !== 'Condition');
+
+    // Add conditions after the trigger
+    conditionsData.forEach((condition, index) => {
+      newSteps.splice(triggerIndex + 1 + index, 0, {
+        id: newSteps.length + 1,
+        type: 'Condition',
+        name: `Condition: ${condition.field}`,
+        status: 'valid',
+        description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
+        icon: filterIcon,
+        label: `Condition`,
+      });
+    });
+
+    // Add action step at the end
+    newSteps.push({
+      id: newSteps.length + 1,
+      type: 'Action',
+      name: "Slack Action",
+      status: 'valid',
+      description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...`,
+      icon: slacklogo,
+      label: 'Action'
+    });
+
+    setSteps(newSteps);
   };
 
   const handleSaveConditions = (data) => {
+    // Save to localStorage
+    localStorage.setItem(localStorageKeyConditions, JSON.stringify(data));
+
+    // Find the index where the conditions should be inserted (between triggers and actions)
+    const triggerIndex = steps.findIndex(step => step.type === 'Trigger');
+
+    // Remove any existing skeleton condition steps
+    setSteps((prevSteps) => prevSteps.filter(step => step.type !== 'Condition' || step.status !== 'skeleton'));
+
     // Save each condition as a separate step
     data.forEach((condition, index) => {
-      addConditionStep(index, {
+      addConditionStep(triggerIndex + 1 + index, {
         name: `Condition: ${condition.field}`,
-        description: `${condition.field} ${condition.condition} ${condition.value}`,
+        description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
       });
     });
   };

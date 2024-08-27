@@ -36,6 +36,20 @@ import {
 } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+
+const localStorageKey = 'workflowActions';
+
+const saveActionData = (data) => {
+    const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+    const updatedData = { ...storedData, ...data };
+    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+};
+
+const getActionData = () => {
+    return JSON.parse(localStorage.getItem(localStorageKey)) || {};
+};
+
+
 const fields = [
   { value: "name", label: "Candidate Name", color: "" },
   { value: "title", label: "Job Title", color: "" },
@@ -161,15 +175,20 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({ onSaveActio
   const handleSave = () => {
     if (isSaveEnabled) {
       const actionData = {
+        recipients: selectedRecipients,
+        openingText: "Custom Opening Text", // Replace with actual field if needed
+        messageFields: selectedFields,
+        messageButtons: buttons,
+        messageDelivery: "Group DM", // Replace with actual field if needed
         customMessageBody,
-        selectedFields,
-        buttons,
-        selectedRecipients,
       };
-      onSaveActions(actionData);
+
+      // Save to local storage
+      saveActionData(actionData);
+
+      onSaveActions(actionData); // Call the original save handler
     }
   };
-
   const getButtonStyle = (button: ButtonAction) => {
     switch (button.type) {
       case ButtonType.AcknowledgeButton:
