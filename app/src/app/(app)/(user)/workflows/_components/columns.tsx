@@ -3,10 +3,13 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
-import { format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import IntegrationsCell from "./intergrations-cell"; // Import the IntegrationsCell component
 import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
 import Image, { type StaticImageData } from "next/image";
+import { format } from "date-fns";
+import { useState } from "react";  // Import useState for handling switch state
 
 const logoMap: Record<string, StaticImageData> = {
     slack: slackLogo,
@@ -83,38 +86,51 @@ function formatCondition(condition: Condition): string {
 
 export const columns: ColumnDef<WorkflowData>[] = [
     {
+        accessorKey: "integrations",
+        header: () => <span className="pl-2">Integrations</span>,
+        cell: ({ row }) => <IntegrationsCell workflow={row.original} />,
+    },
+    {
         accessorKey: "name",
         header: () => <span className="pl-2">Name</span>,
-    },
-    {
-        accessorKey: "objectField",
-        header: "Object Field",
-    },
-    {
-        accessorKey: "alertType",
-        header: "Alert Type",
+        cell: ({ row }) => (
+            <div>
+                <span className="text-sm font-medium">{row.original.name}</span>
+                <br />
+                <span className="text-xs text-muted-foreground">
+                    Created at: {format(new Date(row.original.createdAt), "PPP")}
+                </span>
+            </div>
+        ),
     },
     {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => (
-            <Badge variant="secondary" className="capitalize">
-                {row.original.status}
-            </Badge>
-        ),
-    },
-    {
-        accessorKey: "createdAt",
-        header: "Created At",
-        cell: ({ row }) => (
-            <span className="text-muted-foreground">
-                {format(new Date(row.original.createdAt), "PP")}
-            </span>
-        ),
+        cell: ({ row }) => {
+            const [isActive, setIsActive] = useState(row.original.status === "Active");
+
+            const handleStatusChange = async () => {
+                // Toggle the status
+                const newStatus = isActive ? "Inactive" : "Active";
+                setIsActive(!isActive);
+
+                // Perform an API call or state update to persist the change
+                // For example:
+                // await updateWorkflowStatus(row.original.id, newStatus);
+            };
+
+            return (
+                <Switch
+                    className="data-[state=checked]:bg-indigo-500"
+                    checked={isActive}
+                    onCheckedChange={handleStatusChange}
+                />
+            );
+        },
     },
     {
         accessorKey: "recipient",
-        header: "Recipient",
+        header: "Recipients",
         cell: ({ row }) => (
             <div className="flex flex-wrap gap-2">
                 {row.original.recipient.recipients.map((rec) => (
@@ -133,24 +149,6 @@ export const columns: ColumnDef<WorkflowData>[] = [
                 ))}
             </div>
         ),
-    },
-    {
-        accessorKey: "conditions",
-        header: "Conditions",
-        cell: ({ row }) => {
-            const conditionTexts = row.original.conditions.map(formatCondition);
-            return (
-                <div
-                    className="cursor-pointer hover:underline"
-                    title={conditionTexts.join("; ")}
-                    onClick={() => console.log("Conditions Clicked:")}
-                >
-                    {conditionTexts.length > 1
-                        ? `${conditionTexts[0]} + ${conditionTexts.length - 1} more`
-                        : conditionTexts[0]}
-                </div>
-            );
-        },
     },
     {
         header: "Actions",

@@ -5,16 +5,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import LoadingSpinner from "./loadingSprinner";
 import { WorkflowBuilder } from "./workflow-builder";
 
-export default function WorkflowLoader() {
+export default function WorkflowLoader({ workflowId, edit }: { workflowId: string; edit: boolean }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate a loading delay (e.g., fetching data or loading resources)
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 1000); // 6 seconds delay to match the message rotation
+        }, 1000); // Simulate loading delay
 
-        return () => clearTimeout(timer); // Clean up the timeout
+        return () => clearTimeout(timer); // Cleanup timeout
     }, []);
 
     return (
@@ -37,8 +36,8 @@ export default function WorkflowLoader() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="flex flex-col items-center justify-center ">
-                       <WorkflowBuilder/>
+                    <div className="flex flex-col items-center justify-center">
+                        <WorkflowBuilder workflowId={workflowId} edit={edit} />
                     </div>
                 </motion.div>
             )}

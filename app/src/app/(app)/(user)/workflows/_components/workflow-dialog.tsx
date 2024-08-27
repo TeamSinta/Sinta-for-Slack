@@ -28,7 +28,7 @@ import { useState } from "react";
 
 export function WorkflowDialog() {
   const router = useRouter();
-  const [selectedTemplate, setSelectedTemplate] = useState("Template 2");
+  const [selectedTemplate, setSelectedTemplate] = useState("Candidate Sourcing Pipeline");
 
   const handleCreateFromScratch = () => {
     router.push('/workflows/new');
@@ -37,7 +37,7 @@ export function WorkflowDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Create Workflow</Button>
+        <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">Create Workflow</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl rounded">
         <DialogHeader>
@@ -55,7 +55,12 @@ export function WorkflowDialog() {
             <Command>
               <CommandList>
                 <CommandGroup>
-                  {["Template 1", "Template 2", "Template 3", "Chosen Template"].map(template => (
+                  {[
+                    "Candidate Sourcing Pipeline",
+                    "Interview Scheduling Automation",
+                    "Offer Management Process",
+                    "New Hire Onboarding Tracker",
+                  ].map(template => (
                     <CommandItem
                       key={template}
                       className={`flex items-center justify-between p-4 cursor-pointer hover:bg-[#f1f5f9] ${
@@ -70,7 +75,10 @@ export function WorkflowDialog() {
                         <div className="flex flex-col">
                           <span>{template}</span>
                           <span className="text-sm text-muted-foreground">
-                            A description of the template, try to keep it to a single sentence.
+                            {template === "Candidate Sourcing Pipeline" && "Streamline candidate sourcing by tracking leads and automating follow-ups."}
+                            {template === "Interview Scheduling Automation" && "Automate interview scheduling and reminders with Greenhouse integration."}
+                            {template === "Offer Management Process" && "Manage and track offer stages and approvals through automated workflows."}
+                            {template === "New Hire Onboarding Tracker" && "Track onboarding tasks and ensure a smooth transition for new hires."}
                           </span>
                         </div>
                       </div>

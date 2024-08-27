@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/app/(app)/_components/data-table-pagination";
 import { DataTableToolbar } from "@/app/(app)/_components/data-table-toolbar";
+import Link from "next/link"; // Import Link from Next.js
 import type {
     DataTableFilterableColumn,
     DataTableSearchableColumn,
@@ -29,7 +30,7 @@ type DataTableProps<TData, TValue> = {
     searchableColumns?: DataTableSearchableColumn<TData>[];
 };
 
-export function DataTable<TData, TValue>({
+export function CustomDataTable<TData, TValue>({
     columns,
     table,
     totalRows,
@@ -80,14 +81,17 @@ export function DataTable<TData, TValue>({
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
-                                            className="p-4"
+                                            className="p-4 cursor-pointer"
                                         >
-                                            {
-                                                flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext(),
-                                                ) as React.ReactNode
-                                            }
+                                            <Link href={`/workflows/new/${row.original.id}`}>
+                                                {
+                                                    flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext(),
+                                                    ) as React.ReactNode
+                                                }
+                                            </Link>
                                         </TableCell>
                                     ))}
                                 </TableRow>

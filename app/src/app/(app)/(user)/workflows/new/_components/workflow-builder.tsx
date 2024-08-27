@@ -19,12 +19,13 @@ import Actions from './actions';
 import TriggersComponent from './triggers';
 import ConditionsComponent from './conditons';
 import WorkflowPublishModal from './workflow-modal';
+import { getWorkflowById } from '@/server/actions/workflows/queries'; // Adjust the import path as needed
 
 const localStorageKeyTriggers = 'workflowTriggers';
 const localStorageKeyActions = 'workflowActions';
 const localStorageKeyConditions = 'workflowConditions';
 
-export function WorkflowBuilder() {
+export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edit: boolean }) {
   const [steps, setSteps] = useState([
     { id: 1, type: 'Trigger', name: '', status: 'skeleton', description: '', icon: greenhouselogo, label: 'Trigger' },
     { id: 2, type: 'Action', name: '', status: 'skeleton', description: '', icon: slacklogo, label: 'Action' },
@@ -35,84 +36,128 @@ export function WorkflowBuilder() {
   const minSidebarWidth = 400; // Minimum width of the sidebar
   const maxSidebarWidth = 800; // Maximum width of the sidebar
 
+
+
   useEffect(() => {
-    const loadStepsFromLocalStorage = () => {
-        const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
-        const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
-        const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
-
-        const newSteps = [];
-
-        // Add trigger step
-        if (triggerData.event) {
-            newSteps.push({
-                id: 1,
-                type: 'Trigger',
-                name: "Greenhouse Trigger",
-                status: 'valid',
-                description: `${triggerData.event} - ${triggerData.trigger}`,
-                icon: greenhouselogo,
-                label: 'Trigger'
-            });
-        } else {
-            newSteps.push({
-                id: 1,
-                type: 'Trigger',
-                name: '',
-                status: 'skeleton',
-                description: '',
-                icon: greenhouselogo,
-                label: 'Trigger'
-            });
-        }
-
-        // Add condition steps without duplicates
-        conditionsData.forEach((condition) => {
-            const conditionDescription = `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`;
-
-            const conditionExists = newSteps.some(step => step.type === 'Condition' && step.description === conditionDescription);
-
-            if (!conditionExists) {
-                newSteps.push({
-                    id: newSteps.length + 1,
-                    type: 'Condition',
-                    name: `Condition: ${condition.field}`,
-                    status: 'valid',
-                    description: conditionDescription,
-                    icon: filterIcon,
-                    label: 'Condition',
-                });
-            }
-        });
-
-        // Add action step at the end
-        if (actionData.recipients) {
-            newSteps.push({
-                id: newSteps.length + 1,
-                type: 'Action',
-                name: "Slack Action",
-                status: 'valid',
-                description: `Alert: ${actionData.customMessageBody.substring(0, 50)}...`,
-                icon: slacklogo,
-                label: 'Action'
-            });
-        } else {
-            newSteps.push({
-                id: newSteps.length + 1,
-                type: 'Action',
-                name: '',
-                status: 'skeleton',
-                description: '',
-                icon: slacklogo,
-                label: 'Action'
-            });
-        }
-
-        setSteps(newSteps);
+    const clearSpecificLocalStorageKeys = () => {
+      localStorage.removeItem(localStorageKeyTriggers);
+      localStorage.removeItem(localStorageKeyActions);
+      localStorage.removeItem(localStorageKeyConditions);
     };
 
-    loadStepsFromLocalStorage();
-}, []);
+    const loadWorkflowData = async (workflowId: string) => {
+      try {
+        const workflow = await getWorkflowById(workflowId);
+
+        // Split the workflow data into the necessary parts
+        const workflowTriggers = {
+          objectField: workflow.objectField,
+          triggerConfig: workflow.triggerConfig,
+        };
+        const workflowActions = {
+          recipients: workflow.recipient.recipients,
+        };
+        const workflowConditions = workflow.conditions;
+
+        // Store these parts into local storage
+        localStorage.setItem(localStorageKeyTriggers, JSON.stringify(workflowTriggers));
+        localStorage.setItem(localStorageKeyActions, JSON.stringify(workflowActions));
+        localStorage.setItem(localStorageKeyConditions, JSON.stringify(workflowConditions));
+
+        // Load steps from local storage now that it's populated
+        loadStepsFromLocalStorage();
+      } catch (error) {
+        console.error("Error loading workflow data:", error);
+      }
+    };
+
+    const loadStepsFromLocalStorage = () => {
+      const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
+      const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
+      const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
+
+      const newSteps = [];
+
+      // Add trigger step
+      if (triggerData.objectField && triggerData.triggerConfig) {
+        newSteps.push({
+          id: 1,
+          type: 'Trigger',
+          name: "Greenhouse Trigger",
+          status: 'valid',
+          description: `${triggerData.objectField} - ${triggerData.triggerConfig.apiUrl}`,
+          icon: greenhouselogo,
+          label: 'Trigger'
+        });
+      } else {
+        newSteps.push({
+          id: 1,
+          type: 'Trigger',
+          name: '',
+          status: 'skeleton',
+          description: '',
+          icon: greenhouselogo,
+          label: 'Trigger'
+        });
+      }
+
+      // Add condition steps without duplicates
+      conditionsData.forEach((condition) => {
+        const conditionDescription = `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`;
+
+        const conditionExists = newSteps.some(step => step.type === 'Condition' && step.description === conditionDescription);
+
+        if (!conditionExists) {
+          newSteps.push({
+            id: newSteps.length + 1,
+            type: 'Condition',
+            name: `Condition: ${condition.field}`,
+            status: 'valid',
+            description: conditionDescription,
+            icon: filterIcon,
+            label: 'Condition',
+          });
+        }
+      });
+
+      // Add action step at the end
+      if (actionData.recipients) {
+        newSteps.push({
+          id: newSteps.length + 1,
+          type: 'Action',
+          name: "Slack Action",
+          status: 'valid',
+          description: `Alert: ${actionData.recipients.length} recipients`,
+          icon: slacklogo,
+          label: 'Action'
+        });
+      } else {
+        newSteps.push({
+          id: newSteps.length + 1,
+          type: 'Action',
+          name: '',
+          status: 'skeleton',
+          description: '',
+          icon: slacklogo,
+          label: 'Action'
+        });
+      }
+
+      setSteps(newSteps);
+    };
+
+    if (!edit) {
+      clearSpecificLocalStorageKeys(); // Clear local storage if not in edit mode
+    }
+
+    if (edit && workflowId) {
+      // If in edit mode, load the workflow data
+      loadWorkflowData(workflowId);
+    } else {
+      // Otherwise, load steps from local storage for new workflows
+      loadStepsFromLocalStorage();
+    }
+  }, [workflowId, edit]);
 
 
   const handleElementClick = (element) => {
@@ -224,13 +269,6 @@ export function WorkflowBuilder() {
     // Retrieve existing conditions from local storage
     const existingConditions = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
 
-    // // Merge new conditions with existing ones (avoid duplicates)
-    // const mergedConditions = [...existingConditions, ...data];
-    // console.log(mergedConditions);
-
-    // // Save to localStorage
-    // localStorage.setItem(localStorageKeyConditions, JSON.stringify(mergedConditions));
-
     // Filter out duplicates from the steps array
     const filteredSteps = steps.filter(step => step.type !== 'Condition');
 
@@ -264,11 +302,11 @@ export function WorkflowBuilder() {
             <Link href="/workflows">
               <MoveLeft />
             </Link>
-            <h1 className="font-heading text-lg font-bold">New Workflow</h1>
+            <h1 className="font-heading text-lg font-bold">{edit ? 'Edit Workflow' : 'New Workflow'}</h1>
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-gray-500 text-xs">All changes saved</span>
-            <WorkflowPublishModal />
+            <WorkflowPublishModal edit={edit} />
             <div className="flex items-center space-x-1">
               <Switch className="data-[state=checked]:bg-green-500" />
             </div>
