@@ -66,20 +66,26 @@ export function WorkflowBuilder() {
             });
         }
 
-        // Add condition steps
-        conditionsData.forEach((condition, index) => {
-            newSteps.push({
-                id: newSteps.length + 1,
-                type: 'Condition',
-                name: `Condition: ${condition.field}`,
-                status: 'valid',
-                description: `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`,
-                icon: filterIcon,
-                label: 'Condition',
-            });
+        // Add condition steps without duplicates
+        conditionsData.forEach((condition) => {
+            const conditionDescription = `${condition.field} ${condition.condition} ${typeof condition.value === 'object' ? condition.value.name : condition.value}`;
+
+            const conditionExists = newSteps.some(step => step.type === 'Condition' && step.description === conditionDescription);
+
+            if (!conditionExists) {
+                newSteps.push({
+                    id: newSteps.length + 1,
+                    type: 'Condition',
+                    name: `Condition: ${condition.field}`,
+                    status: 'valid',
+                    description: conditionDescription,
+                    icon: filterIcon,
+                    label: 'Condition',
+                });
+            }
         });
 
-        // Add action step
+        // Add action step at the end
         if (actionData.recipients) {
             newSteps.push({
                 id: newSteps.length + 1,
@@ -102,8 +108,6 @@ export function WorkflowBuilder() {
             });
         }
 
-        // Ensure no duplication in rendering
-        console.log('Final Steps:', newSteps); // Debugging log
         setSteps(newSteps);
     };
 
@@ -126,32 +130,26 @@ export function WorkflowBuilder() {
   };
 
   const addConditionStep = () => {
-    const existingConditionStep = steps.find(step => step.type === 'Condition' && step.status === 'skeleton');
+    const newConditionStep = {
+      id: steps.length + 1,
+      type: 'Condition',
+      name: '',
+      status: 'skeleton',
+      description: '',
+      icon: filterIcon,
+      label: 'Condition',
+    };
 
-    // Only add a new skeleton step if there are no existing skeleton condition steps
-    if (!existingConditionStep && !steps.some(step => step.type === 'Condition' && step.status === 'valid')) {
-      const newConditionStep = {
-        id: steps.length + 1,
-        type: 'Condition',
-        name: '',
-        status: 'skeleton',
-        description: '',
-        icon: filterIcon,
-        label: 'Condition',
-      };
+    // Insert the new blank condition before the action step
+    setSteps((prevSteps) => {
+      const actionStepIndex = prevSteps.findIndex(step => step.type === 'Action');
+      const stepsBeforeAction = prevSteps.slice(0, actionStepIndex);
+      const stepsAfterAction = prevSteps.slice(actionStepIndex);
 
-      setSteps((prevSteps) => {
-        const actionStepIndex = prevSteps.findIndex(step => step.type === 'Action');
-        const stepsBeforeAction = prevSteps.slice(0, actionStepIndex);
-        const stepsAfterAction = prevSteps.slice(actionStepIndex);
-
-        return [...stepsBeforeAction, newConditionStep, ...stepsAfterAction];
-      });
-
-      moveActionStepToEnd();
-    }
+      return [...stepsBeforeAction, newConditionStep, ...stepsAfterAction];
+    });
+    moveActionStepToEnd();
   };
-
 
   const moveActionStepToEnd = () => {
     setSteps((prevSteps) => {
@@ -226,22 +224,19 @@ export function WorkflowBuilder() {
     // Retrieve existing conditions from local storage
     const existingConditions = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
 
-    // Combine new and existing conditions, ensuring no duplicates
-    const mergedConditions = [...existingConditions, ...data].filter((condition, index, self) =>
-      index === self.findIndex((c) => (
-        c.field === condition.field && c.condition === condition.condition && c.value === condition.value
-      ))
-    );
+    // // Merge new conditions with existing ones (avoid duplicates)
+    // const mergedConditions = [...existingConditions, ...data];
+    // console.log(mergedConditions);
 
-    // Save the unique conditions back to local storage
-    localStorage.setItem(localStorageKeyConditions, JSON.stringify(mergedConditions));
+    // // Save to localStorage
+    // localStorage.setItem(localStorageKeyConditions, JSON.stringify(mergedConditions));
 
-    // Clear existing condition steps from the state
-    const filteredSteps = steps.filter(step => step.type !== 'Condition' || step.status === 'skeleton');
+    // Filter out duplicates from the steps array
+    const filteredSteps = steps.filter(step => step.type !== 'Condition');
 
     // Add new conditions as separate steps
-    const newSteps = mergedConditions.map((condition, index) => ({
-      id: index + 2,
+    const newSteps = existingConditions.map((condition, index) => ({
+      id: index + 1,  // Adjust the ID as necessary
       type: 'Condition',
       name: `Condition: ${condition.field}`,
       status: 'valid',
@@ -254,13 +249,11 @@ export function WorkflowBuilder() {
     const triggerStep = filteredSteps.find(step => step.type === 'Trigger');
     const actionStep = filteredSteps.find(step => step.type === 'Action');
 
-    // Combine steps in the correct order, ensuring no duplication
-    const finalSteps = [triggerStep, ...newSteps, actionStep].filter(Boolean);
+    // Combine steps in the correct order
+    const finalSteps = [triggerStep, ...newSteps, actionStep].filter(Boolean);  // Filter out any undefined steps
 
     setSteps(finalSteps);
   };
-
-
 
 
   return (

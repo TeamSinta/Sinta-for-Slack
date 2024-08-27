@@ -99,12 +99,13 @@ const ConditionsComponent = ({ onSaveConditions }) => {
         );
 
         saveConditionsData(updatedConditions); // Save unique conditions to local storage
-        onSaveConditions(updatedConditions); // Update WorkflowBuilder with the new conditions
+        onSaveConditions(newConditions); // Update WorkflowBuilder with only the new conditions
 
         // Reset the conditions form after saving
         setConditions([{ id: 1, field: '', condition: '', value: '' }]);
     }
 };
+
 
 
   return (
