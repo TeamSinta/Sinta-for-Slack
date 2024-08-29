@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -16,7 +16,7 @@ import greenhouselogo from '../../../../../../../public/greenhouselogo.png';
 import { Separator } from '@/components/ui/separator';
 import JobsDropdown from '../../_components/job-select';
 import StagesDropdown from '../../_components/stages-dropdown';
-import { customFetch, customFetchTester } from '@/utils/fetch';
+import { customFetchTester } from '@/utils/fetch';
 
 const localStorageKey = 'workflowTriggers';
 
@@ -26,57 +26,16 @@ const saveTriggerData = (data) => {
   localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
 };
 
-const getTriggerData = () => {
-  return JSON.parse(localStorage.getItem(localStorageKey)) || {};
-};
-
 const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [selectedObjectField, setSelectedObjectField] = useState('');
-  const [selectedAlertType, setSelectedAlertType] = useState('');
-  const [selectedJobID, setSelectedJobID] = useState('');
-  const [selectedStageID, setSelectedStageID] = useState('');
-  const [daysInput, setDaysInput] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedStage, setSelectedStage] = useState(null);
   const [selectedTrigger, setSelectedTrigger] = useState(null);
   const [days, setDays] = useState('');
   const [activeTab, setActiveTab] = useState("event");
-  const [isTesting, setIsTesting] = useState(false); // State for loading transition
-  const [testResult, setTestResult] = useState(null); // State for test result (success/error)
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
   const [showFullData, setShowFullData] = useState(false);
-
-  // Pre-populate the fields when in edit mode
-  useEffect(() => {
-    if (workflowData) {
-      // Populate objectField and alertType
-      setSelectedObjectField(workflowData.objectField || '');
-      setSelectedAlertType(workflowData.alertType || '');
-
-      // Populate Job ID (Processor)
-      if (workflowData.trigger_config) {
-        setSelectedJobID(workflowData.trigger_config.processor || '');
-        setSelectedJob(workflowData.trigger_config.processor || '');
-      }
-
-      // Populate Stage ID and Days from conditions
-      if (workflowData.conditions && workflowData.conditions.length > 0) {
-        setSelectedStageID(workflowData.conditions[0].field.value || '');
-        setDaysInput(workflowData.conditions[0].value || '');
-        setSelectedStage({
-          id: workflowData.conditions[0].field.value,
-          label: workflowData.conditions[0].field.label,
-        });
-        setDays(workflowData.conditions[0].value || '');
-      }
-
-      // Pre-select the event based on objectField and alertType
-      const preSelectedEvent = events.find(
-        (e) => e.objectField === workflowData.objectField && e.alertType === workflowData.alertType
-      );
-      setSelectedEvent(preSelectedEvent || null);
-    }
-  }, [workflowData]);
 
   const events = [
     {
@@ -95,8 +54,8 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
       title: "Interview Scheduled",
       description: "Triggered when an interview is scheduled.",
       apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-      objectField: "Scheduled Interview",
-      alertType: "time-based",
+      objectField: "Scheduled Interviews",
+      alertType: "timebased",
       triggers: [
         "Notify Interviewers",
         "Prepare Interview Kit",
@@ -125,11 +84,22 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
     // Add more events as needed
   ];
 
+  useEffect(() => {
+    if (workflowData) {
+      const matchedEvent = events.find(
+        (event) =>
+          event.objectField === workflowData.objectField &&
+          event.alertType === workflowData.alertType
+      );
+      setSelectedEvent(matchedEvent || null); // If no match, set to null
+    } else {
+      setSelectedEvent(null); // Set to null if no workflowData
+    }
+  }, [workflowData]);
+
   const handleEventChange = (eventTitle) => {
     const selected = events.find(event => event.title === eventTitle);
     setSelectedEvent(selected);
-    setSelectedObjectField(selected.objectField);
-    setSelectedAlertType(selected.alertType);
     setSelectedJob(null);
     setSelectedStage(null);
     setSelectedTrigger(null);
@@ -137,18 +107,15 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
 
   const handleJobChange = (jobId) => {
     setSelectedJob(jobId);
-    setSelectedJobID(jobId);
     setSelectedStage(null);
   };
 
   const handleStageChange = (stageId, stageLabel) => {
     setSelectedStage({ id: stageId, label: stageLabel });
-    setSelectedStageID(stageId);
   };
 
   const handleDaysChange = (e) => {
     setDays(e.target.value);
-    setDaysInput(e.target.value);
   };
 
   const handleContinue = () => {
@@ -215,7 +182,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
         success: true,
         status: response.status,
         message: `Status Code: ${response.status}`,
-        data: response.data.length ? response.data[0] : response.data, // Use only one object if array
+        data: response.data.length ? response.data[0] : response.data,
       });
     } catch (error) {
       setTestResult({
@@ -230,7 +197,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
           ? Array.isArray(error.response.data)
             ? error.response.data[0]
             : error.response.data
-          : null, // Handle failure case similarly
+          : null,
       });
     } finally {
       setIsTesting(false);
@@ -282,6 +249,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
               <span>Test</span>
               {getTabIcon("test")}
             </TabsTrigger>
+
           </TabsList>
 
           {/* Event Tab */}
@@ -301,7 +269,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                     <p className="text-xs text-gray-400">API URL: {selectedEvent.apiUrl}</p>
                   </div>
                 )}
-                <Select onValueChange={handleEventChange} value={selectedObjectField}>
+                <Select onValueChange={handleEventChange} value={selectedEvent?.title || "Choose an event"}>
                   <SelectTrigger className="w-full">
                     <SelectValue>
                       {selectedEvent ? selectedEvent.title : "Choose an event"}
@@ -336,10 +304,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
               <CardContent className="space-y-4">
                 {selectedEvent?.title === "Stuck in Pipeline" ? (
                   <>
-                    <JobsDropdown onJobSelect={handleJobChange} value={selectedJobID} />
+                    <JobsDropdown onJobSelect={handleJobChange} />
 
                     {selectedJob && (
-                      <StagesDropdown jobId={selectedJob} onStageSelect={handleStageChange} value={selectedStageID} />
+                      <StagesDropdown jobId={selectedJob} onStageSelect={handleStageChange} />
                     )}
 
                     {selectedStage && (
@@ -350,7 +318,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                         <div className="flex items-center">
                           <input
                             type="number"
-                            value={daysInput}
+                            value={days}
                             onChange={handleDaysChange}
                             className="mt-1 block border border-gray-300 rounded-md shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             placeholder="Enter number of days"
@@ -365,7 +333,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                 ) : (
                   <>
                     {selectedEvent?.triggers.length > 0 && (
-                      <Select onValueChange={handleTriggerChange} value={selectedTrigger}>
+                      <Select onValueChange={handleTriggerChange}>
                         <SelectTrigger className="w-full">
                           <SelectValue>
                             {selectedTrigger || "Choose a trigger"}
@@ -396,68 +364,72 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <motion.div
-                  animate={isTesting ? { opacity: 0.5 } : { opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Button
-                    variant="outline"
-                    className={`mt-4 text-green-600 border-green-600 rounded hover:bg-green-100 hover:text-green-600`}
-                    onClick={handleTest}
-                    disabled={isTesting}
-                  >
-                    {isTesting ? "Running Test..." : "Run Test"}
-                  </Button>
-                </motion.div>
 
-                {/* Test Result Display */}
-                {testResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className={`mt-4 p-6 rounded-lg shadow-md ${
-                      testResult.success
-                        ? "bg-green-50 border-l-4 border-green-400 text-green-800"
-                        : "bg-red-50 border-l-4 border-red-400 text-red-800"
-                    }`}
-                    style={{ maxWidth: '100%', wordWrap: 'break-word' }}
-                  >
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-xl font-bold">
-                        {testResult.success ? "Test Successful" : "Test Failed"}
-                      </h3>
-                      <span className="font-semibold">
-                        Status Code: {testResult.status}
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <p className="font-medium">Response Data:</p>
-                      <pre className="bg-gray-100 p-2 rounded text-sm max-w-full overflow-x-auto whitespace-pre-wrap break-words">
-                        {previewData && previewData.length > 300
-                          ? `${previewData.slice(0, 300)}...`
-                          : previewData || 'No data available'}
-                      </pre>
-                      {previewData && previewData.length > 300 && (
-                        <button
-                          onClick={() => setShowFullData(!showFullData)}
-                          className="mt-2 text-blue-500 hover:underline text-sm"
-                        >
-                          {showFullData ? "Show Less" : "Show More"}
-                        </button>
-                      )}
-                      {showFullData && previewData && (
-                        <pre className="bg-gray-100 p-2 rounded text-sm max-w-full overflow-x-auto whitespace-pre-wrap break-words">
-                          {JSON.stringify(testResult.data, null, 2)}
-                        </pre>
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <p className="font-medium">Message:</p>
-                      <p>{testResult.message}</p>
-                    </div>
-                  </motion.div>
-                )}
+
+              <motion.div
+        animate={isTesting ? { opacity: 0.5 } : { opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Button
+          variant="outline"
+          className={`mt-4 text-green-600 border-green-600 rounded hover:bg-green-100 hover:text-green-600`}
+          onClick={handleTest}
+          disabled={isTesting}
+        >
+          {isTesting ? "Running Test..." : "Run Test"}
+        </Button>
+      </motion.div>
+
+      {/* Test Result Display */}
+      {testResult && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className={`mt-4 p-6 rounded-lg shadow-md ${
+            testResult.success
+              ? "bg-green-50 border-l-4 border-green-400 text-green-800"
+              : "bg-red-50 border-l-4 border-red-400 text-red-800"
+          }`}
+          style={{ maxWidth: '100%', wordWrap: 'break-word' }}
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold">
+              {testResult.success ? "Test Successful" : "Test Failed"}
+            </h3>
+            <span className="font-semibold">
+              Status Code: {testResult.status}
+            </span>
+          </div>
+          <div className="mt-2">
+            <p className="font-medium">Response Data:</p>
+            <pre className="bg-gray-100 p-2 rounded text-sm max-w-full overflow-x-auto whitespace-pre-wrap break-words">
+              {previewData && previewData.length > 300
+                ? `${previewData.slice(0, 300)}...`
+                : previewData || 'No data available'}
+            </pre>
+            {previewData && previewData.length > 300 && (
+              <button
+                onClick={() => setShowFullData(!showFullData)}
+                className="mt-2 text-blue-500 hover:underline text-sm"
+              >
+                {showFullData ? "Show Less" : "Show More"}
+              </button>
+            )}
+            {showFullData && previewData && (
+              <pre className="bg-gray-100 p-2 rounded text-sm max-w-full overflow-x-auto whitespace-pre-wrap break-words">
+                {JSON.stringify(testResult.data, null, 2)}
+              </pre>
+            )}
+          </div>
+          <div className="mt-2">
+            <p className="font-medium">Message:</p>
+            <p>{testResult.message}</p>
+          </div>
+        </motion.div>
+)}
+
+
               </CardContent>
             </Card>
           </TabsContent>

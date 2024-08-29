@@ -84,6 +84,7 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
         const workflowTriggers = {
           objectField: workflow.objectField,
           triggerConfig: workflow.triggerConfig,
+          alertType: workflow.alertType
         };
         const workflowActions = {
           recipients: workflow.recipient.recipients,
