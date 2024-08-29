@@ -76,28 +76,37 @@ async function handleSlackEvent(data: any) {
 }
 
 export async function POST(request: Request) {
-    try {
-        const data = await request.json();
+  try {
+      const data = await request.json();
 
-        if (
-            data.type === "event_callback" &&
-            data.event.type === "app_home_opened"
-        ) {
-            return await handleSlackEvent(data);
-        }
+      // Handle Slack URL verification challenge
+      if (data.type === "url_verification") {
+          return new NextResponse(
+              JSON.stringify({ challenge: data.challenge }),
+              { status: 200, headers: { "Content-Type": "application/json" } }
+          );
+      }
 
-        return new NextResponse(JSON.stringify({ error: "Bad request" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        });
-    } catch (error) {
-        console.error("Error handling Slack event:", error);
-        return new NextResponse(
-            JSON.stringify({ error: "Internal server error" }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-        );
-    }
+      if (
+          data.type === "event_callback" &&
+          data.event.type === "app_home_opened"
+      ) {
+          return await handleSlackEvent(data);
+      }
+
+      return new NextResponse(JSON.stringify({ error: "Bad request" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+      });
+  } catch (error) {
+      console.error("Error handling Slack event:", error);
+      return new NextResponse(
+          JSON.stringify({ error: "Internal server error" }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+  }
 }
+
 
 async function showInviteScreen(userId: string, teamId: string) {
     const inviteLink = `https://5bc1e5fa5023dc7a.ngrok.app/invite/org/032cd629-9d52-4d9f-9e10-cf772b7c30ed?slackUserId=${userId}`;
