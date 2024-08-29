@@ -65,6 +65,16 @@ export function ColumnDropdown({ id }: WorkflowData) {
     } = useMutation({
         mutationFn: ({}: { workflowId: string }) =>
             deleteWorkflowMutation({ id }),
+        onSuccess: () => {
+            router.refresh();
+            toast.success("Workflow removed successfully!");
+        },
+        onError: () => {
+            toast.error("Failed to remove workflow.");
+        },
+        onSettled: () => {
+            startAwaitableRemoveWorkflowTransition(() => {});
+        },
     });
 
     const [
@@ -76,15 +86,11 @@ export function ColumnDropdown({ id }: WorkflowData) {
         toast.promise(
             async () => {
                 await removeWorkflowMutate({ workflowId: id });
-                await startAwaitableRemoveWorkflowTransition(() => {
-                    router.refresh();
-                    toast.success("Workflow removed successfully!");
-                });
             },
             {
                 loading: "Removing workflow...",
                 error: "Failed to remove workflow.",
-            },
+            }
         );
     };
 

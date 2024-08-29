@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/app/(app)/_components/data-table-pagination";
 import { DataTableToolbar } from "@/app/(app)/_components/data-table-toolbar";
-import Link from "next/link"; // Import Link from Next.js
+import Link from "next/link";
 import type {
     DataTableFilterableColumn,
     DataTableSearchableColumn,
@@ -49,22 +49,16 @@ export function CustomDataTable<TData, TValue>({
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="border-b">
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead
-                                            key={header.id}
-                                            className="p-4"
-                                        >
-                                            {header.isPlaceholder
-                                                ? null
-                                                : (flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext(),
-                                                  ) as React.ReactNode)}
-                                        </TableHead>
-                                    );
-                                })}
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={header.id} className="p-4">
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                  header.column.columnDef.header,
+                                                  header.getContext(),
+                                              )}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -73,25 +67,25 @@ export function CustomDataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && "selected"
-                                    }
+                                    data-state={row.getIsSelected() && "selected"}
                                     className="hover:bg-gray-100"
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell
-                                            key={cell.id}
-                                            className="p-4 cursor-pointer"
-                                        >
-                                            <Link href={`/workflows/new/${row.original.id}`}>
-                                                {
-                                                    flexRender(
-                                                        cell.column.columnDef
-                                                            .cell,
+                                        <TableCell key={cell.id} className="p-4">
+                                            {/* Conditionally wrap with Link based on cell content */}
+                                            {cell.column.id === "name" ? (
+                                                <Link href={`/workflows/new/${row.original.id}`}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
                                                         cell.getContext(),
-                                                    ) as React.ReactNode
-                                                }
-                                            </Link>
+                                                    )}
+                                                </Link>
+                                            ) : (
+                                                flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>

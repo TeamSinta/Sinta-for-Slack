@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CircleCheck, Loader2Icon, CircleX, Check } from 'lucide-react';
+import { CircleCheck, Loader2Icon, CircleX } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createWorkflowMutation, updateWorkflowMutation } from '@/server/actions/workflows/mutations';
-import { getActionData, getConditionsData, getTriggerData } from '@/lib/utils';
+import { getActionData, getConditionsData, getTriggerData, getWorkflowName } from '@/lib/utils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
@@ -21,6 +21,7 @@ export const WorkflowPublishModal = ({ edit = false, workflowId }: { edit?: bool
   const triggerData = getTriggerData();
   const actionData = getActionData();
   const conditionsData = getConditionsData();
+  const workflowName = getWorkflowName() || triggerData.event;
 
   const { mutateAsync, isPending: isMutatePending, reset } = useMutation({
     mutationFn: edit ? updateWorkflowMutation : createWorkflowMutation,
@@ -83,6 +84,20 @@ export const WorkflowPublishModal = ({ edit = false, workflowId }: { edit?: bool
     validateData(); // Validate data when the modal opens
   };
 
+  const sortTriggerData = (data) => {
+    const sortedData = {
+      alertType: data.alertType,
+      apiUrl: data.apiUrl,
+      description: data.description,
+      event: data.event,
+      objectField: data.objectField,
+      processor: data.processor,
+      trigger: data.trigger,
+      mainCondition: data.mainCondition && data.mainCondition.sort((a, b) => a.field.label.localeCompare(b.field.label)),
+    };
+    return sortedData;
+  };
+
   const handlePublish = async () => {
     setIsRunningTest(true);
     setStepStatus({});
@@ -107,15 +122,18 @@ export const WorkflowPublishModal = ({ edit = false, workflowId }: { edit?: bool
 
     if (!hasError) {
       try {
+        // Combine conditionsData with triggerData.mainCondition
+        const combinedConditions = [...conditionsData, ...(triggerData.mainCondition || [])];
+
         await mutateAsync({
           id: workflowId, // Include the workflowId when updating
-          name: triggerData.event,
-          objectField: triggerData.event, // You can adjust this as needed
-          alertType: 'time-based', // Adjust this as needed
-          conditions: conditionsData,
+          name: workflowName, // Use the name from local storage or fallback to event name
+          objectField: triggerData.objectField, // Use sorted trigger data's object field
+          alertType: triggerData.alertType, // Adjust this as needed
+          conditions: combinedConditions, // Send combined conditions
           triggerConfig: {
-            apiUrl: triggerData.description,
-            processor: triggerData.triggerData,
+            apiUrl: triggerData.apiUrl,
+            processor: triggerData.processor,
           },
           recipient: actionData,
           status: 'active',
@@ -133,11 +151,12 @@ export const WorkflowPublishModal = ({ edit = false, workflowId }: { edit?: bool
     }
   };
 
+
   return (
     <Dialog onOpenChange={handleOpenModal}>
       <DialogTrigger asChild>
         <Button variant="outline" className="text-indigo-600 border-indigo-600 rounded hover:bg-indigo-100 hover:text-indigo-600">
-          {edit ? 'Update Workflow' : 'Publish Workflow'}
+          {edit ? 'Update' : 'Publish'}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -156,9 +175,15 @@ export const WorkflowPublishModal = ({ edit = false, workflowId }: { edit?: bool
               className={`flex items-center justify-between p-3 bg-gray-50 border rounded ${stepStatus[step.id] === 'error' ? 'border-red-500' : ''}`}
             >
               <div className="flex items-center space-x-2">
-                {stepStatus[step.id] === 'loading' && <Loader2Icon className="animate-spin text-blue-500" />}
-                {stepStatus[step.id] === 'success' && <CircleCheck className="text-green-500" />}
-                {stepStatus[step.id] === 'error' ? <CircleX className="text-red-500" /> : <Check className="text-gray-400" />}
+                {stepStatus[step.id] === 'loading' ? (
+                  <Loader2Icon className="animate-spin text-blue-500" />
+                ) : stepStatus[step.id] === 'success' ? (
+                  <CircleCheck className="text-green-500" />
+                ) : stepStatus[step.id] === 'error' ? (
+                  <CircleX className="text-red-500" />
+                ) : (
+                  <CircleCheck className="text-gray-400" />
+                )}
                 <div>
                   <h3 className="font-semibold">{step.type}</h3>
                   <p className="text-sm text-gray-500">
@@ -190,6 +215,7 @@ const clearLocalStorage = () => {
   localStorage.removeItem('workflowTriggers');
   localStorage.removeItem('workflowActions');
   localStorage.removeItem('workflowConditions');
+  localStorage.removeItem('Workflow name'); // Clear the workflow name from local storage as well
 };
 
 export default WorkflowPublishModal;

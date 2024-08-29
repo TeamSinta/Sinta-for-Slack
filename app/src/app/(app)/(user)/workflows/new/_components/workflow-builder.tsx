@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MoveLeft, PlusCircleIcon, MoveHorizontal, Filter } from 'lucide-react';
+import { MoveLeft, PlusCircleIcon, MoveHorizontal, Filter, XIcon, PencilIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
@@ -19,11 +19,15 @@ import Actions from './actions';
 import TriggersComponent from './triggers';
 import ConditionsComponent from './conditons';
 import WorkflowPublishModal from './workflow-modal';
-import { getWorkflowById } from '@/server/actions/workflows/queries'; // Adjust the import path as needed
+import { updateWorkflowStatusMutation, updateWorkflowNameMutation } from '@/server/actions/workflows/mutations';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { getWorkflowById } from '@/server/actions/workflows/queries';
 
 const localStorageKeyTriggers = 'workflowTriggers';
 const localStorageKeyActions = 'workflowActions';
 const localStorageKeyConditions = 'workflowConditions';
+const localStorageKeyName = 'Workflow name';
 
 export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edit: boolean }) {
   const [steps, setSteps] = useState([
@@ -35,19 +39,46 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
   const [sidebarWidth, setSidebarWidth] = useState(500); // Default width set wider when first opened
   const minSidebarWidth = 400; // Minimum width of the sidebar
   const maxSidebarWidth = 800; // Maximum width of the sidebar
+  const [isActive, setIsActive] = useState(false); // State to track switch status
+  const [workflowName, setWorkflowName] = useState('New Workflow');
+  const [isEditingName, setIsEditingName] = useState(false);
 
+  const { mutateAsync: updateStatusMutate, isPending: isUpdatingStatus } = useMutation({
+    mutationFn: updateWorkflowStatusMutation,
+    onSuccess: () => {
+      toast.success(`Workflow ${isActive ? 'activated' : 'deactivated'} successfully`);
+    },
+    onError: () => {
+      toast.error('Failed to update workflow status.');
+    },
+  });
 
+  const { mutateAsync: updateNameMutate } = useMutation({
+    mutationFn: updateWorkflowNameMutation, // Add your update name mutation function here
+    onSuccess: () => {
+      toast.success('Workflow name updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update workflow name.');
+    },
+  });
 
   useEffect(() => {
     const clearSpecificLocalStorageKeys = () => {
       localStorage.removeItem(localStorageKeyTriggers);
       localStorage.removeItem(localStorageKeyActions);
       localStorage.removeItem(localStorageKeyConditions);
+      localStorage.removeItem(localStorageKeyName);
     };
 
     const loadWorkflowData = async (workflowId: string) => {
       try {
         const workflow = await getWorkflowById(workflowId);
+
+        // Set switch status based on workflow data
+        setIsActive(workflow.status === 'Active');
+        setWorkflowName(workflow.name || 'Edit Workflow');
+        localStorage.setItem(localStorageKeyName, workflow.name || 'Edit Workflow');
 
         // Split the workflow data into the necessary parts
         const workflowTriggers = {
@@ -75,6 +106,9 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
       const triggerData = JSON.parse(localStorage.getItem(localStorageKeyTriggers)) || {};
       const actionData = JSON.parse(localStorage.getItem(localStorageKeyActions)) || {};
       const conditionsData = JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
+      const storedName = localStorage.getItem(localStorageKeyName) || 'New Workflow';
+
+      setWorkflowName(storedName);
 
       const newSteps = [];
 
@@ -159,6 +193,21 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
     }
   }, [workflowId, edit]);
 
+  const handleSwitchToggle = async () => {
+    const newStatus = isActive ? 'Inactive' : 'Active';
+    setIsActive(!isActive);
+    const extractedId = Array.isArray(workflowId) ? workflowId[0] : workflowId;
+
+    try {
+      await updateStatusMutate({
+        id: extractedId,  // Make sure workflowId is a string
+        status: newStatus,
+      });
+    } catch (error) {
+      console.error("Error updating workflow status:", error);
+      setIsActive(isActive); // Revert the change on error
+    }
+  };
 
   const handleElementClick = (element) => {
     setSelectedElement(element);
@@ -231,26 +280,26 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
     const actionExists = steps.some(step => step.type === 'Action' && step.status === 'valid');
 
     if (actionExists) {
-        saveStep(actionIndex, {
-            name: "Slack Action",
-            description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
-        });
+      saveStep(actionIndex, {
+        name: "Slack Action",
+        description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+      });
     } else {
-        const newActionStep = {
-            id: steps.length,
-            type: 'Action',
-            name: "Slack Action",
-            status: 'valid',
-            description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
-            icon: slacklogo,
-            label: 'Action',
-        };
+      const newActionStep = {
+        id: steps.length,
+        type: 'Action',
+        name: "Slack Action",
+        status: 'valid',
+        description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+        icon: slacklogo,
+        label: 'Action',
+      };
 
-        setSteps(prevSteps => {
-            const updatedSteps = [...prevSteps];
-            updatedSteps[updatedSteps.length - 1] = newActionStep;
-            return updatedSteps;
-        });
+      setSteps(prevSteps => {
+        const updatedSteps = [...prevSteps];
+        updatedSteps[updatedSteps.length - 1] = newActionStep;
+        return updatedSteps;
+      });
     }
 
     setSelectedElement(null);
@@ -263,6 +312,8 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
       name: "Greenhouse Trigger",
       description: `Trigger: ${data.description.substring(0, 50)}...`,
     });
+    setSelectedElement(null);
+
   };
 
   const handleSaveConditions = (data) => {
@@ -291,24 +342,100 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
     const finalSteps = [triggerStep, ...newSteps, actionStep].filter(Boolean);  // Filter out any undefined steps
 
     setSteps(finalSteps);
+    setSelectedElement(null);
   };
 
+  const handleCloseSidebar = () => {
+    setSelectedElement(null);
+  };
+
+  const handleDoubleClick = () => {
+    setIsEditingName(true);
+  };
+
+  const handleNameChange = (e) => {
+    setWorkflowName(e.target.value);
+    localStorage.setItem(localStorageKeyName, e.target.value);
+  };
+
+  const handleNameBlur = async () => {
+    setIsEditingName(false);
+
+    if (edit && workflowId) {
+      const extractedId = Array.isArray(workflowId) ? workflowId[0] : workflowId;
+
+      try {
+        await updateNameMutate({
+          id: extractedId,
+          name: workflowName,
+        });
+      } catch (error) {
+        console.error("Error updating workflow name:", error);
+      }
+    }
+  };
 
   return (
     <>
       <header className="w-[112%] ml-[50px] flex-none p-4 bg-white border-b border-border">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Link href="/workflows">
-              <MoveLeft />
-            </Link>
-            <h1 className="font-heading text-lg font-bold">{edit ? 'Edit Workflow' : 'New Workflow'}</h1>
-          </div>
+        <div className="flex items-center space-x-2 w-[70%]">
+  <Link href="/workflows">
+    <MoveLeft />
+  </Link>
+  <div className="flex items-center space-x-2 w-[70%]" onDoubleClick={handleDoubleClick}>
+    {isEditingName ? (
+      <input
+        type="text"
+        value={workflowName}
+        onChange={(e) => {
+          if (e.target.value.length <= 50) {
+            handleNameChange(e);
+          }
+        }}
+        onBlur={handleNameBlur}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleNameBlur(); // Submit on Enter key press
+          }
+        }}
+        className="border border-gray-300 rounded p-1 w-full focus:outline-none"
+        autoFocus
+        style={{
+          fontSize: '1.05rem', // Equivalent to h3 font size
+          fontWeight: 'bold', // Equivalent to h3 font weight
+          lineHeight: '1.75rem', // Adjust line-height similar to h3
+          width: '100%',
+          maxWidth: '500px'
+        }}
+      />
+    ) : (
+      <h3 className="font-heading text-lg font-bold">
+        {workflowName}
+      </h3>
+    )}
+    {!isEditingName && (
+      <button
+        className="p-1 rounded-full text-gray-500 hover:text-gray-700 focus:outline-none"
+        onClick={handleDoubleClick} // Trigger edit mode on button click
+      >
+        <PencilIcon size={16} />
+      </button>
+    )}
+  </div>
+</div>
+
+
           <div className="flex items-center space-x-4">
             <span className="text-gray-500 text-xs">All changes saved</span>
-            <WorkflowPublishModal edit={edit} />
+            <WorkflowPublishModal edit={edit} workflowId={workflowId} />
             <div className="flex items-center space-x-1">
-              <Switch className="data-[state=checked]:bg-green-500" />
+              <Switch
+                className="data-[state=checked]:bg-indigo-500"
+                checked={isActive}
+                onCheckedChange={handleSwitchToggle}
+                disabled={isUpdatingStatus || !workflowId}
+              />
             </div>
           </div>
         </div>
@@ -420,11 +547,31 @@ export function WorkflowBuilder({ workflowId, edit }: { workflowId?: string; edi
                 </div>
               </div>
               <div className="flex-grow">
+              <button
+                  className="absolute top-2 right-2 p-1 rounded-full text-gray-500 hover:text-gray-700 focus:outline-none"
+                  onClick={handleCloseSidebar}
+                >
+                  <XIcon size={20} />
+                </button>
 
-                {selectedElement.type === 'Trigger' && <TriggersComponent onSaveTrigger={handleSaveTriggers} />}
-                {selectedElement.type === 'Action' && <Actions onSaveActions={handleSaveActions} />}
-
-                {selectedElement.type === 'Condition' && <ConditionsComponent onSaveConditions={handleSaveConditions} />}
+                              {selectedElement.type === 'Trigger' && (
+                <TriggersComponent
+                  onSaveTrigger={handleSaveTriggers}
+                  workflowData={edit ? JSON.parse(localStorage.getItem(localStorageKeyTriggers)) : null}
+                />
+              )}
+              {selectedElement.type === 'Action' && (
+                <Actions
+                  onSaveActions={handleSaveActions}
+                  workflowData={edit ? JSON.parse(localStorage.getItem(localStorageKeyActions)) : null}
+                />
+              )}
+              {selectedElement.type === 'Condition' && (
+                <ConditionsComponent
+                  onSaveConditions={handleSaveConditions}
+                  workflowData={edit ? JSON.parse(localStorage.getItem(localStorageKeyConditions)) : null}
+                />
+)}
               </div>
             </motion.div>
           )}

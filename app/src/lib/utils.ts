@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 const TRIGGER_STORAGE_KEY = 'workflowTriggers';
 const ACTION_STORAGE_KEY = 'workflowActions';
 const CONDITIONS_STORAGE_KEY = 'workflowConditions';
+const WORKFLOW_NAME_STORAGE_KEY = 'Workflow name';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -74,6 +75,20 @@ export const isSame = (date: string, value: number, unit: string): boolean => {
     return false;
 };
 
+// Save workflow name to local storage
+export const saveWorkflowName = (name: string) => {
+    localStorage.setItem(WORKFLOW_NAME_STORAGE_KEY, name);
+};
+
+// Get workflow name from local storage
+export const getWorkflowName = () => {
+    return localStorage.getItem(WORKFLOW_NAME_STORAGE_KEY) || '';
+};
+
+// Clear workflow name from local storage
+export const clearWorkflowName = () => {
+    localStorage.removeItem(WORKFLOW_NAME_STORAGE_KEY);
+};
 
 // Save trigger data to local storage
 export const saveTriggerData = (data) => {
@@ -113,4 +128,5 @@ export const clearWorkflowStorage = () => {
     localStorage.removeItem(TRIGGER_STORAGE_KEY);
     localStorage.removeItem(ACTION_STORAGE_KEY);
     localStorage.removeItem(CONDITIONS_STORAGE_KEY);
+    clearWorkflowName(); // Clear the workflow name as well
 };

@@ -9,7 +9,6 @@ import { getMockGreenhouseData } from "@/server/greenhouse/core";
 import slacklogo from '../../../../../../../public/slack-logo.png';
 import sintalogo from '../../../../../../../public/sintalogo.png';
 import Image from "next/image";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +18,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { HelpCircleIcon, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { HelpCircleIcon, CheckCircle, AlertTriangle, Clock, Loader2Icon } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import MessageButtons, {
@@ -84,6 +83,7 @@ type Option = {
 
 const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({ onSaveActions }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [testButtonLoading, setTestButtonLoading] = useState(false);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [buttons, setButtons] = useState<ButtonAction[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
@@ -189,6 +189,107 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({ onSaveActio
       onSaveActions(actionData); // Call the original save handler
     }
   };
+
+  const handleTestConfiguration = async () => {
+    setTestButtonLoading(true);
+
+    const payload = {
+      attachments: [
+        {
+          color: "#384ab4",
+          blocks: [
+            {
+              type: "header",
+              block_id: "ASR3r",
+              text: {
+                type: "plain_text",
+                text: "Stuck in Hiring Manager Screen for 5 days :worried:",
+                emoji: true
+              }
+            },
+            {
+              type: "divider",
+              block_id: "TYZqO"
+            },
+            {
+              type: "section",
+              block_id: "ig1EJ",
+              text: {
+                type: "mrkdwn",
+                text: "*Candidate's Name*: Jane Arthur\n*Role*: Senior Product Manager\n*Recruiter name*: <@U06UPA4MQ13>\n*Coordinator name*: <@U06V2NZQ0B1>",
+                verbatim: false
+              }
+            },
+            {
+              type: "actions",
+              block_id: "block_id_5673600008",
+              elements: [
+                {
+                  type: "button",
+                  action_id: "2R1vH",
+                  text: {
+                    type: "plain_text",
+                    text: "Candidate Profile",
+                    emoji: true
+                  },
+                  value: "LinkButton_5673600008",
+                  url: "https://app8.greenhouse.io/people/5673600008"
+                },
+                {
+                  type: "button",
+                  action_id: "move_to_next_stage_5673600008",
+                  text: {
+                    type: "plain_text",
+                    text: "Move to Next Stage",
+                    emoji: true
+                  },
+                  style: "primary",
+                  value: "MoveToNextStage_5673600008"
+                },
+                {
+                  type: "button",
+                  action_id: "reject_candidate_5673600008",
+                  text: {
+                    type: "plain_text",
+                    text: "Reject Candidate",
+                    emoji: true
+                  },
+                  style: "danger",
+                  value: "RejectCandidate_5673600008"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    try {
+      const response = await fetch(
+        "https://hooks.slack.com/services/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",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (response.ok) {
+        // Handle successful response
+        console.log("Test message sent successfully.");
+      } else {
+        // Handle errors
+        console.error("Failed to send test message.");
+      }
+    } catch (error) {
+      console.error("Error occurred while sending test message:", error);
+    } finally {
+      setTestButtonLoading(false);
+    }
+  };
+
   const getButtonStyle = (button: ButtonAction) => {
     switch (button.type) {
       case ButtonType.AcknowledgeButton:
@@ -415,8 +516,20 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({ onSaveActio
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button variant="outline" className="mt-4 text-green-600 border-green-600 rounded hover:bg-green-100 hover:text-green-600">
-                  Run Test
+                <Button
+                  variant="outline"
+                  className="mt-4 text-green-600 border-green-600 rounded hover:bg-green-100 hover:text-green-600"
+                  onClick={handleTestConfiguration}
+                  disabled={testButtonLoading}
+                >
+                  {testButtonLoading ? (
+                    <>
+                      <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    "Run Test"
+                  )}
                 </Button>
               </CardContent>
             </Card>
