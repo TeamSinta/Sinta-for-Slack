@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use server";
 import { db } from "@/server/db";
-import { organizations, workflows } from "@/server/db/schema";
-import { eq } from "drizzle-orm";
+import {
+    organizations,
+    workflows,
+    hiringrooms,
+    membersToOrganizations,
+} from "@/server/db/schema";
+import { and, eq, type SQLWrapper } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {
@@ -102,7 +107,6 @@ export async function setAccessToken(
 ) {
     const { currentOrg } = await getOrganizations();
     const orgID = currentOrg.id;
-    console.log("orgID", orgID);
     const result = await db
         .update(organizations)
         .set({
@@ -115,6 +119,17 @@ export async function setAccessToken(
         .execute();
 
     return result ? "OK" : "Failed to update access token";
+}
+
+export async function checkForSlackTeamIDConflict(teamId: string | SQLWrapper) {
+    const existingOrg = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, teamId),
+        columns: {
+            id: true,
+        },
+    });
+    const { currentOrg } = await getOrganizations();
+    return existingOrg && existingOrg.id !== currentOrg.id;
 }
 
 export async function getSlackTeamIDByWorkflowID(
@@ -149,4 +164,65 @@ export async function getSlackTeamIDByWorkflowID(
     }
 
     return organization.slack_team_id!;
+}
+
+export async function getSlackTeamIDByHiringroomID(
+    hiringroomId: string,
+): Promise<string> {
+    if (!hiringroomId) {
+        throw new Error("No hiringroom ID provided.");
+    }
+
+    // Fetch hiringroom details using the provided hiringroom ID
+    const hiringroom = await db.query.hiringrooms.findFirst({
+        where: eq(hiringrooms.id, hiringroomId),
+        columns: {
+            organizationId: true,
+        },
+    });
+
+    if (!hiringroom) {
+        throw new Error("Hiringroom not found.");
+    }
+
+    // Fetch organization's Slack team ID using the organization ID from the hiringroom
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.id, hiringroom.organizationId),
+        columns: {
+            slack_team_id: true,
+        },
+    });
+
+    if (!organization) {
+        throw new Error("Organization not found.");
+    }
+
+    return organization.slack_team_id!;
+}
+
+export async function isUserMemberOfOrg({
+    slackUserId,
+    slackTeamId,
+}: {
+    slackUserId: string;
+    slackTeamId: string;
+}): Promise<boolean> {
+    // Step 1: Retrieve the organization based on the slack_team_id
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, slackTeamId),
+    });
+
+    if (!organization) {
+        return false; // Organization not found
+    }
+
+    // Step 2: Check if the user is a member of the found organization
+    const member = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.slack_user_id, slackUserId),
+            eq(membersToOrganizations.organizationId, organization.id),
+        ),
+    });
+
+    return !!member; // Return true if the user is a member, false otherwise
 }

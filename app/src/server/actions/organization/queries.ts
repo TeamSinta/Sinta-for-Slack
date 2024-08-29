@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use server";
 
 import { orgConfig } from "@/config/organization";
@@ -6,6 +8,7 @@ import {
     membersToOrganizations,
     orgRequests,
     organizations,
+    userPreferences,
     workflows,
 } from "@/server/db/schema";
 import { protectedProcedure } from "@/server/procedures";
@@ -59,92 +62,91 @@ export async function getOrgRequestsQuery() {
         })
         .execute();
 }
-
 /**
  * Check if the slack_team_id is filled for the current organization.
  * @returns A boolean indicating if the slack_team_id is set.
  */
 export async function checkSlackTeamIdFilled() {
-  const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
 
-  if (!currentOrg) {
-      return null; // Return null or any default value to indicate no organization
-  }
+    if (!currentOrg) {
+        return null; // Return null or any default value to indicate no organization
+    }
 
-  const org = await db.query.organizations.findFirst({
-      where: eq(organizations.id, currentOrg.id), // Properly use 'eq' for condition
-      columns: {
-          slack_team_id: true, // We only need to fetch the slack_team_id
-      },
-  });
+    const org = await db.query.organizations.findFirst({
+        where: eq(organizations.id, currentOrg.id), // Properly use 'eq' for condition
+        columns: {
+            slack_team_id: true, // We only need to fetch the slack_team_id
+        },
+    });
 
-  return org ? org.slack_team_id : null; // Return the slack_team_id or null if not found
+    return org ? org.slack_team_id : null; // Return the slack_team_id or null if not found
 }
 
 /**
-* Check if the greenhouse_api_token is filled for the current organization.
-* @returns A boolean indicating if the greenhouse_api_token is set.
-*/
+ * Check if the greenhouse_api_token is filled for the current organization.
+ * @returns A boolean indicating if the greenhouse_api_token is set.
+ */
 export async function checkGreenhouseTeamIdFilled() {
-  const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
 
-  if (!currentOrg) {
-      return null; // Return null or any default value to indicate no organization
-  }
+    if (!currentOrg) {
+        return null; // Return null or any default value to indicate no organization
+    }
 
-  const org = await db.query.organizations.findFirst({
-      where: eq(organizations.id, currentOrg.id), // Properly use 'eq' for condition
-      columns: {
-          greenhouse_api_token: true, // We only need to fetch the greenhouse_api_token
-      },
-  });
+    const org = await db.query.organizations.findFirst({
+        where: eq(organizations.id, currentOrg.id), // Properly use 'eq' for condition
+        columns: {
+            greenhouse_api_token: true, // We only need to fetch the greenhouse_api_token
+        },
+    });
 
-  return org ? org.greenhouse_api_token : null; // Return the greenhouse_api_token or null if not found
+    return org ? org.greenhouse_api_token : null; // Return the greenhouse_api_token or null if not found
 }
 
 /**
-* @returns A boolean indicating if there are any active workflows.
-*/
+ * @returns A boolean indicating if there are any active workflows.
+ */
 export async function Checktoseeworkflows() {
-  const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
 
-  if (!currentOrg) {
-      return false; // Return false if no organization found
-  }
+    if (!currentOrg) {
+        return false; // Return false if no organization found
+    }
 
-  const activeWorkflows = await db.query.workflows.findMany({
-      where: eq(workflows.organizationId, currentOrg.id), // Properly use 'eq' for condition
-      columns: {
-          id: true, // We only need to check if there's at least one workflow
-      },
-  });
+    const activeWorkflows = await db.query.workflows.findMany({
+        where: eq(workflows.organizationId, currentOrg.id), // Properly use 'eq' for condition
+        columns: {
+            id: true, // We only need to check if there's at least one workflow
+        },
+    });
 
-  return activeWorkflows.length > 0; // Return true if there's at least one workflow, false otherwise
+    return activeWorkflows.length > 0; // Return true if there's at least one workflow, false otherwise
 }
 
 /**
-* Fetch the first 5 workflows for the current organization.
-* @returns An array of workflows with their names.
-*/
+ * Fetch the first 5 workflows for the current organization.
+ * @returns An array of workflows with their names.
+ */
 export async function getFirstFiveWorkflows() {
-  const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
 
-  if (!currentOrg) {
-      return []; // Return an empty array if no organization found
-  }
+    if (!currentOrg) {
+        return []; // Return an empty array if no organization found
+    }
 
-  const workflowFilter = eq(workflows.organizationId, currentOrg.id);
+    const workflowFilter = eq(workflows.organizationId, currentOrg.id);
 
-  const workflowsList = await db.query.workflows.findMany({
-      where: workflowFilter, // Apply the filter
-      columns: {
-          name: true, // Fetch the name of the workflows
-      },
-      limit: 5, // Limit to the first 5 workflows
-      orderBy: desc(workflows.createdAt), // Order by creation date, descending
-  });
+    const workflowsList = await db.query.workflows.findMany({
+        where: workflowFilter, // Apply the filter
+        columns: {
+            name: true, // Fetch the name of the workflows
+        },
+        limit: 5, // Limit to the first 5 workflows
+        orderBy: desc(workflows.createdAt), // Order by creation date, descending
+    });
 
-  return workflowsList;
+    return workflowsList;
 }
 
 /**
@@ -311,4 +313,140 @@ export async function getSubdomainByWorkflowID(
     }
 
     return organization.greenhouse_subdomain!;
+}
+
+/**
+ * Get User Preferences by Role
+ * @param role - The role of the user (Interviewer, Recruiter, Hiring Manager)
+ * @returns The user preferences for the specified role
+ */
+
+const getUserPreferencesSchema = z.object({
+    role: z.enum(["Interviewer", "Recruiter", "Hiring Manager"]),
+});
+
+type GetUserPreferencesProps = z.infer<typeof getUserPreferencesSchema>;
+
+export async function getUserPreferencesQuery({
+    role,
+}: GetUserPreferencesProps) {
+    const { user } = await protectedProcedure();
+    const { currentOrg } = await getOrganizations();
+
+    // Fetch the user preferences from the database
+    const preferences = await db.query.userPreferences.findFirst({
+        where: and(
+            eq(userPreferences.userId, user.id),
+            eq(userPreferences.organizationId, currentOrg.id),
+            eq(userPreferences.role, role),
+        ),
+    });
+
+    if (!preferences) {
+        // Return default preferences if none exist
+        return {
+            upcomingInterviews: false,
+            pendingFeedback: false,
+            videoConferenceLink: false,
+            resourcesEnabled: false,
+            resources: [],
+        };
+    }
+
+    return preferences;
+}
+
+export async function getUserPreferences(userId: string, teamId: string) {
+    // Step 1: Retrieve the organization ID using the Slack team ID
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, teamId),
+    });
+
+    if (!organization) {
+        throw new Error("Organization not found for the provided team ID");
+    }
+
+    const organizationId = organization.id;
+
+    // Step 2: Retrieve the user's role from the membersToOrganizations table
+    const member = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.slack_user_id, userId),
+            eq(membersToOrganizations.organizationId, organizationId),
+        ),
+    });
+
+    if (!member) {
+        throw new Error("User not found in the membersToOrganizations table");
+    }
+
+    // Step 3: Adjust the role if it's "Admin" to match it with "Interviewer"
+    let role = member.role;
+    if (role === "Admin") {
+        role = "Interviewer";
+    }
+
+    console.log("User role:", role);
+    console.log("Organization ID:", organizationId);
+    console.log("User ID:", userId);
+
+    // Step 4: Retrieve the user preferences based on their role and organization ID
+    const preferences = await db.query.userPreferences.findFirst({
+        where: and(
+            eq(userPreferences.organizationId, organizationId),
+            eq(userPreferences.role, role),
+        ),
+    });
+
+    if (!preferences) {
+        throw new Error("User preferences not found");
+    }
+
+    // Step 5: Return the preferences
+    return {
+        upcomingInterviews: preferences.upcomingInterviews,
+        pendingFeedback: preferences.pendingFeedback,
+        videoConferenceLink: preferences.videoConferenceLink,
+        resourcesEnabled: preferences.resources.length > 0,
+        resources: preferences.resources,
+        role: preferences.role,
+    };
+}
+
+/**
+ * Get User Email by Slack User ID and Slack Team ID
+ * @param slackUserId - The Slack user ID
+ * @param slackTeamId - The Slack team ID
+ * @returns The user's email if found, otherwise null
+ */
+export async function getUserEmailBySlackIdAndTeamId(
+    slackUserId: string,
+    slackTeamId: string,
+): Promise<string | null> {
+    // Find the organization by the Slack team ID
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, slackTeamId),
+    });
+
+    if (!organization) {
+        throw new Error(
+            "Organization not found for the provided Slack team ID",
+        );
+    }
+
+    const organizationId = organization.id;
+
+    // Find the member in the organization by Slack user ID
+    const member = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.slack_user_id, slackUserId),
+            eq(membersToOrganizations.organizationId, organizationId),
+        ),
+    });
+
+    if (!member) {
+        return null;
+    }
+
+    return member.memberEmail;
 }

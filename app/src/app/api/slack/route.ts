@@ -7,14 +7,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+
 // src/pages/api/slack/oauth.ts
+import { db } from "@/server/db";
+import { eq } from "drizzle-orm";
+import { slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 
 import type { NextRequest } from "next/server"; // Only used as a type
 import { NextResponse } from "next/server";
-import { getAccessToken, setAccessToken } from "@/server/actions/slack/query";
+import {
+    checkForSlackTeamIDConflict,
+    getAccessToken,
+    setAccessToken,
+} from "@/server/actions/slack/query";
 
 import { siteUrls } from "@/config/urls";
 import {
+    fetchActiveCandidates,
     fetchCandidateDetails,
     fetchEmailTemplates,
     fetchGreenhouseUsers,
@@ -23,7 +32,12 @@ import {
     matchSlackToGreenhouseUsers,
     moveToNextStageInGreenhouse,
 } from "@/server/greenhouse/core";
-import { getEmailsfromSlack } from "@/server/slack/core";
+import {
+    createSlackChannel,
+    getEmailsfromSlack,
+    inviteUsersToChannel,
+    postWelcomeMessage,
+} from "@/server/slack/core";
 
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
@@ -64,10 +78,6 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
-    console.log("redirectUri  - ", redirectUri);
-    console.log("clientId  - ", clientId);
-    console.log("client secret - ", clientSecret);
-    console.log("code - ", code);
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -82,7 +92,6 @@ export async function GET(req: NextRequest) {
         console.log("url - ", url);
         const response = await fetch(url, { method: "POST" });
         const json = await response.json();
-        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&
@@ -91,6 +100,14 @@ export async function GET(req: NextRequest) {
         ) {
             // Calculate the expiry timestamp
             const expiresAt = Math.floor(Date.now() / 1000) + json.expires_in;
+
+            // Checks to see if there is a conflict fon the teamId in the DB
+            const conflict = await checkForSlackTeamIDConflict(json.team.id);
+
+            if (conflict) {
+                const conflictUrl = `${siteUrls.publicUrl}/?conflict`;
+                return NextResponse.redirect(conflictUrl);
+            }
 
             // Store access token, refresh token, and expiry time securely
             const updateResponse = await setAccessToken(
@@ -172,6 +189,89 @@ async function updateSlackMessage(
     }
 }
 
+async function fetchCandidateData(view_id, accessToken) {
+    const candidates = await fetchActiveCandidates(); // Fetch active candidates
+
+    const updatePayload = {
+        view_id: view_id,
+        view: {
+            type: "modal",
+            callback_id: "debrief_modal",
+            title: {
+                type: "plain_text",
+                text: "Create Debrief",
+            },
+            blocks: [
+                {
+                    type: "input",
+                    block_id: "name_block",
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "name_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Enter debrief name (optional)",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Name",
+                    },
+                    optional: true,
+                },
+                {
+                    type: "input",
+                    block_id: "candidate_block",
+                    element: {
+                        type: "static_select",
+                        action_id: "candidate_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select a candidate",
+                        },
+                        options: candidates.map((candidate) => ({
+                            text: {
+                                type: "plain_text",
+                                text: `${candidate.name} - Job: ${candidate.job}`,
+                            },
+                            value: candidate.id.toString(),
+                        })),
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Candidate",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "recipients_block",
+                    element: {
+                        type: "multi_users_select",
+                        action_id: "recipients_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select recipients",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Recipients/Debrief Team",
+                    },
+                },
+            ],
+            submit: {
+                type: "plain_text",
+                text: "Create",
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+            },
+        },
+    };
+
+    return updateModal(updatePayload, accessToken); // Update the modal with the new candidate options
+}
 async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
     try {
         const { view, user, team } = payload;
@@ -251,11 +351,77 @@ async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+async function handleDebriefSubmission(payload) {
+    const { team, user, view } = payload;
+    const values = view.state.values;
+
+    console.log("debrief submission", values);
+
+    const candidateBlock = values.candidate_block.candidate_input;
+    const nameInput = values.name_block.name_input.value;
+    const recipients = values.recipients_block.recipients_input.selected_users;
+
+    if (!candidateBlock?.selected_option) {
+        await updateModalWithError(
+            view.id,
+            view.hash,
+            accessToken,
+            "Please select a valid candidate",
+        );
+        return new NextResponse(
+            JSON.stringify({ error: "Please select a valid candidate" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
+
+    const candidateID = candidateBlock.selected_option.value; // Get candidateID
+    const candidateText = candidateBlock.selected_option.text.text; // Get candidate text
+    const candidateName = candidateText.split(" - ")[0].trim(); // Extract the candidate name
+
+    const slackTeamId = team.id;
+
+    // Generate the channel name
+    const channelName = nameInput
+        ? `debrief-${nameInput.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase()}`
+        : `debrief-${candidateName.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase()}-${new Date()
+              .toISOString()
+              .split("T")[0]
+              .replace(/[^a-zA-Z0-9-]/g, "")
+              .toLowerCase()}`;
+
+    // Continue with creating the Slack channel and inviting users if no errors
+    try {
+        const channelId = await createSlackChannel(channelName, slackTeamId);
+
+        await inviteUsersToChannel(channelId, recipients, slackTeamId);
+        const responseToSlack = new NextResponse(
+            JSON.stringify({ response_action: "clear" }),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+        await postWelcomeMessage(channelId, candidateID, slackTeamId);
+
+        return responseToSlack;
+    } catch (error) {
+        console.error(error);
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to create debrief room" }),
+            {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
+}
 
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
     const { type, actions, trigger_id, team, response_url, message } = payload;
-
     if (type === "block_actions") {
         const action = actions[0];
         if (!action?.value) {
@@ -273,6 +439,8 @@ async function handleSlackInteraction(payload: SlackInteraction) {
         }
 
         const { action_id } = action;
+        console.log("handle slack interaction - pre access token");
+
         const accessToken = await getAccessToken(team.id);
 
         // Parse candidate ID from action_id
@@ -315,6 +483,8 @@ async function handleSlackInteraction(payload: SlackInteraction) {
             return handleMoveToNextStageSubmission(payload);
         } else if (payload.view.callback_id === "submit_reject_candidate") {
             return handleRejectCandidateSubmission(payload);
+        } else if (payload.view.callback_id === "debrief_modal") {
+            return handleDebriefSubmission(payload);
         }
     }
 
@@ -328,10 +498,7 @@ async function handleSlackInteraction(payload: SlackInteraction) {
 }
 
 // Function to open a modal in response to a button click
-async function openModal(
-    modalPayload: any,
-    accessToken: string | null | undefined,
-) {
+async function openModal(modalPayload, accessToken) {
     const response = await fetch("https://slack.com/api/views.open", {
         method: "POST",
         headers: {
@@ -340,10 +507,46 @@ async function openModal(
         },
         body: JSON.stringify(modalPayload),
     });
-    return new NextResponse(JSON.stringify({ message: "Modal opened" }), {
-        status: response.ok ? 200 : 400,
-        headers: { "Content-Type": "application/json" },
+
+    const data = await response.json();
+
+    if (response.ok) {
+        return { status: 200, view_id: data.view.id };
+    } else {
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to open modal" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
+}
+
+async function updateModal(updatePayload, accessToken) {
+    const response = await fetch("https://slack.com/api/views.update", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(updatePayload),
     });
+
+    const data = await response.json();
+
+    console.log("update modal response", data);
+
+    if (!response.ok) {
+        console.error("Failed to update modal", await response.json());
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to update modal" }),
+            {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    }
 }
 
 async function createMoveToNextStageModal(
@@ -672,36 +875,243 @@ async function handleRejectCandidateSubmission(payload: SlackInteraction) {
     }
 }
 
-export async function POST(request: Request) {
-    const contentType = request.headers.get("content-type");
-    if (contentType?.includes("application/json")) {
-        const data = await request.json();
-        return handleJsonPost(data);
-    } else if (contentType?.includes("application/x-www-form-urlencoded")) {
-        const text = await request.text();
-        const params = new URLSearchParams(text);
-        const payloadRaw = params.get("payload");
+async function handleDebriefCommand(trigger_id, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
 
-        if (payloadRaw) {
-            return handleSlackInteraction(JSON.parse(payloadRaw));
-        } else {
-            return new NextResponse(
-                JSON.stringify({
-                    error: "Unrecognized form-urlencoded request",
-                }),
+    const modalPayload = {
+        trigger_id: trigger_id,
+        view: {
+            type: "modal",
+            callback_id: "debrief_modal",
+            title: {
+                type: "plain_text",
+                text: "Create Debrief",
+            },
+            blocks: [
                 {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
+                    type: "input",
+                    block_id: "name_block",
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "name_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Enter debrief name (optional)",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Name",
+                    },
+                    optional: true,
                 },
-            );
-        }
-    }
+                {
+                    type: "input",
+                    block_id: "candidate_block",
+                    element: {
+                        type: "external_select",
+                        action_id: "candidate",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Loading candidates...",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Candidate",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "recipients_block",
+                    element: {
+                        type: "multi_users_select",
+                        action_id: "recipients_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select recipients",
+                        },
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "Recipients/Debrief Team",
+                    },
+                },
+            ],
+            submit: {
+                type: "plain_text",
+                text: "Create",
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+            },
+        },
+    };
 
-    return new NextResponse(
-        JSON.stringify({ error: "Unsupported Content Type" }),
-        {
+    const { status, view_id, error } = await openModal(
+        modalPayload,
+        accessToken,
+    );
+
+    if (status === 200) {
+        await fetchCandidateData(view_id, accessToken); // Fetch candidate data once the modal is opened
+        return new NextResponse(null, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
+    } else {
+        return new NextResponse(JSON.stringify({ error: error }), {
             status: 400,
             headers: { "Content-Type": "application/json" },
+        });
+    }
+}
+
+export async function POST(request: NextRequest): Promise<void | Response> {
+    try {
+        const contentType = request.headers.get("content-type");
+
+        if (contentType?.includes("application/json")) {
+            const data = await request.json();
+
+            if (data.hasArchive && !data.hasDelete) {
+                const channelId = data.channelId;
+                const slackTeamId = data.slackTeamId;
+
+                try {
+                    await archiveConversationInSlack(channelId, slackTeamId);
+                    await archiveConversationInDB(channelId);
+                } catch (e) {
+                    console.error("Error during archiving:", e);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Error during archiving" }),
+                        { status: 500 },
+                    );
+                }
+
+                return new NextResponse(JSON.stringify({ success: true }), {
+                    status: 200,
+                });
+            } else if (data.hasDelete) {
+                try {
+                    const channelId = data.channelId;
+                    const slackTeamId = data.slackTeamId;
+                    await deleteConversationInSlack(channelId, slackTeamId);
+                } catch (e) {
+                    console.error("Error during deletion:", e);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Error during deletion" }),
+                        { status: 500 },
+                    );
+                }
+
+                return new NextResponse(JSON.stringify({ success: true }), {
+                    status: 200,
+                });
+            } else {
+                return handleJsonPost(data);
+            }
+        } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+            const text = await request.text();
+            const params = new URLSearchParams(text);
+
+            const command = params.get("command");
+            const trigger_id = params.get("trigger_id");
+            const team_id = params.get("team_id");
+
+            if (command === "/debrief" && trigger_id) {
+                return handleDebriefCommand(trigger_id, team_id);
+            }
+
+            const payloadRaw = params.get("payload");
+
+            if (payloadRaw) {
+                return handleSlackInteraction(JSON.parse(payloadRaw));
+            } else {
+                return new NextResponse(
+                    JSON.stringify({
+                        error: "Unrecognized form-urlencoded request",
+                    }),
+                    { status: 400 },
+                );
+            }
+        }
+    } catch (e) {
+        console.error("Error handling POST request:", e);
+        return new NextResponse(
+            JSON.stringify({ error: "Internal server error" }),
+            { status: 500 },
+        );
+    }
+}
+
+// import { useState } from 'react';
+async function archiveConversationInDB(channelId) {
+    try {
+        console.log("prearchive");
+
+        await db
+            .update(slackChannelsCreated)
+            .set({ isArchived: true })
+            .where(eq(slackChannelsCreated.channelId, channelId))
+            .execute();
+    } catch (e) {
+        console.log("eeee - ", e);
+    }
+}
+
+async function archiveConversationInSlack(channelId, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
+    console.log("channelId-", channelId);
+    console.log("accessToken-", accessToken);
+    const response = await fetch(
+        "https://slack.com/api/conversations.archive",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+            }),
         },
     );
+
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(data.error);
+    }
+
+    return data;
+}
+async function deleteConversationInSlack(channelId, slackTeamId) {
+    const accessToken = await getAccessToken(slackTeamId);
+    console.log("channelId-", channelId);
+    console.log("accessToken-", accessToken);
+    const apikey = process.env.SLACK_BOT_TOKEN;
+    const apitoken =
+        "xoxe.xoxb-1-MS0yLTQ0MTYwOTk0MzE4NzgtNjk3Mjc2NjQ3Njk2NC02OTU2NzI4OTYzNjcxLTc0Mzg3MzA4OTczMzItNDMyZjIyYmI0Mzg2Yzg4ODIzMmRjNWUwZDk0MzA5NTFhNTE2YTBiMjE1YmRjMTM4NmE5MmJlYjRjZGE3MGQzZA";
+    console.log("api key - ", apikey);
+    const response = await fetch(
+        "https://slack.com/api/conversations.archive",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+            }),
+        },
+    );
+
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(data.error);
+    }
+
+    return data;
 }

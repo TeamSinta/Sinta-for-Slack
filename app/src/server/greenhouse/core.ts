@@ -6,10 +6,15 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+//@ts-nocheck
 
-// @ts-nocheck
+import { isAfter, isBefore, isSame } from "@/lib/utils";
 import { customFetch } from "@/utils/fetch";
-import { parseISO, differenceInCalendarDays } from "date-fns";
+import {
+    parseISO,
+    differenceInCalendarDays,
+    differenceInHours,
+} from "date-fns";
 import { isValid } from "date-fns";
 
 interface Candidate {
@@ -17,6 +22,8 @@ interface Candidate {
     first_name: string;
     last_name: string;
     applications: Application[];
+    created_at: string;
+    last_activity: string;
 }
 
 interface Application {
@@ -27,6 +34,18 @@ interface Condition {
     field: ConditionField;
     condition: string;
     value: string;
+    unit: string;
+}
+
+interface Condition {
+    field: {
+        value: string;
+        label: string;
+    };
+    condition: string;
+    value: string;
+    unit: string;
+    conditionType: string;
 }
 
 interface ConditionField {
@@ -45,12 +64,14 @@ interface Activity {
 }
 
 interface MockData {
-    owner: string;
+    interviewer: string;
     recruiter: string;
     coordinator: string;
     hiringTeam: string;
     admin: string;
 }
+
+type FilteredCandidate = Candidate; // Adjust as per actual structure
 
 export async function getMockGreenhouseData(): Promise<MockData> {
     try {
@@ -61,7 +82,7 @@ export async function getMockGreenhouseData(): Promise<MockData> {
             coordinator: "{ Coordinator }",
             hiringTeam: "{ Hiring_Team }",
             admin: "{ Admin }",
-            owner: "{ Record_Owner }",
+            interviewer: "{ Interviewer }",
         };
 
         return mockData;
@@ -74,19 +95,54 @@ export async function getMockGreenhouseData(): Promise<MockData> {
 interface Job {
     id: number;
     name: string;
+    created_at: string;
+}
+
+export async function updateGreenhouseCandidate(
+    candidate: any,
+    field: string,
+    newValue: string,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const candidateId = candidate.id;
+        const url = `https://harvest.greenhouse.io/v1/candidates/${candidateId}`;
+        let payload: any = {};
+
+        if (field === "recruiter") {
+            payload = {
+                recruiter: { id: newValue },
+            };
+        } else if (field === "coordinator") {
+            payload = {
+                coordinator: { id: newValue },
+            };
+        }
+
+        const response = await customFetch(url, {
+            method: "PATCH",
+            data: payload,
+        });
+        console.log("respone- ", response);
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update Greenhouse candidate:", error);
+        return { success: false, error: error.message };
+    }
 }
 
 export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     try {
         const jobs = (await customFetch(
             "https://harvest.greenhouse.io/v1/jobs",
-        )) as { id: number; name: string }[];
+        )) as { id: number; name: string; created_at: string }[];
         return jobs.map((job) => ({
             id: job.id,
             name: job.name,
+            created_at: job.created_at,
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
+        console.log("here1?");
         return [];
     }
 };
@@ -111,6 +167,19 @@ export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
     }
 };
 
+export async function fetchCandidates(): Promise<any> {
+    try {
+        // Replace this URL with the actual Greenhouse API endpoint for fetching candidate details
+        const response = await customFetch(
+            `https://harvest.greenhouse.io/v1/candidates`,
+        );
+        return response;
+    } catch (error) {
+        console.error("Error fetching candidate details: ");
+        return null;
+    }
+}
+
 export async function fetchCandidateDetails(candidateId: string): Promise<any> {
     try {
         // Replace this URL with the actual Greenhouse API endpoint for fetching candidate details
@@ -122,6 +191,30 @@ export async function fetchCandidateDetails(candidateId: string): Promise<any> {
         console.error("Error fetching candidate details: ", error);
         return null;
     }
+}
+
+export async function fetchActiveCandidates() {
+    const candidates = await fetchCandidates();
+    if (!candidates) {
+        return [];
+    }
+
+    return candidates
+        .filter((candidate) =>
+            candidate.applications.some((app) => app.status === "active"),
+        )
+        .map((candidate) => {
+            const activeApplications = candidate.applications.filter(
+                (app) => app.status === "active",
+            );
+            return activeApplications.map((app) => ({
+                id: app.id, // Using the application ID here
+                name: `${candidate.first_name} ${candidate.last_name}`,
+                stage: app.current_stage?.name || "N/A",
+                job: app.jobs.map((job) => job.name).join(", "),
+            }));
+        })
+        .flat();
 }
 
 export async function moveToNextStageInGreenhouse(
@@ -304,19 +397,27 @@ export async function fetchRejectReasons(): Promise<
         return [];
     }
 }
+
 export async function fetchGreenhouseUsers(): Promise<
-    Record<string, { id: string; email: string }>
+    Record<string, { id: string; email: string; name: string }>
 > {
     try {
         const users = (await customFetch(
             "https://harvest.greenhouse.io/v1/users",
-        )) as { id: string; primary_email_address: string }[];
+        )) as { id: string; primary_email_address: string; name: string }[];
         return users.reduce(
-            (acc: Record<string, { id: string; email: string }>, user) => {
+            (
+                acc: Record<
+                    string,
+                    { id: string; email: string; name: string }
+                >,
+                user,
+            ) => {
                 if (user.primary_email_address) {
                     acc[user.id] = {
                         id: user.id,
                         email: user.primary_email_address,
+                        name: user.name,
                     };
                 }
                 return acc;
@@ -324,7 +425,7 @@ export async function fetchGreenhouseUsers(): Promise<
             {},
         );
     } catch (error) {
-        console.error("Error fetching Greenhouse users: ", error);
+        console.error("Error fetching Greenhouse users: ");
         return {};
     }
 }
@@ -427,79 +528,112 @@ function isISODate(dateStr: string): boolean {
 }
 
 export const filterDataWithConditions = (
-    data: Record<string, unknown>[],
+    candidates: Candidate[],
     conditions: Condition[],
-): Record<string, unknown>[] => {
-    const today = new Date();
+): FilteredCandidate[] => {
+    return candidates.filter((candidate) => {
+        for (const condition of conditions) {
+            if (condition.conditionType !== "main") {
+                continue; // Ignore non-main conditions for now
+            }
 
-    return data.filter((item) => {
-        return conditions.every((condition) => {
-            const { field, condition: operator, value, unit } = condition;
-            const itemValue = item[field.label] ?? item[field.value];
+            const fieldValue = candidate[condition.field.value];
 
-            if (isISODate(String(itemValue)) && unit === "Days") {
-                const fieldValueAsDate = parseISO(String(itemValue));
-                const valueAsNumber = parseInt(value, 10);
-
-                switch (operator) {
-                    case "before":
-                        return (
-                            differenceInCalendarDays(today, fieldValueAsDate) <
-                            -valueAsNumber
-                        );
-                    case "after":
-                        return (
-                            differenceInCalendarDays(today, fieldValueAsDate) >
-                            -valueAsNumber
-                        );
-                    case "sameDay":
-                        return (
-                            differenceInCalendarDays(
-                                today,
-                                fieldValueAsDate,
-                            ) === -valueAsNumber
-                        );
+            if (
+                typeof fieldValue === "string" &&
+                (condition.condition === "after" ||
+                    condition.condition === "before" ||
+                    condition.condition === "same")
+            ) {
+                const value = parseInt(condition.value, 10);
+                if (
+                    condition.condition === "after" &&
+                    !isAfter(fieldValue, value, condition.unit)
+                ) {
+                    return false;
+                }
+                if (
+                    condition.condition === "before" &&
+                    !isBefore(fieldValue, value, condition.unit)
+                ) {
+                    return false;
+                }
+                if (
+                    condition.condition === "same" &&
+                    !isSame(fieldValue, value, condition.unit)
+                ) {
+                    return false;
                 }
             }
-            console.log(
-                "itemValue",
-                itemValue,
-                "value",
-                value,
-                "operator",
-                operator,
-            );
-            switch (operator) {
-                case "equals":
-                    return itemValue === value;
-                case "notEqual":
-                    return itemValue !== value;
-                case "greaterThan":
-                    return itemValue > value;
-                case "lessThan":
-                    return itemValue < value;
-                case "greaterThanOrEqual":
-                    return itemValue >= value;
-                case "lessThanOrEqual":
-                    return itemValue <= value;
-                case "contains":
-                    return (
-                        typeof itemValue === "string" &&
-                        itemValue.includes(value)
-                    );
-                default:
-                    return false;
-            }
-        });
+        }
+        return true;
     });
 };
+export async function fetchAllGreenhouseUsers(): Promise<
+    Record<string, { id: string; email: string }>
+> {
+    try {
+        const users = await customFetch(
+            "https://harvest.greenhouse.io/v1/users",
+        );
+        return users;
+    } catch (error) {
+        console.error("Error fetching Greenhouse users: ", error);
+        return {};
+    }
+}
 
+export const fetchAllGreenhouseJobsFromGreenhouse = async (): Promise<
+    Job[]
+> => {
+    try {
+        const jobs = (await customFetch(
+            "https://harvest.greenhouse.io/v1/jobs",
+        )) as any[];
+        console.log("JOB  - ", jobs);
+        return jobs;
+    } catch (error) {
+        console.error("Error fetching jobs: ", error);
+        return [];
+    }
+};
 async function fetchActivityFeed(candidateId: number): Promise<ActivityFeed> {
     const response = await customFetch(
         `https://harvest.greenhouse.io/v1/candidates/${candidateId}/activity_feed`,
         {},
     );
     return response as ActivityFeed;
+}
+
+// Fetch all scheduled interviews from Greenhouse
+export async function fetchScheduledInterviews(): Promise<any[]> {
+    try {
+        const interviews = await customFetch(
+            "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        );
+        return interviews;
+    } catch (error) {
+        console.error(
+            "Error fetching scheduled interviews from Greenhouse: ",
+            error,
+        );
+        return [];
+    }
+}
+
+// Filter the scheduled interviews for the specific user
+export function filterInterviewsForUser(
+    interviews: any[],
+    userEmail: string,
+): any[] {
+    return interviews.filter(
+        (interview) =>
+            interview.interviewers.some(
+                (interviewer) => interviewer.email === userEmail,
+            ) &&
+            (interview.status === "awaiting_feedback" ||
+                interview.status === "scheduled"),
+    );
 }
 
 function calculateTimeInCurrentStage(
@@ -541,10 +675,19 @@ export async function filterStuckinStageDataConditions(
     const matchedCandidates: Candidate[] = [];
 
     const condition = conditions[0];
+    if (condition == null) {
+        return matchedCandidates;
+    }
+
     const stageName = condition.field.label;
     const thresholdDays = parseInt(condition.value, 10);
     const operator = condition.condition;
 
+    console.log("stageName", stageName);
+    console.log("thresholdDays", thresholdDays);
+    console.log("operator", operator);
+    console.log("candidates", candidates);
+    console.log("conditions", conditions);
     for (const candidate of candidates) {
         const candidateId = candidate.id;
         const activityFeed = await fetchActivityFeed(candidateId);
@@ -557,7 +700,7 @@ export async function filterStuckinStageDataConditions(
                 currentStage,
                 activityFeed.activities,
             );
-
+            console.log(daysInCurrentStage, "days in current stage");
             let conditionMet = false;
 
             switch (operator) {
@@ -582,6 +725,12 @@ export async function filterStuckinStageDataConditions(
                 default:
                     console.warn(`Unsupported condition operator: ${operator}`);
             }
+            console.log(
+                operator,
+                daysInCurrentStage,
+                thresholdDays,
+                conditionMet,
+            );
 
             if (conditionMet) {
                 matchedCandidates.push(candidate);
@@ -591,3 +740,115 @@ export async function filterStuckinStageDataConditions(
 
     return matchedCandidates;
 }
+
+export const filterScheduledInterviewsWithConditions = (
+    data: Record<string, unknown>[],
+    conditions: Condition[],
+): Record<string, unknown>[] => {
+    const today = new Date();
+
+    return data.filter((item) => {
+        return conditions.every((condition) => {
+            const { field, condition: operator, value, unit } = condition;
+
+            console.log("Processing condition:", condition);
+
+            // Adjust the field value to match the data object structure
+            let itemValue;
+            if (field.value.includes(".")) {
+                const keys = field.value.split(".");
+                itemValue = keys.reduce(
+                    (obj, key) => (obj ? obj[key] : undefined),
+                    item,
+                );
+            } else {
+                itemValue = item[field.value] ?? item[field.label];
+            }
+
+            console.log("Item value for field", field.value, ":", itemValue);
+
+            if (!itemValue) {
+                console.log("Item value is empty for field", field.value);
+                return false;
+            }
+
+            if (isISODate(String(itemValue))) {
+                const fieldValueAsDate = parseISO(String(itemValue));
+                const valueAsNumber = parseInt(value, 10);
+
+                console.log("Field value as date:", fieldValueAsDate);
+
+                if (unit === "Days") {
+                    switch (operator) {
+                        case "before":
+                            return (
+                                differenceInCalendarDays(
+                                    today,
+                                    fieldValueAsDate,
+                                ) < -valueAsNumber
+                            );
+                        case "after":
+                            return (
+                                differenceInCalendarDays(
+                                    today,
+                                    fieldValueAsDate,
+                                ) > -valueAsNumber
+                            );
+                        case "same":
+                            return (
+                                differenceInCalendarDays(
+                                    today,
+                                    fieldValueAsDate,
+                                ) === -valueAsNumber
+                            );
+                        default:
+                            return false;
+                    }
+                } else if (unit === "Hours") {
+                    console.log("Today:", today);
+                    console.log("Field value as date:", fieldValueAsDate);
+                    switch (operator) {
+                        case "before":
+                            return (
+                                differenceInHours(today, fieldValueAsDate) <
+                                -valueAsNumber
+                            );
+                        case "after":
+                            return (
+                                differenceInHours(today, fieldValueAsDate) >
+                                -valueAsNumber
+                            );
+                        case "same":
+                            return (
+                                differenceInHours(today, fieldValueAsDate) === 0
+                            );
+                        default:
+                            return false;
+                    }
+                }
+            }
+
+            switch (operator) {
+                case "equals":
+                    return itemValue === value;
+                case "notEqual":
+                    return itemValue !== value;
+                case "greaterThan":
+                    return itemValue > value;
+                case "lessThan":
+                    return itemValue < value;
+                case "greaterThanOrEqual":
+                    return itemValue >= value;
+                case "lessThanOrEqual":
+                    return itemValue <= value;
+                case "contains":
+                    return (
+                        typeof itemValue === "string" &&
+                        itemValue.includes(value)
+                    );
+                default:
+                    return false;
+            }
+        });
+    });
+};

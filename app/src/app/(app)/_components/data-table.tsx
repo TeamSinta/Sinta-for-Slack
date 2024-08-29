@@ -21,10 +21,6 @@ import type {
     DataTableSearchableColumn,
 } from "@/types/data-table";
 
-/**
- * learn more about data-table at shadcn ui website @see https://ui.shadcn.com/docs/components/data-table
- */
-
 type DataTableProps<TData, TValue> = {
     columns: ColumnDef<TData, TValue>[];
     table: TanstackTable<TData>;
@@ -48,13 +44,16 @@ export function DataTable<TData, TValue>({
                 searchableColumns={searchableColumns}
             />
             <div className="flex-shrink rounded-md border border-border bg-background">
-                <Table>
+                <Table className="w-full text-left">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow key={headerGroup.id} className="border-b">
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            className="p-4"
+                                        >
                                             {header.isPlaceholder
                                                 ? null
                                                 : (flexRender(
@@ -76,9 +75,13 @@ export function DataTable<TData, TValue>({
                                     data-state={
                                         row.getIsSelected() && "selected"
                                     }
+                                    className="hover:bg-gray-100"
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell
+                                            key={cell.id}
+                                            className="p-4"
+                                        >
                                             {
                                                 flexRender(
                                                     cell.column.columnDef.cell,
@@ -93,7 +96,7 @@ export function DataTable<TData, TValue>({
                             <TableRow>
                                 <TableCell
                                     colSpan={columns.length}
-                                    className="h-24 text-center"
+                                    className="h-24 p-4 text-center"
                                 >
                                     No results.
                                 </TableCell>

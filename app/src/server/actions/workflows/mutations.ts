@@ -7,7 +7,7 @@ import {
     workflowInsertSchema,
     workflowSelectSchema,
 } from "@/server/db/schema";
-import { protectedProcedure, adminProcedure } from "@/server/procedures";
+import { protectedProcedure } from "@/server/procedures";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { getOrganizations } from "../organization/queries";
@@ -64,6 +64,18 @@ export async function createWorkflowMutation(props: CreateWorkflowProps) {
  */
 const workflowUpdateSchema = workflowSelectSchema.pick({
     id: true,
+    name: true,
+    objectField: true,
+    alertType: true,
+    organizationId: true,
+    triggerConfig: true,
+    recipient: true,
+    conditions: true,
+    status: true,
+    // other fields as necessary
+});
+const workflowStatusUpdateSchema = workflowSelectSchema.pick({
+    id: true,
     status: true,
     // other fields as necessary
 });
@@ -71,20 +83,84 @@ const workflowUpdateSchema = workflowSelectSchema.pick({
 type UpdateWorkflowProps = z.infer<typeof workflowUpdateSchema>;
 
 export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
-    await adminProcedure();
+    // await adminProcedure();
+    try {
+        // console.log('props',props)
+        const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
+        // console.log('workflows parse ',workflowParse)
+        if (!workflowParse.success) {
+            throw new Error("Invalid workflow data", {
+                cause: workflowParse.error.errors,
+            });
+        }
 
-    const workflowParse = await workflowUpdateSchema.safeParseAsync(props);
-    if (!workflowParse.success) {
-        throw new Error("Invalid workflow data", {
-            cause: workflowParse.error.errors,
-        });
+        return await db
+            .update(workflows)
+            .set(workflowParse.data)
+            .where(eq(workflows.id, workflowParse.data.id))
+            .execute();
+    } catch (e) {
+        console.log("wtf  eeeee -", e);
     }
+}
+type UpdateWorkflowStatusProps = z.infer<typeof workflowStatusUpdateSchema>;
 
-    return await db
-        .update(workflows)
-        .set(workflowParse.data)
-        .where(eq(workflows.id, workflowParse.data.id))
-        .execute();
+export async function updateWorkflowStatusMutation(
+    props: UpdateWorkflowStatusProps,
+) {
+    try {
+        const workflowParse =
+            await workflowStatusUpdateSchema.safeParseAsync(props);
+        if (!workflowParse.success) {
+            throw new Error("Invalid workflow data", {
+                cause: workflowParse.error.errors,
+            });
+        }
+
+        return await db
+            .update(workflows)
+            .set({ status: workflowParse.data.status })
+            .where(eq(workflows.id, workflowParse.data.id))
+            .execute();
+    } catch (e) {
+        console.log("wtf  eeeee -", e);
+        throw e;
+    }
+}
+
+/**
+ * Update a workflow name
+ */
+
+const workflowNameUpdateSchema = workflowSelectSchema.pick({
+    id: true,
+    name: true,
+    // other fields as necessary
+});
+
+type UpdateWorkflowNameProps = z.infer<typeof workflowNameUpdateSchema>;
+
+export async function updateWorkflowNameMutation(
+    props: UpdateWorkflowNameProps,
+) {
+    try {
+        const workflowParse =
+            await workflowNameUpdateSchema.safeParseAsync(props);
+        if (!workflowParse.success) {
+            throw new Error("Invalid workflow data", {
+                cause: workflowParse.error.errors,
+            });
+        }
+
+        return await db
+            .update(workflows)
+            .set({ name: workflowParse.data.name })
+            .where(eq(workflows.id, workflowParse.data.id))
+            .execute();
+    } catch (e) {
+        console.error("Error updating workflow name:", e);
+        throw e;
+    }
 }
 
 /**

@@ -7,6 +7,7 @@
 
 "use client";
 
+import { updateWorkflowMutation } from "@/server/actions/workflows/mutations";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +23,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
 import { useRouter } from "next/navigation";
 import { createWorkflowMutation } from "@/server/actions/workflows/mutations";
 import { useMutation } from "@tanstack/react-query";
@@ -39,6 +39,7 @@ import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import SlackWorkflow from "./slack-workflow";
 import ConditionComponent from "./conditions";
 import { fetchJobsFromGreenhouse } from "@/server/greenhouse/core";
+import { getWorkflowById } from "@/server/actions/workflows/queries";
 import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
@@ -60,6 +61,7 @@ export const recipientSchema = z.object({
             value: z.string(),
         }),
     ),
+    customMessageBody: z.string().optional(), // This can be a large string
 });
 
 export const workflowFormSchema = z.object({
@@ -75,6 +77,7 @@ export const workflowFormSchema = z.object({
             condition: z.string(),
             value: z.string(),
             unit: z.string().optional(),
+            conditionType: z.string(), // Add this line
         }),
     ),
     triggerConfig: z.object({
@@ -98,11 +101,12 @@ export interface Condition {
     value: string;
 }
 
-export interface LegacyCondition {
+export interface TimeBasedCondition {
     field: { value: string; label: string };
     condition: string;
     value: string;
     unit?: string;
+    conditionType: string; // Add this line
 }
 
 interface DateFieldOption {
@@ -115,28 +119,50 @@ interface Job {
     name: string;
 }
 
-function CreateWorkflowSheet() {
+function WorkflowSheet({
+    workflowId,
+    mode,
+}: {
+    workflowId: string;
+    mode: string;
+}) {
+    const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
     const [conditions, setConditions] = useState<Condition[]>([
         { field: "", operator: "", value: "" },
     ]);
-    const [legacyConditions, setLegacyConditions] = useState<LegacyCondition[]>(
-        [
-            {
-                field: { value: "", label: "" },
-                condition: "",
-                value: "",
-                unit: "",
+    const [timeBasedConditions, setTimeBasedConditions] = useState<
+        TimeBasedCondition[]
+    >([
+        {
+            field: { value: "", label: "" },
+            condition: "",
+            value: "",
+            unit: "",
+            conditionType: "main",
+        },
+    ]);
+    const [stuckStageConditions, setStuckStageConditions] = useState<
+        Condition[]
+    >([
+        {
+            field: {
+                value: "when stuck-in-stage in",
+                label: "When Stuck in Stage",
             },
-        ],
-    );
+            operator: "greaterThan",
+            value: "",
+            conditionType: "main",
+        },
+    ]);
     const [recipientConfig, setRecipientConfig] = useState({
         openingText: "",
         messageFields: [],
         messageButtons: [],
         messageDelivery: "",
         recipients: [],
+        customMessageBody: "",
     });
-    const [selectedAlertType, setSelectedAlertType] = useState("create/update");
+    const [selectedAlertType, setSelectedAlertType] = useState("timebased");
     const [isInitialSetupDone, setIsInitialSetupDone] =
         useState<boolean>(false);
 
@@ -164,23 +190,25 @@ function CreateWorkflowSheet() {
     useEffect(() => {
         if (!isInitialSetupDone) {
             if (selectedAlertType === "timebased") {
-                setLegacyConditions([
+                setTimeBasedConditions([
                     {
                         field: { value: "", label: "" },
                         condition: "",
                         value: "",
                         unit: "Days",
+                        conditionType: "main",
                     },
                 ]);
             } else if (selectedAlertType === "stuck-in-stage") {
-                setConditions([
+                setStuckStageConditions([
                     {
                         field: {
                             value: "when stuck-in-stage in",
                             label: "When Stuck in Stage",
                         },
-                        condition: "greaterThan",
-                        value: "for",
+                        operator: "greaterThan",
+                        value: "",
+                        conditionType: "main",
                     },
                 ]);
             } else {
@@ -200,13 +228,25 @@ function CreateWorkflowSheet() {
         if (!condition) return;
         condition[key] = value;
         setConditions(newConditions);
+        if (selectedAlertType === "timebased") {
+            form.setValue("conditions", [
+                ...timeBasedConditions,
+                ...newConditions,
+            ]);
+        } else {
+            form.setValue("conditions", [
+                ...stuckStageConditions,
+                ...newConditions,
+            ]);
+        }
     };
-    const handleConditionChangeLegacy = (
+
+    const handleConditionChangeTimeBased = (
         index: number,
-        key: keyof LegacyCondition,
+        key: keyof TimeBasedCondition,
         value: any,
     ) => {
-        const newConditions = [...legacyConditions];
+        const newConditions = [...timeBasedConditions];
         const condition = newConditions[index];
         if (!condition) return;
 
@@ -216,7 +256,27 @@ function CreateWorkflowSheet() {
             condition[key] = value;
         }
 
-        setLegacyConditions(newConditions);
+        setTimeBasedConditions(newConditions);
+        form.setValue("conditions", [...newConditions, ...conditions]);
+    };
+
+    const handleConditionChangeStuckStage = (
+        index: number,
+        key: keyof Condition,
+        value: any,
+    ) => {
+        const newConditions = [...stuckStageConditions];
+        const condition = newConditions[index];
+        if (!condition) return;
+
+        if (key === "field") {
+            condition[key] = { value: value.value, label: value.label };
+        } else {
+            condition[key] = value;
+        }
+
+        setStuckStageConditions(newConditions);
+        form.setValue("conditions", [...newConditions, ...conditions]);
     };
 
     const addCondition = () => {
@@ -226,6 +286,7 @@ function CreateWorkflowSheet() {
                 field: "",
                 operator: "",
                 value: "",
+                conditionType: "add-on",
             },
         ]);
     };
@@ -234,6 +295,17 @@ function CreateWorkflowSheet() {
         const newConditions = [...conditions];
         newConditions.splice(index, 1);
         setConditions(newConditions);
+        if (selectedAlertType === "timebased") {
+            form.setValue("conditions", [
+                ...timeBasedConditions,
+                ...newConditions,
+            ]);
+        } else {
+            form.setValue("conditions", [
+                ...stuckStageConditions,
+                ...newConditions,
+            ]);
+        }
     };
 
     const handleSelectChange = (
@@ -270,8 +342,32 @@ function CreateWorkflowSheet() {
                     setSelectedAlertType(value);
                     form.setValue("alertType", value);
                     setIsInitialSetupDone(false); // Reset the initial setup flag
+                    if (value === "timebased") {
+                        setTimeBasedConditions([
+                            {
+                                field: { value: "", label: "" },
+                                condition: "",
+                                value: "",
+                                unit: "Days",
+                                conditionType: "main",
+                            },
+                        ]);
+                        setConditions([]);
+                    } else if (value === "stuck-in-stage") {
+                        setStuckStageConditions([
+                            {
+                                field: {
+                                    value: "when stuck-in-stage in",
+                                    label: "When Stuck in Stage",
+                                },
+                                operator: "greaterThan",
+                                value: "",
+                                conditionType: "main",
+                            },
+                        ]);
+                        setConditions([]);
+                    }
                 }
-
                 break;
             case "organizationId":
                 setSelectedOrganization(value);
@@ -282,12 +378,12 @@ function CreateWorkflowSheet() {
                 form.setValue("triggerConfig.processor", value);
                 break;
             case "stage":
-                const conditionIndex = conditions.findIndex(
+                const conditionIndex = stuckStageConditions.findIndex(
                     (condition) =>
                         typeof condition.field !== "string" &&
                         condition.field.value === "when stuck-in-stage in",
                 );
-                handleConditionChange(conditionIndex, "field", {
+                handleConditionChangeStuckStage(conditionIndex, "field", {
                     value: value,
                     label,
                 });
@@ -321,6 +417,10 @@ function CreateWorkflowSheet() {
         updateRecipient("recipients", recipientObjects);
     };
 
+    const handleCustomMessageBodyChange = (customMessageBody: string) => {
+        updateRecipient("customMessageBody", customMessageBody);
+    };
+
     const updateRecipient = (
         key: keyof typeof recipientConfig,
         value: unknown,
@@ -349,7 +449,7 @@ function CreateWorkflowSheet() {
         defaultValues: {
             name: "",
             objectField: "",
-            alertType: "",
+            alertType: "timebased",
             recipient: recipientConfig,
             conditions: [], // Initialize with an empty array of Condition[]
             organizationId: "",
@@ -358,8 +458,21 @@ function CreateWorkflowSheet() {
     });
 
     useEffect(() => {
-        form.setValue("conditions", conditions);
-    }, [conditions, form]);
+        if (
+            selectedAlertType === "timebased" ||
+            selectedAlertType === "stuck-in-stage"
+        ) {
+            form.setValue("conditions", timeBasedConditions);
+        } else {
+            form.setValue("conditions", stuckStageConditions);
+        }
+    }, [
+        timeBasedConditions,
+        stuckStageConditions,
+        conditions,
+        form,
+        selectedAlertType,
+    ]);
 
     useEffect(() => {
         form.setValue("recipient", recipientConfig);
@@ -383,33 +496,148 @@ function CreateWorkflowSheet() {
             );
         },
     });
+    // import { db } from "@/server/db"; // Adjust the import to your actual db instance
+    // import { workflows } from "@/server/db/schema"; // Adjust the import to your actual schema
+    const [isFormReady, setIsFormReady] = useState(false);
+
+    useEffect(() => {
+        if (mode === "edit" && workflowId) {
+            setIsFormReady(true);
+        }
+    }, [mode, workflowId]);
+
+    useEffect(() => {
+        if (isFormReady && mode === "edit" && workflowId) {
+            const fetchWorkflowData = async () => {
+                try {
+                    const data = await getWorkflowById(workflowId);
+                    console.log("DATA - ", data);
+                    const formattedData = {
+                        name: data.name || "",
+                        objectField: data.objectField || "",
+                        alertType: data.alertType || "timebased",
+                        recipient: data.recipient || "",
+                        conditions: data.conditions || [],
+                        organizationId: data.organizationId || "",
+                        triggerConfig: data.triggerConfig || {
+                            apiUrl: "",
+                            processor: "",
+                        },
+                    };
+                    console.log("DAA - ALERT ", data?.alertType);
+                    form.setValue("id", data.id || "");
+                    form.setValue("conditions", data.conditions || []);
+                    form.setValue("createdAt", data.createdAt || "");
+                    form.setValue("id", data.id || "");
+                    form.setValue("modifiedAt", data.modifiedAt || "");
+                    form.setValue("name", data.name || "");
+                    form.setValue("objectField", data.objectField || "");
+                    form.setValue("organizationId", data.organizationId || "");
+                    form.setValue("ownerId", data.ownerId || "");
+                    form.setValue("recipient", data.recipient || "");
+                    form.setValue("status", data.status || "ACTIVE");
+                    form.setValue("alertType", data.alertType || "timebased");
+                    handleSelectChange(
+                        data.objectField || "",
+                        "",
+                        "objectField",
+                    );
+                    handleSelectChange("timebased" || "", "", "alertType");
+                    // handleSelectChange(data.alertType || "timebased" || "","","alertType",)
+                    handleSelectChange(data.recipient || "", "", "recipient");
+                    handleSelectChange(data.conditions || "", "", "conditions");
+                    handleSelectChange(
+                        data.organizationId || "",
+                        "",
+                        "organizationId",
+                    );
+                    handleSelectChange(
+                        data.triggerConfig || "",
+                        "",
+                        "triggerConfig",
+                    );
+                    handleRecipientsChange(data.recipient.recipients); // to fill in
+                    handleCustomMessageBodyChange(
+                        data?.recipient?.customMessageBody,
+                    );
+                    setSelectedRecipients(data.recipient.recipients);
+                    setRecipientConfig(data.recipient);
+                    form.setValue("recipient", data.recipient);
+                    // handleConditionChange
+                    // handleOpeningTextChange
+                    // }
+                    // onFieldsSelect={handleFieldsSelect}
+                    // onButtonsChange={handleButtonsChange}
+                    // onDeliveryOptionChange={
+                    //     handleDeliveryOptionChange
+                    // }
+                    // onRecipientsChange={handleRecipientsChange}
+                    // onCustomMessageBodyChange={
+                    //     handleCustomMessageBodyChange
+                    // reset(formattedData); // Reset form with fetched data
+                } catch (error) {
+                    toast.error("Failed to load workflow data." + error);
+                }
+            };
+
+            fetchWorkflowData();
+        }
+    }, [isFormReady, mode, workflowId, reset]);
 
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const onSubmit = async () => {
+        console.log("on submit");
         try {
             const formData = form.getValues();
             console.log("Form Data before submission:", formData);
 
-            // Transform conditions if necessary
+            // Combine timeBasedConditions or stuckStageConditions and additional conditions
+            const allConditions =
+                selectedAlertType === "timebased"
+                    ? timeBasedConditions
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions)
+                    : stuckStageConditions
+                          .map((condition) => ({
+                              ...condition,
+                              field: {
+                                  value: condition.field.value,
+                                  label: condition.field.label,
+                              },
+                          }))
+                          .concat(conditions);
+
+            // Transform and include combined conditions
             const transformedData = {
                 ...formData,
-                conditions: formData.conditions.map((condition) => ({
-                    ...condition,
-                    field:
-                        typeof condition.field === "string"
-                            ? { value: condition.field, label: "" }
-                            : condition.field,
-                })),
+                conditions: allConditions,
             };
 
-            await mutateAsync(transformedData);
+            if (mode == "edit") {
+                //update db
+                await updateWorkflowMutation(transformedData);
+            } else {
+                await mutateAsync(transformedData);
+            }
+
             await startAwaitableTransition(() => {
                 router.refresh();
             });
             reset();
             setIsOpen(false);
-            toast.success("Workflow created successfully");
+            if (mode == "edit") {
+                toast.success("Workflow updated successfully");
+                router.push("/workflows");
+            } else {
+                toast.success("Workflow created successfully");
+            }
         } catch (error) {
             toast.error(
                 (error as { message?: string })?.message ??
@@ -420,7 +648,6 @@ function CreateWorkflowSheet() {
 
     const alertTypeOptions = [
         { value: "timebased", label: "Time-based" },
-        { value: "create/update", label: "Create/Update" },
         { value: "stuck-in-stage", label: "Stuck-in-Stage" },
     ];
 
@@ -428,7 +655,7 @@ function CreateWorkflowSheet() {
         {
             name: "Activity Feed",
             apiUrl: "https://harvest.greenhouse.io/v1/activity_feed",
-        }, // Verify if correct
+        },
         {
             name: "Applications",
             apiUrl: "https://harvest.greenhouse.io/v1/applications",
@@ -436,12 +663,11 @@ function CreateWorkflowSheet() {
         {
             name: "Approvals",
             apiUrl: "https://harvest.greenhouse.io/v1/approvals",
-        }, // Verify if correct
+        },
         {
             name: "Candidates",
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
         },
-
         { name: "Jobs", apiUrl: "https://harvest.greenhouse.io/v1/jobs" },
         { name: "Offers", apiUrl: "https://harvest.greenhouse.io/v1/offers" },
         {
@@ -457,14 +683,14 @@ function CreateWorkflowSheet() {
     const timeConditionOptions = [
         { value: "before", label: "Before" },
         { value: "after", label: "After" },
-        { value: "same", label: "Same Day" },
+        { value: "same", label: "Same" },
     ];
 
     const dateFieldOptions: DateFieldOption[] = [
         { label: "Created at", value: "created_at" },
         { label: "Closed at", value: "closed_at" },
-        { label: "Updated at", value: "updated_at" },
         { label: "Last activity", value: "last_activity" },
+        { label: "Interview End time", value: "end.date_time" },
     ];
 
     const conditionTypesWithOperators = [
@@ -479,7 +705,7 @@ function CreateWorkflowSheet() {
                 { value: "equal", label: "Equal To" },
                 { value: "notEqual", label: "Not Equal To" },
             ],
-            values: [], // Assuming values are dynamic or not predefined
+            values: [],
         },
         {
             name: "Following",
@@ -492,7 +718,7 @@ function CreateWorkflowSheet() {
                 { value: "equal", label: "Equal To" },
                 { value: "notEqual", label: "Not Equal To" },
             ],
-            values: ["Granted", "Denied"], // Assuming predefined values for GDPR consent
+            values: ["Granted", "Denied"],
         },
         {
             name: "Last Activity",
@@ -501,7 +727,7 @@ function CreateWorkflowSheet() {
                 { value: "before", label: "Before" },
                 { value: "after", label: "After" },
             ],
-            values: [], // Assuming values are dynamic or date-based
+            values: [],
         },
         {
             name: "Recruiter",
@@ -509,17 +735,20 @@ function CreateWorkflowSheet() {
                 { value: "equal", label: "Equal To" },
                 { value: "notEqual", label: "Not Equal To" },
             ],
-            values: [], // Assuming values are dynamic or not predefined
+            values: [],
         },
         {
             name: "Tags",
             operators: [{ value: "equal", label: "Equal To" }],
-            values: [], // Assuming values are dynamic or not predefined
+            values: [],
         },
     ];
 
+    const isSameDayOrTimeCondition = (condition: string) =>
+        condition === "same";
+
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen || mode == "edit"} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
                     Create Workflow
@@ -613,11 +842,17 @@ function CreateWorkflowSheet() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <JobsDropdown
-                                    onJobSelect={(jobId) =>
-                                        handleSelectChange(jobId, "", "jobId")
-                                    }
-                                />
+                                {isCandidateSelected && (
+                                    <JobsDropdown
+                                        onJobSelect={(jobId) =>
+                                            handleSelectChange(
+                                                jobId,
+                                                "",
+                                                "jobId",
+                                            )
+                                        }
+                                    />
+                                )}
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
@@ -686,19 +921,19 @@ function CreateWorkflowSheet() {
                             </div>
                         </div>
                         <hr className="my-2 border-gray-300 dark:border-gray-700" />
+
+                        {/* Conditions */}
                         <div className="flex items-start gap-8">
                             <div className="w-1/3">
                                 <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                                     Conditions
                                 </Label>
-
                                 <p className="mt-2 text-sm text-gray-500">
                                     Specify conditions for triggering the
                                     workflow.
                                 </p>
                             </div>
                             <div className="flex-1 space-y-4">
-                                {/* Conditional rendering based on selected alert type */}
                                 {selectedAlertType === "timebased" && (
                                     <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
                                         <div className="flex-1">
@@ -707,7 +942,7 @@ function CreateWorkflowSheet() {
                                             </Label>
                                             <Select
                                                 onValueChange={(value) =>
-                                                    handleConditionChangeLegacy(
+                                                    handleConditionChangeTimeBased(
                                                         0,
                                                         "field",
                                                         {
@@ -748,14 +983,13 @@ function CreateWorkflowSheet() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        {/* Other elements for legacy conditions */}
                                         <div className="flex-1">
                                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Condition
+                                                Operator
                                             </Label>
                                             <Select
                                                 onValueChange={(value) =>
-                                                    handleConditionChangeLegacy(
+                                                    handleConditionChangeTimeBased(
                                                         0,
                                                         "condition",
                                                         value,
@@ -787,36 +1021,43 @@ function CreateWorkflowSheet() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Value
-                                            </Label>
-                                            <Input
-                                                placeholder="Enter Value"
-                                                className="w-full border border-gray-300 bg-white"
-                                                value={
-                                                    legacyConditions[0]?.value
-                                                }
-                                                onChange={(e) =>
-                                                    handleConditionChangeLegacy(
-                                                        0,
-                                                        "value",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
+                                        {!isSameDayOrTimeCondition(
+                                            timeBasedConditions[0]?.condition,
+                                        ) && (
+                                            <>
+                                                <div className="flex-1">
+                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        Value
+                                                    </Label>
+                                                    <Input
+                                                        placeholder="Enter Value"
+                                                        className="w-full border border-gray-300 bg-white"
+                                                        value={
+                                                            timeBasedConditions[0]
+                                                                ?.value
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleConditionChangeTimeBased(
+                                                                0,
+                                                                "value",
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                         <div className="flex-1">
                                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Time Unit
                                             </Label>
                                             <Select
                                                 value={
-                                                    legacyConditions[0]?.unit ??
-                                                    "Days"
+                                                    timeBasedConditions[0]
+                                                        ?.unit ?? "Days"
                                                 }
                                                 onValueChange={(value) =>
-                                                    handleConditionChangeLegacy(
+                                                    handleConditionChangeTimeBased(
                                                         0,
                                                         "unit",
                                                         value,
@@ -866,7 +1107,7 @@ function CreateWorkflowSheet() {
                                                 placeholder="Enter Days"
                                                 className="w-full border border-gray-300 bg-white"
                                                 onChange={(e) =>
-                                                    handleConditionChange(
+                                                    handleConditionChangeStuckStage(
                                                         0,
                                                         "value",
                                                         e.target.value,
@@ -936,18 +1177,28 @@ function CreateWorkflowSheet() {
                                         handleDeliveryOptionChange
                                     }
                                     onRecipientsChange={handleRecipientsChange}
+                                    onCustomMessageBodyChange={
+                                        handleCustomMessageBodyChange
+                                    } // Add this line
+                                    selectedRecipients={selectedRecipients}
+                                    setSelectedRecipients={
+                                        setSelectedRecipients
+                                    }
                                 />
                             </div>
                         </div>
 
-                        {/* Additional fields as required... */}
                         <div className="flex justify-end">
                             <Button
                                 type="submit"
                                 disabled={isMutatePending}
                                 className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
                             >
-                                Submit Workflow
+                                {mode == "edit" ? (
+                                    <>Save Workflow</>
+                                ) : (
+                                    <>Submit Workflow</>
+                                )}
                             </Button>
                         </div>
                     </form>
@@ -957,4 +1208,4 @@ function CreateWorkflowSheet() {
     );
 }
 
-export default CreateWorkflowSheet;
+export default WorkflowSheet;

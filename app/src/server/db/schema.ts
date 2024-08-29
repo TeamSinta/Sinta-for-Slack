@@ -11,10 +11,9 @@ import {
     timestamp,
     varchar,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { type AdapterAccount } from "next-auth/adapters";
 import { z } from "zod";
-
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
  * database instance for multiple projects.
@@ -31,6 +30,64 @@ export const workflowStatusEnum = pgEnum("workflow_status", [
     "Inactive",
     "Archived",
 ]);
+export const hiringroomStatusEnum = pgEnum("hiringroom_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
+export const slackChannelsCreatedStatusEnum = pgEnum(
+    "slack_channels_created_status",
+    ["Active", "Inactive", "Archived"],
+);
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+    "Active",
+    "Inactive",
+    "Archived",
+]);
+
+// slack_channels_created table definition
+export const slackChannelsCreated = createTable("slack_channels_created", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    channelId: varchar("channelId", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    createdBy: varchar("createdBy", { length: 255 }),
+    description: varchar("description", { length: 255 }),
+    greenhouseCandidateId: varchar("greenhouseCandidateId", { length: 255 }),
+    greenhouseJobId: varchar("greenhouseJobId", { length: 255 }),
+    isArchived: boolean("isArchived").default(false).notNull(),
+    invitedUsers: jsonb("invited_users")
+        .notNull()
+        .default(sql`'[]'`),
+    hiringroomId: varchar("hiringroomId", { length: 255 }), // Ensure this is not commented
+    channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
+});
+
+export const hiringrooms = createTable("hiringroom", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    objectField: varchar("objectField", { length: 255 }).notNull(),
+    alertType: varchar("alertType", { length: 255 }),
+    conditions: jsonb("conditions").notNull(), // Updated to JSONB
+    triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
+    recipient: jsonb("recipient").notNull(),
+    status: hiringroomStatusEnum("status").default("Active").notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    modifiedAt: timestamp("modifiedAt", { mode: "date" }),
+    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
+    ownerId: varchar("ownerId", { length: 255 })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+});
 
 export const workflows = createTable("workflow", {
     id: varchar("id", { length: 255 })
@@ -65,6 +122,28 @@ export const workflowsRelations = relations(workflows, ({ one }) => ({
     }),
 }));
 
+export const hiringroomsRelations = relations(hiringrooms, ({ one, many }) => ({
+    owner: one(users, {
+        fields: [hiringrooms.ownerId],
+        references: [users.id],
+    }),
+    organization: one(organizations, {
+        fields: [hiringrooms.organizationId],
+        references: [organizations.id],
+    }),
+    // slackChannelsCreated: many(slackChannelsCreated),
+    // slackChannelsCreated: many(slackChannelsCreated, {
+    //     fields: [slackChannelsCreated.hiringroomId],
+    //     references: [hiringrooms.id],
+    // }),
+}));
+
+// export const slackChannelsCreatedRelations = relations(slackChannelsCreated, ({ one }) => ({
+//     hiringroom: one(hiringrooms, {
+//         fields: [slackChannelsCreated.hiringroomId],
+//         references: [hiringrooms.id],
+//     }),
+// }));
 export const workflowInsertSchema = createInsertSchema(workflows, {
     name: z
         .string()
@@ -74,11 +153,26 @@ export const workflowInsertSchema = createInsertSchema(workflows, {
     alertType: z.string().min(1, "Alert type must not be empty"),
 });
 
+export const hiringroomInsertSchema = createInsertSchema(hiringrooms, {
+    name: z
+        .string()
+        .min(3, "Hiringroom name must be at least 3 characters long")
+        .max(50, "Hiringroom name must be at most 50 characters long"),
+    objectField: z.string().min(1, "Object field must not be empty"),
+    alertType: z.string().min(1, "Alert type must not be empty"),
+});
+
 export const workflowSelectSchema = createSelectSchema(workflows, {
     name: z
         .string()
         .min(3, "Workflow name must be at least 3 characters long")
         .max(50, "Workflow name must be at most 50 characters long"),
+});
+export const hiringroomSelectSchema = createSelectSchema(hiringrooms, {
+    name: z
+        .string()
+        .min(3, "Hiringroom name must be at least 3 characters long")
+        .max(50, "Hiringroom name must be at most 50 characters long"),
 });
 
 export const users = createTable("user", {
@@ -217,10 +311,9 @@ export const organizationsRelations = relations(
 );
 
 export const membersToOrganizationsRoleEnum = pgEnum("org-member-role", [
-    "Viewer",
-    "Developer",
-    "Billing",
-    "Admin",
+    "Interviewer",
+    "Recruiter",
+    "Hiring Manager",
 ]);
 
 export const membersToOrganizations = createTable(
@@ -235,8 +328,9 @@ export const membersToOrganizations = createTable(
             .notNull()
             .references(() => organizations.id, { onDelete: "cascade" }),
         role: membersToOrganizationsRoleEnum("role")
-            .default("Viewer")
+            .default("Interviewer")
             .notNull(),
+        slack_user_id: varchar("slack_user_id", { length: 255 }), // New column
         createdAt: timestamp("createdAt", { mode: "date" })
             .notNull()
             .defaultNow(),
@@ -265,6 +359,49 @@ export const membersToOrganizationsRelations = relations(
 export const membersToOrganizationsInsertSchema = createInsertSchema(
     membersToOrganizations,
 );
+
+export const userPreferences = createTable("user_preferences", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    userId: varchar("userId", { length: 255 })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+    role: membersToOrganizationsRoleEnum("role").notNull(),
+    upcomingInterviews: boolean("upcomingInterviews").default(false).notNull(),
+    pendingFeedback: boolean("pendingFeedback").default(false).notNull(),
+    videoConferenceLink: boolean("videoConferenceLink")
+        .default(false)
+        .notNull(),
+    resources: jsonb("resources")
+        .default(sql`'[]'`)
+        .notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow().notNull(),
+});
+
+export const userPreferencesInsertSchema = createInsertSchema(userPreferences, {
+    userId: z.string().uuid(),
+    organizationId: z.string().uuid(),
+    role: z.enum(["Interviewer", "Recruiter", "Hiring Manager"]),
+    upcomingInterviews: z.boolean().default(true),
+    pendingFeedback: z.boolean().default(true),
+    videoConferenceLink: z.boolean().default(true),
+    resources: z
+        .array(
+            z.object({
+                label: z.string().min(1),
+                link: z.string().url(),
+            }),
+        )
+        .default([]),
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
+});
 
 export const orgRequests = createTable(
     "orgRequest",

@@ -41,7 +41,6 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({ onJobSelect }) => {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                        <SelectItem value={"All Jobs"}>All Jobs</SelectItem>
                         {jobs.map((job) => (
                             <SelectItem key={job.id} value={job.id.toString()}>
                                 {job.name}

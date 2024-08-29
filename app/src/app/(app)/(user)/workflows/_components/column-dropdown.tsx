@@ -16,7 +16,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
     deleteWorkflowMutation,
-    updateWorkflowMutation,
+    updateWorkflowStatusMutation,
 } from "@/server/actions/workflows/mutations";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 
@@ -30,7 +30,8 @@ export function ColumnDropdown({ id }: WorkflowData) {
         mutateAsync: changeStatusMutate,
         isPending: changeStatusIsPending,
     } = useMutation<unknown, unknown, { id: string; status: WorkflowStatus }>({
-        mutationFn: ({ id, status }) => updateWorkflowMutation({ id, status }),
+        mutationFn: ({ id, status }) =>
+            updateWorkflowStatusMutation({ id, status }),
         onSettled: () => {
             router.refresh();
         },
@@ -64,6 +65,16 @@ export function ColumnDropdown({ id }: WorkflowData) {
     } = useMutation({
         mutationFn: ({}: { workflowId: string }) =>
             deleteWorkflowMutation({ id }),
+        onSuccess: () => {
+            router.refresh();
+            toast.success("Workflow removed successfully!");
+        },
+        onError: () => {
+            toast.error("Failed to remove workflow.");
+        },
+        onSettled: () => {
+            startAwaitableRemoveWorkflowTransition(() => {});
+        },
     });
 
     const [
@@ -75,10 +86,6 @@ export function ColumnDropdown({ id }: WorkflowData) {
         toast.promise(
             async () => {
                 await removeWorkflowMutate({ workflowId: id });
-                await startAwaitableRemoveWorkflowTransition(() => {
-                    router.refresh();
-                    toast.success("Workflow removed successfully!");
-                });
             },
             {
                 loading: "Removing workflow...",
@@ -100,6 +107,14 @@ export function ColumnDropdown({ id }: WorkflowData) {
 
                 <DropdownMenuSeparator />
 
+                <DropdownMenuItem
+                    disabled={
+                        changeStatusIsPending || statusChangeIsTransitionPending
+                    }
+                    onClick={() => router.push(`/workflows/new/${id}`)} // Activate
+                >
+                    Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem
                     disabled={
                         changeStatusIsPending || statusChangeIsTransitionPending

@@ -9,7 +9,9 @@ import {
     UserRoundPlusIcon,
     UsersRoundIcon,
     Zap,
+    Ticket,
     Workflow,
+    DoorOpen,
     Cable,
 } from "lucide-react";
 import { siteUrls } from "@/config/urls";
@@ -105,19 +107,29 @@ const navigation: SidebarNavItems[] = [
                 href: siteUrls.dashboard.home,
             },
             {
+                label: "Assignments",
+                icon: Ticket,
+                href: siteUrls.assignments.home,
+            },
+            {
+                label: "Hiring Rooms",
+                icon: DoorOpen,
+                href: siteUrls.hiringrooms.home,
+            },
+            {
                 label: "Workflows",
                 icon: Zap,
                 href: siteUrls.workflows.home,
             },
             {
-                label: "Triggers",
-                icon: Workflow,
-                href: siteUrls.triggers.home,
-            },
-            {
                 label: "Integrations",
                 icon: Cable,
                 href: siteUrls.integrations.home,
+            },
+            {
+                label: "Slack Home",
+                icon: Workflow,
+                href: siteUrls.customize.home,
             },
         ],
     },
