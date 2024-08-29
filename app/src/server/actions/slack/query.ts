@@ -7,7 +7,7 @@ import {
     hiringrooms,
     membersToOrganizations,
 } from "@/server/db/schema";
-import { and, eq, SQLWrapper } from "drizzle-orm";
+import { and, eq, type SQLWrapper } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 
 export async function getAccessToken(teamId: string): Promise<string> {

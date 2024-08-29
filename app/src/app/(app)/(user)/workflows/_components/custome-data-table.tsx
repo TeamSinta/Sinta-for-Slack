@@ -22,7 +22,7 @@ import type {
     DataTableSearchableColumn,
 } from "@/types/data-table";
 
-type DataTableProps<TData, TValue> = {
+type DataTableProps<TData extends { id: string }, TValue> = {
     columns: ColumnDef<TData, TValue>[];
     table: TanstackTable<TData>;
     totalRows: number;
@@ -30,7 +30,7 @@ type DataTableProps<TData, TValue> = {
     searchableColumns?: DataTableSearchableColumn<TData>[];
 };
 
-export function CustomDataTable<TData, TValue>({
+export function CustomDataTable<TData extends { id: string }, TValue>({
     columns,
     table,
     totalRows,

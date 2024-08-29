@@ -3,7 +3,6 @@
 
 "use client";
 
-import { DataTable } from "@/app/(app)/_components/data-table";
 import { type ColumnDef } from "@tanstack/react-table";
 import React, { useMemo } from "react";
 import { getColumns, type WorkflowData } from "./columns";

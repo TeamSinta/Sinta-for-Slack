@@ -90,7 +90,7 @@ export const clearWorkflowName = () => {
 };
 
 // Save trigger data to local storage
-export const saveTriggerData = (data) => {
+export const saveTriggerData = (data: any) => {
     localStorage.setItem(TRIGGER_STORAGE_KEY, JSON.stringify(data));
 };
 
@@ -101,7 +101,7 @@ export const getTriggerData = () => {
 };
 
 // Save action data to local storage
-export const saveActionData = (data) => {
+export const saveActionData = (data: any) => {
     localStorage.setItem(ACTION_STORAGE_KEY, JSON.stringify(data));
 };
 
@@ -112,7 +112,7 @@ export const getActionData = () => {
 };
 
 // Save conditions data to local storage
-export const saveConditionsData = (data) => {
+export const saveConditionsData = (data: any) => {
     localStorage.setItem(CONDITIONS_STORAGE_KEY, JSON.stringify(data));
 };
 
