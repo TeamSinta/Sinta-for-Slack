@@ -232,7 +232,7 @@ async function fetchCandidateData(view_id, accessToken) {
                         options: candidates.map((candidate) => ({
                             text: {
                                 type: "plain_text",
-                                text: `${candidate.name} - *Stage:* ${candidate.stage} / *Job:* ${candidate.job}`,
+                                text: `${candidate.name} - Job: ${candidate.job}`,
                             },
                             value: candidate.id.toString(),
                         })),

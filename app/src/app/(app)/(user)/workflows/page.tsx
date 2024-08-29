@@ -8,14 +8,14 @@ import {
     getPaginatedWorkflowsQuery,
 } from "@/server/actions/workflows/queries";
 import { WorkflowsTable } from "./_components/workflows-table";
-import { type SearchParams } from "@/types/data-table";
 import {
     checkGreenhouseTeamIdFilled,
     checkSlackTeamIdFilled,
 } from "@/server/actions/organization/queries";
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
-// import router, { useRouter } from "next/router";
 import WorkflowSheet from "./_components/new-workflowForm";
+import { WorkflowDialog } from "./_components/workflow-dialog";
+import { type SearchParams } from "@/types/data-table";
 
 type UsersPageProps = {
     searchParams: SearchParams;
@@ -61,18 +61,13 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
                             Created by team
                         </TabsTrigger>
                     </TabsList>
-                    {isEdit == "true" && workflowId ? (
-                        <>
-                            <WorkflowSheet
-                                workflowId={workflowId}
-                                mode={"edit"}
-                            />
-                        </>
+                    {isEdit === "true" && workflowId ? (
+                        <WorkflowSheet workflowId={workflowId} mode={"edit"} />
                     ) : (
                         <></>
                     )}
                     {!isEdit && slackIntegration && greenhouseIntegration ? (
-                        <WorkflowSheet workflowId={""} mode={"create"} />
+                        <WorkflowDialog />
                     ) : (
                         <AlertIntegrationDialog />
                     )}

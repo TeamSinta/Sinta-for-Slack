@@ -3,10 +3,9 @@
 
 "use client";
 
-import { DataTable } from "@/app/(app)/_components/data-table";
 import { type ColumnDef } from "@tanstack/react-table";
 import React, { useMemo } from "react";
-import { getColumns, type WorkflowData } from "./columns"; // Adjust to include correct imports and types for workflows
+import { getColumns, type WorkflowData } from "./columns";
 import { workflowStatusEnum } from "@/server/db/schema";
 import { useDataTable } from "@/hooks/use-data-table";
 import type {
@@ -14,6 +13,7 @@ import type {
     DataTableSearchableColumn,
 } from "@/types/data-table";
 import { type getPaginatedWorkflowsQuery } from "@/server/actions/workflows/queries";
+import { CustomDataTable } from "./custome-data-table";
 
 const filterableColumns: DataTableFilterableColumn<WorkflowData>[] = [
     {
@@ -26,13 +26,13 @@ const filterableColumns: DataTableFilterableColumn<WorkflowData>[] = [
     },
 ];
 
-type WorkflowsTableProps = {
-    workflowsPromise: ReturnType<typeof getPaginatedWorkflowsQuery>;
-};
-
 const searchableColumns: DataTableSearchableColumn<WorkflowData>[] = [
     { id: "name", placeholder: "Search by workflow name..." },
 ];
+
+type WorkflowsTableProps = {
+    workflowsPromise: ReturnType<typeof getPaginatedWorkflowsQuery>;
+};
 
 export function WorkflowsTable({ workflowsPromise }: WorkflowsTableProps) {
     const { data, pageCount, total } = React.use(workflowsPromise);
@@ -48,12 +48,12 @@ export function WorkflowsTable({ workflowsPromise }: WorkflowsTableProps) {
             name: workflow.name,
             status: workflow.status,
             createdAt: workflow.createdAt,
-            recipient: workflow.recipient as JSON, // Cast to JSON
+            recipient: workflow.recipient as JSON,
             alertType: workflow.alertType,
-            conditions: workflow.conditions as JSON, // Cast to JSON
+            conditions: workflow.conditions as JSON,
             objectField: workflow.objectField,
             ownerId: workflow.ownerId,
-            triggerConfig: workflow.triggerConfig as JSON, // Cast to JSON
+            triggerConfig: workflow.triggerConfig as JSON,
         };
     });
 
@@ -67,7 +67,7 @@ export function WorkflowsTable({ workflowsPromise }: WorkflowsTableProps) {
 
     return (
         <>
-            <DataTable
+            <CustomDataTable
                 table={table}
                 columns={columns}
                 filterableColumns={filterableColumns}

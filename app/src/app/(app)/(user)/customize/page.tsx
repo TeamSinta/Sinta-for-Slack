@@ -111,7 +111,7 @@ export default function CustomizeDashboard() {
         // Assuming you have access to the organizationId and userId
 
         const preferences = {
-            role: selectedRole!,
+            role: selectedRole,
             upcomingInterviews,
             pendingFeedback,
             videoConferenceLink: meetingLink,

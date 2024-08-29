@@ -65,6 +65,16 @@ export function ColumnDropdown({ id }: WorkflowData) {
     } = useMutation({
         mutationFn: ({}: { workflowId: string }) =>
             deleteWorkflowMutation({ id }),
+        onSuccess: () => {
+            router.refresh();
+            toast.success("Workflow removed successfully!");
+        },
+        onError: () => {
+            toast.error("Failed to remove workflow.");
+        },
+        onSettled: () => {
+            startAwaitableRemoveWorkflowTransition(() => {});
+        },
     });
 
     const [
@@ -76,10 +86,6 @@ export function ColumnDropdown({ id }: WorkflowData) {
         toast.promise(
             async () => {
                 await removeWorkflowMutate({ workflowId: id });
-                await startAwaitableRemoveWorkflowTransition(() => {
-                    router.refresh();
-                    toast.success("Workflow removed successfully!");
-                });
             },
             {
                 loading: "Removing workflow...",
@@ -105,9 +111,7 @@ export function ColumnDropdown({ id }: WorkflowData) {
                     disabled={
                         changeStatusIsPending || statusChangeIsTransitionPending
                     }
-                    onClick={() =>
-                        router.push(`/workflows?edit=true&workflowId=${id}`)
-                    } // Activate
+                    onClick={() => router.push(`/workflows/new/${id}`)} // Activate
                 >
                     Edit
                 </DropdownMenuItem>

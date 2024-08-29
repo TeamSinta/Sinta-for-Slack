@@ -6,6 +6,7 @@ type AppLayoutProps = {
     sideNavRemoveIds?: string[];
     sideNavIncludedIds?: string[];
     showOrgSwitcher?: boolean;
+    isWorkflowBuilder?: boolean; // Add a new prop to detect if it's WorkflowBuilder
 };
 
 /**
@@ -15,6 +16,7 @@ type AppLayoutProps = {
  * @param children the main content of the app
  * @param sideNavIncludedIds the ids of the sidebar nav items to include in the sidebar specifically @get ids from the sidebar config
  * @param sideNavRemoveIds the ids of the sidebar nav items to remove from the sidebar specifically @get ids from the sidebar config
+ * @param isWorkflowBuilder boolean flag to determine if WorkflowBuilder is being used
  *
  */
 
@@ -23,10 +25,15 @@ export function AppLayoutShell({
     sideNavIncludedIds,
     sideNavRemoveIds,
     showOrgSwitcher,
+    isWorkflowBuilder = false, // default to false
 }: AppLayoutProps) {
     return (
-        <div className="container flex items-start ">
-            <div className="sticky left-0 top-0 h-screen w-60 flex-shrink-0 ">
+        <div
+            className={`flex items-start ${isWorkflowBuilder ? "" : "container"}`}
+        >
+            <div
+                className={`sticky left-0 top-0 h-screen flex-shrink-0 ${isWorkflowBuilder ? "w-60" : ""}`}
+            >
                 <Suspense fallback={<SidebarLoading />}>
                     <Sidebar
                         sidebarNavIncludeIds={sideNavIncludedIds}
@@ -35,7 +42,9 @@ export function AppLayoutShell({
                     />
                 </Suspense>
             </div>
-            <section className="min-h-screen w-full flex-grow">
+            <section
+                className={`min-h-screen flex-grow ${isWorkflowBuilder ? "" : "container"}`}
+            >
                 {children}
             </section>
         </div>

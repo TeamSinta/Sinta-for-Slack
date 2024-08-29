@@ -28,12 +28,14 @@ export enum LinkActionType {
 }
 
 export interface ButtonAction {
-    label: string;
-    action: string;
+    label?: string;
+    action?: string;
     type: ButtonType;
     updateType?: UpdateActionType;
     linkType?: LinkActionType;
 }
+
+
 
 interface MessageButtonsProps {
     buttons: ButtonAction[];
