@@ -3,11 +3,10 @@ import { type ClassValue, clsx } from "clsx";
 import { env } from "process";
 import { twMerge } from "tailwind-merge";
 
-
-const TRIGGER_STORAGE_KEY = 'workflowTriggers';
-const ACTION_STORAGE_KEY = 'workflowActions';
-const CONDITIONS_STORAGE_KEY = 'workflowConditions';
-const WORKFLOW_NAME_STORAGE_KEY = 'Workflow name';
+const TRIGGER_STORAGE_KEY = "workflowTriggers";
+const ACTION_STORAGE_KEY = "workflowActions";
+const CONDITIONS_STORAGE_KEY = "workflowConditions";
+const WORKFLOW_NAME_STORAGE_KEY = "Workflow name";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -82,7 +81,7 @@ export const saveWorkflowName = (name: string) => {
 
 // Get workflow name from local storage
 export const getWorkflowName = () => {
-    return localStorage.getItem(WORKFLOW_NAME_STORAGE_KEY) || '';
+    return localStorage.getItem(WORKFLOW_NAME_STORAGE_KEY) || "";
 };
 
 // Clear workflow name from local storage

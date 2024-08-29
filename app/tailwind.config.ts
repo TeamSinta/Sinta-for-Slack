@@ -7,13 +7,13 @@ const config = {
     prefix: "",
     safelist: ["dark"],
     theme: {
-      container: {
-        center: true,
-        padding: "2rem",
-        screens: {
-            "2xl": "1560px", // Adjust this value to be narrower than before
+        container: {
+            center: true,
+            padding: "2rem",
+            screens: {
+                "2xl": "1560px", // Adjust this value to be narrower than before
+            },
         },
-    },
         extend: {
             fontFamily: {
                 sans: ["var(--font-sans)", ...fontFamily.sans],

@@ -90,7 +90,7 @@ export function ColumnDropdown({ id }: WorkflowData) {
             {
                 loading: "Removing workflow...",
                 error: "Failed to remove workflow.",
-            }
+            },
         );
     };
 
@@ -111,9 +111,7 @@ export function ColumnDropdown({ id }: WorkflowData) {
                     disabled={
                         changeStatusIsPending || statusChangeIsTransitionPending
                     }
-                    onClick={() =>
-                        router.push(`/workflows/new/${id}`)
-                    } // Activate
+                    onClick={() => router.push(`/workflows/new/${id}`)} // Activate
                 >
                     Edit
                 </DropdownMenuItem>

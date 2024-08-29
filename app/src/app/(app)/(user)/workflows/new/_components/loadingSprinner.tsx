@@ -29,12 +29,13 @@ export default function LoadingSpinner() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
-            <div className="relative w-16 h-16">
+        <div className="flex h-screen flex-col items-center justify-center">
+            <div className="relative h-16 w-16">
                 <div
-                    className="absolute inset-0 rounded-full animate-spin"
+                    className="absolute inset-0 animate-spin rounded-full"
                     style={{
-                        background: "conic-gradient(from 90deg, #4F46E5, #4F46E5, #C7D2FE, #C7D2FE, #FFFFFF)",
+                        background:
+                            "conic-gradient(from 90deg, #4F46E5, #4F46E5, #C7D2FE, #C7D2FE, #FFFFFF)",
                         width: "64px",
                         height: "64px",
                         borderRadius: "50%",

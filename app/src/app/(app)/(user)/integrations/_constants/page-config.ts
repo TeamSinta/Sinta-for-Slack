@@ -1,5 +1,4 @@
 export const integrationsPageConfig = {
     title: "Integrations",
-    description:
-        "",
+    description: "",
 } as const;

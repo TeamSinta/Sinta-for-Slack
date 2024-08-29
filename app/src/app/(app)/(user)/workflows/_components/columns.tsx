@@ -9,7 +9,7 @@ import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
 import Image, { type StaticImageData } from "next/image";
 import { format } from "date-fns";
-import { useState } from "react";  // Import useState for handling switch state
+import { useState } from "react"; // Import useState for handling switch state
 
 const logoMap: Record<string, StaticImageData> = {
     slack: slackLogo,
@@ -98,7 +98,8 @@ export const columns: ColumnDef<WorkflowData>[] = [
                 <span className="text-sm font-medium">{row.original.name}</span>
                 <br />
                 <span className="text-xs text-muted-foreground">
-                    Created at: {format(new Date(row.original.createdAt), "PPP")}
+                    Created at:{" "}
+                    {format(new Date(row.original.createdAt), "PPP")}
                 </span>
             </div>
         ),
@@ -107,7 +108,9 @@ export const columns: ColumnDef<WorkflowData>[] = [
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
-            const [isActive, setIsActive] = useState(row.original.status === "Active");
+            const [isActive, setIsActive] = useState(
+                row.original.status === "Active",
+            );
 
             const handleStatusChange = async () => {
                 // Toggle the status

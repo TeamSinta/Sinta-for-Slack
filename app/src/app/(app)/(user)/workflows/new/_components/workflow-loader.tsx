@@ -5,7 +5,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import LoadingSpinner from "./loadingSprinner";
 import { WorkflowBuilder } from "./workflow-builder";
 
-export default function WorkflowLoader({ workflowId, edit }: { workflowId: string; edit: boolean }) {
+export default function WorkflowLoader({
+    workflowId,
+    edit,
+}: {
+    workflowId: string;
+    edit: boolean;
+}) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -17,7 +23,11 @@ export default function WorkflowLoader({ workflowId, edit }: { workflowId: strin
     }, []);
 
     return (
-        <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
+        <AnimatePresence
+            mode="wait"
+            initial={false}
+            onExitComplete={() => window.scrollTo(0, 0)}
+        >
             {isLoading ? (
                 <motion.div
                     key="loading"

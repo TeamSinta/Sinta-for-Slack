@@ -911,71 +911,73 @@ const openai = new OpenAI({
 });
 
 export async function postWelcomeMessage(channelId, candidateID, slackTeamId) {
-  const accessToken = await getAccessToken(slackTeamId);
+    const accessToken = await getAccessToken(slackTeamId);
 
-  try {
-      // Post initial welcome message
-      const initialMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
-      await fetch("https://slack.com/api/chat.postMessage", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-              channel: channelId,
-              text: initialMessage,
-          }),
-      });
+    try {
+        // Post initial welcome message
+        const initialMessage = `Welcome to the debrief room for candidate ${candidateID}. Here are the scorecards: ...`;
+        await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                channel: channelId,
+                text: initialMessage,
+            }),
+        });
 
-      // Fetch scorecards
-      const scorecards = await fetchScorecards(candidateID);
+        // Fetch scorecards
+        const scorecards = await fetchScorecards(candidateID);
 
-      // Generate the prompt for OpenAI
-      const prompt = generatePrompt(scorecards);
+        // Generate the prompt for OpenAI
+        const prompt = generatePrompt(scorecards);
 
-      const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-              { role: "system", content: "You are a helpful assistant." },
-              { role: "user", content: prompt },
-          ],
-      });
+        const response = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: prompt },
+            ],
+        });
 
-      console.log("OpenAI response:", response);
+        console.log("OpenAI response:", response);
 
-      // Extract and clean the JSON from the response
-      const responseText = response.choices[0].message.content.trim();
-      const jsonStart = responseText.indexOf('{');
-      const jsonEnd = responseText.lastIndexOf('}');
+        // Extract and clean the JSON from the response
+        const responseText = response.choices[0].message.content.trim();
+        const jsonStart = responseText.indexOf("{");
+        const jsonEnd = responseText.lastIndexOf("}");
 
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-          const formattedMessage = JSON.parse(responseText.substring(jsonStart, jsonEnd + 1));
-          console.log("Formatted message:", formattedMessage);
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+            const formattedMessage = JSON.parse(
+                responseText.substring(jsonStart, jsonEnd + 1),
+            );
+            console.log("Formatted message:", formattedMessage);
 
-          // Post the detailed message
-          await fetch("https://slack.com/api/chat.postMessage", {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                  channel: channelId,
-                  blocks: formattedMessage.blocks,
-              }),
-          });
-      } else {
-          throw new Error("No valid JSON found in the response.");
-      }
-  } catch (error) {
-      console.error("Error posting messages:", error);
-      throw error;
-  }
+            // Post the detailed message
+            await fetch("https://slack.com/api/chat.postMessage", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    channel: channelId,
+                    blocks: formattedMessage.blocks,
+                }),
+            });
+        } else {
+            throw new Error("No valid JSON found in the response.");
+        }
+    } catch (error) {
+        console.error("Error posting messages:", error);
+        throw error;
+    }
 }
 
 function generatePrompt(scorecards) {
-  let prompt = `Generate a Slack message in Block Kit JSON format. The message should include a welcome message, candidate details, and feedback for each interviewer with buttons for actions. Use the following structure and ensure the message is formatted for Slack with dividers and emojis. Do not add any introductory text, explanations, or additional words outside of the JSON format. Only return the JSON response:
+    let prompt = `Generate a Slack message in Block Kit JSON format. The message should include a welcome message, candidate details, and feedback for each interviewer with buttons for actions. Use the following structure and ensure the message is formatted for Slack with dividers and emojis. Do not add any introductory text, explanations, or additional words outside of the JSON format. Only return the JSON response:
 
   {
       "blocks": [
@@ -1021,9 +1023,9 @@ function generatePrompt(scorecards) {
       ]
   }`;
 
-  const interviewer_blocks = scorecards
-      .map((scorecard, index) => {
-          return `
+    const interviewer_blocks = scorecards
+        .map((scorecard, index) => {
+            return `
       {
           "type": "section",
           "text": {
@@ -1043,12 +1045,12 @@ function generatePrompt(scorecards) {
       {
           "type": "divider"
       }`;
-      })
-      .join(",");
+        })
+        .join(",");
 
-  prompt = prompt.replace("{interviewer_blocks}", interviewer_blocks);
+    prompt = prompt.replace("{interviewer_blocks}", interviewer_blocks);
 
-  return prompt;
+    return prompt;
 }
 
 async function fetchScorecards(candidateID) {

@@ -28,8 +28,12 @@ export function AppLayoutShell({
     isWorkflowBuilder = false, // default to false
 }: AppLayoutProps) {
     return (
-        <div className={`flex items-start ${isWorkflowBuilder ? '' : 'container'}`}>
-            <div className={`sticky left-0 top-0 h-screen flex-shrink-0 ${isWorkflowBuilder ? 'w-60' : ''}`}>
+        <div
+            className={`flex items-start ${isWorkflowBuilder ? "" : "container"}`}
+        >
+            <div
+                className={`sticky left-0 top-0 h-screen flex-shrink-0 ${isWorkflowBuilder ? "w-60" : ""}`}
+            >
                 <Suspense fallback={<SidebarLoading />}>
                     <Sidebar
                         sidebarNavIncludeIds={sideNavIncludedIds}
@@ -38,7 +42,9 @@ export function AppLayoutShell({
                     />
                 </Suspense>
             </div>
-            <section className={`min-h-screen flex-grow ${isWorkflowBuilder ? '' : 'container'}`}>
+            <section
+                className={`min-h-screen flex-grow ${isWorkflowBuilder ? "" : "container"}`}
+            >
                 {children}
             </section>
         </div>

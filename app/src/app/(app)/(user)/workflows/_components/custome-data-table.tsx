@@ -54,7 +54,8 @@ export function CustomDataTable<TData, TValue>({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
+                                                  header.column.columnDef
+                                                      .header,
                                                   header.getContext(),
                                               )}
                                     </TableHead>
@@ -67,16 +68,24 @@ export function CustomDataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
+                                    data-state={
+                                        row.getIsSelected() && "selected"
+                                    }
                                     className="hover:bg-gray-100"
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id} className="p-4">
+                                        <TableCell
+                                            key={cell.id}
+                                            className="p-4"
+                                        >
                                             {/* Conditionally wrap with Link based on cell content */}
                                             {cell.column.id === "name" ? (
-                                                <Link href={`/workflows/new/${row.original.id}`}>
+                                                <Link
+                                                    href={`/workflows/new/${row.original.id}`}
+                                                >
                                                     {flexRender(
-                                                        cell.column.columnDef.cell,
+                                                        cell.column.columnDef
+                                                            .cell,
                                                         cell.getContext(),
                                                     )}
                                                 </Link>
@@ -94,7 +103,7 @@ export function CustomDataTable<TData, TValue>({
                             <TableRow>
                                 <TableCell
                                     colSpan={columns.length}
-                                    className="h-24 text-center p-4"
+                                    className="h-24 p-4 text-center"
                                 >
                                     No results.
                                 </TableCell>

@@ -105,58 +105,62 @@ export async function updateWorkflowMutation(props: UpdateWorkflowProps) {
 }
 type UpdateWorkflowStatusProps = z.infer<typeof workflowStatusUpdateSchema>;
 
-export async function updateWorkflowStatusMutation(props: UpdateWorkflowStatusProps) {
-  try {
-      const workflowParse = await workflowStatusUpdateSchema.safeParseAsync(props);
-      if (!workflowParse.success) {
-          throw new Error("Invalid workflow data", {
-              cause: workflowParse.error.errors,
-          });
-      }
+export async function updateWorkflowStatusMutation(
+    props: UpdateWorkflowStatusProps,
+) {
+    try {
+        const workflowParse =
+            await workflowStatusUpdateSchema.safeParseAsync(props);
+        if (!workflowParse.success) {
+            throw new Error("Invalid workflow data", {
+                cause: workflowParse.error.errors,
+            });
+        }
 
-      return await db
-          .update(workflows)
-          .set({ status: workflowParse.data.status })
-          .where(eq(workflows.id, workflowParse.data.id))
-          .execute();
-  } catch (e) {
-      console.log("wtf  eeeee -", e);
-      throw e;
-  }
+        return await db
+            .update(workflows)
+            .set({ status: workflowParse.data.status })
+            .where(eq(workflows.id, workflowParse.data.id))
+            .execute();
+    } catch (e) {
+        console.log("wtf  eeeee -", e);
+        throw e;
+    }
 }
 
 /**
  * Update a workflow name
  */
 
-
 const workflowNameUpdateSchema = workflowSelectSchema.pick({
-  id: true,
-  name: true,
-  // other fields as necessary
+    id: true,
+    name: true,
+    // other fields as necessary
 });
-
 
 type UpdateWorkflowNameProps = z.infer<typeof workflowNameUpdateSchema>;
 
-export async function updateWorkflowNameMutation(props: UpdateWorkflowNameProps) {
-  try {
-      const workflowParse = await workflowNameUpdateSchema.safeParseAsync(props);
-      if (!workflowParse.success) {
-          throw new Error("Invalid workflow data", {
-              cause: workflowParse.error.errors,
-          });
-      }
+export async function updateWorkflowNameMutation(
+    props: UpdateWorkflowNameProps,
+) {
+    try {
+        const workflowParse =
+            await workflowNameUpdateSchema.safeParseAsync(props);
+        if (!workflowParse.success) {
+            throw new Error("Invalid workflow data", {
+                cause: workflowParse.error.errors,
+            });
+        }
 
-      return await db
-          .update(workflows)
-          .set({ name: workflowParse.data.name })
-          .where(eq(workflows.id, workflowParse.data.id))
-          .execute();
-  } catch (e) {
-      console.error("Error updating workflow name:", e);
-      throw e;
-  }
+        return await db
+            .update(workflows)
+            .set({ name: workflowParse.data.name })
+            .where(eq(workflows.id, workflowParse.data.id))
+            .execute();
+    } catch (e) {
+        console.error("Error updating workflow name:", e);
+        throw e;
+    }
 }
 
 /**
