@@ -109,7 +109,9 @@ export async function POST(request: Request) {
 
 
 async function showInviteScreen(userId: string, teamId: string) {
-    const inviteLink = `https://5bc1e5fa5023dc7a.ngrok.app/invite/org/032cd629-9d52-4d9f-9e10-cf772b7c30ed?slackUserId=${userId}`;
+
+    const orgID = getOrgIdBySlackTeamId(teamId);
+    const inviteLink = `https://5bc1e5fa5023dc7a.ngrok.app/invite/org/${orgID}?slackUserId=${orgID}`;
 
     const blocks = [
         {
