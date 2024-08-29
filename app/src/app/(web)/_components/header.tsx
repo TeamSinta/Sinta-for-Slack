@@ -12,7 +12,7 @@ export function WebHeader() {
         <div className="container sticky top-0 z-50 max-w-[1400px] pt-5">
             <header className="container relative flex h-14 w-full items-center rounded-lg border border-border bg-background/60 backdrop-blur sm:px-12">
                 <Link
-                    href={siteUrls.home}
+                    href={siteUrls.dashboard.home}
                     className="absolute left-4 z-10 transition-transform  hover:scale-90"
                 >
                     <Icons.logo />

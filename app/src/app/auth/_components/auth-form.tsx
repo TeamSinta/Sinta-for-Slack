@@ -70,7 +70,7 @@ export function AuthForm({ type }: AuthFormProps) {
             >
                 <div className="flex flex-col items-center space-y-4">
                     <Link
-                        href={siteUrls.home}
+                        href={siteUrls.publicUrl}
                         className="flex w-fit items-center transition-transform hover:scale-90"
                     >
                         <Icons.logoIcon className="h-10 w-10 fill-primary" />

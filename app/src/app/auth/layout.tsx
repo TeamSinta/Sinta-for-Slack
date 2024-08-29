@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         href={siteUrls.teamsinta}
                         className="font-medium text-foreground underline underline-offset-4"
                     >
-                        teamsinta.vercel.app
+                        app.teamsinta.com
                     </Link>
                 </p>
             </aside>
