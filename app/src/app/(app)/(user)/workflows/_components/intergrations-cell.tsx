@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { type WorkflowData } from "./columns"; // Adjust to your actual import
-import greenhouseLogo from "../../../../../../public/greenhouselogo.png";
+import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import filterIcon from "../../../../../../public/filter.png";
 

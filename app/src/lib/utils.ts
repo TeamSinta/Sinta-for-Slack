@@ -1,6 +1,7 @@
 import { orgConfig } from "@/config/organization";
+import { env } from "@/env";
 import { type ClassValue, clsx } from "clsx";
-import { env } from "process";
+
 import { twMerge } from "tailwind-merge";
 
 const TRIGGER_STORAGE_KEY = "workflowTriggers";

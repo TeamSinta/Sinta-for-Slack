@@ -26,7 +26,7 @@ import {
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
-import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
 import slacklogo from "../../../../../../../public/slack-logo.png";
 import filterIcon from "../../../../../../../public/filter.png";
 import Actions from "./actions";
@@ -60,7 +60,7 @@ export function WorkflowBuilder({
             name: "",
             status: "skeleton",
             description: "",
-            icon: greenhouselogo,
+            icon: greenhouseLogo,
             label: "Trigger",
         },
         {
@@ -180,7 +180,7 @@ export function WorkflowBuilder({
                     name: "Greenhouse Trigger",
                     status: "valid",
                     description: `${triggerData.objectField} - ${triggerData.triggerConfig.apiUrl}`,
-                    icon: greenhouselogo,
+                    icon: greenhouseLogo,
                     label: "Trigger",
                 });
             } else {
@@ -190,7 +190,7 @@ export function WorkflowBuilder({
                     name: "",
                     status: "skeleton",
                     description: "",
-                    icon: greenhouselogo,
+                    icon: greenhouseLogo,
                     label: "Trigger",
                 });
             }

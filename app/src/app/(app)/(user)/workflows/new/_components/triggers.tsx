@@ -20,7 +20,7 @@ import {
 import { CheckCircle, AlertTriangle, Clock } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
 import { Separator } from "@/components/ui/separator";
 import JobsDropdown from "../../_components/job-select";
 import StagesDropdown from "../../_components/stages-dropdown";
@@ -253,7 +253,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                     <div className="mb-4 flex items-center">
                         <div className="mb-2 flex items-center">
                             <Image
-                                src={greenhouselogo}
+                                src={greenhouseLogo}
                                 alt="slack-logo"
                                 width={40}
                                 height={40}
