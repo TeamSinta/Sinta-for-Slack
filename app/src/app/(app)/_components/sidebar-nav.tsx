@@ -80,153 +80,79 @@ export function SidebarNav({
                             </h3>
                         )}
                         <ul className="flex flex-col gap-1">
-                            {nav.items.map((item) => (
-                                <li key={item.label}>
-                                    {/**
-                                     * if the item has a subMenu, we will render an accordion component to handle the subMenu
-                                     * otherwise, we will render a simple link
-                                     */}
-                                    {item.subMenu ? (
-                                        <Accordion
-                                            type="single"
-                                            collapsible
-                                            defaultValue={
-                                                item.subMenu.find(
-                                                    (subItem: {
-                                                        label: string;
-                                                        href: string;
-                                                        icon: React.ComponentType<IconProps>;
-                                                    }) =>
-                                                        isLinkActive(
-                                                            pathname,
-                                                            subItem.href,
-                                                        ),
-                                                )
-                                                    ? item.label
-                                                    : undefined
-                                            }
-                                        >
-                                            <AccordionItem value={item.label}>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <AccordionTrigger
-                                                            className={linkStyle(
-                                                                {
-                                                                    className:
-                                                                        "justify-between",
-                                                                },
-                                                            )}
-                                                        >
-                                                            <div className="flex items-center justify-start gap-3 ">
-                                                                <item.icon
-                                                                    className={cn(
-                                                                        "flex-shrink-0",
-                                                                        isCollapsed
-                                                                            ? "h-5 w-5"
-                                                                            : "h-4 w-4 ",
-                                                                    )}
-                                                                />
-                                                                {!isCollapsed && (
-                                                                    <span className="truncate">
-                                                                        {
-                                                                            item.label
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </AccordionTrigger>
-                                                    </TooltipTrigger>
-                                                    {isCollapsed && (
-                                                        <TooltipContent
-                                                            side="right"
-                                                            className="flex items-center gap-2 font-medium "
-                                                        >
-                                                            <span>
-                                                                {item.label}
-                                                            </span>
-                                                            <ChevronDown className="h-4 w-4" />
-                                                        </TooltipContent>
-                                                    )}
-                                                </Tooltip>
-                                                <AccordionContent
-                                                    className={cn(
-                                                        " flex flex-col gap-1 pt-1",
-                                                        isCollapsed
-                                                            ? ""
-                                                            : "relative pl-7 pr-0",
-                                                    )}
-                                                >
-                                                    {item.subMenu.map(
-                                                        (subItem) => (
-                                                            <Tooltip
-                                                                key={
-                                                                    subItem.label
-                                                                }
-                                                            >
-                                                                <TooltipTrigger className="h-full w-full">
-                                                                    <NavLink
-                                                                        {...subItem}
-                                                                        Icon={
-                                                                            subItem.icon
-                                                                        }
-                                                                        active={isLinkActive(
-                                                                            pathname,
-                                                                            subItem.href,
-                                                                        )}
-                                                                        isCollapsed={
-                                                                            isCollapsed
-                                                                        }
-                                                                    />
-                                                                </TooltipTrigger>
-                                                                {isCollapsed && (
-                                                                    <TooltipContent
-                                                                        side="right"
-                                                                        className="flex items-center gap-4 font-medium"
-                                                                    >
-                                                                        {
-                                                                            subItem.label
-                                                                        }
-                                                                    </TooltipContent>
-                                                                )}
-                                                            </Tooltip>
-                                                        ),
-                                                    )}
-
-                                                    {!isCollapsed && (
-                                                        <Separator
-                                                            orientation="vertical"
-                                                            className="absolute bottom-2 left-5 right-auto"
-                                                        />
-                                                    )}
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        </Accordion>
-                                    ) : (
-                                        <Tooltip>
-                                            <TooltipTrigger className="h-full w-full">
-                                                <NavLink
-                                                    {...item}
-                                                    Icon={item.icon}
-                                                    active={isLinkActive(
-                                                        pathname,
-                                                        item.href,
-                                                    )}
-                                                    isCollapsed={isCollapsed}
-                                                />
-                                            </TooltipTrigger>
-                                            {isCollapsed && (
-                                                <TooltipContent
-                                                    side="right"
-                                                    className="flex items-center gap-4 font-medium"
-                                                >
-                                                    {item.label}
-                                                </TooltipContent>
-                                            )}
-                                        </Tooltip>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
+    {nav.items.map((item) => (
+        <li key={item.label}>
+            {item.subMenu ? (
+                <Accordion
+                    type="single"
+                    collapsible
+                    defaultValue={
+                        item.subMenu.find((subItem) =>
+                            isLinkActive(subItem.href, pathname)
+                        )
+                            ? item.label
+                            : undefined
+                    }
+                >
+                    <AccordionItem value={item.label}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <AccordionTrigger
+                                    className={linkStyle({
+                                        active: item.subMenu.some((subItem) =>
+                                            isLinkActive(subItem.href, pathname)
+                                        ),
+                                        className: "justify-between",
+                                    })}
+                                >
+                                    <div className="flex items-center justify-start gap-3 ">
+                                        <item.icon className="flex-shrink-0 h-4 w-4" />
+                                        {!isCollapsed && <span className="truncate">{item.label}</span>}
+                                    </div>
+                                </AccordionTrigger>
+                            </TooltipTrigger>
+                            <AccordionContent className="flex flex-col gap-1 pt-1">
+                                {item.subMenu.map((subItem) => (
+                                    <Tooltip key={subItem.label}>
+                                        <TooltipTrigger className="h-full w-full">
+                                            <NavLink
+                                                {...subItem}
+                                                Icon={subItem.icon}
+                                                active={isLinkActive(subItem.href, pathname)}
+                                                isCollapsed={isCollapsed}
+                                            />
+                                        </TooltipTrigger>
+                                        {isCollapsed && (
+                                            <TooltipContent side="right" className="flex items-center gap-4 font-medium">
+                                                {subItem.label}
+                                            </TooltipContent>
+                                        )}
+                                    </Tooltip>
+                                ))}
+                            </AccordionContent>
+                        </Tooltip>
+                    </AccordionItem>
+                </Accordion>
+            ) : (
+                <Tooltip>
+                    <TooltipTrigger className="h-full w-full">
+                        <NavLink
+                            {...item}
+                            Icon={item.icon}
+                            active={isLinkActive(item.href, pathname)}
+                            isCollapsed={isCollapsed}
+                        />
+                    </TooltipTrigger>
+                    {isCollapsed && (
+                        <TooltipContent side="right" className="flex items-center gap-4 font-medium">
+                            {item.label}
+                        </TooltipContent>
+                    )}
+                </Tooltip>
+            )}
+        </li>
+    ))}
+</ul>
 
                         {index !== sidebarNavitems.length - 1 && (
                             <Separator className="my-2" />
