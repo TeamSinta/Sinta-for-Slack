@@ -17,6 +17,7 @@ import { protectedProcedure } from "@/server/procedures";
 import { and, eq } from "drizzle-orm";
 import { getOrganizations } from "@/server/actions/organization/queries";
 import { z } from "zod";
+import MixpanelServer from "@/server/mixpanel";
 
 /**
  * Create a new organization mutations
@@ -40,6 +41,20 @@ export async function createOrgMutation({ ...props }: CreateOrgProps) {
             cause: organizationParse.error.errors,
         });
     }
+
+    MixpanelServer.identify(user.id, {
+        organization: organizationParse.data.name,
+        email: user.email,
+        createdAt: new Date(),
+        userRole: user.role,
+    });
+
+    MixpanelServer.track("User Signed up", {
+        organization: organizationParse.data.name,
+        email: user.email,
+        createdAt: new Date(),
+        userRole: user.role,
+    });
 
     const createOrg = await db
         .insert(organizations)

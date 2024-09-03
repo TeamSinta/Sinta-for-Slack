@@ -66,6 +66,8 @@
         "label": "^0.2.2",
         "lucide-react": "^0.372.0",
         "mdast-util-toc": "^7.0.0",
+        "mixpanel": "^0.18.0",
+        "mixpanel-browser": "^2.55.1",
         "next": "^14.1.0",
         "next-auth": "^4.24.6",
         "next-connect": "^0.12.2",
@@ -105,6 +107,7 @@
     "devDependencies": {
         "@tailwindcss/typography": "^0.5.12",
         "@types/eslint": "^8.56.4",
+        "@types/mixpanel-browser": "^2.50.0",
         "@types/node": "^20.11.22",
         "@types/react": "^18.2.60",
         "@types/react-dom": "^18.2.19",
