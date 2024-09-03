@@ -42,20 +42,6 @@ export async function createOrgMutation({ ...props }: CreateOrgProps) {
         });
     }
 
-    MixpanelServer.identify(user.id, {
-        organization: organizationParse.data.name,
-        email: user.email,
-        createdAt: new Date(),
-        userRole: user.role,
-    });
-
-    MixpanelServer.track("User Signed up", {
-        organization: organizationParse.data.name,
-        email: user.email,
-        createdAt: new Date(),
-        userRole: user.role,
-    });
-
     const createOrg = await db
         .insert(organizations)
         .values(organizationParse.data)
@@ -70,6 +56,22 @@ export async function createOrgMutation({ ...props }: CreateOrgProps) {
         slack_user_id: null,
     });
 
+    MixpanelServer.identify(user.id, {
+        organization: organizationParse.data.name,
+        organization_id: createOrg[0]!.id,
+        email: user.email,
+        signup_at: new Date(),
+        user_role: user.role,
+    });
+
+    MixpanelServer.track("User Signed up", {
+        organization_id: createOrg[0]!.id,
+        organization_name: organizationParse.data.name,
+        email: user.email,
+        signup_at: new Date(),
+        user_role: user.role,
+        user_id: user.id,
+    });
     return createOrg[0];
 }
 
