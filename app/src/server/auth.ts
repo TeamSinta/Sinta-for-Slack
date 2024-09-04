@@ -19,6 +19,7 @@ import SlackProvider from "next-auth/providers/slack";
 import { sendVerificationEmail } from "@/server/actions/send-verification-email";
 import { env } from "@/env";
 import { eq } from "drizzle-orm";
+import MixpanelServer from "./mixpanel";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -90,11 +91,19 @@ export const authOptions: NextAuthOptions = {
 
             return session;
         },
+
         async jwt({ token, user }) {
             const dbUser = await db.query.users.findFirst({
                 where: eq(users.email, token.email!),
             });
 
+            if (user && !token.isTracked) {
+                MixpanelServer.track("User Logged In", {
+                    userId: user.id,
+                    email: user.email,
+                });
+                token.isTracked = true;
+            }
             if (!dbUser) {
                 if (user) {
                     token.id = user?.id;

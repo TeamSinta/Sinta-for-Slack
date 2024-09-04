@@ -9,6 +9,7 @@ type SignoutTriggerProps = {
     redirect?: boolean;
     asChild?: boolean;
     children?: React.ReactNode;
+    onClick?: () => Promise<void> | (() => void);
 } & React.HTMLAttributes<HTMLButtonElement>;
 
 export function SignoutTrigger({
@@ -16,13 +17,19 @@ export function SignoutTrigger({
     redirect = true,
     asChild,
     children,
+    onClick,
     ...props
 }: SignoutTriggerProps) {
     const Comp = asChild ? Slot : "button";
 
     return (
         <Comp
-            onClick={async () => await signOut({ callbackUrl, redirect })}
+            onClick={async () => {
+                if (onClick) {
+                    await onClick();
+                }
+                await signOut({ callbackUrl, redirect });
+            }}
             {...props}
         >
             {children}
