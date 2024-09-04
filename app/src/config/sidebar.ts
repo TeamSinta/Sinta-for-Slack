@@ -115,10 +115,10 @@ const navigation: SidebarNavItems[] = [
             //     href: siteUrls.assignments.home,
             // },
             {
-              label: "Workflows",
-              icon: Zap,
-              href: siteUrls.workflows.home,
-          },
+                label: "Workflows",
+                icon: Zap,
+                href: siteUrls.workflows.home,
+            },
             {
                 label: "Hire Rooms",
                 icon: FlameKindling,
@@ -131,10 +131,10 @@ const navigation: SidebarNavItems[] = [
                 href: siteUrls.workspaces.home,
             },
             {
-              label: "Integrations",
-              icon: Cable,
-              href: siteUrls.integrations.home,
-          },
+                label: "Integrations",
+                icon: Cable,
+                href: siteUrls.integrations.home,
+            },
         ],
     },
     {

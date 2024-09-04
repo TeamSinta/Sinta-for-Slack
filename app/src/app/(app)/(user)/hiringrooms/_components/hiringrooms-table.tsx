@@ -85,35 +85,46 @@ export function HiringroomsTable({
     }));
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {hiringroomsData.map((hiringroom) => (
                 <Link
                     key={hiringroom.id}
                     href="/hiringrooms/form"
-                    className="p-4 bg-white rounded-lg shadow-md border border-border hover:shadow-lg transition-shadow"
+                    className="rounded-lg border border-border bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
                 >
                     {/* Card Image */}
-                    <div className="h-40 md:h-48 bg-gray-100 flex items-center justify-center rounded-t-lg overflow-hidden">
+                    <div className="flex h-40 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 md:h-48">
                         <Image
                             src={imageMap[hiringroom.objectField] || flow} // Use the objectField to select the appropriate image
                             alt={`${hiringroom.objectField}-image`}
-                            className="object-cover h-full w-full"
+                            className="h-full w-full object-cover"
                         />
                     </div>
 
                     {/* Card Content */}
                     <div className="p-4">
-                        <h3 className="text-xl font-semibold truncate mb-2">{hiringroom.name}</h3>
-                        <div className="flex flex-wrap gap-2 mb-3">
+                        <h3 className="mb-2 truncate text-xl font-semibold">
+                            {hiringroom.name}
+                        </h3>
+                        <div className="mb-3 flex flex-wrap gap-2">
                             {hiringroom.recipient.recipients.map((rec) => (
-                                <Badge key={rec.value} variant="secondary" className="capitalize flex items-center">
-                                    <Image src={logoMap[rec.source] ?? slackLogo} alt={`${rec.source}-logo`} className="mr-1 h-4 w-4" />
+                                <Badge
+                                    key={rec.value}
+                                    variant="secondary"
+                                    className="flex items-center capitalize"
+                                >
+                                    <Image
+                                        src={logoMap[rec.source] ?? slackLogo}
+                                        alt={`${rec.source}-logo`}
+                                        className="mr-1 h-4 w-4"
+                                    />
                                     {rec.label}
                                 </Badge>
                             ))}
                         </div>
                         <p className="text-xs text-gray-500">
-                            Last updated: {format(new Date(hiringroom.createdAt), "PPpp")}
+                            Last updated:{" "}
+                            {format(new Date(hiringroom.createdAt), "PPpp")}
                         </p>
                     </div>
                 </Link>
