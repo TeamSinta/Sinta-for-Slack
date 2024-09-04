@@ -18,6 +18,7 @@ import { AlertIntegrationDialog } from "./alertIntergrationDialog";
 import { StageSelectionModal } from "./new/components/create-new-modal";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { siteUrls } from "@/config/urls";
 
 // Assuming HiringroomStatus is the enum type for status
 
@@ -74,7 +75,7 @@ export default async function Hiringrooms({ searchParams }: UsersPageProps) {
                                 <>
                                     {/* <CreateHiringroomSheet /> */}
                                     {/* <StageSelectionModal/> */}
-                                    <Link href="/hiringrooms/form">
+                                    <Link href={siteUrls.hiringrooms.form}>
                                         <Button
                                             variant="outline"
                                             className="rounded-sm bg-indigo-500 px-4 py-2 text-white shadow hover:bg-indigo-600 hover:text-white"

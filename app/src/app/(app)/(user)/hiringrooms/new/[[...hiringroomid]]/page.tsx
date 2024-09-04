@@ -186,7 +186,7 @@ export default function JourneyBuilder() {
                                                             src={
                                                                 logoMap[
                                                                     item.source
-                                                                ]
+                                                                ] || ""
                                                             }
                                                             alt={`${item.source}-logo`}
                                                             className="mr-3 h-6 w-6"

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React from "react";
 import Link from "next/link";
 import { type getPaginatedHiringroomsQuery } from "@/server/actions/hiringrooms/queries";

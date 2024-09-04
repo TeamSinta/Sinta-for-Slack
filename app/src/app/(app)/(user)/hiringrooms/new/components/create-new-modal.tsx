@@ -17,7 +17,7 @@ import { Briefcase, Users, ClipboardCheck } from "lucide-react";
 export function StageSelectionModal() {
     const router = useRouter();
 
-    const handleSelection = (stage) => {
+    const handleSelection = (stage: string) => {
         router.push(`/hiringrooms/new?stage=${stage}`);
     };
 

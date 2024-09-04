@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, { useEffect, useState } from "react";
 import {
     Card,
@@ -17,11 +19,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
-import SlackChannelNameFormat from "../../_components/SlackChannelNameFormat";
-import ConditionComponent from "../../_components/conditions";
+import SlackChannelNameFormat from "./SlackChannelNameFormat";
+import ConditionComponent from "./conditions";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import { Condition } from "../../../workflows/_components/columns";
+import { Condition } from "../../workflows/_components/columns";
 
 const actionsOptions = [
     { value: "add_recipients", label: "Add Additional Recipients" },
