@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 import { type getPaginatedHiringroomsQuery } from "@/server/actions/hiringrooms/queries";
@@ -8,8 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import Image, { StaticImageData } from "next/image";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
-import flow from "../../../../../../public/kanban.jpg";
+import flow from "../../../../../../public/RoleChannel.png";
+import jobsImage from "../../../../../../public/RoleChannel.png"; // Add your image here
+import candidatesImage from "../../../../../../public/Candidate-Channel.png"; // Add your image here
 import { format } from "date-fns";
+
+// Map the appropriate images for the different object fields
+const imageMap: Record<string, StaticImageData> = {
+    jobs: jobsImage,
+    candidates: candidatesImage,
+};
 
 const logoMap: Record<string, StaticImageData> = {
     slack: slackLogo,
@@ -83,14 +89,14 @@ export function HiringroomsTable({
             {hiringroomsData.map((hiringroom) => (
                 <Link
                     key={hiringroom.id}
-                    href="/hiringrooms/new"
+                    href="/hiringrooms/form"
                     className="p-4 bg-white rounded-lg shadow-md border border-border hover:shadow-lg transition-shadow"
                 >
                     {/* Card Image */}
                     <div className="h-40 md:h-48 bg-gray-100 flex items-center justify-center rounded-t-lg overflow-hidden">
                         <Image
-                            src={flow}
-                            alt="Workflow Diagram"
+                            src={imageMap[hiringroom.objectField] || flow} // Use the objectField to select the appropriate image
+                            alt={`${hiringroom.objectField}-image`}
                             className="object-cover h-full w-full"
                         />
                     </div>

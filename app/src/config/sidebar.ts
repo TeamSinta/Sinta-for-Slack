@@ -14,6 +14,7 @@ import {
     DoorOpen,
     Cable,
     MapPinned,
+    FlameKindling,
 } from "lucide-react";
 import { siteUrls } from "@/config/urls";
 
@@ -118,8 +119,8 @@ const navigation: SidebarNavItems[] = [
               href: siteUrls.workflows.home,
           },
             {
-                label: "Hiring Maps",
-                icon: MapPinned,
+                label: "Hire Rooms",
+                icon: FlameKindling,
                 href: siteUrls.hiringrooms.home,
             },
 

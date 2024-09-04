@@ -1,4 +1,4 @@
-export const HiringroomsPageConfig = {
-    title: "Hire Rooms",
+export const SlackHome = {
+    title: "Customize Slack Home Tab",
     description: "Create and manage dedicated Slack channels for hiring.",
 } as const;

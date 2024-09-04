@@ -72,10 +72,10 @@ export default async function Hiringrooms({ searchParams }: UsersPageProps) {
                       </TabsList>
                       {slackIntegration && greenhouseIntegration ? (
                          <>
-                         <CreateHiringroomSheet />
-                          <StageSelectionModal/>
+                         {/* <CreateHiringroomSheet /> */}
+                          {/* <StageSelectionModal/> */}
                           <Link href="/hiringrooms/form">
-    <Button>Create Hiring Room</Button>
+    <Button  variant="outline" className="bg-indigo-500 text-white px-4 py-2 rounded-sm shadow hover:text-white hover:bg-indigo-600">New Hire Room</Button>
 </Link>
                           </>
 
