@@ -82,6 +82,7 @@ export async function Sidebar({
                     <SidebarNav
                         sidebarNavIncludeIds={sidebarNavIncludeIds}
                         sidebarNavRemoveIds={sidebarNavRemoveIds}
+                        user={user}
                     />
                     <ScrollBar orientation="vertical" />
                 </div>

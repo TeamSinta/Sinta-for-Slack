@@ -21,6 +21,8 @@ import {
 import { ChevronDown } from "lucide-react";
 import { sidebarConfig } from "@/config/sidebar";
 import { type VariantProps } from "class-variance-authority";
+import mixpanel from "mixpanel-browser";
+import { type User } from "next-auth";
 
 /**
  * SidebarNav is a component that renders the sidebar navigation for the dashboard
@@ -54,11 +56,13 @@ function linkStyle({ active, disabled, className, ...props }: LinkStyleProps) {
 type SidebarNavProps = {
     sidebarNavIncludeIds?: string[];
     sidebarNavRemoveIds?: string[];
+    user?: User | null;
 };
 
 export function SidebarNav({
     sidebarNavIncludeIds,
     sidebarNavRemoveIds,
+    user,
 }: SidebarNavProps) {
     const isCollapsed = false;
 
@@ -176,6 +180,9 @@ export function SidebarNav({
                                                                         isCollapsed={
                                                                             isCollapsed
                                                                         }
+                                                                        user={
+                                                                            user
+                                                                        }
                                                                     />
                                                                 </TooltipTrigger>
                                                                 {isCollapsed && (
@@ -212,6 +219,7 @@ export function SidebarNav({
                                                         item.href,
                                                     )}
                                                     isCollapsed={isCollapsed}
+                                                    user={user}
                                                 />
                                             </TooltipTrigger>
                                             {isCollapsed && (
@@ -248,6 +256,7 @@ type NavLinkProps = {
     active?: boolean;
     isCollapsed?: boolean;
     size?: ButtonProps["size"];
+    user?: User | null;
 };
 
 function NavLink({
@@ -258,9 +267,22 @@ function NavLink({
     active,
     size = "default",
     isCollapsed,
+    user,
 }: NavLinkProps) {
     return (
-        <Link href={href} className={linkStyle({ active, disabled, size })}>
+        <Link
+            href={href}
+            className={linkStyle({ active, disabled, size })}
+            onClick={() => {
+                mixpanel.track("Nav Bar Clicked", {
+                    distinct_id: user?.id,
+                    page: href,
+                    item_name: label,
+                    clicked_at: new Date().toISOString(),
+                    user_id: user?.id,
+                });
+            }}
+        >
             <Icon
                 className={cn(
                     "flex-shrink-0",
