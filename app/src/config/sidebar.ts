@@ -15,6 +15,7 @@ import {
     Cable,
     MapPinned,
     FlameKindling,
+    Origami,
 } from "lucide-react";
 import { siteUrls } from "@/config/urls";
 
@@ -126,7 +127,7 @@ const navigation: SidebarNavItems[] = [
 
             {
                 label: "Workspaces",
-                icon: Workflow,
+                icon: Origami,
                 href: siteUrls.workspaces.home,
             },
             {
