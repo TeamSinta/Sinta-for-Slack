@@ -40,6 +40,7 @@ import {
 } from "@/server/slack/core";
 import { getServerAuthSession } from "@/server/auth";
 import { getOrganizations } from "@/server/actions/organization/queries";
+import MixpanelServer from "@/server/mixpanel";
 
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
