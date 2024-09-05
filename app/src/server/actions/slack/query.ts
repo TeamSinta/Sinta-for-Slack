@@ -227,23 +227,24 @@ export async function isUserMemberOfOrg({
     return !!member; // Return true if the user is a member, false otherwise
 }
 
+export async function getOrgIdBySlackTeamId(
+    teamId: string,
+): Promise<string | null> {
+    if (!teamId) {
+        throw new Error("No Slack team ID provided.");
+    }
 
-export async function getOrgIdBySlackTeamId(teamId: string): Promise<string | null> {
-  if (!teamId) {
-      throw new Error("No Slack team ID provided.");
-  }
+    // Fetch organization details using the provided Slack team ID
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, teamId),
+        columns: {
+            id: true,
+        },
+    });
 
-  // Fetch organization details using the provided Slack team ID
-  const organization = await db.query.organizations.findFirst({
-      where: eq(organizations.slack_team_id, teamId),
-      columns: {
-          id: true,
-      },
-  });
+    if (!organization) {
+        throw new Error("Organization not found.");
+    }
 
-  if (!organization) {
-      throw new Error("Organization not found.");
-  }
-
-  return organization.id || null;
+    return organization.id || null;
 }

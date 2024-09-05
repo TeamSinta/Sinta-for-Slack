@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 
 // Custom hook to get a specific cookie by name
 const useGetCookie = (cookieName: string) => {
-    const [cookieValue, setCookieValue] = useState<string | null | undefined>(null);
+    const [cookieValue, setCookieValue] = useState<string | null | undefined>(
+        null,
+    );
 
     useEffect(() => {
         if (typeof document !== "undefined") {

@@ -47,14 +47,34 @@ const variableOptions: Option[] = [
     { value: "{{Role title}}", label: "Role Title", source: "greenhouse" },
     { value: "{{Job Stage}}", label: "Job Stage", source: "greenhouse" },
     { value: "{{Recruiter}}", label: "Recruiter", source: "greenhouse" },
-    { value: "{{Candidate_Name}}", label: "Candidate Name", source: "greenhouse" },
+    {
+        value: "{{Candidate_Name}}",
+        label: "Candidate Name",
+        source: "greenhouse",
+    },
 ];
 
 const specialVariableOptions: Option[] = [
-    { value: "{{All Job Stages}}", label: "All Job Stages", source: "greenhouse" },
-    { value: "{{All Interviewers}}", label: "All Interviewers", source: "greenhouse" },
-    { value: "{{All Competencies}}", label: "All Competencies", source: "greenhouse" },
-    { value: "{{All}}", label: "All (Job Stages, Interviewers, Competencies)", source: "greenhouse" },
+    {
+        value: "{{All Job Stages}}",
+        label: "All Job Stages",
+        source: "greenhouse",
+    },
+    {
+        value: "{{All Interviewers}}",
+        label: "All Interviewers",
+        source: "greenhouse",
+    },
+    {
+        value: "{{All Competencies}}",
+        label: "All Competencies",
+        source: "greenhouse",
+    },
+    {
+        value: "{{All}}",
+        label: "All (Job Stages, Interviewers, Competencies)",
+        source: "greenhouse",
+    },
 ];
 
 interface SlackHiringroomProps {
@@ -121,15 +141,15 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         handleButtonsChange(newButtons);
     };
 
-
     const updateButton = (
         index: number,
         key: keyof ButtonAction,
         value: string | never,
     ) => {
         const newButtons = [...buttons];
-        newButtons?[index][key] = value as string:
-        handleButtonsChange(newButtons);
+        newButtons
+            ? ([index][key] = value as string)
+            : handleButtonsChange(newButtons);
     };
 
     const removeButton = (index: number) => {
