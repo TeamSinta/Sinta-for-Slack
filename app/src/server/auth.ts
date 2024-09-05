@@ -101,6 +101,7 @@ export const authOptions: NextAuthOptions = {
                 MixpanelServer.track("User Logged In", {
                     userId: user.id,
                     email: user.email,
+                    type: account?.provider,
                 });
                 token.isTracked = true;
             }
