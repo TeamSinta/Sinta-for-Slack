@@ -31,9 +31,9 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import { getOrganizations } from "@/server/actions/organization/queries";
 import mixpanel from "mixpanel-browser";
-
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 interface GreenhouseIntegrationCardProps {
     name: string;
     imageUrl: string;
@@ -57,6 +57,7 @@ export const GreenhouseIntegrationCard: React.FC<
     const [isModalOpen, setIsModalOpen] = useState(false);
     const session = useSession();
     const router = useRouter();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const form = useForm({
@@ -93,6 +94,7 @@ export const GreenhouseIntegrationCard: React.FC<
             modal_page: "/integrations",
             modal_shown_at: new Date().toISOString(),
             user_id: session.data?.user?.id,
+            organization_id: orgCookie,
         });
     }
     return (

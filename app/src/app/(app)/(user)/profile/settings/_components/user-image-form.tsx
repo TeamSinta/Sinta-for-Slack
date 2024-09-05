@@ -35,6 +35,8 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { useRouter } from "next/navigation";
 import mixpanel from "mixpanel-browser";
 import { useSession } from "next-auth/react";
+import useGetCookie from "@/hooks/use-get-cookie";
+import { orgConfig } from "@/config/organization";
 
 type UserImageFormProps = {
     user: User;
@@ -45,6 +47,7 @@ const PROFILE_MAX_SIZE = 4;
 export function UserImageForm({ user }: UserImageFormProps) {
     const router = useRouter();
     const session = useSession();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const [modalOpen, setModalOpen] = useState<boolean>(false);
 
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -114,6 +117,7 @@ export function UserImageForm({ user }: UserImageFormProps) {
             modal_page: "/profile/settings",
             modal_shown_at: new Date().toISOString(),
             user_id: session.data?.user?.id,
+            organization_id: orgCookie,
         });
     }
 

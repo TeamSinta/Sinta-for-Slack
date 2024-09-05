@@ -14,6 +14,7 @@ import {
 import {
     getActionData,
     getConditionsData,
+    getOrgCookie,
     getTriggerData,
     getWorkflowName,
 } from "@/lib/utils";
@@ -87,6 +88,7 @@ export const WorkflowPublishModal = ({
             modal_page: "/workflows",
             modal_shown_at: new Date().toISOString(),
             user_id: session.data?.user?.id,
+            organization_id: getOrgCookie(),
         });
     }
 

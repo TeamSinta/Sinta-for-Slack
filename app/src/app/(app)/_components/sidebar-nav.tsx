@@ -23,6 +23,8 @@ import { sidebarConfig } from "@/config/sidebar";
 import { type VariantProps } from "class-variance-authority";
 import mixpanel from "mixpanel-browser";
 import { type User } from "next-auth";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 
 /**
  * SidebarNav is a component that renders the sidebar navigation for the dashboard
@@ -269,6 +271,7 @@ function NavLink({
     isCollapsed,
     user,
 }: NavLinkProps) {
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     return (
         <Link
             href={href}
@@ -280,6 +283,7 @@ function NavLink({
                     item_name: label,
                     clicked_at: new Date().toISOString(),
                     user_id: user?.id,
+                    organization_id: orgCookie,
                 });
             }}
         >

@@ -24,6 +24,8 @@ import { z } from "zod";
 import { SignoutTrigger } from "@/components/signout-trigger";
 import { usePathname } from "next/navigation";
 import mixpanel from "mixpanel-browser";
+import useGetCookie from "@/hooks/use-get-cookie";
+import { orgConfig } from "@/config/organization";
 
 /**
  * to @add more navigation items to the user dropdown, you can add more items to the `userDropdownConfig` object in the
@@ -55,6 +57,7 @@ type UserDropdownContentProps = {
 
 function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
     const pathName = usePathname();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const isCollapsed = false;
     return (
         <DropdownMenu modal={false}>
@@ -138,6 +141,7 @@ function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
                                     user_id: user?.id,
                                     page_exit_at: new Date().toISOString(),
                                     page_exit: pathName,
+                                    organization_id: orgCookie,
                                 },
                                 resolve,
                             );

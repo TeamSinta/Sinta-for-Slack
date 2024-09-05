@@ -8,7 +8,7 @@ import { Fragment, useState } from "react";
 import { CreateOrgForm } from "@/app/(app)/_components/create-org-form";
 import { type organizations } from "@/server/db/schema";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { switchOrgPendingState } from "@/app/(app)/_components/org-switch-loading";
 import {
     Command,
@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/popover";
 import { useSession } from "next-auth/react";
 import mixpanel from "mixpanel-browser";
+import useGetCookie from "@/hooks/use-get-cookie";
+import { orgConfig } from "@/config/organization";
 
 export type UserOrgs = {
     heading: string;
@@ -43,7 +45,7 @@ export function OrgSelectDropdown({
 }: OrgSelectDropdownProps) {
     const router = useRouter();
     const session = useSession();
-    const pathName = usePathname();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const isCollapsed = false;
 
     const { setIsPending } = switchOrgPendingState();
@@ -73,6 +75,7 @@ export function OrgSelectDropdown({
             modal_page: "/org/settings",
             modal_shown_at: new Date().toISOString(),
             user_id: session.data?.user?.id,
+            organization_id: orgCookie,
         });
     }
     return (
