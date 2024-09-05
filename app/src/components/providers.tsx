@@ -10,7 +10,7 @@ const MIXPANEL_TOKEN =
     process.env.NEXT_PUBLIC_MIXPANEL_TOKEN ??
     "33423b0b278507a7f8b14f9b34694baf";
 
-mixpanel.init(MIXPANEL_TOKEN);
+mixpanel.init(MIXPANEL_TOKEN, { track_pageview: true });
 
 type ProvidersProps = {
     children: React.ReactNode;

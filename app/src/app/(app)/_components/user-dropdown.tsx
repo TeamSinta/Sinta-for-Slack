@@ -141,6 +141,7 @@ function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
                                 },
                                 resolve,
                             );
+                            mixpanel.reset();
                         });
                     }}
                     asChild

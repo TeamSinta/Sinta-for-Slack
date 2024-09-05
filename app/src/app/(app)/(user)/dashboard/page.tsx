@@ -14,6 +14,7 @@ import {
     getFirstFiveWorkflows,
 } from "@/server/actions/organization/queries";
 import { Button } from "@/components/ui/button";
+import LogInTracker from "./_components/logInTracker";
 
 const mockData = {
     welcomeText: "Welcome to your Sinta Launchpad!",
@@ -212,6 +213,7 @@ export default async function DashboardPage() {
             title="Dashboard"
             description="Overview of your account usage and potential features"
         >
+            <LogInTracker />
             <div className="space-y-6 p-2">
                 <Card className="rounded-lg bg-background shadow">
                     <CardHeader className="flex flex-row items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-700">

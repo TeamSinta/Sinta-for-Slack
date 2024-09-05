@@ -56,21 +56,10 @@ export async function createOrgMutation({ ...props }: CreateOrgProps) {
         slack_user_id: null,
     });
 
-    MixpanelServer.identify(user.id, {
-        organization: organizationParse.data.name,
-        organization_id: createOrg[0]!.id,
-        email: user.email,
-        signup_at: new Date(),
-        user_role: user.role,
-    });
-
-    MixpanelServer.track("User Signed up", {
+    MixpanelServer.track("Organization Created", {
         organization_id: createOrg[0]!.id,
         organization_name: organizationParse.data.name,
-        email: user.email,
-        signup_at: new Date(),
-        user_role: user.role,
-        user_id: user.id,
+        org_created_at: new Date(),
     });
     return createOrg[0];
 }
