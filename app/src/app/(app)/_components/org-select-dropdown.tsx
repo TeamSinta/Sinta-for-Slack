@@ -50,9 +50,13 @@ export function OrgSelectDropdown({
 
     const [, startAwaitableTransition] = useAwaitableTransition();
 
-    const onOrgChange = async (orgId: string) => {
+    const onOrgChange = async (orgId: string, orgName: string) => {
         setIsPending(true);
         setOrgCookie(orgId);
+        mixpanel.track("Organization Viewed", {
+            organization_id: orgId,
+            organization_name: orgName,
+        });
         await startAwaitableTransition(() => {
             router.refresh();
         });
@@ -126,7 +130,10 @@ export function OrgSelectDropdown({
                                                 key={org.id}
                                                 onSelect={async () => {
                                                     setPopOpen(false);
-                                                    await onOrgChange(org.id);
+                                                    await onOrgChange(
+                                                        org.id,
+                                                        org.name,
+                                                    );
                                                 }}
                                                 className="text-sm"
                                             >

@@ -170,6 +170,10 @@ export async function deleteOrgMutation() {
         throw new Error("You are not the owner of this organization");
     }
 
+    MixpanelServer.track("Organization Deleted", {
+        organiztion_id: currentOrg.id,
+        organization_name: currentOrg.name,
+    });
     return await db
         .delete(organizations)
         .where(eq(organizations.id, currentOrg.id))
