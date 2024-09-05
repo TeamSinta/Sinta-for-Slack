@@ -12,7 +12,6 @@ export async function setGreenhouseDetails(
     API_TOKEN: string,
 ) {
     const { currentOrg } = await getOrganizations();
-    const session = await getServerAuthSession();
     const orgID = currentOrg.id;
     const result = await db
         .update(organizations)
@@ -23,6 +22,7 @@ export async function setGreenhouseDetails(
         .where(eq(organizations.id, orgID))
         .execute();
     if (result) {
+        const session = await getServerAuthSession();
         MixpanelServer.track("Integration Connected", {
             user_id: session?.user.id,
             organization_id: orgID,
