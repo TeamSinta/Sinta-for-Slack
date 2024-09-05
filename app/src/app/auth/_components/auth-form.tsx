@@ -22,7 +22,6 @@ import { SocialLogins } from "@/app/auth/_components/social-logins";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import Mixpanel from "@/lib/mixpanel";
 
 const formSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
