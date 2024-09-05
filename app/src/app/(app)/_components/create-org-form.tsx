@@ -23,7 +23,8 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { createOrgMutation } from "@/server/actions/organization/mutations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import mixpanel from "mixpanel";
+import { usePathname, useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -46,7 +47,7 @@ type CreateOrgFormProps = {
 
 export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
     const router = useRouter();
-
+    const pathName = usePathname();
     const form = useForm<CreateOrgFormSchema>({
         resolver: zodResolver(createOrgFormSchema),
         defaultValues: {
@@ -81,7 +82,22 @@ export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={(o) => setOpen(o)}>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                if (!o) {
+                    mixpanel.track("Modal Dismissed", {
+                        distinct_id: user?.id,
+                        modal_name: "Slack Integration Conflict",
+                        modal_page: "/integrations",
+                        modal_shown_at: new Date().toISOString(),
+                        user_id: user?.id,
+                        organization_id: currentOrg?.id,
+                    });
+                }
+                setOpen(o);
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create Organization</DialogTitle>
