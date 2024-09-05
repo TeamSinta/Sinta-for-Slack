@@ -13,7 +13,6 @@ import Image from "next/image";
 import ConflictImage from "../../../../../public/ConflictImage.png";
 import { CircleAlert } from "lucide-react";
 import mixpanel from "mixpanel-browser";
-import MixpanelServer from "@/server/mixpanel";
 
 interface AlertPanelProps {
     userId?: string;

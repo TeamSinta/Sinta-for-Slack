@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,8 @@ import {
 } from "@/lib/utils";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-
+import mixpanel from "mixpanel-browser";
+import { useSession } from "next-auth/react";
 export const WorkflowPublishModal = ({
     edit = false,
     workflowId,
@@ -34,7 +34,7 @@ export const WorkflowPublishModal = ({
     const [errorMessage, setErrorMessage] = useState("");
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const router = useRouter();
-
+    const session = useSession();
     const triggerData = getTriggerData();
     const actionData = getActionData();
     const conditionsData = getConditionsData();
@@ -70,8 +70,7 @@ export const WorkflowPublishModal = ({
     };
 
     const validateData = () => {
-        const isTriggerValid =
-            triggerData?.event && triggerData.description;
+        const isTriggerValid = triggerData?.event && triggerData.description;
         const isActionValid =
             actionData?.recipients && actionData.customMessageBody;
         setIsButtonDisabled(!(isTriggerValid && isActionValid));
@@ -81,7 +80,18 @@ export const WorkflowPublishModal = ({
         validateData(); // Validate data whenever the modal opens
     }, [triggerData, actionData]);
 
-    const handleOpenModal = () => {
+    function trackModalEvent(open: boolean) {
+        mixpanel.track(open ? "Modal Shown" : "Modal Dismissed", {
+            distinct_id: session.data?.user?.id,
+            modal_name: "Workflow Modal",
+            modal_page: "/workflows",
+            modal_shown_at: new Date().toISOString(),
+            user_id: session.data?.user?.id,
+        });
+    }
+
+    const handleOpenModal = (open: boolean) => {
+        trackModalEvent(open);
         const combinedSteps = [
             {
                 id: 1,
@@ -122,10 +132,9 @@ export const WorkflowPublishModal = ({
             objectField: data.objectField,
             processor: data.processor,
             trigger: data.trigger,
-            mainCondition:
-                data.mainCondition?.sort((a, b) =>
-                    a.field.label.localeCompare(b.field.label),
-                ),
+            mainCondition: data.mainCondition?.sort((a, b) =>
+                a.field.label.localeCompare(b.field.label),
+            ),
         };
         return sortedData;
     };

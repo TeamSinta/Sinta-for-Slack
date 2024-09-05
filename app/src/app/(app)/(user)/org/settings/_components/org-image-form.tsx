@@ -33,7 +33,8 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { useRouter } from "next/navigation";
 import { updateOrgImageMutation } from "@/server/actions/organization/mutations";
 import type { organizations } from "@/server/db/schema";
-
+import mixpanel from "mixpanel-browser";
+import { useSession } from "next-auth/react";
 type OrgImageFormProps = {
     currentOrg: typeof organizations.$inferSelect;
 };
@@ -42,7 +43,7 @@ const PROFILE_MAX_SIZE = 4;
 
 export function OrgImageForm({ currentOrg }: OrgImageFormProps) {
     const router = useRouter();
-
+    const session = useSession();
     const [modalOpen, setModalOpen] = useState<boolean>(false);
 
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -107,6 +108,7 @@ export function OrgImageForm({ currentOrg }: OrgImageFormProps) {
     return (
         <Dialog
             onOpenChange={(o) => {
+                trackModalEvent(o);
                 setModalOpen(o);
                 setFiles([]);
             }}

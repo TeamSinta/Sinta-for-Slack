@@ -8,7 +8,7 @@ import { Fragment, useState } from "react";
 import { CreateOrgForm } from "@/app/(app)/_components/create-org-form";
 import { type organizations } from "@/server/db/schema";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { switchOrgPendingState } from "@/app/(app)/_components/org-switch-loading";
 import {
     Command,
@@ -24,6 +24,8 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { useSession } from "next-auth/react";
+import mixpanel from "mixpanel-browser";
 
 export type UserOrgs = {
     heading: string;
@@ -40,7 +42,8 @@ export function OrgSelectDropdown({
     userOrgs,
 }: OrgSelectDropdownProps) {
     const router = useRouter();
-
+    const session = useSession();
+    const pathName = usePathname();
     const isCollapsed = false;
 
     const { setIsPending } = switchOrgPendingState();
@@ -59,9 +62,22 @@ export function OrgSelectDropdown({
     const [modalOpen, setModalOpen] = useState<boolean>(false);
     const [popOpen, setPopOpen] = useState<boolean>(false);
 
+    function trackModalEvent(open: boolean) {
+        mixpanel.track(open ? "Modal Shown" : "Modal Dismissed", {
+            distinct_id: session.data?.user?.id,
+            modal_name: "Org Image Upload",
+            modal_page: "/org/settings",
+            modal_shown_at: new Date().toISOString(),
+            user_id: session.data?.user?.id,
+        });
+    }
     return (
         <Fragment>
-            <CreateOrgForm open={modalOpen} setOpen={setModalOpen} />
+            <CreateOrgForm
+                open={modalOpen}
+                setOpen={setModalOpen}
+                trackModalEvent={trackModalEvent}
+            />
 
             <Popover
                 modal={false}
@@ -149,7 +165,10 @@ export function OrgSelectDropdown({
                             <CommandGroup>
                                 <CommandItem>
                                     <button
-                                        onClick={() => setModalOpen(true)}
+                                        onClick={() => {
+                                            trackModalEvent(true);
+                                            setModalOpen(true);
+                                        }}
                                         className="flex w-full cursor-pointer items-center justify-start gap-2"
                                     >
                                         <PlusCircledIcon className="h-4 w-4" />

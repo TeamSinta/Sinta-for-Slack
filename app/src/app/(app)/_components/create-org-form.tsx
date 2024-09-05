@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -23,12 +24,13 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { createOrgMutation } from "@/server/actions/organization/mutations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import mixpanel from "mixpanel";
 import { usePathname, useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import mixpanel from "mixpanel-browser";
+import { useSession } from "next-auth/react";
 
 const createOrgFormSchema = z.object({
     name: z
@@ -43,11 +45,17 @@ export type CreateOrgFormSchema = z.infer<typeof createOrgFormSchema>;
 type CreateOrgFormProps = {
     open: boolean;
     setOpen: Dispatch<SetStateAction<boolean>>;
+    trackModalEvent: (arg0: boolean) => void;
 };
 
-export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
+export function CreateOrgForm({
+    open,
+    setOpen,
+    trackModalEvent,
+}: CreateOrgFormProps) {
     const router = useRouter();
-    const pathName = usePathname();
+    const session = useSession();
+    const pathname = usePathname();
     const form = useForm<CreateOrgFormSchema>({
         resolver: zodResolver(createOrgFormSchema),
         defaultValues: {
@@ -85,16 +93,7 @@ export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
         <Dialog
             open={open}
             onOpenChange={(o) => {
-                // if (!o) {
-                //     mixpanel.track("Modal Dismissed", {
-                //         distinct_id: user?.id,
-                //         modal_name: "Slack Integration Conflict",
-                //         modal_page: "/integrations",
-                //         modal_shown_at: new Date().toISOString(),
-                //         user_id: user?.id,
-                //         organization_id: currentOrg?.id,
-                //     });
-                // }
+                trackModalEvent(o);
                 setOpen(o);
             }}
         >

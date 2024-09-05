@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
 import mixpanel from "mixpanel-browser";
+import { SessionProvider } from "next-auth/react";
 
 // Initialize mixpanel analytics
 const MIXPANEL_TOKEN =
@@ -20,7 +21,9 @@ export function Providers({ children }: ProvidersProps) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <ThemeProvider>{children}</ThemeProvider>
+            <SessionProvider>
+                <ThemeProvider>{children}</ThemeProvider>
+            </SessionProvider>
         </QueryClientProvider>
     );
 }
