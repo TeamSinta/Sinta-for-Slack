@@ -85,16 +85,16 @@ export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
         <Dialog
             open={open}
             onOpenChange={(o) => {
-                if (!o) {
-                    mixpanel.track("Modal Dismissed", {
-                        distinct_id: user?.id,
-                        modal_name: "Slack Integration Conflict",
-                        modal_page: "/integrations",
-                        modal_shown_at: new Date().toISOString(),
-                        user_id: user?.id,
-                        organization_id: currentOrg?.id,
-                    });
-                }
+                // if (!o) {
+                //     mixpanel.track("Modal Dismissed", {
+                //         distinct_id: user?.id,
+                //         modal_name: "Slack Integration Conflict",
+                //         modal_page: "/integrations",
+                //         modal_shown_at: new Date().toISOString(),
+                //         user_id: user?.id,
+                //         organization_id: currentOrg?.id,
+                //     });
+                // }
                 setOpen(o);
             }}
         >

@@ -1,3 +1,4 @@
+"use client";
 import {
     Dialog,
     DialogContent,
@@ -11,9 +12,32 @@ import Link from "next/link";
 import Image from "next/image";
 import ConflictImage from "../../../../../public/ConflictImage.png";
 import { CircleAlert } from "lucide-react";
+import mixpanel from "mixpanel-browser";
+import MixpanelServer from "@/server/mixpanel";
 
-export const ConflictAlertModal = () => (
-    <Dialog defaultOpen={true}>
+interface AlertPanelProps {
+    userId?: string;
+    organizationId?: string;
+}
+export const ConflictAlertModal = ({
+    userId,
+    organizationId,
+}: AlertPanelProps) => (
+    <Dialog
+        defaultOpen={true}
+        onOpenChange={(open) => {
+            if (!open) {
+                mixpanel.track("Modal Dismissed", {
+                    distinct_id: userId,
+                    modal_name: "Slack Integration Conflict",
+                    modal_page: "/integrations",
+                    modal_shown_at: new Date().toISOString(),
+                    user_id: userId,
+                    organization_id: organizationId,
+                });
+            }
+        }}
+    >
         <DialogContent>
             <DialogHeader>
                 <div className="flex items-center ">
