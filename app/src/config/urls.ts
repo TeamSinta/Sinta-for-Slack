@@ -36,6 +36,7 @@ export const siteUrls = {
     },
     hiringrooms: {
         home: "/hiringrooms",
+        form: "/hiringrooms/form",
     },
     integrations: {
         home: "/integrations",
@@ -75,4 +76,5 @@ export const publicRoutes: string[] = [
     siteUrls.blog,
     siteUrls.docs,
     siteUrls.maintenance,
+    siteUrls.hiringrooms.form
 ];
