@@ -44,7 +44,6 @@ async function handleGreenhouseCandidateRequest(url: string, options: any) {
     return respData;
 }
 export async function POST(request: NextRequest) {
-
     try {
         const {
             url,
@@ -94,9 +93,7 @@ export async function POST(request: NextRequest) {
             }
             const response = await fetch(requestUrl, { ...options, headers });
 
-
             if (!response.ok) {
-
                 return NextResponse.json(
                     { error: `HTTP error! Status: ${response.status}` },
                     { status: response.status },

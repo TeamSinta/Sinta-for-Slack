@@ -51,7 +51,8 @@ const isBrowser = typeof window !== "undefined";
 // Safe function to save action data to localStorage
 const saveActionData = (data) => {
     if (isBrowser) {
-        const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+        const storedData =
+            JSON.parse(localStorage.getItem(localStorageKey)) || {};
         const updatedData = { ...storedData, ...data };
         localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
     }

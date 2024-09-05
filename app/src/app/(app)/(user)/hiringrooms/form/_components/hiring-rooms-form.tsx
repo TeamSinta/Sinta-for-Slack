@@ -47,15 +47,17 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle } from "lucide-react";
 import TriggerActionsComponent from "../../_components/trigger-actions";
-import { Condition, hiringroomFormSchema, TimeBasedCondition } from "../../_components/new-hiringroomForm";
-
+import {
+    Condition,
+    hiringroomFormSchema,
+    TimeBasedCondition,
+} from "../../_components/new-hiringroomForm";
 
 const createFeedbackFormSchema = hiringroomFormSchema.omit({
     status: true,
     recipient: true,
     triggerConfig: true,
 });
-
 
 interface DateFieldOption {
     value: string;
@@ -66,7 +68,6 @@ interface Job {
     id: number;
     name: string;
 }
-
 
 function HiringroomFormPage() {
     // State and logic related to fetching data, form state, conditions, etc.
