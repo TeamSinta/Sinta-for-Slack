@@ -43,6 +43,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { LinkActionType } from "../../_components/message-buttons";
 
 const localStorageKey = "workflowActions";
 
@@ -212,82 +213,123 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     color: "#384ab4",
                     blocks: [
                         {
-                            type: "header",
-                            block_id: "ASR3r",
-                            text: {
-                                type: "plain_text",
-                                text: "Stuck in Hiring Manager Screen for 5 days :worried:",
-                                emoji: true,
-                            },
-                        },
-                        {
-                            type: "divider",
-                            block_id: "TYZqO",
-                        },
-                        {
                             type: "section",
                             block_id: "ig1EJ",
                             text: {
                                 type: "mrkdwn",
-                                text: "*Candidate's Name*: Jane Arthur\n*Role*: Senior Product Manager\n*Recruiter name*: <@U06UPA4MQ13>\n*Coordinator name*: <@U06V2NZQ0B1>",
-                                verbatim: false,
+                                text: customMessageBody,
                             },
                         },
-                        {
-                            type: "actions",
-                            block_id: "block_id_5673600008",
-                            elements: [
-                                {
-                                    type: "button",
-                                    action_id: "2R1vH",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Candidate Profile",
-                                        emoji: true,
-                                    },
-                                    value: "LinkButton_5673600008",
-                                    url: "https://app8.greenhouse.io/people/5673600008",
+
+                        ...(selectedFields.length > 0
+                            ? [
+                                  {
+                                      type: "divider",
+                                      block_id: "TYZqO",
+                                  },
+                              ]
+                            : []),
+                        ...selectedFields.map((field, index) => {
+                            return {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: `{{${fields.find((f) => f.value === field)?.label}}}`,
+                                    verbatim: false,
                                 },
-                                {
-                                    type: "button",
-                                    action_id: "move_to_next_stage_5673600008",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Move to Next Stage",
-                                        emoji: true,
-                                    },
-                                    style: "primary",
-                                    value: "MoveToNextStage_5673600008",
-                                },
-                                {
-                                    type: "button",
-                                    action_id: "reject_candidate_5673600008",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Reject Candidate",
-                                        emoji: true,
-                                    },
-                                    style: "danger",
-                                    value: "RejectCandidate_5673600008",
-                                },
-                            ],
-                        },
+                            };
+                        }),
+                        ...(buttons.length > 0
+                            ? {
+                                  type: "actions",
+                                  block_id: "block_id_5673600008",
+                                  elements: buttons.map((item, index) => {
+                                      return {
+                                          type: "button",
+                                          ...(item.type ===
+                                              ButtonType.UpdateButton &&
+                                              item.updateType && {
+                                                  action_id: item.updateType,
+                                                  style:
+                                                      item.updateType ===
+                                                      UpdateActionType.MoveToNextStage
+                                                          ? "primary"
+                                                          : "danger",
+                                              }),
+                                          text: {
+                                              type: "plain_text",
+                                              text: item.label,
+                                              emoji: true,
+                                          },
+                                          ...(item.type ===
+                                              ButtonType.LinkButton &&
+                                              item.linkType ===
+                                                  LinkActionType.Dynamic && {
+                                                  action_id: item.action,
+                                              }),
+                                          ...(item.type ===
+                                              ButtonType.LinkButton &&
+                                              item.linkType ===
+                                                  LinkActionType.Static && {
+                                                  url: item.action,
+                                              }),
+                                      };
+                                  }),
+
+                                  // other: [
+                                  //     {
+                                  //         type: "button",
+                                  //         action_id: "2R1vH",
+                                  //         text: {
+                                  //             type: "plain_text",
+                                  //             text: "Candidate Profile",
+                                  //             emoji: true,
+                                  //         },
+                                  //         value: "LinkButton_5673600008",
+                                  //         url: "https://app8.greenhouse.io/people/5673600008",
+                                  //     },
+                                  //     {
+                                  //         type: "button",
+                                  //         action_id: "move_to_next_stage_5673600008",
+                                  //         text: {
+                                  //             type: "plain_text",
+                                  //             text: "Move to Next Stage",
+                                  //             emoji: true,
+                                  //         },
+                                  //         style: "primary",
+                                  //         value: "MoveToNextStage_5673600008",
+                                  //     },
+                                  //     {
+                                  //         type: "button",
+                                  //         action_id: "reject_candidate_5673600008",
+                                  //         text: {
+                                  //             type: "plain_text",
+                                  //             text: "Reject Candidate",
+                                  //             emoji: true,
+                                  //         },
+                                  //         style: "danger",
+                                  //         value: "RejectCandidate_5673600008",
+                                  //     },
+                                  // ],
+                              }
+                            : []),
                     ],
                 },
             ],
         };
 
         try {
-            const response = await fetch(
-                "https://hooks.slack.com/services/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",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload),
+            // Send the message to the endpoint (to forward to Slack API because of CORS)
+            const response = await fetch("/api/slack/test", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            );
+                body: JSON.stringify({
+                    url: "https://hooks.slack.com/services/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",
+                    body: payload,
+                }),
+            });
 
             if (response.ok) {
                 // Handle successful response
