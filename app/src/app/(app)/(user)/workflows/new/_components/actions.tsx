@@ -44,7 +44,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { LinkActionType } from "../../_components/message-buttons";
-
+import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
 const localStorageKey = "workflowActions";
 
 const saveActionData = (data) => {
@@ -162,6 +162,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     }, [customMessageBody, selectedRecipients]);
 
     const handleCustomMessageBodyChange = (value: string) => {
+        console.log(value);
         setCustomMessageBody(value);
     };
 
@@ -217,7 +218,9 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                             block_id: "ig1EJ",
                             text: {
                                 type: "mrkdwn",
-                                text: customMessageBody,
+                                text: convertHtmlToSlackMrkdwn(
+                                    customMessageBody,
+                                ),
                             },
                         },
 
@@ -240,78 +243,90 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                             };
                         }),
                         ...(buttons.length > 0
-                            ? {
-                                  type: "actions",
-                                  block_id: "block_id_5673600008",
-                                  elements: buttons.map((item, index) => {
-                                      return {
-                                          type: "button",
-                                          ...(item.type ===
-                                              ButtonType.UpdateButton &&
-                                              item.updateType && {
-                                                  action_id: item.updateType,
-                                                  style:
-                                                      item.updateType ===
-                                                      UpdateActionType.MoveToNextStage
-                                                          ? "primary"
-                                                          : "danger",
-                                              }),
-                                          text: {
-                                              type: "plain_text",
-                                              text: item.label,
-                                              emoji: true,
-                                          },
-                                          ...(item.type ===
-                                              ButtonType.LinkButton &&
+                            ? [
+                                  {
+                                      type: "actions",
+                                      block_id: "block_id_5673600008",
+                                      elements: buttons.map((item, index) => {
+                                          return {
+                                              type: "button",
+                                              ...(item.type ===
+                                                  ButtonType.UpdateButton &&
+                                                  item.updateType && {
+                                                      action_id:
+                                                          item.updateType,
+                                                      style:
+                                                          item.updateType ===
+                                                          UpdateActionType.MoveToNextStage
+                                                              ? "primary"
+                                                              : "danger",
+                                                  }),
+                                              text: {
+                                                  type: "plain_text",
+                                                  text: item.label,
+                                                  emoji: true,
+                                              },
+                                              ...(item.type ===
+                                                  ButtonType.LinkButton &&
                                               item.linkType ===
-                                                  LinkActionType.Dynamic && {
-                                                  action_id: item.action,
-                                              }),
-                                          ...(item.type ===
-                                              ButtonType.LinkButton &&
+                                                  LinkActionType.Dynamic
+                                                  ? [
+                                                        {
+                                                            action_id:
+                                                                item.action,
+                                                        },
+                                                    ]
+                                                  : []),
+                                              ...(item.type ===
+                                                  ButtonType.LinkButton &&
                                               item.linkType ===
-                                                  LinkActionType.Static && {
-                                                  url: item.action,
-                                              }),
-                                      };
-                                  }),
+                                                  LinkActionType.Static
+                                                  ? [
+                                                        {
+                                                            url: item.action,
+                                                        },
+                                                    ]
+                                                  : []),
+                                          };
+                                      }),
 
-                                  // other: [
-                                  //     {
-                                  //         type: "button",
-                                  //         action_id: "2R1vH",
-                                  //         text: {
-                                  //             type: "plain_text",
-                                  //             text: "Candidate Profile",
-                                  //             emoji: true,
-                                  //         },
-                                  //         value: "LinkButton_5673600008",
-                                  //         url: "https://app8.greenhouse.io/people/5673600008",
-                                  //     },
-                                  //     {
-                                  //         type: "button",
-                                  //         action_id: "move_to_next_stage_5673600008",
-                                  //         text: {
-                                  //             type: "plain_text",
-                                  //             text: "Move to Next Stage",
-                                  //             emoji: true,
-                                  //         },
-                                  //         style: "primary",
-                                  //         value: "MoveToNextStage_5673600008",
-                                  //     },
-                                  //     {
-                                  //         type: "button",
-                                  //         action_id: "reject_candidate_5673600008",
-                                  //         text: {
-                                  //             type: "plain_text",
-                                  //             text: "Reject Candidate",
-                                  //             emoji: true,
-                                  //         },
-                                  //         style: "danger",
-                                  //         value: "RejectCandidate_5673600008",
-                                  //     },
-                                  // ],
-                              }
+                                      // other: [
+                                      //     {
+                                      //         type: "button",
+                                      //         action_id: "2R1vH",
+                                      //         text: {
+                                      //             type: "plain_text",
+                                      //             text: "Candidate Profile",
+                                      //             emoji: true,
+                                      //         },
+                                      //         value: "LinkButton_5673600008",
+                                      //         url: "https://app8.greenhouse.io/people/5673600008",
+                                      //     },
+                                      //     {
+                                      //         type: "button",
+                                      //         action_id: "move_to_next_stage_5673600008",
+                                      //         text: {
+                                      //             type: "plain_text",
+                                      //             text: "Move to Next Stage",
+                                      //             emoji: true,
+                                      //         },
+                                      //         style: "primary",
+                                      //         value: "MoveToNextStage_5673600008",
+                                      //     },
+                                      //     {
+                                      //         type: "button",
+                                      //         action_id: "reject_candidate_5673600008",
+                                      //         text: {
+                                      //             type: "plain_text",
+                                      //             text: "Reject Candidate",
+                                      //             emoji: true,
+                                      //         },
+                                      //         style: "danger",
+                                      //         value: "RejectCandidate_5673600008",
+                                      //     },
+                                      // ],
+                                  },
+                              ]
                             : []),
                     ],
                 },
@@ -326,6 +341,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                    // The URL should be handled programatically: https://api.slack.com/messaging/webhooks#incoming_webhooks_programmatic
                     url: "https://hooks.slack.com/services/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",
                     body: payload,
                 }),
