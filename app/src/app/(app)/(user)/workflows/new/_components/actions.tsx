@@ -268,25 +268,16 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                               },
                                               ...(item.type ===
                                                   ButtonType.LinkButton &&
-                                              item.linkType ===
-                                                  LinkActionType.Dynamic
-                                                  ? [
-                                                        {
-                                                            action_id:
-                                                                item.action,
-                                                        },
-                                                    ]
-                                                  : []),
+                                                  item.linkType ===
+                                                      LinkActionType.Dynamic && {
+                                                      action_id: item.action,
+                                                  }),
                                               ...(item.type ===
                                                   ButtonType.LinkButton &&
-                                              item.linkType ===
-                                                  LinkActionType.Static
-                                                  ? [
-                                                        {
-                                                            url: item.action,
-                                                        },
-                                                    ]
-                                                  : []),
+                                                  item.linkType ===
+                                                      LinkActionType.Static && {
+                                                      url: item.action,
+                                                  }),
                                           };
                                       }),
 
