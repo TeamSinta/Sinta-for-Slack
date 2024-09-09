@@ -24,13 +24,11 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { createOrgMutation } from "@/server/actions/organization/mutations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import mixpanel from "mixpanel-browser";
-import { useSession } from "next-auth/react";
 
 const createOrgFormSchema = z.object({
     name: z
@@ -54,8 +52,6 @@ export function CreateOrgForm({
     trackModalEvent,
 }: CreateOrgFormProps) {
     const router = useRouter();
-    const session = useSession();
-    const pathname = usePathname();
     const form = useForm<CreateOrgFormSchema>({
         resolver: zodResolver(createOrgFormSchema),
         defaultValues: {

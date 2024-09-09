@@ -6,9 +6,7 @@ import mixpanel from "mixpanel-browser";
 import { SessionProvider } from "next-auth/react";
 
 // Initialize mixpanel analytics
-const MIXPANEL_TOKEN =
-    process.env.NEXT_PUBLIC_MIXPANEL_TOKEN ??
-    "33423b0b278507a7f8b14f9b34694baf";
+const MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN ?? "";
 
 mixpanel.init(MIXPANEL_TOKEN, { track_pageview: true });
 
