@@ -46,8 +46,7 @@ import {
 import { LinkActionType } from "../../_components/message-buttons";
 import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
 import TestResult from "./testResults";
-import { getSession } from "next-auth/react";
-import { getOrganizations } from "@/server/actions/organization/queries";
+import { useSession } from "next-auth/react";
 const localStorageKey = "workflowActions";
 
 const saveActionData = (data) => {
@@ -109,16 +108,8 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [activeTab, setActiveTab] = useState("message");
     const [testResult, setTestResult] = useState(null);
+    const session = useSession();
 
-    useEffect(() => {
-        async function test() {
-            const session = await getSession();
-            const org = await getOrganizations();
-            console.log("SESSION", session);
-            console.log("ORGS", org);
-        }
-        test();
-    }, []);
     useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
@@ -293,42 +284,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                                   }),
                                           };
                                       }),
-
-                                      // other: [
-                                      //     {
-                                      //         type: "button",
-                                      //         action_id: "2R1vH",
-                                      //         text: {
-                                      //             type: "plain_text",
-                                      //             text: "Candidate Profile",
-                                      //             emoji: true,
-                                      //         },
-                                      //         value: "LinkButton_5673600008",
-                                      //         url: "https://app8.greenhouse.io/people/5673600008",
-                                      //     },
-                                      //     {
-                                      //         type: "button",
-                                      //         action_id: "move_to_next_stage_5673600008",
-                                      //         text: {
-                                      //             type: "plain_text",
-                                      //             text: "Move to Next Stage",
-                                      //             emoji: true,
-                                      //         },
-                                      //         style: "primary",
-                                      //         value: "MoveToNextStage_5673600008",
-                                      //     },
-                                      //     {
-                                      //         type: "button",
-                                      //         action_id: "reject_candidate_5673600008",
-                                      //         text: {
-                                      //             type: "plain_text",
-                                      //             text: "Reject Candidate",
-                                      //             emoji: true,
-                                      //         },
-                                      //         style: "danger",
-                                      //         value: "RejectCandidate_5673600008",
-                                      //     },
-                                      // ],
                                   },
                               ]
                             : []),
@@ -345,8 +300,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    // The URL should be handled programatically: https://api.slack.com/messaging/webhooks#incoming_webhooks_programmatic
-                    url: "https://hooks.slack.com/services/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",
+                    user: session?.data?.user,
                     body: payload,
                 }),
             });
@@ -357,9 +311,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     success: true,
                     status: response.status,
                     message: `Status Code: ${response.status}`,
-                    data: response.data?.length
-                        ? response.data[0]
-                        : response.data,
+                    data: null,
                 });
             } else {
                 console.error("Failed to send test message.");
@@ -377,11 +329,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 message: error.message.includes("HTTP error!")
                     ? error.message
                     : `Error: ${error.message}`,
-                data: error.response?.data
-                    ? Array.isArray(error.response.data)
-                        ? error.response.data[0]
-                        : error.response.data
-                    : null,
+                data: null,
             });
         } finally {
             setTestButtonLoading(false);
@@ -674,7 +622,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 <CardTitle>Test Configuration</CardTitle>
                                 <CardDescription>
                                     Use this section to test your message and
-                                    ensure it reaches the right people.
+                                    ensure it is configured correctly.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -693,20 +641,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                         "Run Test"
                                     )}
                                 </Button>
-                                {testResult && (
-                                    <TestResult
-                                        {...testResult}
-                                        data={
-                                            testResult?.data
-                                                ? JSON.stringify(
-                                                      testResult.data,
-                                                      null,
-                                                      2,
-                                                  )
-                                                : null
-                                        }
-                                    />
-                                )}
+                                {testResult && <TestResult {...testResult} />}
                             </CardContent>
                         </Card>
                     </TabsContent>
