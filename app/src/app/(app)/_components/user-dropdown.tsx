@@ -124,7 +124,7 @@ function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
                         <DropdownMenuSeparator />
                     </Fragment>
                 ))}
-                <SignoutTrigger callbackUrl={siteUrls.home} asChild>
+                <SignoutTrigger callbackUrl={siteUrls.publicUrl} asChild>
                     <DropdownMenuItem asChild>
                         <button className="flex w-full cursor-pointer items-center gap-2 text-red-500 ">
                             <LogOutIcon className="h-4 w-4" />

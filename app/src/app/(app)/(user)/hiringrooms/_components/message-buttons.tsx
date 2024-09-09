@@ -35,8 +35,6 @@ export interface ButtonAction {
     linkType?: LinkActionType;
 }
 
-
-
 interface MessageButtonsProps {
     buttons: ButtonAction[];
     addButton: () => void;

@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -70,8 +69,7 @@ export const WorkflowPublishModal = ({
     };
 
     const validateData = () => {
-        const isTriggerValid =
-            triggerData?.event && triggerData.description;
+        const isTriggerValid = triggerData?.event && triggerData.description;
         const isActionValid =
             actionData?.recipients && actionData.customMessageBody;
         setIsButtonDisabled(!(isTriggerValid && isActionValid));
@@ -122,10 +120,9 @@ export const WorkflowPublishModal = ({
             objectField: data.objectField,
             processor: data.processor,
             trigger: data.trigger,
-            mainCondition:
-                data.mainCondition?.sort((a, b) =>
-                    a.field.label.localeCompare(b.field.label),
-                ),
+            mainCondition: data.mainCondition?.sort((a, b) =>
+                a.field.label.localeCompare(b.field.label),
+            ),
         };
         return sortedData;
     };

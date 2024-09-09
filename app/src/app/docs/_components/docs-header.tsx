@@ -9,7 +9,7 @@ export function DocsHeader() {
     return (
         <header className="sticky top-0 z-50 flex h-16 items-center justify-between bg-background/70 backdrop-blur">
             <Link
-                href={siteUrls.home}
+                href={siteUrls.dashboard.home}
                 className="z-10 transition-transform  hover:scale-90"
             >
                 <Icons.logo />

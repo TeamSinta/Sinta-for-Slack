@@ -79,6 +79,17 @@ export async function POST(request: Request) {
     try {
         const data = await request.json();
 
+        // Handle Slack URL verification challenge
+        if (data.type === "url_verification") {
+            return new NextResponse(
+                JSON.stringify({ challenge: data.challenge }),
+                {
+                    status: 200,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        }
+
         if (
             data.type === "event_callback" &&
             data.event.type === "app_home_opened"
@@ -100,7 +111,8 @@ export async function POST(request: Request) {
 }
 
 async function showInviteScreen(userId: string, teamId: string) {
-    const inviteLink = `https://5bc1e5fa5023dc7a.ngrok.app/invite/org/032cd629-9d52-4d9f-9e10-cf772b7c30ed?slackUserId=${userId}`;
+    const orgID = getOrgIdBySlackTeamId(teamId);
+    const inviteLink = `https://5bc1e5fa5023dc7a.ngrok.app/invite/org/${orgID}?slackUserId=${orgID}`;
 
     const blocks = [
         {

@@ -788,7 +788,7 @@ function CreateHiringroomSheet() {
                     Create Hiring Room
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] min-w-[90vw] overflow-y-auto bg-white dark:bg-gray-800">
+            <DialogContent className="max-h-[95vh] min-w-[95vw] overflow-y-auto bg-white dark:bg-gray-800">
                 <DialogHeader className="flex flex-row justify-between">
                     <Image
                         src="https://assets-global.website-files.com/6457f112b965721ffc2b0777/653e865d87d06c306e2b5147_Group%201321316944.png"
@@ -807,25 +807,24 @@ function CreateHiringroomSheet() {
                     </DialogTitle>
                     <DialogDescription className="mt-1 text-sm text-gray-500 dark:text-gray-400"></DialogDescription>
                 </DialogHeader>
-                <hr className="mb-6 mt-2 border-gray-300 dark:border-gray-700" />
 
-                <div className="flex h-full flex-col gap-6 overflow-y-auto px-6">
+                <div className="space-y-8 px-8 py-6">
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-6"
+                        className="space-y-8"
                     >
-                        {/* General */}
-                        <div className="flex items-start gap-8">
+                        {/* General Settings Section */}
+                        <div className="flex gap-10">
                             <div className="w-1/3">
-                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                <Label className="text-xl font-semibold text-gray-800 dark:text-gray-300">
                                     General
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Configure the general settings of the
-                                    hiringroom.
+                                    Configure the general settings of the hiring
+                                    room.
                                 </p>
                             </div>
-                            <div className="flex-1 space-y-4">
+                            <div className="flex-1 space-y-6">
                                 <div>
                                     <Label
                                         htmlFor="name"
@@ -836,7 +835,7 @@ function CreateHiringroomSheet() {
                                     <Input
                                         {...form.register("name")}
                                         placeholder="Enter name"
-                                        className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50 dark:border-gray-600"
+                                        className="mt-1 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 dark:border-gray-600"
                                     />
                                 </div>
 
@@ -858,7 +857,7 @@ function CreateHiringroomSheet() {
                                             handleTypeChange(value);
                                         }}
                                     >
-                                        <SelectTrigger className="w-full border-gray-300">
+                                        <SelectTrigger className="w-full rounded-lg border-gray-300 shadow-sm">
                                             <SelectValue placeholder="Select Greenhouse Object" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -877,33 +876,23 @@ function CreateHiringroomSheet() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                {/* {isCandidateSelected && (
-                                    <JobsDropdown
-                                        onJobSelect={(jobId) =>
-                                            handleSelectChange(
-                                                jobId,
-                                                "",
-                                                "jobId",
-                                            )
-                                        }
-                                    />
-                                )} */}
                             </div>
                         </div>
-                        <hr className="my-2 border-gray-300 dark:border-gray-700" />
 
-                        {/* Alert Type */}
-                        <div className="flex items-start gap-8">
+                        <hr className="border-gray-300 dark:border-gray-700" />
+
+                        {/* Alert Type Section */}
+                        <div className="flex gap-10">
                             <div className="w-1/3">
-                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                <Label className="text-xl font-semibold text-gray-800 dark:text-gray-300">
                                     Alert Type
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Select the type of alert for this
-                                    hiringroom.
+                                    Select the type of alert for this hiring
+                                    room.
                                 </p>
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 space-y-6">
                                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Alert Type Options
                                 </Label>
@@ -916,17 +905,22 @@ function CreateHiringroomSheet() {
                                             "alertType",
                                         )
                                     }
-                                    className="flex flex-row space-x-4"
+                                    className="flex flex-wrap gap-4"
                                 >
                                     {alertTypeOptions.map((option) => (
                                         <div
                                             key={option.value}
-                                            className="flex w-full items-center gap-3"
+                                            className={`flex-1 rounded-lg border p-4 shadow-sm transition ${
+                                                selectedAlertType ===
+                                                option.value
+                                                    ? "bg-blue-500 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
                                         >
                                             <RadioGroupItem
                                                 value={option.value}
                                                 id={option.value}
-                                                className="peer sr-only"
+                                                className="hidden"
                                                 disabled={
                                                     option.value ===
                                                         "stuck-in-stage" &&
@@ -935,190 +929,182 @@ function CreateHiringroomSheet() {
                                             />
                                             <Label
                                                 htmlFor={option.value}
-                                                className={`flex w-full flex-col items-center justify-center rounded-md border border-gray-300 bg-popover p-4 ${
-                                                    selectedAlertType ===
-                                                    option.value
-                                                        ? "bg-indigo-500 text-white"
-                                                        : option.value ===
-                                                                "stuck-in-stage" &&
-                                                            !isCandidateSelected
-                                                          ? "cursor-not-allowed bg-gray-300 text-opacity-50"
-                                                          : "hover:bg-indigo-100 hover:text-indigo-800"
-                                                }`}
-                                                style={{ height: "40px" }}
+                                                className="text-center"
                                             >
-                                                <h2 className="mb-0">
-                                                    {option.label}
-                                                </h2>
+                                                {option.label}
                                             </Label>
                                         </div>
                                     ))}
                                 </RadioGroup>
                             </div>
                         </div>
-                        <hr className="my-2 border-gray-300 dark:border-gray-700" />
 
-                        {/* Conditions */}
-                        <div className="flex items-start gap-8">
+                        <hr className="border-gray-300 dark:border-gray-700" />
+
+                        {/* Conditions Section */}
+                        <div className="flex gap-10">
                             <div className="w-1/3">
-                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                <Label className="text-xl font-semibold text-gray-800 dark:text-gray-300">
                                     Conditions
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Specify conditions for triggering the
-                                    hiringroom.
+                                    Specify conditions for triggering the hiring
+                                    room.
                                 </p>
                             </div>
-                            <div className="flex-1 space-y-4">
+                            <div className="flex-1 space-y-6">
+                                {/* Time-Based Conditions */}
                                 {selectedAlertType === "timebased" && (
-                                    <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Date Property
-                                            </Label>
-                                            <Select
-                                                onValueChange={(value) =>
-                                                    handleConditionChangeTimeBased(
-                                                        0,
-                                                        "field",
-                                                        {
-                                                            value,
-                                                            label:
-                                                                dateFieldOptions.find(
-                                                                    (opt) =>
-                                                                        opt.value ===
-                                                                        value,
-                                                                )?.label ??
+                                    <div className="space-y-4 rounded-lg border border-gray-300 bg-gray-50 p-4">
+                                        <div className="flex gap-6">
+                                            <div className="w-1/2">
+                                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Date Property
+                                                </Label>
+                                                <Select
+                                                    onValueChange={(value) =>
+                                                        handleConditionChangeTimeBased(
+                                                            0,
+                                                            "field",
+                                                            {
                                                                 value,
-                                                        },
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Date Field" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {dateFieldOptions.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        option.value
-                                                                    }
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
+                                                                label:
+                                                                    dateFieldOptions.find(
+                                                                        (opt) =>
+                                                                            opt.value ===
+                                                                            value,
+                                                                    )?.label ??
+                                                                    value,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full rounded-lg border-gray-300">
+                                                        <SelectValue placeholder="Select Date Field" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            {dateFieldOptions.map(
+                                                                (option) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            option.value
+                                                                        }
+                                                                        value={
+                                                                            option.value
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            option.label
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="w-1/2">
+                                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Operator
+                                                </Label>
+                                                <Select
+                                                    onValueChange={(value) =>
+                                                        handleConditionChangeTimeBased(
+                                                            0,
+                                                            "condition",
+                                                            value,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full rounded-lg border-gray-300">
+                                                        <SelectValue placeholder="Select Condition" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            {timeConditionOptions.map(
+                                                                (option) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            option.value
+                                                                        }
+                                                                        value={
+                                                                            option.value
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            option.label
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Operator
-                                            </Label>
-                                            <Select
-                                                onValueChange={(value) =>
-                                                    handleConditionChangeTimeBased(
-                                                        0,
-                                                        "condition",
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Condition" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {timeConditionOptions.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        option.value
-                                                                    }
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        {!isSameDayOrTimeCondition(
-                                            timeBasedConditions[0]?.condition,
-                                        ) && (
-                                            <>
-                                                <div className="flex-1">
-                                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Value
-                                                    </Label>
-                                                    <Input
-                                                        placeholder="Enter Value"
-                                                        className="w-full border border-gray-300 bg-white"
-                                                        value={
-                                                            timeBasedConditions[0]
-                                                                ?.value
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleConditionChangeTimeBased(
-                                                                0,
-                                                                "value",
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-                                            </>
-                                        )}
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Time Unit
-                                            </Label>
-                                            <Select
-                                                value={
-                                                    timeBasedConditions[0]
-                                                        ?.unit ?? "Days"
-                                                }
-                                                onValueChange={(value) =>
-                                                    handleConditionChangeTimeBased(
-                                                        0,
-                                                        "unit",
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                                                    <SelectValue placeholder="Select Unit" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        <SelectItem value="Days">
-                                                            Days
-                                                        </SelectItem>
-                                                        <SelectItem value="Hours">
-                                                            Hours
-                                                        </SelectItem>
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
+
+                                        <div className="flex gap-6">
+                                            <div className="w-1/2">
+                                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Value
+                                                </Label>
+                                                <Input
+                                                    placeholder="Enter Value"
+                                                    className="w-full rounded-lg border-gray-300"
+                                                    value={
+                                                        timeBasedConditions[0]
+                                                            ?.value
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleConditionChangeTimeBased(
+                                                            0,
+                                                            "value",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="w-1/2">
+                                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Time Unit
+                                                </Label>
+                                                <Select
+                                                    value={
+                                                        timeBasedConditions[0]
+                                                            ?.unit ?? "Days"
+                                                    }
+                                                    onValueChange={(value) =>
+                                                        handleConditionChangeTimeBased(
+                                                            0,
+                                                            "unit",
+                                                            value,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full rounded-lg border-gray-300">
+                                                        <SelectValue placeholder="Select Unit" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            <SelectItem value="Days">
+                                                                Days
+                                                            </SelectItem>
+                                                            <SelectItem value="Hours">
+                                                                Hours
+                                                            </SelectItem>
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Stuck-in-Stage Conditions */}
                                 {selectedAlertType === "stuck-in-stage" && (
-                                    <div className="mb-4 flex gap-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
+                                    <div className="space-y-4 rounded-lg border border-gray-300 bg-gray-50 p-4">
                                         <StagesDropdown
                                             jobId={selectedJobId}
                                             onStageSelect={(
@@ -1132,30 +1118,33 @@ function CreateHiringroomSheet() {
                                                 )
                                             }
                                         />
-                                        <h1 className="mt-4 self-center text-gray-700 dark:text-gray-300">
-                                            For
-                                        </h1>
-                                        <div className="flex-1">
-                                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Days
-                                            </Label>
-                                            <Input
-                                                placeholder="Enter Days"
-                                                className="w-full border border-gray-300 bg-white"
-                                                onChange={(e) =>
-                                                    handleConditionChangeStuckStage(
-                                                        0,
-                                                        "value",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
+                                        <div className="flex items-center gap-6">
+                                            <h1 className="text-gray-700 dark:text-gray-300">
+                                                For
+                                            </h1>
+                                            <div className="w-1/2">
+                                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Days
+                                                </Label>
+                                                <Input
+                                                    placeholder="Enter Days"
+                                                    className="w-full rounded-lg border-gray-300"
+                                                    onChange={(e) =>
+                                                        handleConditionChangeStuckStage(
+                                                            0,
+                                                            "value",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
+                                {/* Additional Conditions */}
                                 {conditions.map((condition, index) => (
-                                    <div key={index}>
+                                    <div key={index} className="space-y-4">
                                         <ConditionComponent
                                             index={index}
                                             condition={condition}
@@ -1166,22 +1155,17 @@ function CreateHiringroomSheet() {
                                             }
                                         />
                                         {index < conditions.length - 1 && (
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    margin: "10px 0",
-                                                }}
-                                            >
+                                            <div className="text-center font-medium text-gray-600">
                                                 AND
                                             </div>
                                         )}
                                     </div>
                                 ))}
 
-                                {/* Button to add new conditions */}
+                                {/* Add Condition Button */}
                                 <Button
                                     variant="outline"
-                                    className="mt-2 w-full hover:bg-indigo-100 hover:text-indigo-800"
+                                    className="w-full rounded-lg border-blue-600 text-blue-600 hover:bg-blue-50"
                                     onClick={addCondition}
                                     type="button"
                                 >
@@ -1190,16 +1174,17 @@ function CreateHiringroomSheet() {
                             </div>
                         </div>
 
-                        <hr className="my-2 border-gray-300 dark:border-gray-700" />
-                        {/* Recipient */}
-                        <div className="flex items-start gap-8">
+                        <hr className="border-gray-300 dark:border-gray-700" />
+
+                        {/* Slack Channel Format Section */}
+                        <div className="flex gap-10">
                             <div className="w-1/3">
-                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                <Label className="text-xl font-semibold text-gray-800 dark:text-gray-300">
                                     Slack Channel Format
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Specify the format of the slack channel name
-                                    of the hiring room.
+                                    Specify the format of the Slack channel name
+                                    for the hiring room.
                                 </p>
                             </div>
                             <div className="flex-1">
@@ -1210,12 +1195,13 @@ function CreateHiringroomSheet() {
                                 />
                             </div>
                         </div>
-                        <hr className="my-2 border-gray-300 dark:border-gray-700" />
 
-                        {/* Recipient */}
-                        <div className="flex items-start gap-8">
+                        <hr className="border-gray-300 dark:border-gray-700" />
+
+                        {/* Recipient Section */}
+                        <div className="flex gap-10">
                             <div className="w-1/3">
-                                <Label className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                <Label className="text-xl font-semibold text-gray-800 dark:text-gray-300">
                                     Recipient
                                 </Label>
                                 <p className="mt-2 text-sm text-gray-500">
@@ -1235,16 +1221,17 @@ function CreateHiringroomSheet() {
                                     onRecipientsChange={handleRecipientsChange}
                                     onCustomMessageBodyChange={
                                         handleCustomMessageBodyChange
-                                    } // Add this line
+                                    }
                                 />
                             </div>
                         </div>
 
-                        <div className="flex justify-end">
+                        {/* Submit Button */}
+                        <div className="flex justify-end pt-6">
                             <Button
                                 type="submit"
                                 disabled={isMutatePending}
-                                className="bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
+                                className="rounded-lg bg-blue-600 px-6 py-3 text-white shadow-md hover:bg-blue-700"
                             >
                                 Submit Hiring Room
                             </Button>

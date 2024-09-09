@@ -107,11 +107,8 @@ export async function POST(request: NextRequest) {
 
             const response = await fetch(requestUrl, { ...options, headers });
 
-            console.log("here??? - post repsonse", response.status);
 
             if (!response.ok) {
-                console.log("here??abaabababab?", response.body);
-                console.log("here??abaabababab?", response.statusText);
 
                 return NextResponse.json(
                     { error: `HTTP error! Status: ${response.status}` },

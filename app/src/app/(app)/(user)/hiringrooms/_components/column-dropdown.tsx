@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontalIcon } from "lucide-react";
 import { toast } from "sonner";
-import { type HiringroomData } from "./columns";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
@@ -22,7 +21,7 @@ import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 
 type HiringroomStatus = "Active" | "Inactive" | "Archived";
 
-export function ColumnDropdown({ id }: HiringroomData) {
+export function ColumnDropdown({ id }: { id: string }) {
     const router = useRouter();
 
     // Mutation to update the hiringroom status

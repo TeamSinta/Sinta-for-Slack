@@ -8,9 +8,9 @@
  */
 
 export const siteUrls = {
-    publicUrl: "https://5bc1e5fa5023dc7a.ngrok.app",
+    publicUrl: "https://teamsinta.com/",
     github: "https://github.com/msinta/",
-    home: "/",
+    home: "/dashboard",
     auth: {
         login: "/auth/login",
         signup: "/auth/signup",
@@ -21,12 +21,12 @@ export const siteUrls = {
     blog: "/blog",
     docs: "/docs/introduction",
     maintenance: "/maintenance",
-    teamsinta: "https://teamsinta.vercel.app/",
+    teamsinta: "https://app.teamsinta.com/",
     dashboard: {
         home: "/dashboard",
     },
-    customize: {
-        home: "/customize",
+    workspaces: {
+        home: "/workspaces",
     },
     workflows: {
         home: "/workflows",
