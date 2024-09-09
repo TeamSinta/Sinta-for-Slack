@@ -5,8 +5,8 @@
             "schedule": "0 10 * * *"
         },
         {
-          "path": "/api/rotation",
-          "schedule": "0 * * * *"
+            "path": "/api/rotation",
+            "schedule": "0 * * * *"
         }
     ]
 }

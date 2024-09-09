@@ -48,60 +48,64 @@ export async function getAccessToken(teamId: string): Promise<string> {
 }
 
 export async function refreshTokenIfNeeded(
-  teamId: string,
-  token_expiry: number,
-  slack_refresh_token: string,
+    teamId: string,
+    token_expiry: number,
+    slack_refresh_token: string,
 ): Promise<string> {
-  const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
-  const clientSecret = process.env.SLACK_CLIENT_SECRET;
+    const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
+    const clientSecret = process.env.SLACK_CLIENT_SECRET;
 
-  if (!clientId || !clientSecret) {
-      throw new Error("Slack client ID or secret is undefined.");
-  }
+    if (!clientId || !clientSecret) {
+        throw new Error("Slack client ID or secret is undefined.");
+    }
 
-  // Set a buffer time of 2 hours (in seconds)
-  const bufferTime = 2 * 60 * 60; // 2 hours in seconds
-  const currentTime = Math.floor(Date.now() / 1000); // current time in seconds
+    // Set a buffer time of 2 hours (in seconds)
+    const bufferTime = 2 * 60 * 60; // 2 hours in seconds
+    const currentTime = Math.floor(Date.now() / 1000); // current time in seconds
 
-  // Check if the token will expire within 2 hours
-  if (currentTime >= (token_expiry - bufferTime)) {
-      const response = await fetch("https://slack.com/api/oauth.v2.access", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&refresh_token=${encodeURIComponent(slack_refresh_token)}&grant_type=refresh_token`,
-      });
+    // Check if the token will expire within 2 hours
+    if (currentTime >= token_expiry - bufferTime) {
+        const response = await fetch("https://slack.com/api/oauth.v2.access", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&refresh_token=${encodeURIComponent(slack_refresh_token)}&grant_type=refresh_token`,
+        });
 
-      const data: {
-          ok: boolean;
-          access_token?: string;
-          refresh_token?: string;
-          expires_in?: number;
-          error?: string;
-      } = await response.json();
-      console.log("data from refresh", data);
+        const data: {
+            ok: boolean;
+            access_token?: string;
+            refresh_token?: string;
+            expires_in?: number;
+            error?: string;
+        } = await response.json();
+        console.log("data from refresh", data);
 
-      if (data.ok && data.access_token && data.refresh_token && data.expires_in) {
-          const expiresAt = currentTime + data.expires_in;
-          await setAccessToken(
-              data.access_token,
-              teamId,
-              data.refresh_token,
-              expiresAt,
-          );
-          return data.access_token;
-      } else {
-          throw new Error(
-              "Failed to refresh access token" +
-              (data.error ? `: ${data.error}` : ""),
-          );
-      }
-  }
+        if (
+            data.ok &&
+            data.access_token &&
+            data.refresh_token &&
+            data.expires_in
+        ) {
+            const expiresAt = currentTime + data.expires_in;
+            await setAccessToken(
+                data.access_token,
+                teamId,
+                data.refresh_token,
+                expiresAt,
+            );
+            return data.access_token;
+        } else {
+            throw new Error(
+                "Failed to refresh access token" +
+                    (data.error ? `: ${data.error}` : ""),
+            );
+        }
+    }
 
-  // If the token is still valid and doesn't need refreshing, return the current access token
-  const currentAccessToken = ""; // Placeholder for actual access token retrieval logic
-  return currentAccessToken;
+    // If the token is still valid and doesn't need refreshing, return the current access token
+    const currentAccessToken = ""; // Placeholder for actual access token retrieval logic
+    return currentAccessToken;
 }
-
 
 export async function setAccessToken(
     accessToken: string,
