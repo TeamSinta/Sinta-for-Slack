@@ -88,25 +88,16 @@ export function SidebarNav({
                         <ul className="flex flex-col gap-1">
                             {nav.items.map((item) => (
                                 <li key={item.label}>
-                                    {/**
-                                     * if the item has a subMenu, we will render an accordion component to handle the subMenu
-                                     * otherwise, we will render a simple link
-                                     */}
                                     {item.subMenu ? (
                                         <Accordion
                                             type="single"
                                             collapsible
                                             defaultValue={
-                                                item.subMenu.find(
-                                                    (subItem: {
-                                                        label: string;
-                                                        href: string;
-                                                        icon: React.ComponentType<IconProps>;
-                                                    }) =>
-                                                        isLinkActive(
-                                                            pathname,
-                                                            subItem.href,
-                                                        ),
+                                                item.subMenu.find((subItem) =>
+                                                    isLinkActive(
+                                                        subItem.href,
+                                                        pathname,
+                                                    ),
                                                 )
                                                     ? item.label
                                                     : undefined
@@ -118,20 +109,22 @@ export function SidebarNav({
                                                         <AccordionTrigger
                                                             className={linkStyle(
                                                                 {
+                                                                    active: item.subMenu.some(
+                                                                        (
+                                                                            subItem,
+                                                                        ) =>
+                                                                            isLinkActive(
+                                                                                subItem.href,
+                                                                                pathname,
+                                                                            ),
+                                                                    ),
                                                                     className:
                                                                         "justify-between",
                                                                 },
                                                             )}
                                                         >
                                                             <div className="flex items-center justify-start gap-3 ">
-                                                                <item.icon
-                                                                    className={cn(
-                                                                        "flex-shrink-0",
-                                                                        isCollapsed
-                                                                            ? "h-5 w-5"
-                                                                            : "h-4 w-4 ",
-                                                                    )}
-                                                                />
+                                                                <item.icon className="h-4 w-4 flex-shrink-0" />
                                                                 {!isCollapsed && (
                                                                     <span className="truncate">
                                                                         {
@@ -142,17 +135,43 @@ export function SidebarNav({
                                                             </div>
                                                         </AccordionTrigger>
                                                     </TooltipTrigger>
-                                                    {isCollapsed && (
-                                                        <TooltipContent
-                                                            side="right"
-                                                            className="flex items-center gap-2 font-medium "
-                                                        >
-                                                            <span>
-                                                                {item.label}
-                                                            </span>
-                                                            <ChevronDown className="h-4 w-4" />
-                                                        </TooltipContent>
-                                                    )}
+                                                    <AccordionContent className="flex flex-col gap-1 pt-1">
+                                                        {item.subMenu.map(
+                                                            (subItem) => (
+                                                                <Tooltip
+                                                                    key={
+                                                                        subItem.label
+                                                                    }
+                                                                >
+                                                                    <TooltipTrigger className="h-full w-full">
+                                                                        <NavLink
+                                                                            {...subItem}
+                                                                            Icon={
+                                                                                subItem.icon
+                                                                            }
+                                                                            active={isLinkActive(
+                                                                                subItem.href,
+                                                                                pathname,
+                                                                            )}
+                                                                            isCollapsed={
+                                                                                isCollapsed
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {isCollapsed && (
+                                                                        <TooltipContent
+                                                                            side="right"
+                                                                            className="flex items-center gap-4 font-medium"
+                                                                        >
+                                                                            {
+                                                                                subItem.label
+                                                                            }
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
+                                                            ),
+                                                        )}
+                                                    </AccordionContent>
                                                 </Tooltip>
                                                 <AccordionContent
                                                     className={cn(
@@ -217,8 +236,8 @@ export function SidebarNav({
                                                     {...item}
                                                     Icon={item.icon}
                                                     active={isLinkActive(
-                                                        pathname,
                                                         item.href,
+                                                        pathname,
                                                     )}
                                                     isCollapsed={isCollapsed}
                                                     user={user}
