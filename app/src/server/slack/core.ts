@@ -1086,3 +1086,94 @@ async function fetchScorecards(candidateID) {
         },
     ];
 }
+
+
+export async function sendSlackTestMessage(): Promise<void> {
+  const payload = {
+      attachments: [
+          {
+              color: "#4B0082",  // Indigo color
+              blocks: [
+                  {
+                      type: "section",
+                      text: {
+                          type: "mrkdwn",
+                          text: "*🔔 Offer Request: Michael Adler*"
+                      }
+                  },
+                  {
+                      type: "divider"
+                  },
+                  {
+                      type: "section",
+                      text: {
+                          type: "mrkdwn",
+                          text: "Hey Chris, Mohamed, & Evan, the offer process has started for *Michael Adler*! 🎉"
+                      }
+                  },
+                  {
+                      type: "section",
+                      text: {
+                          type: "mrkdwn",
+                          text: "*Interviewing Team:*\n👤 *Alice Recruiter* - Phone Screen: Yes ✅\n👤 *Bob Engineer* - Technical Interview: Strong Yes ✅\n👤 *Charlie Manager* - Final Interview: Yes ✅"
+                      }
+                  },
+                  {
+                      type: "context",
+                      elements: [
+                          {
+                              type: "mrkdwn",
+                              text: "The offer is *pending* ⏳ and is currently awaiting approval from *David Smith*."
+                          }
+                      ]
+                  },
+                  {
+                      type: "actions",
+                      elements: [
+                          {
+                              type: "button",
+                              text: {
+                                  type: "plain_text",
+                                  text: ":mag: View Candidate Profile"
+                              },
+                              value: "view_profile",
+                              url: "https://example.com/candidate/michael-adler"
+                          },
+                          {
+                              type: "button",
+                              text: {
+                                  type: "plain_text",
+                                  text: ":page_with_curl: View Offer Details"
+                              },
+                              value: "view_offer",
+                              url: "https://example.com/offer/michael-adler"
+                          }
+                      ]
+                  }
+              ]
+          }
+      ]
+  };
+
+  try {
+      const response = await fetch(
+          "https://hooks.slack.com/services/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", // Replace with your actual webhook URL
+          {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+          }
+      );
+
+      if (response.ok) {
+          console.log("Message posted successfully.");
+      } else {
+          const errorResponse = await response.text();
+          console.error("Failed to post message:", errorResponse);
+      }
+  } catch (error) {
+      console.error("Error occurred while sending Slack message:", error);
+  }
+}

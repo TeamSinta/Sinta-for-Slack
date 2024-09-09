@@ -104,7 +104,7 @@ export async function setAccessToken(
     teamId: string,
     refreshToken: string,
     expiration: number,
-) {
+): Promise<string> {
     const { currentOrg } = await getOrganizations();
     const orgID = currentOrg.id;
     const result = await db

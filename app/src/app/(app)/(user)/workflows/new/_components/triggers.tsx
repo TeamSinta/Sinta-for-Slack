@@ -50,54 +50,155 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
     const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
 
     const events = [
-        {
-            title: "Interview Scheduled",
-            description: "Triggered when an interview is scheduled.",
-            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-            objectField: "Scheduled Interviews",
-            alertType: "Create/Update",
-            triggers: [
-                "Notify Interviewers",
-                "Prepare Interview Kit",
-                "Schedule Reminder",
-            ],
-        },
-        {
-            title: "Offer Request Created ",
-            description:
-                "Triggered when an approval request is sent for a job offer for a candidate.",
-            objectField: "Approvals",
-            apiUrl: "https://harvest.greenhouse.io/v1/approvals",
-            alertType: "Create/Update",
-            triggers: [
-                "Send Approval Request",
-                "Notify Approvers in Slack",
-                "Track Approval Status",
-            ],
-        },
-        {
-            title: "Candidates",
-            description: "Triggered for working with Candidates Object",
-            objectField: "Candidates",
-            apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
-            alertType: "timebased",
-            triggers: [
-                "Send Referral SLA Reminder to Recruiter",
-                "Send Active Candidates Reminder to Recruiter",
-                "Notify Recruiter via Slack",
-                "Take Action on Active Candidates in Closed Roles",
-            ],
-        },
-        {
-            title: "Stuck in Pipeline",
-            objectField: "Candidates",
-            description: "Triggered when a candidate is stuck in a stage.",
-            apiUrl: "https://harvest.greenhouse.io/v1/candidates",
-            alertType: "stuck-in-stage",
-            triggers: [],
-        },
-        // Add more events as needed
-    ];
+      // Real-time Events (Webhooks)
+      {
+          title: "Candidate Created",
+          description: "Triggered when a new candidate is created.",
+          apiUrl: "https://harvest.greenhouse.io/v1/candidates",
+          objectField: "Candidates",
+          alertType: "Create/Update",
+          triggers: [
+              "Notify Recruiter",
+              "Create Candidate Profile in Slack",
+          ],
+      },
+      {
+          title: "Interview Scheduled",
+          description: "Triggered when an interview is scheduled.",
+          apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+          objectField: "Scheduled Interviews",
+          alertType: "Create/Update",
+          triggers: [
+              "Notify Interviewers",
+              "Prepare Interview Kit",
+              "Schedule Reminder",
+          ],
+      },
+      {
+          title: "Offer Request Created",
+          description: "Triggered when an approval request is sent for a job offer for a candidate.",
+          objectField: "Approvals",
+          apiUrl: "https://harvest.greenhouse.io/v1/approvals",
+          alertType: "Create/Update",
+          triggers: [
+              "Send Approval Request",
+              "Notify Approvers in Slack",
+              "Track Approval Status",
+          ],
+      },
+      {
+          title: "Candidate Stage Changed",
+          description: "Triggered when a candidate's stage is updated.",
+          apiUrl: "https://harvest.greenhouse.io/v1/candidates",
+          objectField: "Candidates",
+          alertType: "Create/Update",
+          triggers: [
+              "Notify Recruiter",
+              "Send Stage Change Update to Hiring Team",
+              "Prepare Next Stage Interview Kit",
+          ],
+      },
+      {
+          title: "Candidate Hired",
+          description: "Triggered when a candidate is marked as hired.",
+          apiUrl: "https://harvest.greenhouse.io/v1/candidates",
+          objectField: "Candidates",
+          alertType: "Create/Update",
+          triggers: [
+              "Send Hired Notification",
+              "Kickoff Onboarding Process",
+              "Notify Payroll",
+          ],
+      },
+      {
+          title: "Job Opening Created",
+          description: "Triggered when a new job opening is created.",
+          apiUrl: "https://harvest.greenhouse.io/v1/jobs",
+          objectField: "Jobs",
+          alertType: "Create/Update",
+          triggers: [
+              "Notify Recruiters",
+              "Prepare Job Opening Announcement",
+              "Send Job Posting to Slack",
+          ],
+      },
+      {
+          title: "Candidate Offer Approved",
+          description: "Triggered when a candidate's offer is approved.",
+          apiUrl: "https://harvest.greenhouse.io/v1/offers",
+          objectField: "Offers",
+          alertType: "Create/Update",
+          triggers: [
+              "Notify Hiring Team",
+              "Prepare Offer Letter",
+              "Send Offer Acceptance Request",
+          ],
+      },
+      // Time-based Events (Harvest API)
+      {
+          title: "Candidates Pending Action",
+          description: "Trigger reminders for candidates pending action for too long.",
+          apiUrl: "https://harvest.greenhouse.io/v1/candidates",
+          objectField: "Candidates",
+          alertType: "timebased",
+          triggers: [
+              "Send Pending Candidate Reminder",
+              "Notify Recruiters",
+          ],
+      },
+      {
+          title: "Stuck in Pipeline",
+          objectField: "Candidates",
+          description: "Triggered when a candidate is stuck in a stage.",
+          apiUrl: "https://harvest.greenhouse.io/v1/candidates",
+          alertType: "stuck-in-stage",
+          triggers: [],
+      },
+      {
+          title: "Inactive Job Postings",
+          description: "Triggered when job postings have been inactive for too long.",
+          apiUrl: "https://harvest.greenhouse.io/v1/jobs",
+          objectField: "Jobs",
+          alertType: "timebased",
+          triggers: [
+              "Notify Hiring Manager",
+              "Send Job Posting Expiration Reminder",
+          ],
+      },
+      {
+          title: "Pending Offers",
+          description: "Triggered for pending offers that haven't been accepted or declined within a certain timeframe.",
+          apiUrl: "https://harvest.greenhouse.io/v1/offers",
+          objectField: "Offers",
+          alertType: "timebased",
+          triggers: [
+              "Notify Offer Owner",
+              "Send Follow-up to Candidate",
+          ],
+      },
+      {
+          title: "Expired Requisition Approvals",
+          description: "Triggered for requisitions that are pending approval for too long.",
+          apiUrl: "https://harvest.greenhouse.io/v1/approvals",
+          objectField: "Approvals",
+          alertType: "timebased",
+          triggers: [
+              "Send Requisition Expiration Alert",
+              "Notify Hiring Manager",
+          ],
+      },
+      {
+          title: "Referrals Pending Action",
+          description: "Triggered for referrals that haven't been acted upon.",
+          apiUrl: "https://harvest.greenhouse.io/v1/candidates",
+          objectField: "Candidates",
+          alertType: "timebased",
+          triggers: [
+              "Send Referral SLA Reminder to Recruiter",
+              "Send Referral Reminder to Hiring Manager",
+          ],
+      }
+  ];
 
     useEffect(() => {
         if (workflowData) {
