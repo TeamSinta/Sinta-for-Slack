@@ -30,7 +30,10 @@ import {
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
+import { useSession } from "next-auth/react";
+import mixpanel from "mixpanel-browser";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 interface GreenhouseIntegrationCardProps {
     name: string;
     imageUrl: string;
@@ -52,7 +55,9 @@ export const GreenhouseIntegrationCard: React.FC<
     GreenhouseIntegrationCardProps
 > = ({ name, imageUrl, buttonText, isConnected, lastModified }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const session = useSession();
     const router = useRouter();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const [, startAwaitableTransition] = useAwaitableTransition();
 
     const form = useForm({
@@ -82,6 +87,16 @@ export const GreenhouseIntegrationCard: React.FC<
         }
     };
 
+    function trackModalEvent(open: boolean) {
+        mixpanel.track(open ? "Modal Shown" : "Modal Dismissed", {
+            distinct_id: session.data?.user?.id,
+            modal_name: "Greenhouse Integration Modal",
+            modal_page: "/integrations",
+            modal_shown_at: new Date().toISOString(),
+            user_id: session.data?.user?.id,
+            organization_id: orgCookie,
+        });
+    }
     return (
         <>
             <Card className="flex w-full items-center justify-between p-6">
@@ -109,13 +124,22 @@ export const GreenhouseIntegrationCard: React.FC<
                 <div className="flex items-center">
                     <Button
                         className="ml-2 rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => {
+                            trackModalEvent(true);
+                            setIsModalOpen(true);
+                        }}
                     >
                         {buttonText}
                     </Button>
                 </div>
             </Card>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <Dialog
+                open={isModalOpen}
+                onOpenChange={(open) => {
+                    if (!open) trackModalEvent(false);
+                    setIsModalOpen(open);
+                }}
+            >
                 <DialogTrigger asChild></DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>

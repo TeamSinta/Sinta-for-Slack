@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -42,11 +43,15 @@ export type CreateOrgFormSchema = z.infer<typeof createOrgFormSchema>;
 type CreateOrgFormProps = {
     open: boolean;
     setOpen: Dispatch<SetStateAction<boolean>>;
+    trackModalEvent: (arg0: boolean) => void;
 };
 
-export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
+export function CreateOrgForm({
+    open,
+    setOpen,
+    trackModalEvent,
+}: CreateOrgFormProps) {
     const router = useRouter();
-
     const form = useForm<CreateOrgFormSchema>({
         resolver: zodResolver(createOrgFormSchema),
         defaultValues: {
@@ -81,7 +86,13 @@ export function CreateOrgForm({ open, setOpen }: CreateOrgFormProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={(o) => setOpen(o)}>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                trackModalEvent(o);
+                setOpen(o);
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create Organization</DialogTitle>

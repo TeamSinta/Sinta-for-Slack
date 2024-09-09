@@ -14,12 +14,14 @@ import {
 import {
     getActionData,
     getConditionsData,
+    getOrgCookie,
     getTriggerData,
     getWorkflowName,
 } from "@/lib/utils";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-
+import mixpanel from "mixpanel-browser";
+import { useSession } from "next-auth/react";
 export const WorkflowPublishModal = ({
     edit = false,
     workflowId,
@@ -33,7 +35,7 @@ export const WorkflowPublishModal = ({
     const [errorMessage, setErrorMessage] = useState("");
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const router = useRouter();
-
+    const session = useSession();
     const triggerData = getTriggerData();
     const actionData = getActionData();
     const conditionsData = getConditionsData();
@@ -79,7 +81,19 @@ export const WorkflowPublishModal = ({
         validateData(); // Validate data whenever the modal opens
     }, [triggerData, actionData]);
 
-    const handleOpenModal = () => {
+    function trackModalEvent(open: boolean) {
+        mixpanel.track(open ? "Modal Shown" : "Modal Dismissed", {
+            distinct_id: session.data?.user?.id,
+            modal_name: "Workflow Modal",
+            modal_page: "/workflows",
+            modal_shown_at: new Date().toISOString(),
+            user_id: session.data?.user?.id,
+            organization_id: getOrgCookie(),
+        });
+    }
+
+    const handleOpenModal = (open: boolean) => {
+        trackModalEvent(open);
         const combinedSteps = [
             {
                 id: 1,

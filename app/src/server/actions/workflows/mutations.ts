@@ -11,6 +11,8 @@ import { protectedProcedure } from "@/server/procedures";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { getOrganizations } from "../organization/queries";
+import MixpanelServer from "@/server/mixpanel";
+import { getServerAuthSession } from "@/server/auth";
 
 /**
  * Create a new workflow
@@ -116,12 +118,27 @@ export async function updateWorkflowStatusMutation(
                 cause: workflowParse.error.errors,
             });
         }
-
-        return await db
+        const res = await db
             .update(workflows)
             .set({ status: workflowParse.data.status })
             .where(eq(workflows.id, workflowParse.data.id))
             .execute();
+
+        let eventTitle = null;
+        const session = await getServerAuthSession();
+        const { currentOrg } = await getOrganizations();
+        if (workflowParse.data.status === "Active")
+            eventTitle = "Workflow Activated";
+        else if (workflowParse.data.status === "Inactive")
+            eventTitle = "Workflow Deactivated";
+
+        if (eventTitle)
+            MixpanelServer.track(eventTitle, {
+                workflow_id: workflowParse.data.id,
+                user_id: session?.user?.id,
+                organization_id: currentOrg.id,
+            });
+        return res;
     } catch (e) {
         console.log("wtf  eeeee -", e);
         throw e;
@@ -169,5 +186,16 @@ export async function updateWorkflowNameMutation(
 export async function deleteWorkflowMutation({ id }: { id: string }) {
     if (!id) throw new Error("Invalid workflow ID");
 
-    return await db.delete(workflows).where(eq(workflows.id, id)).execute();
+    const res = await db
+        .delete(workflows)
+        .where(eq(workflows.id, id))
+        .execute();
+    const session = await getServerAuthSession();
+    const { currentOrg } = await getOrganizations();
+    MixpanelServer.track("Workflow Deleted", {
+        workflow_id: id,
+        user_id: session?.user?.id,
+        organization_id: currentOrg.id,
+    });
+    return res;
 }

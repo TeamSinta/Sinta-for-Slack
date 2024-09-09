@@ -44,6 +44,8 @@ import StagesDropdown from "./stages-dropdown";
 import JobsDropdown from "./job-select";
 import Image from "next/image";
 import { toast } from "sonner";
+import mixpanel from "mixpanel-browser";
+import { useSession } from "next-auth/react";
 
 const messageButtonSchema = z.object({
     name: z.string(),
@@ -168,6 +170,7 @@ function WorkflowSheet({
 
     const [, setSelectedOrganization] = useState("");
     const router = useRouter();
+    const session = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [, setJobs] = useState<Job[]>([]);
     const [isCandidateSelected, setIsCandidateSelected] =
@@ -637,6 +640,13 @@ function WorkflowSheet({
                 router.push("/workflows");
             } else {
                 toast.success("Workflow created successfully");
+                mixpanel.track("Workflow Created", {
+                    workflow_id: workflowId,
+                    workflow_name: formData.name,
+                    alert_type: formData.alertType,
+                    organization_id: formData.organizationId,
+                    user_id: session.data?.user.id,
+                });
             }
         } catch (error) {
             toast.error(
