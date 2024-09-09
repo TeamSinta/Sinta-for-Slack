@@ -49,14 +49,24 @@ import TestResult from "./testResults";
 import { useSession } from "next-auth/react";
 const localStorageKey = "workflowActions";
 
+const isBrowser = typeof window !== "undefined";
+
+// Safe function to save action data to localStorage
 const saveActionData = (data) => {
-    const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
-    const updatedData = { ...storedData, ...data };
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+    if (isBrowser) {
+        const storedData =
+            JSON.parse(localStorage.getItem(localStorageKey)) || {};
+        const updatedData = { ...storedData, ...data };
+        localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+    }
 };
 
+// Safe function to get action data from localStorage
 const getActionData = () => {
-    return JSON.parse(localStorage.getItem(localStorageKey)) || {};
+    if (isBrowser) {
+        return JSON.parse(localStorage.getItem(localStorageKey)) || {};
+    }
+    return {};
 };
 
 const fields = [

@@ -314,6 +314,7 @@ export const membersToOrganizationsRoleEnum = pgEnum("org-member-role", [
     "Interviewer",
     "Recruiter",
     "Hiring Manager",
+    "Admin",
 ]);
 
 export const membersToOrganizations = createTable(

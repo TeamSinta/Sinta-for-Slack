@@ -13,6 +13,9 @@ import {
     Workflow,
     DoorOpen,
     Cable,
+    MapPinned,
+    FlameKindling,
+    Origami,
 } from "lucide-react";
 import { siteUrls } from "@/config/urls";
 
@@ -106,30 +109,31 @@ const navigation: SidebarNavItems[] = [
                 icon: LayoutDashboardIcon,
                 href: siteUrls.dashboard.home,
             },
-            {
-                label: "Assignments",
-                icon: Ticket,
-                href: siteUrls.assignments.home,
-            },
-            {
-                label: "Hiring Rooms",
-                icon: DoorOpen,
-                href: siteUrls.hiringrooms.home,
-            },
+            // {
+            //     label: "Assignments",
+            //     icon: Ticket,
+            //     href: siteUrls.assignments.home,
+            // },
             {
                 label: "Workflows",
                 icon: Zap,
                 href: siteUrls.workflows.home,
             },
             {
+                label: "Hire Rooms",
+                icon: FlameKindling,
+                href: siteUrls.hiringrooms.home,
+            },
+
+            {
+                label: "Workspaces",
+                icon: Origami,
+                href: siteUrls.workspaces.home,
+            },
+            {
                 label: "Integrations",
                 icon: Cable,
                 href: siteUrls.integrations.home,
-            },
-            {
-                label: "Slack Home",
-                icon: Workflow,
-                href: siteUrls.customize.home,
             },
         ],
     },

@@ -139,7 +139,7 @@ export default function CustomizeDashboard() {
         <div className="w-full space-y-8 pl-8">
             <header className="flex w-full flex-col gap-1 border-border pt-6">
                 <h1 className="font-heading text-2xl font-bold">
-                    Customize Slack Home
+                    Customize Slack Workspace
                 </h1>
                 <p className="max-w-xl text-muted-foreground">
                     Customize content displayed on the Slack home dashboard.
