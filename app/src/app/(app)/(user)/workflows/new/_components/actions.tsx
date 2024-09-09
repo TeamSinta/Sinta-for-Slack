@@ -46,6 +46,8 @@ import {
 import { LinkActionType } from "../../_components/message-buttons";
 import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
 import TestResult from "./testResults";
+import { getSession } from "next-auth/react";
+import { getOrganizations } from "@/server/actions/organization/queries";
 const localStorageKey = "workflowActions";
 
 const saveActionData = (data) => {
@@ -108,6 +110,15 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [activeTab, setActiveTab] = useState("message");
     const [testResult, setTestResult] = useState(null);
 
+    useEffect(() => {
+        async function test() {
+            const session = await getSession();
+            const org = await getOrganizations();
+            console.log("SESSION", session);
+            console.log("ORGS", org);
+        }
+        test();
+    }, []);
     useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {

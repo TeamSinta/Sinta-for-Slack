@@ -9,6 +9,7 @@ import {
 } from "@/server/db/schema";
 import { and, eq, type SQLWrapper } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
+import { getServerAuthSession } from "@/server/auth";
 
 export async function getAccessToken(teamId: string): Promise<string> {
     if (!teamId) {
@@ -121,6 +122,23 @@ export async function setAccessToken(
     return result ? "OK" : "Failed to update access token";
 }
 
+export async function addSlackUserIdToDB(slackUserId: string) {
+    const { currentOrg } = await getOrganizations();
+    const user = await getServerAuthSession();
+    if (!user) return null;
+    const result = await db
+        .update(membersToOrganizations)
+        .set({ slack_user_id: slackUserId })
+        .where(
+            and(
+                eq(membersToOrganizations.organizationId, currentOrg.id),
+                eq(membersToOrganizations.memberId, user?.user?.id),
+            ),
+        );
+
+    return true;
+}
+
 export async function checkForSlackTeamIDConflict(teamId: string | SQLWrapper) {
     const existingOrg = await db.query.organizations.findFirst({
         where: eq(organizations.slack_team_id, teamId),
@@ -227,23 +245,24 @@ export async function isUserMemberOfOrg({
     return !!member; // Return true if the user is a member, false otherwise
 }
 
+export async function getOrgIdBySlackTeamId(
+    teamId: string,
+): Promise<string | null> {
+    if (!teamId) {
+        throw new Error("No Slack team ID provided.");
+    }
 
-export async function getOrgIdBySlackTeamId(teamId: string): Promise<string | null> {
-  if (!teamId) {
-      throw new Error("No Slack team ID provided.");
-  }
+    // Fetch organization details using the provided Slack team ID
+    const organization = await db.query.organizations.findFirst({
+        where: eq(organizations.slack_team_id, teamId),
+        columns: {
+            id: true,
+        },
+    });
 
-  // Fetch organization details using the provided Slack team ID
-  const organization = await db.query.organizations.findFirst({
-      where: eq(organizations.slack_team_id, teamId),
-      columns: {
-          id: true,
-      },
-  });
+    if (!organization) {
+        throw new Error("Organization not found.");
+    }
 
-  if (!organization) {
-      throw new Error("Organization not found.");
-  }
-
-  return organization.id || null;
+    return organization.id || null;
 }

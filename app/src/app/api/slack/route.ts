@@ -38,7 +38,7 @@ import {
     inviteUsersToChannel,
     postWelcomeMessage,
 } from "@/server/slack/core";
-
+import { addSlackUserIdToDB } from "@/server/actions/slack/query";
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
     type: string;
@@ -116,8 +116,23 @@ export async function GET(req: NextRequest) {
                 json.refresh_token,
                 expiresAt,
             );
+
             console.log("Access token updated:", updateResponse);
             console.log(json);
+
+            // Store the user's ID
+            const updateUserResponse = await addSlackUserIdToDB(
+                json.authed_user.id,
+            );
+            if (!updateUserResponse) {
+                return new NextResponse(
+                    JSON.stringify({
+                        message: "Failed to set slack user ID.",
+                    }),
+                    { status: 500 },
+                );
+            }
+
             if (updateResponse === "OK") {
                 const url = `${siteUrls.teamsinta}/success/${json.team.id}`;
                 return NextResponse.redirect(url);
