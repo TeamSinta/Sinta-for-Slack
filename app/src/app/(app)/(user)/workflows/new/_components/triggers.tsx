@@ -1,4 +1,4 @@
-// @ts-nocheck
+//@ts-nocheck
 
 import React, { useState, useEffect } from "react";
 import {
@@ -17,7 +17,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { CheckCircle, AlertTriangle, Clock, PlugZap } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
@@ -25,6 +25,8 @@ import { Separator } from "@/components/ui/separator";
 import JobsDropdown from "../../_components/job-select";
 import StagesDropdown from "../../_components/stages-dropdown";
 import { customFetchTester } from "@/utils/fetch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const localStorageKey = "workflowTriggers";
 
@@ -44,26 +46,16 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
     const [isTesting, setIsTesting] = useState(false);
     const [testResult, setTestResult] = useState(null);
     const [showFullData, setShowFullData] = useState(false);
+    const [pollingInterval, setPollingInterval] = useState("");
+    const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
 
     const events = [
-        {
-            title: "Candidate Hired",
-            description: "Triggered when a candidate is marked as hired.",
-            objectField: "Candidates",
-            apiUrl: "/api/greenhouse/candidate_hired",
-            alertType: "Create/Update",
-            triggers: [
-                "Onboarding Setup",
-                "Send Welcome Email",
-                "Assign Buddy",
-            ],
-        },
         {
             title: "Interview Scheduled",
             description: "Triggered when an interview is scheduled.",
             apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
             objectField: "Scheduled Interviews",
-            alertType: "timebased",
+            alertType: "Create/Update",
             triggers: [
                 "Notify Interviewers",
                 "Prepare Interview Kit",
@@ -71,12 +63,30 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
             ],
         },
         {
-            title: "Job Post Approved",
-            description: "Triggered when a job post is approved.",
-            objectField: "Jobs",
-            apiUrl: "/api/greenhouse/job_post_approved",
+            title: "Offer Request Created ",
+            description:
+                "Triggered when an approval request is sent for a job offer for a candidate.",
+            objectField: "Approvals",
+            apiUrl: "https://harvest.greenhouse.io/v1/approvals",
             alertType: "Create/Update",
-            triggers: ["Publish Job Post", "Notify Team"],
+            triggers: [
+                "Send Approval Request",
+                "Notify Approvers in Slack",
+                "Track Approval Status",
+            ],
+        },
+        {
+            title: "Candidates",
+            description: "Triggered for working with Candidates Object",
+            objectField: "Candidates",
+            apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
+            alertType: "timebased",
+            triggers: [
+                "Send Referral SLA Reminder to Recruiter",
+                "Send Active Candidates Reminder to Recruiter",
+                "Notify Recruiter via Slack",
+                "Take Action on Active Candidates in Closed Roles",
+            ],
         },
         {
             title: "Stuck in Pipeline",
@@ -137,6 +147,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
         setSelectedTrigger(trigger);
     };
 
+    const handlePollingIntervalChange = (e) => {
+        setPollingInterval(e.target.value);
+    };
+
     const handleSave = () => {
         if (selectedEvent) {
             let triggerDescription = `${selectedEvent.title}`;
@@ -154,6 +168,8 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                 apiUrl: selectedEvent.apiUrl,
                 objectField: selectedEvent.objectField,
                 alertType: selectedEvent.alertType,
+                pollingInterval,
+                pollingTimeUnit,
                 description: triggerDescription,
                 processor: selectedJob,
                 mainCondition:
@@ -185,9 +201,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
             const response = await customFetchTester(selectedEvent.apiUrl);
 
             if (response.status !== 200) {
-                throw new Error(
-                    `HTTP error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`,
-                );
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
             setTestResult({
@@ -200,7 +214,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
             setTestResult({
                 success: false,
                 status: error.message.includes("HTTP error!")
-                    ? error.message
+                    ? "N/A"
                     : `Status: ${error.response?.status || "N/A"}`,
                 message: error.message.includes("HTTP error!")
                     ? error.message
@@ -245,6 +259,11 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
             return <Clock className="text-gray-300" size={iconSize} />;
         }
     };
+
+    const isTimeBasedEventSelected =
+        selectedEvent &&
+        (selectedEvent.alertType === "timebased" ||
+            selectedEvent.alertType === "stuck-in-stage");
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
@@ -315,10 +334,13 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {selectedEvent && (
-                                    <div className="rounded-lg border bg-gray-50 p-4">
-                                        <h3 className="text-lg font-semibold">
-                                            {selectedEvent.title}
-                                        </h3>
+                                    <div className="space-y-4 rounded-lg border bg-gray-50 p-4">
+                                        <div className="flex items-center space-x-2">
+                                            <PlugZap />
+                                            <h3 className="text-lg font-semibold">
+                                                {selectedEvent.title}
+                                            </h3>
+                                        </div>
                                         <p className="text-sm text-gray-500">
                                             {selectedEvent.description}
                                         </p>
@@ -327,6 +349,8 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                         </p>
                                     </div>
                                 )}
+
+                                {/* Combined Select for Real-Time and Time-Based Events */}
                                 <Select
                                     onValueChange={handleEventChange}
                                     value={
@@ -341,26 +365,124 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                                 : "Choose an event"}
                                         </SelectValue>
                                     </SelectTrigger>
-                                    <SelectContent className="space-y-2 p-2">
-                                        {events.map((event) => (
-                                            <SelectItem
-                                                key={event.title}
-                                                value={event.title}
-                                            >
-                                                <div className="p-2">
-                                                    <p className="font-medium">
-                                                        {event.title}
-                                                    </p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {event.description}
-                                                    </p>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
+                                    <SelectContent className="space-y-2 rounded-sm p-2">
+                                        {/* Real-Time Events Sub-Title */}
+                                        <div className="px-2 py-1 text-xs font-semibold uppercase text-gray-500">
+                                            Real-Time Events
+                                        </div>
+                                        {events
+                                            .filter(
+                                                (event) =>
+                                                    event.alertType ===
+                                                    "Create/Update",
+                                            )
+                                            .map((event) => (
+                                                <SelectItem
+                                                    key={event.title}
+                                                    value={event.title}
+                                                >
+                                                    <div className="p-2">
+                                                        <p className="font-medium">
+                                                            {event.title}
+                                                        </p>
+                                                        <p className="text-sm text-gray-500">
+                                                            {event.description}
+                                                        </p>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+
+                                        {/* Divider */}
+                                        <div className="my-2 border-t border-gray-300"></div>
+
+                                        {/* Time-Based Events Sub-Title */}
+                                        <div className="px-2 py-1 text-xs font-semibold uppercase text-gray-500">
+                                            Time-Based Events
+                                        </div>
+                                        {events
+                                            .filter(
+                                                (event) =>
+                                                    event.alertType !=
+                                                    "Create/Update",
+                                            )
+                                            .map((event) => (
+                                                <SelectItem
+                                                    key={event.title}
+                                                    value={event.title}
+                                                >
+                                                    <div className="p-2">
+                                                        <p className="font-medium">
+                                                            {event.title}
+                                                        </p>
+                                                        <p className="text-sm text-gray-500">
+                                                            {event.description}
+                                                        </p>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
                                     </SelectContent>
                                 </Select>
                             </CardContent>
                         </Card>
+                        {/* Conditionally render the polling interval input if the event is time-based */}
+                        {isTimeBasedEventSelected && (
+                            <Card className="mt-6 border border-gray-300 bg-gray-50 shadow-lg">
+                                <CardHeader className="rounded-t-lg bg-gray-100 p-4">
+                                    <CardTitle>Polling Interval</CardTitle>
+                                    <CardDescription>
+                                        Set the interval for how often this
+                                        event should check for updates.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-4">
+                                    <div className="space-y-4">
+                                        <Label>Polling Interval</Label>
+                                        <div className="flex space-x-4">
+                                            <Input
+                                                type="number"
+                                                placeholder="Polling interval"
+                                                value={pollingInterval}
+                                                onChange={
+                                                    handlePollingIntervalChange
+                                                }
+                                                className="w-1/2 rounded-sm border-gray-300 bg-white shadow-inner"
+                                            />
+                                            <Select
+                                                value={pollingTimeUnit}
+                                                onValueChange={
+                                                    setPollingTimeUnit
+                                                }
+                                            >
+                                                <SelectTrigger className="w-full rounded-sm border-gray-300 bg-white shadow-inner">
+                                                    <SelectValue>
+                                                        {pollingTimeUnit}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="minutes">
+                                                        Minutes
+                                                    </SelectItem>
+                                                    <SelectItem value="hours">
+                                                        Hours
+                                                    </SelectItem>
+                                                    <SelectItem value="days">
+                                                        Days
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        {/* Helper Text */}
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            The polling interval determines how
+                                            frequently this time-based event
+                                            checks for new data. Choose a
+                                            suitable interval depending on how
+                                            often you expect updates.
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
                     </TabsContent>
 
                     {/* Trigger Tab */}
@@ -371,86 +493,54 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                     {selectedEvent?.title ===
                                     "Stuck in Pipeline"
                                         ? "Select Job and Stage"
-                                        : "Select Trigger"}
+                                        : "Select Job"}
                                 </CardTitle>
                                 <CardDescription>
                                     {selectedEvent?.title ===
                                     "Stuck in Pipeline"
                                         ? "Select a job and then a stage to trigger the workflow."
-                                        : "Choose a trigger condition related to the selected event."}
+                                        : "Select a job to trigger the workflow based on the selected event."}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {selectedEvent?.title ===
-                                "Stuck in Pipeline" ? (
-                                    <>
-                                        <JobsDropdown
-                                            onJobSelect={handleJobChange}
-                                        />
+                                {/* Show JobsDropdown for all events */}
+                                <JobsDropdown onJobSelect={handleJobChange} />
 
-                                        {selectedJob && (
+                                {/* Additional StagesDropdown for "Stuck in Pipeline" */}
+                                {selectedEvent?.title === "Stuck in Pipeline" &&
+                                    selectedJob && (
+                                        <>
                                             <StagesDropdown
                                                 jobId={selectedJob}
                                                 onStageSelect={
                                                     handleStageChange
                                                 }
                                             />
-                                        )}
 
-                                        {selectedStage && (
-                                            <div className="mt-4">
-                                                <label className="block text-sm font-medium text-gray-700">
-                                                    For
-                                                </label>
-                                                <div className="flex items-center">
-                                                    <input
-                                                        type="number"
-                                                        value={days}
-                                                        onChange={
-                                                            handleDaysChange
-                                                        }
-                                                        className="mt-1 block rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                        placeholder="Enter number of days"
-                                                    />
-                                                    <span className="ml-2 text-sm text-black">
-                                                        Days
-                                                    </span>
+                                            {/* Days input after stage selection */}
+                                            {selectedStage && (
+                                                <div className="mt-4">
+                                                    <label className="block text-sm font-medium text-gray-700">
+                                                        For
+                                                    </label>
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="number"
+                                                            value={days}
+                                                            onChange={
+                                                                handleDaysChange
+                                                            }
+                                                            className="mt-1 block rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                            placeholder="Enter number of days"
+                                                        />
+                                                        <span className="ml-2 text-sm text-black">
+                                                            Days
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <>
-                                        {selectedEvent?.triggers.length > 0 && (
-                                            <Select
-                                                onValueChange={
-                                                    handleTriggerChange
-                                                }
-                                            >
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue>
-                                                        {selectedTrigger ||
-                                                            "Choose a trigger"}
-                                                    </SelectValue>
-                                                </SelectTrigger>
-                                                <SelectContent className="space-y-2 p-2">
-                                                    {selectedEvent.triggers.map(
-                                                        (trigger, index) => (
-                                                            <SelectItem
-                                                                key={index}
-                                                                value={trigger}
-                                                            >
-                                                                <div className="p-2">
-                                                                    {trigger}
-                                                                </div>
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    </>
-                                )}
+                                            )}
+                                        </>
+                                    )}
                             </CardContent>
                         </Card>
                     </TabsContent>

@@ -5,12 +5,11 @@ export default function FormPageRooms({
 }: {
     params: { workflowId?: string };
 }) {
-
     return (
         <>
-                <HiringroomFormPage/>
+            <HiringroomFormPage />
         </>
     );
 }
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
