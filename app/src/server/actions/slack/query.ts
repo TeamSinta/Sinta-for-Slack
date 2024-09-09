@@ -59,12 +59,18 @@ export async function refreshTokenIfNeeded(
         throw new Error("Slack client ID or secret is undefined.");
     }
 
-    if (Date.now() >= token_expiry * 1000) {
+    // Set a buffer time of 2 hours (in seconds)
+    const bufferTime = 2 * 60 * 60; // 2 hours in seconds
+    const currentTime = Math.floor(Date.now() / 1000); // current time in seconds
+
+    // Check if the token will expire within 2 hours
+    if (currentTime >= token_expiry - bufferTime) {
         const response = await fetch("https://slack.com/api/oauth.v2.access", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: `client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&refresh_token=${encodeURIComponent(slack_refresh_token)}&grant_type=refresh_token`,
         });
+
         const data: {
             ok: boolean;
             access_token?: string;
@@ -72,13 +78,15 @@ export async function refreshTokenIfNeeded(
             expires_in?: number;
             error?: string;
         } = await response.json();
+        console.log("data from refresh", data);
+
         if (
             data.ok &&
             data.access_token &&
             data.refresh_token &&
             data.expires_in
         ) {
-            const expiresAt = Math.floor(Date.now() / 1000) + data.expires_in;
+            const expiresAt = currentTime + data.expires_in;
             await setAccessToken(
                 data.access_token,
                 teamId,
@@ -94,7 +102,7 @@ export async function refreshTokenIfNeeded(
         }
     }
 
-    // Assuming there's a way to fetch the current accessToken if not expired
+    // If the token is still valid and doesn't need refreshing, return the current access token
     const currentAccessToken = ""; // Placeholder for actual access token retrieval logic
     return currentAccessToken;
 }
