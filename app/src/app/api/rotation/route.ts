@@ -24,37 +24,33 @@ export async function GET() {
         const isExpired = currentTime >= token_expiry;
 
         if (isExpired) {
-          console.log(`Token expired for team ${slack_team_id}. Attempting to refresh...`);
+          console.log(`Token expired. Attempting to refresh...`);
           try {
             const newAccessToken = await refreshTokenIfNeeded(slack_team_id, token_expiry, slack_refresh_token);
             results.push({
-              team_id: slack_team_id,
               status: 'success',
-              message: `Token refreshed successfully for team ${slack_team_id}.`,
+              message: `Token refreshed successfully.`,
               newAccessToken,
             });
           } catch (refreshError) {
-            console.error(`Failed to refresh token for team ${slack_team_id}:`, refreshError);
+            console.error(`Failed to refresh token:`, refreshError);
             results.push({
-              team_id: slack_team_id,
               status: 'error',
-              message: `Failed to refresh token for team ${slack_team_id}: ${(refreshError as Error).message}`,
+              message: `Failed to refresh token: ${(refreshError as Error).message}`,
             });
           }
         } else {
-          console.log(`Token for team ${slack_team_id} is still valid.`);
+          console.log(`Token is still valid.`);
           results.push({
-            team_id: slack_team_id,
             status: 'not_expired',
-            message: `Token for team ${slack_team_id} is still valid.`,
+            message: `Token is still valid.`,
           });
         }
       } else {
-        console.log(`No token expiry data available for team ${slack_team_id}.`);
+        console.log(`No token expiry data available.`);
         results.push({
-          team_id: slack_team_id,
           status: 'no_expiry',
-          message: `No token expiry data available for team ${slack_team_id}.`,
+          message: `No token expiry data available.`,
         });
       }
     }
