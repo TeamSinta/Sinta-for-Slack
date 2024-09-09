@@ -139,7 +139,7 @@ const ConditionComponent: React.FC<ConditionProps> = ({
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Value
                 </Label>
-                {selectedField?.values?.length ?? 0 > 0 ? (
+                {(selectedField?.values?.length ?? 0 > 0) ? (
                     <Select
                         value={condition.value}
                         onValueChange={handleValueChange}

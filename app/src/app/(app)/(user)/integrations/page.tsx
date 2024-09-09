@@ -31,7 +31,7 @@ export default async function Integrations({
             {showConflictModal && <ConflictAlertModal />}
 
             <h2 className="text-lg font-medium">Your integrations</h2>
-            {slackIntegration ?? greenhouseIntegration ? (
+            {(slackIntegration ?? greenhouseIntegration) ? (
                 <>
                     {slackIntegration && (
                         <IntegrationCard
