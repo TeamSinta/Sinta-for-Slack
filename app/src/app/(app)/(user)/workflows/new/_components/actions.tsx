@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/card";
 import { LinkActionType } from "../../_components/message-buttons";
 import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
+import TestResult from "./testResults";
 const localStorageKey = "workflowActions";
 
 const saveActionData = (data) => {
@@ -105,6 +106,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     );
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [activeTab, setActiveTab] = useState("message");
+    const [testResult, setTestResult] = useState(null);
 
     useEffect(() => {
         setIsLoading(true);
@@ -162,7 +164,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     }, [customMessageBody, selectedRecipients]);
 
     const handleCustomMessageBodyChange = (value: string) => {
-        console.log(value);
         setCustomMessageBody(value);
     };
 
@@ -206,6 +207,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     };
 
     const handleTestConfiguration = async () => {
+        setTestResult(null);
         setTestButtonLoading(true);
 
         const payload = {
@@ -339,14 +341,37 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
             });
 
             if (response.ok) {
-                // Handle successful response
                 console.log("Test message sent successfully.");
+                setTestResult({
+                    success: true,
+                    status: response.status,
+                    message: `Status Code: ${response.status}`,
+                    data: response.data?.length
+                        ? response.data[0]
+                        : response.data,
+                });
             } else {
-                // Handle errors
                 console.error("Failed to send test message.");
+                throw new Error(
+                    `Error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`,
+                );
             }
         } catch (error) {
             console.error("Error occurred while sending test message:", error);
+            setTestResult({
+                success: false,
+                status: error.message.includes("HTTP error!")
+                    ? error.message
+                    : `Status: ${error.response?.status || "N/A"}`,
+                message: error.message.includes("HTTP error!")
+                    ? error.message
+                    : `Error: ${error.message}`,
+                data: error.response?.data
+                    ? Array.isArray(error.response.data)
+                        ? error.response.data[0]
+                        : error.response.data
+                    : null,
+            });
         } finally {
             setTestButtonLoading(false);
         }
@@ -657,6 +682,20 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                         "Run Test"
                                     )}
                                 </Button>
+                                {testResult && (
+                                    <TestResult
+                                        {...testResult}
+                                        data={
+                                            testResult?.data
+                                                ? JSON.stringify(
+                                                      testResult.data,
+                                                      null,
+                                                      2,
+                                                  )
+                                                : null
+                                        }
+                                    />
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>
