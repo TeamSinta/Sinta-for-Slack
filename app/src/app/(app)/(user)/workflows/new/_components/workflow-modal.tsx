@@ -14,7 +14,6 @@ import {
 import {
     getActionData,
     getConditionsData,
-    getOrgCookie,
     getTriggerData,
     getWorkflowName,
 } from "@/lib/utils";
@@ -22,6 +21,9 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import mixpanel from "mixpanel-browser";
 import { useSession } from "next-auth/react";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
+
 export const WorkflowPublishModal = ({
     edit = false,
     workflowId,
@@ -36,6 +38,7 @@ export const WorkflowPublishModal = ({
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const router = useRouter();
     const session = useSession();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const triggerData = getTriggerData();
     const actionData = getActionData();
     const conditionsData = getConditionsData();
@@ -88,7 +91,7 @@ export const WorkflowPublishModal = ({
             modal_page: "/workflows",
             modal_shown_at: new Date().toISOString(),
             user_id: session.data?.user?.id,
-            organization_id: getOrgCookie(),
+            organization_id: orgCookie,
         });
     }
 
