@@ -55,13 +55,18 @@ const fields = [
     { value: "coordinator_name", label: "Coordinator Name" },
 ];
 
-const ConditionsComponent = ({ onSaveConditions }) => {
+const ConditionsComponent = ({ onSaveConditions, workflowData }) => {
     const [conditions, setConditions] = useState([
         { id: 1, field: "", condition: "", value: "" },
     ]);
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const conditions = getConditionsData();
+        setConditions(conditions);
+    }, []);
 
     useEffect(() => {
         const fetchUsers = async () => {
