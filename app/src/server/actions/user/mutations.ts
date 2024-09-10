@@ -1,9 +1,11 @@
 "use server";
 import { db } from "@/server/db";
 import { accounts, userInsertSchema, users } from "@/server/db/schema";
+import MixpanelServer from "@/server/mixpanel";
 import { protectedProcedure, superAdminProcedure } from "@/server/procedures";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
+import { getOrganizations } from "../organization/queries";
 
 /**
  * Update the name of the user
@@ -128,7 +130,23 @@ export async function deleteUserMutation({ id }: DeleteUserProps) {
 
 export async function completeNewUserSetupMutation() {
     const { user } = await protectedProcedure();
+    const { currentOrg } = await getOrganizations();
+    MixpanelServer.identify(user.id, {
+        organization: currentOrg?.name,
+        organization_id: currentOrg?.id,
+        email: user.email,
+        signup_at: new Date(),
+        user_role: user.role,
+    });
 
+    MixpanelServer.track("User Signed up", {
+        organization_id: currentOrg?.id,
+        organization_name: currentOrg?.name,
+        email: user.email,
+        signup_at: new Date(),
+        user_role: user.role,
+        user_id: user.id,
+    });
     return await db
         .update(users)
         .set({ isNewUser: false })

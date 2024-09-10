@@ -39,6 +39,10 @@ import {
     postWelcomeMessage,
 } from "@/server/slack/core";
 import { addSlackUserIdToDB } from "@/server/actions/slack/query";
+import { getServerAuthSession } from "@/server/auth";
+import { getOrganizations } from "@/server/actions/organization/queries";
+import MixpanelServer from "@/server/mixpanel";
+
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
     type: string;
@@ -65,14 +69,14 @@ interface SlackAction {
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-
+    const session = await getServerAuthSession();
+    const { currentOrg } = await getOrganizations();
     if (!code) {
         return new NextResponse(
             JSON.stringify({ message: "Code parameter is missing." }),
             { status: 400 },
         );
     }
-
     const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
     const clientSecret = process.env.SLACK_CLIENT_SECRET;
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
@@ -135,6 +139,12 @@ export async function GET(req: NextRequest) {
 
             if (updateResponse === "OK") {
                 const url = `${siteUrls.teamsinta}/success/${json.team.id}`;
+                MixpanelServer.track("Integration Connected", {
+                    user_id: session?.user.id,
+                    organization_id: currentOrg.id,
+                    integration_id: 1,
+                    integration_name: "Slack",
+                });
                 return NextResponse.redirect(url);
             } else {
                 return new NextResponse(

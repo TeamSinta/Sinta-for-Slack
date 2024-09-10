@@ -4,11 +4,14 @@ import { integrationsPageConfig } from "./_constants/page-config";
 import {
     checkGreenhouseTeamIdFilled,
     checkSlackTeamIdFilled,
+    getOrganizations,
 } from "@/server/actions/organization/queries";
 
 import { GreenhouseIntegrationCard } from "./_components/gh-intergration-card";
 import { IntegrationCard } from "./_components/intergration-cards";
 import { ConflictAlertModal } from "./conflictAlertDialog";
+import MixpanelServer from "@/server/mixpanel";
+import { getUser } from "@/server/auth";
 
 export default async function Integrations({
     searchParams,
@@ -20,15 +23,31 @@ export default async function Integrations({
     if (searchParams === undefined) {
         searchParams = {};
     }
+    const user = await getUser();
+    const { currentOrg } = await getOrganizations();
     const showConflictModal =
         "conflict" in searchParams && searchParams.conflict !== undefined;
-
+    if (showConflictModal) {
+        MixpanelServer.track("Modal Shown", {
+            distinct_id: user?.id,
+            modal_name: "Slack Integration Conflict",
+            modal_page: "/integrations",
+            modal_shown_at: new Date().toISOString(),
+            user_id: user?.id,
+            organization_id: currentOrg?.id,
+        });
+    }
     return (
         <AppPageShell
             title={integrationsPageConfig.title}
             description={integrationsPageConfig.description}
         >
-            {showConflictModal && <ConflictAlertModal />}
+            {showConflictModal && (
+                <ConflictAlertModal
+                    userId={user?.id}
+                    organizationId={currentOrg?.id}
+                />
+            )}
 
             <h2 className="text-lg font-medium">Your integrations</h2>
             {(slackIntegration ?? greenhouseIntegration) ? (

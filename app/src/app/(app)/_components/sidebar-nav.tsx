@@ -21,6 +21,10 @@ import {
 import { ChevronDown } from "lucide-react";
 import { sidebarConfig } from "@/config/sidebar";
 import { type VariantProps } from "class-variance-authority";
+import mixpanel from "mixpanel-browser";
+import { type User } from "next-auth";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 
 /**
  * SidebarNav is a component that renders the sidebar navigation for the dashboard
@@ -54,11 +58,13 @@ function linkStyle({ active, disabled, className, ...props }: LinkStyleProps) {
 type SidebarNavProps = {
     sidebarNavIncludeIds?: string[];
     sidebarNavRemoveIds?: string[];
+    user?: User | null;
 };
 
 export function SidebarNav({
     sidebarNavIncludeIds,
     sidebarNavRemoveIds,
+    user,
 }: SidebarNavProps) {
     const isCollapsed = false;
 
@@ -167,6 +173,60 @@ export function SidebarNav({
                                                         )}
                                                     </AccordionContent>
                                                 </Tooltip>
+                                                <AccordionContent
+                                                    className={cn(
+                                                        " flex flex-col gap-1 pt-1",
+                                                        isCollapsed
+                                                            ? ""
+                                                            : "relative pl-7 pr-0",
+                                                    )}
+                                                >
+                                                    {item.subMenu.map(
+                                                        (subItem) => (
+                                                            <Tooltip
+                                                                key={
+                                                                    subItem.label
+                                                                }
+                                                            >
+                                                                <TooltipTrigger className="h-full w-full">
+                                                                    <NavLink
+                                                                        {...subItem}
+                                                                        Icon={
+                                                                            subItem.icon
+                                                                        }
+                                                                        active={isLinkActive(
+                                                                            pathname,
+                                                                            subItem.href,
+                                                                        )}
+                                                                        isCollapsed={
+                                                                            isCollapsed
+                                                                        }
+                                                                        user={
+                                                                            user
+                                                                        }
+                                                                    />
+                                                                </TooltipTrigger>
+                                                                {isCollapsed && (
+                                                                    <TooltipContent
+                                                                        side="right"
+                                                                        className="flex items-center gap-4 font-medium"
+                                                                    >
+                                                                        {
+                                                                            subItem.label
+                                                                        }
+                                                                    </TooltipContent>
+                                                                )}
+                                                            </Tooltip>
+                                                        ),
+                                                    )}
+
+                                                    {!isCollapsed && (
+                                                        <Separator
+                                                            orientation="vertical"
+                                                            className="absolute bottom-2 left-5 right-auto"
+                                                        />
+                                                    )}
+                                                </AccordionContent>
                                             </AccordionItem>
                                         </Accordion>
                                     ) : (
@@ -180,6 +240,7 @@ export function SidebarNav({
                                                         pathname,
                                                     )}
                                                     isCollapsed={isCollapsed}
+                                                    user={user}
                                                 />
                                             </TooltipTrigger>
                                             {isCollapsed && (
@@ -216,6 +277,7 @@ type NavLinkProps = {
     active?: boolean;
     isCollapsed?: boolean;
     size?: ButtonProps["size"];
+    user?: User | null;
 };
 
 function NavLink({
@@ -226,9 +288,24 @@ function NavLink({
     active,
     size = "default",
     isCollapsed,
+    user,
 }: NavLinkProps) {
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     return (
-        <Link href={href} className={linkStyle({ active, disabled, size })}>
+        <Link
+            href={href}
+            className={linkStyle({ active, disabled, size })}
+            onClick={() => {
+                mixpanel.track("Nav Bar Clicked", {
+                    distinct_id: user?.id,
+                    page: href,
+                    item_name: label,
+                    clicked_at: new Date().toISOString(),
+                    user_id: user?.id,
+                    organization_id: orgCookie,
+                });
+            }}
+        >
             <Icon
                 className={cn(
                     "flex-shrink-0",
