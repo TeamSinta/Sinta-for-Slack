@@ -29,7 +29,6 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({
     useEffect(() => {
         const fetchJobs = async () => {
             const jobs = await fetchJobsFromGreenhouse();
-            console.log("FETCHED JOBS", jobs);
             setJobs(jobs);
         };
         void fetchJobs();

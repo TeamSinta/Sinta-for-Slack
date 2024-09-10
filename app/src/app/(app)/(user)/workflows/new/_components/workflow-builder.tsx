@@ -131,7 +131,12 @@ export function WorkflowBuilder({
                     alertType: workflow.alertType,
                 };
                 const workflowActions = {
-                    recipients: workflow.recipient.recipients,
+                    recipients: workflow.recipient?.recipients,
+                    customMessageBody: workflow?.recipient.customMessageBody,
+                    messageButtons: workflow?.recipient.messageButtons,
+                    messageDelivery: workflow?.recipient.messageDelivery,
+                    messageFields: workflow?.recipient.messageFields,
+                    openingText: workflow?.recipient.openingText,
                 };
                 const workflowConditions = workflow.conditions;
 

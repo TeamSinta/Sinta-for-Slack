@@ -116,6 +116,20 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [activeTab, setActiveTab] = useState("message");
 
     useEffect(() => {
+        const actionData = getActionData();
+        console.log("ACTION DATA", actionData);
+        if (actionData) {
+            if (actionData?.customMessageBody)
+                setCustomMessageBody(actionData?.customMessageBody);
+            if (actionData?.messageFields)
+                setSelectedFields(actionData?.messageFields);
+            if (actionData?.messageButtons)
+                setButtons(actionData?.messageButtons);
+            if (actionData?.recipients)
+                setSelectedRecipients(actionData?.recipients);
+        }
+    }, []);
+    useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
             try {
