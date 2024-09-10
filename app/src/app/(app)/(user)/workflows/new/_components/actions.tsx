@@ -229,7 +229,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     blocks: [
                         {
                             type: "section",
-                            block_id: "ig1EJ",
+                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
                             text: {
                                 type: "mrkdwn",
                                 text: convertHtmlToSlackMrkdwn(
@@ -242,7 +242,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                             ? [
                                   {
                                       type: "divider",
-                                      block_id: "TYZqO",
                                   },
                               ]
                             : []),
@@ -260,7 +259,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                             ? [
                                   {
                                       type: "actions",
-                                      block_id: "block_id_5673600008",
                                       elements: buttons.map((item, index) => {
                                           return {
                                               type: "button",
