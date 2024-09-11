@@ -18,7 +18,7 @@ interface Stage {
 interface StagesDropdownProps {
     jobId: string;
     onStageSelect: (stageId: string, stageLabel: string) => void;
-    selectedStage: string;
+    selectedStage?: string;
 }
 
 const StagesDropdown: React.FC<StagesDropdownProps> = ({
