@@ -45,7 +45,6 @@ export function AuthForm({ type }: AuthFormProps) {
 
     const onSubmit = async (data: formSchemaType) => {
         setIsLoading(true);
-
         try {
             await signIn("email", {
                 email: data.email,

@@ -4,6 +4,8 @@ import { db } from "@/server/db";
 import { organizations } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
+import MixpanelServer from "@/server/mixpanel";
+import { getServerAuthSession } from "@/server/auth";
 
 export async function setGreenhouseDetails(
     subDomain: string,
@@ -19,5 +21,15 @@ export async function setGreenhouseDetails(
         })
         .where(eq(organizations.id, orgID))
         .execute();
+    if (result) {
+        const session = await getServerAuthSession();
+        MixpanelServer.track("Integration Connected", {
+            user_id: session?.user.id,
+            organization_id: orgID,
+            integration_id: 2,
+            integration_name: "Greenhouse",
+            integration_type: "ATS",
+        });
+    }
     return result ? "OK" : "Failed to update details";
 }

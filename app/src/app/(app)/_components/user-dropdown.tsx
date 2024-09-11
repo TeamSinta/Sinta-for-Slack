@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,10 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { z } from "zod";
 import { SignoutTrigger } from "@/components/signout-trigger";
+import { usePathname } from "next/navigation";
+import mixpanel from "mixpanel-browser";
+import useGetCookie from "@/hooks/use-get-cookie";
+import { orgConfig } from "@/config/organization";
 
 /**
  * to @add more navigation items to the user dropdown, you can add more items to the `userDropdownConfig` object in the
@@ -51,8 +56,9 @@ type UserDropdownContentProps = {
 };
 
 function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
+    const pathName = usePathname();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const isCollapsed = false;
-
     return (
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -124,7 +130,26 @@ function UserDropdownContent({ user, navItems }: UserDropdownContentProps) {
                         <DropdownMenuSeparator />
                     </Fragment>
                 ))}
-                <SignoutTrigger callbackUrl={siteUrls.publicUrl} asChild>
+                <SignoutTrigger
+                    callbackUrl={siteUrls.publicUrl}
+                    onClick={async () => {
+                        await new Promise((resolve) => {
+                            mixpanel.track(
+                                "User Logged Out",
+                                {
+                                    distinct_id: user?.id,
+                                    user_id: user?.id,
+                                    page_exit_at: new Date().toISOString(),
+                                    page_exit: pathName,
+                                    organization_id: orgCookie,
+                                },
+                                resolve,
+                            );
+                            mixpanel.reset();
+                        });
+                    }}
+                    asChild
+                >
                     <DropdownMenuItem asChild>
                         <button className="flex w-full cursor-pointer items-center gap-2 text-red-500 ">
                             <LogOutIcon className="h-4 w-4" />

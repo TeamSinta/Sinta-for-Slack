@@ -30,10 +30,13 @@ import { Icons } from "@/components/ui/icons";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAwaitableTransition } from "@/hooks/use-awaitable-transition";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { updateOrgImageMutation } from "@/server/actions/organization/mutations";
 import type { organizations } from "@/server/db/schema";
-
+import mixpanel from "mixpanel-browser";
+import { useSession } from "next-auth/react";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 type OrgImageFormProps = {
     currentOrg: typeof organizations.$inferSelect;
 };
@@ -42,7 +45,9 @@ const PROFILE_MAX_SIZE = 4;
 
 export function OrgImageForm({ currentOrg }: OrgImageFormProps) {
     const router = useRouter();
-
+    const session = useSession();
+    const orgCookie = useGetCookie(orgConfig.cookieName);
+    const pathname = usePathname();
     const [modalOpen, setModalOpen] = useState<boolean>(false);
 
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -104,9 +109,21 @@ export function OrgImageForm({ currentOrg }: OrgImageFormProps) {
         }
     };
 
+    function trackModalEvent(open: boolean) {
+        mixpanel.track(open ? "Modal Shown" : "Modal Dismissed", {
+            distinct_id: session.data?.user?.id,
+            modal_name: "Org Image Modal",
+            modal_page: pathname,
+            modal_shown_at: new Date().toISOString(),
+            user_id: session.data?.user?.id,
+            organization_id: orgCookie,
+        });
+    }
+
     return (
         <Dialog
             onOpenChange={(o) => {
+                trackModalEvent(o);
                 setModalOpen(o);
                 setFiles([]);
             }}
