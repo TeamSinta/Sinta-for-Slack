@@ -21,6 +21,8 @@ import { slackChannelsCreated } from "../db/schema";
 import { OpenAI } from "openai";
 import { env } from "@/env";
 import { combineGreenhouseRolesAndSlackUsers } from "@/app/api/cron/route";
+import { and, eq } from "drizzle-orm";
+import { membersToOrganizations } from "@/server/db/schema";
 
 interface SlackChannel {
     id: string;
@@ -1085,4 +1087,36 @@ async function fetchScorecards(candidateID) {
             ],
         },
     ];
+}
+
+export async function postMessageToChannel(userId: string, body: any) {
+    if (!userId) throw new Error("No user id found");
+    const { currentOrg } = await getOrganizations();
+    const teamId = currentOrg.slack_team_id;
+    if (!teamId) throw new Error("No team id found");
+
+    const accessToken = await getAccessToken(teamId);
+
+    const dbUser = await db.query.membersToOrganizations.findFirst({
+        where: and(
+            eq(membersToOrganizations.memberId, userId),
+            eq(membersToOrganizations.organizationId, currentOrg.id),
+        ),
+    });
+    if (!dbUser) throw new Error("No user found");
+    const slackUserId = dbUser?.slack_user_id;
+    const response = await fetch("https://slack.com/api/chat.postMessage", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+            attachments: body.attachments,
+            channel: slackUserId,
+        }),
+    });
+    if (!response.ok) throw new Error("Failed to post message");
+
+    return true;
 }

@@ -47,6 +47,7 @@ import { LinkActionType } from "../../_components/message-buttons";
 import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
 import TestResult from "./testResults";
 import { useSession } from "next-auth/react";
+import { postMessageToChannel } from "@/server/slack/core";
 const localStorageKey = "workflowActions";
 
 const isBrowser = typeof window !== "undefined";
@@ -301,32 +302,14 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
         };
 
         try {
-            // Send the message to the endpoint (to forward to Slack API because of CORS)
-            const response = await fetch("/api/slack/test", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    user: session?.data?.user,
-                    body: payload,
-                }),
+            await postMessageToChannel(session?.data?.user?.id, payload);
+            console.log("Test message sent successfully.");
+            setTestResult({
+                success: true,
+                status: 200,
+                message: `Status Code: 200`,
+                data: null,
             });
-
-            if (response.ok) {
-                console.log("Test message sent successfully.");
-                setTestResult({
-                    success: true,
-                    status: response.status,
-                    message: `Status Code: ${response.status}`,
-                    data: null,
-                });
-            } else {
-                console.error("Failed to send test message.");
-                throw new Error(
-                    `Error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`,
-                );
-            }
         } catch (error) {
             console.error("Error occurred while sending test message:", error);
             setTestResult({
