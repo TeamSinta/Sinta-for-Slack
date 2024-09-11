@@ -117,7 +117,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
 
     useEffect(() => {
         const actionData = getActionData();
-        console.log("ACTION DATA", actionData);
         if (actionData) {
             if (actionData?.customMessageBody)
                 setCustomMessageBody(actionData?.customMessageBody);

@@ -111,7 +111,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                 (workflowData.triggerConfig?.processor as string) ?? null,
             );
             if (workflowData.mainCondition.length > 0) {
-                setSelectedStage(workflowData.mainCondition[0].field ?? null);
+                setSelectedStage({
+                    id: workflowData?.mainCondition[0]?.field?.value,
+                    name: workflowData?.mainCondition[0]?.field?.label,
+                });
                 setDays(workflowData.mainCondition[0].value);
             }
         } else {
@@ -526,7 +529,8 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                                     handleStageChange
                                                 }
                                                 selectedStage={
-                                                    selectedStage.value
+                                                    selectedStage?.id ??
+                                                    undefined
                                                 }
                                             />
 
