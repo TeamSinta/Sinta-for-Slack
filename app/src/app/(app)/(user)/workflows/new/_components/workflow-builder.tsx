@@ -35,10 +35,13 @@ import WorkflowPublishModal from "./workflow-modal";
 import {
     updateWorkflowStatusMutation,
     updateWorkflowNameMutation,
+    updateWorkflowMutation,
 } from "@/server/actions/workflows/mutations";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getWorkflowById } from "@/server/actions/workflows/queries";
+import useGetCookie from "@/hooks/use-get-cookie";
+import { orgConfig } from "@/config/organization";
 
 const localStorageKeyTriggers = "workflowTriggers";
 const localStorageKeyActions = "workflowActions";
@@ -75,12 +78,12 @@ export function WorkflowBuilder({
 
     const [selectedElement, setSelectedElement] = useState(null);
     const [sidebarWidth, setSidebarWidth] = useState(500); // Default width set wider when first opened
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     const minSidebarWidth = 400; // Minimum width of the sidebar
     const maxSidebarWidth = 800; // Maximum width of the sidebar
     const [isActive, setIsActive] = useState(false); // State to track switch status
     const [workflowName, setWorkflowName] = useState("New Workflow");
     const [isEditingName, setIsEditingName] = useState(false);
-
     const { mutateAsync: updateStatusMutate, isPending: isUpdatingStatus } =
         useMutation({
             mutationFn: updateWorkflowStatusMutation,
@@ -103,6 +106,40 @@ export function WorkflowBuilder({
             toast.error("Failed to update workflow name.");
         },
     });
+
+    const { mutateAsync: updateWorkflowMutate } = useMutation({
+        mutationFn: updateWorkflowMutation, // Add your update name mutation function here
+        onSuccess: () => {
+            toast.success("Changes have been saved.");
+        },
+        onError: () => {
+            toast.error("Failed to save changes.");
+        },
+    });
+
+    async function updateDbData() {
+        const workflowTriggers = JSON.parse(
+            localStorage.getItem(localStorageKeyTriggers),
+        );
+        const recipient = JSON.parse(
+            localStorage.getItem(localStorageKeyActions),
+        );
+        const conditions = JSON.parse(
+            localStorage.getItem(localStorageKeyConditions),
+        );
+        const newDbData = {
+            id: workflowId[0],
+            name: workflowName,
+            objectField: workflowTriggers?.objectField,
+            alertType: workflowTriggers?.alertType,
+            organizationId: orgCookie,
+            triggerConfig: workflowTriggers?.triggerConfig,
+            recipient: recipient,
+            conditions: conditions,
+            status: isActive ? "Active" : "Inactive",
+        };
+        await updateWorkflowMutate(newDbData);
+    }
 
     useEffect(() => {
         const clearSpecificLocalStorageKeys = () => {
@@ -351,7 +388,7 @@ export function WorkflowBuilder({
         document.addEventListener("mouseup", stopDrag);
     };
 
-    const handleSaveActions = (data) => {
+    const handleSaveActions = async (data) => {
         const lastConditionIndex = steps
             .map((step) => step.type)
             .lastIndexOf("Condition");
@@ -369,6 +406,7 @@ export function WorkflowBuilder({
                 name: "Slack Action",
                 description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
             });
+            await updateDbData();
         } else {
             const newActionStep = {
                 id: steps.length,
@@ -390,7 +428,7 @@ export function WorkflowBuilder({
         setSelectedElement(null);
     };
 
-    const handleSaveTriggers = (data) => {
+    const handleSaveTriggers = async (data) => {
         localStorage.setItem(localStorageKeyTriggers, JSON.stringify(data));
 
         saveStep(1, {
@@ -398,9 +436,10 @@ export function WorkflowBuilder({
             description: `Trigger: ${data.description.substring(0, 50)}...`,
         });
         setSelectedElement(null);
+        await updateDbData();
     };
 
-    const handleSaveConditions = (data) => {
+    const handleSaveConditions = async (data) => {
         // Retrieve existing conditions from local storage
         const existingConditions =
             JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
@@ -432,6 +471,7 @@ export function WorkflowBuilder({
 
         setSteps(finalSteps);
         setSelectedElement(null);
+        await updateDbData();
     };
 
     const handleCloseSidebar = () => {
