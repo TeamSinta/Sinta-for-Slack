@@ -18,7 +18,7 @@ export function isLinkActive(href: string, pathname: string) {
     return pathname.startsWith(href);
 }
 
-export function getOrgCookie(orgId: string) {
+export function setOrgCookie(orgId: string) {
     document.cookie = `${orgConfig.cookieName}=${orgId}; path=/; max-age=31536000;`;
 }
 

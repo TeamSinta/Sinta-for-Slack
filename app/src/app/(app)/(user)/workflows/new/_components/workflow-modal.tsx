@@ -81,16 +81,7 @@ export const WorkflowPublishModal = ({
         validateData(); // Validate data whenever the modal opens
     }, [triggerData, actionData]);
 
-    function trackModalEvent(open: boolean) {
-        mixpanel.track(open ? "Modal Shown" : "Modal Dismissed", {
-            distinct_id: session.data?.user?.id,
-            modal_name: "Workflow Modal",
-            modal_page: "/workflows",
-            modal_shown_at: new Date().toISOString(),
-            user_id: session.data?.user?.id,
-            organization_id: getOrgCookie(),
-        });
-    }
+
 
     const handleOpenModal = (open: boolean) => {
         trackModalEvent(open);
