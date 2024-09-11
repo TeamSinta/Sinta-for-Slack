@@ -273,7 +273,6 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
-            {JSON.stringify(workflowData)}
             <div>
                 <div className="pt-2">
                     <div className="mb-4 flex items-center">
