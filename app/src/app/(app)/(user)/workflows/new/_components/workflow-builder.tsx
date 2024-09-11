@@ -84,6 +84,8 @@ export function WorkflowBuilder({
     const [isActive, setIsActive] = useState(false); // State to track switch status
     const [workflowName, setWorkflowName] = useState("New Workflow");
     const [isEditingName, setIsEditingName] = useState(false);
+    const [mainCondition, setMainCondition] = useState(null);
+
     const { mutateAsync: updateStatusMutate, isPending: isUpdatingStatus } =
         useMutation({
             mutationFn: updateWorkflowStatusMutation,
@@ -152,7 +154,6 @@ export function WorkflowBuilder({
         const loadWorkflowData = async (workflowId: string) => {
             try {
                 const workflow = await getWorkflowById(workflowId);
-
                 // Set switch status based on workflow data
                 setIsActive(workflow.status === "Active");
                 setWorkflowName(workflow.name || "Edit Workflow");
@@ -166,6 +167,9 @@ export function WorkflowBuilder({
                     objectField: workflow.objectField,
                     triggerConfig: workflow.triggerConfig,
                     alertType: workflow.alertType,
+                    mainCondition: workflow.conditions.filter((condition) => {
+                        return typeof condition.field === "object";
+                    }),
                 };
                 const workflowActions = {
                     recipients: workflow.recipient?.recipients,
@@ -175,7 +179,11 @@ export function WorkflowBuilder({
                     messageFields: workflow?.recipient.messageFields,
                     openingText: workflow?.recipient.openingText,
                 };
-                const workflowConditions = workflow.conditions;
+                const workflowConditions = workflow.conditions.filter(
+                    (condition) => {
+                        return typeof condition.field !== "object";
+                    },
+                );
 
                 // Store these parts into local storage
                 localStorage.setItem(
@@ -238,7 +246,7 @@ export function WorkflowBuilder({
 
             // Add condition steps without duplicates
             conditionsData.forEach((condition) => {
-                const conditionDescription = `${condition.field} ${condition.condition} ${typeof condition.value === "object" ? condition.value.name : condition.value}`;
+                const conditionDescription = `${typeof condition.field === "object" ? condition.field.label : condition.field} ${condition.condition} ${typeof condition.value === "object" ? condition.value.name : condition.value}`;
 
                 const conditionExists = newSteps.some(
                     (step) =>
@@ -246,17 +254,21 @@ export function WorkflowBuilder({
                         step.description === conditionDescription,
                 );
 
-                if (!conditionExists) {
+                if (!conditionExists && typeof condition.field !== "object") {
                     newSteps.push({
                         id: newSteps.length + 1,
                         type: "Condition",
-                        name: `Condition: ${condition.field}`,
+                        name: `Condition: ${typeof condition.field === "object" ? condition.field.label : condition.field}`,
                         status: "valid",
                         description: conditionDescription,
                         icon: filterIcon,
                         label: "Condition",
                     });
-                }
+                } else if (
+                    !mainCondition &&
+                    typeof condition.field === "object"
+                )
+                    setMainCondition(condition);
             });
 
             // Add action step at the end
