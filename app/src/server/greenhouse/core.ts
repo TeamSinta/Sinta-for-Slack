@@ -142,7 +142,6 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
-        console.log("here1?");
         return [];
     }
 };

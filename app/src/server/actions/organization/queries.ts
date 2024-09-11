@@ -383,7 +383,7 @@ export async function getUserPreferences(userId: string, teamId: string) {
     // Step 3: Adjust the role if it's "Admin" to match it with "Interviewer"
     let role = member.role;
     if (role === "Admin") {
-        role = "Interviewer";
+        role = "Recruiter";
     }
 
     console.log("User role:", role);
