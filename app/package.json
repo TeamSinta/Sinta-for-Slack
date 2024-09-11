@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "build": "next build",
-        "db:push": "npx drizzle-kit push",
+        "db:push": "drizzle-kit push",
         "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
         "dev": "next dev",
         "dev:turbo": "next dev --turbo",
@@ -56,6 +56,7 @@
         "dialog": "^0.3.1",
         "drizzle-orm": "^0.31.4",
         "drizzle-zod": "^0.5.1",
+        "drizzle-kit": "^0.22.8",
         "dropdown-menu": "^0.1.1",
         "eslint-plugin-unused-imports": "^3.1.0",
         "form": "^0.2.4",
@@ -103,7 +104,7 @@
         "uuid": "^9.0.1",
         "vaul": "^0.9.0",
         "zod": "^3.22.4",
-        "zustand": "^4.5.1"
+        "zustand": "^4.5.1",
     },
     "devDependencies": {
         "@tailwindcss/typography": "^0.5.12",
@@ -117,7 +118,6 @@
         "@typescript-eslint/eslint-plugin": "^7.1.0",
         "@typescript-eslint/parser": "^7.1.0",
         "autoprefixer": "^10.4.17",
-        "drizzle-kit": "^0.22.8",
         "eslint": "^8.57.0",
         "eslint-config-next": "^14.1.0",
         "pg": "^8.11.3",
