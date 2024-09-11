@@ -178,3 +178,8 @@ export const convertHtmlToSlackMrkdwn = (html: string) => {
 
     return html;
 };
+
+
+export function thousandToK(value: number) {
+  return value / 1000;
+}

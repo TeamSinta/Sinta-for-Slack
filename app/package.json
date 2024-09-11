@@ -86,6 +86,7 @@
         "react-hook-form": "^7.50.1",
         "react-quill": "^2.0.0",
         "react-wrap-balancer": "^1.1.0",
+        "recharts": "^2.12.7",
         "rehype-prism-plus": "^2.0.0",
         "remark": "^15.0.1",
         "resend": "^3.2.0",
