@@ -110,6 +110,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
             setSelectedJob(
                 (workflowData.triggerConfig?.processor as string) ?? null,
             );
+            if (workflowData.mainCondition.length > 0) {
+                setSelectedStage(workflowData.mainCondition[0].field ?? null);
+                setDays(workflowData.mainCondition[0].value);
+            }
         } else {
             setSelectedEvent(null); // Set to null if no workflowData
         }
@@ -269,6 +273,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
+            {JSON.stringify(workflowData)}
             <div>
                 <div className="pt-2">
                     <div className="mb-4 flex items-center">
@@ -519,6 +524,9 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                                 jobId={selectedJob}
                                                 onStageSelect={
                                                     handleStageChange
+                                                }
+                                                selectedStage={
+                                                    selectedStage.value
                                                 }
                                             />
 
