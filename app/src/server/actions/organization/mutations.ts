@@ -17,6 +17,7 @@ import { protectedProcedure } from "@/server/procedures";
 import { and, eq } from "drizzle-orm";
 import { getOrganizations } from "@/server/actions/organization/queries";
 import { z } from "zod";
+import MixpanelServer from "@/server/mixpanel";
 
 /**
  * Create a new organization mutations
@@ -55,6 +56,11 @@ export async function createOrgMutation({ ...props }: CreateOrgProps) {
         slack_user_id: null,
     });
 
+    MixpanelServer.track("Organization Created", {
+        organization_id: createOrg[0]!.id,
+        organization_name: organizationParse.data.name,
+        org_created_at: new Date(),
+    });
     return createOrg[0];
 }
 
@@ -164,6 +170,10 @@ export async function deleteOrgMutation() {
         throw new Error("You are not the owner of this organization");
     }
 
+    MixpanelServer.track("Organization Deleted", {
+        organiztion_id: currentOrg.id,
+        organization_name: currentOrg.name,
+    });
     return await db
         .delete(organizations)
         .where(eq(organizations.id, currentOrg.id))

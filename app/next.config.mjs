@@ -21,14 +21,14 @@ const nextConfig = {
         ignoreDuringBuilds: true,
     },
     async redirects() {
-      return [
-          {
-              source: '/',
-              destination: '/dashboard',
-              permanent: false, // Use true if the redirect is permanent (308 status code)
-          },
-      ];
-  },
+        return [
+            {
+                source: "/",
+                destination: "/dashboard",
+                permanent: false, // Use true if the redirect is permanent (308 status code)
+            },
+        ];
+    },
 };
 
 export default nextConfig;

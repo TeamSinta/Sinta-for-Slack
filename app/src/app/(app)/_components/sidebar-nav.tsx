@@ -21,6 +21,10 @@ import {
 import { ChevronDown } from "lucide-react";
 import { sidebarConfig } from "@/config/sidebar";
 import { type VariantProps } from "class-variance-authority";
+import mixpanel from "mixpanel-browser";
+import { type User } from "next-auth";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 
 /**
  * SidebarNav is a component that renders the sidebar navigation for the dashboard
@@ -54,11 +58,13 @@ function linkStyle({ active, disabled, className, ...props }: LinkStyleProps) {
 type SidebarNavProps = {
     sidebarNavIncludeIds?: string[];
     sidebarNavRemoveIds?: string[];
+    user?: User | null;
 };
 
 export function SidebarNav({
     sidebarNavIncludeIds,
     sidebarNavRemoveIds,
+    user,
 }: SidebarNavProps) {
     const isCollapsed = false;
 
@@ -82,25 +88,16 @@ export function SidebarNav({
                         <ul className="flex flex-col gap-1">
                             {nav.items.map((item) => (
                                 <li key={item.label}>
-                                    {/**
-                                     * if the item has a subMenu, we will render an accordion component to handle the subMenu
-                                     * otherwise, we will render a simple link
-                                     */}
                                     {item.subMenu ? (
                                         <Accordion
                                             type="single"
                                             collapsible
                                             defaultValue={
-                                                item.subMenu.find(
-                                                    (subItem: {
-                                                        label: string;
-                                                        href: string;
-                                                        icon: React.ComponentType<IconProps>;
-                                                    }) =>
-                                                        isLinkActive(
-                                                            pathname,
-                                                            subItem.href,
-                                                        ),
+                                                item.subMenu.find((subItem) =>
+                                                    isLinkActive(
+                                                        subItem.href,
+                                                        pathname,
+                                                    ),
                                                 )
                                                     ? item.label
                                                     : undefined
@@ -112,20 +109,22 @@ export function SidebarNav({
                                                         <AccordionTrigger
                                                             className={linkStyle(
                                                                 {
+                                                                    active: item.subMenu.some(
+                                                                        (
+                                                                            subItem,
+                                                                        ) =>
+                                                                            isLinkActive(
+                                                                                subItem.href,
+                                                                                pathname,
+                                                                            ),
+                                                                    ),
                                                                     className:
                                                                         "justify-between",
                                                                 },
                                                             )}
                                                         >
                                                             <div className="flex items-center justify-start gap-3 ">
-                                                                <item.icon
-                                                                    className={cn(
-                                                                        "flex-shrink-0",
-                                                                        isCollapsed
-                                                                            ? "h-5 w-5"
-                                                                            : "h-4 w-4 ",
-                                                                    )}
-                                                                />
+                                                                <item.icon className="h-4 w-4 flex-shrink-0" />
                                                                 {!isCollapsed && (
                                                                     <span className="truncate">
                                                                         {
@@ -136,17 +135,43 @@ export function SidebarNav({
                                                             </div>
                                                         </AccordionTrigger>
                                                     </TooltipTrigger>
-                                                    {isCollapsed && (
-                                                        <TooltipContent
-                                                            side="right"
-                                                            className="flex items-center gap-2 font-medium "
-                                                        >
-                                                            <span>
-                                                                {item.label}
-                                                            </span>
-                                                            <ChevronDown className="h-4 w-4" />
-                                                        </TooltipContent>
-                                                    )}
+                                                    <AccordionContent className="flex flex-col gap-1 pt-1">
+                                                        {item.subMenu.map(
+                                                            (subItem) => (
+                                                                <Tooltip
+                                                                    key={
+                                                                        subItem.label
+                                                                    }
+                                                                >
+                                                                    <TooltipTrigger className="h-full w-full">
+                                                                        <NavLink
+                                                                            {...subItem}
+                                                                            Icon={
+                                                                                subItem.icon
+                                                                            }
+                                                                            active={isLinkActive(
+                                                                                subItem.href,
+                                                                                pathname,
+                                                                            )}
+                                                                            isCollapsed={
+                                                                                isCollapsed
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {isCollapsed && (
+                                                                        <TooltipContent
+                                                                            side="right"
+                                                                            className="flex items-center gap-4 font-medium"
+                                                                        >
+                                                                            {
+                                                                                subItem.label
+                                                                            }
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
+                                                            ),
+                                                        )}
+                                                    </AccordionContent>
                                                 </Tooltip>
                                                 <AccordionContent
                                                     className={cn(
@@ -175,6 +200,9 @@ export function SidebarNav({
                                                                         )}
                                                                         isCollapsed={
                                                                             isCollapsed
+                                                                        }
+                                                                        user={
+                                                                            user
                                                                         }
                                                                     />
                                                                 </TooltipTrigger>
@@ -208,10 +236,11 @@ export function SidebarNav({
                                                     {...item}
                                                     Icon={item.icon}
                                                     active={isLinkActive(
-                                                        pathname,
                                                         item.href,
+                                                        pathname,
                                                     )}
                                                     isCollapsed={isCollapsed}
+                                                    user={user}
                                                 />
                                             </TooltipTrigger>
                                             {isCollapsed && (
@@ -248,6 +277,7 @@ type NavLinkProps = {
     active?: boolean;
     isCollapsed?: boolean;
     size?: ButtonProps["size"];
+    user?: User | null;
 };
 
 function NavLink({
@@ -258,9 +288,24 @@ function NavLink({
     active,
     size = "default",
     isCollapsed,
+    user,
 }: NavLinkProps) {
+    const orgCookie = useGetCookie(orgConfig.cookieName);
     return (
-        <Link href={href} className={linkStyle({ active, disabled, size })}>
+        <Link
+            href={href}
+            className={linkStyle({ active, disabled, size })}
+            onClick={() => {
+                mixpanel.track("Nav Bar Clicked", {
+                    distinct_id: user?.id,
+                    page: href,
+                    item_name: label,
+                    clicked_at: new Date().toISOString(),
+                    user_id: user?.id,
+                    organization_id: orgCookie,
+                });
+            }}
+        >
             <Icon
                 className={cn(
                     "flex-shrink-0",

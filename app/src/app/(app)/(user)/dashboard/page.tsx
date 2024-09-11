@@ -14,6 +14,8 @@ import {
     getFirstFiveWorkflows,
 } from "@/server/actions/organization/queries";
 import { Button } from "@/components/ui/button";
+import LogInTracker from "./_components/logInTracker";
+import GlobalClickTracker from "./_components/globalClickTracker";
 
 const mockData = {
     welcomeText: "Welcome to your Sinta Launchpad!",
@@ -47,7 +49,7 @@ export default async function DashboardPage() {
 
     const renderConnectCard = () => (
         <Card className="rounded-lg bg-background">
-            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
+            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-900">
                 <div className="flex items-center">
                     <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200">
                         1
@@ -97,7 +99,7 @@ export default async function DashboardPage() {
 
     const renderCreateWorkflowCard = () => (
         <Card className="mb-4 rounded-lg bg-background">
-            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
+            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-900">
                 <div className="flex items-center">
                     {slackIntegration && greenhouseIntegration ? (
                         <Zap className="mr-2 h-5 w-5" />
@@ -132,7 +134,7 @@ export default async function DashboardPage() {
 
     const renderActiveWorkflowsCard = () => (
         <Card className="mb-4 rounded-lg bg-background">
-            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
+            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-900">
                 <Zap className="mt-1.5 h-5 w-5 text-yellow-500 dark:text-yellow-400" />
                 <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                     Active Workflows
@@ -173,7 +175,7 @@ export default async function DashboardPage() {
 
     const renderConnectionStatusCard = () => (
         <Card className="rounded-lg bg-background">
-            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-700">
+            <CardHeader className="flex flex-row items-center gap-2 rounded-sm bg-gray-50 px-4 py-3 dark:bg-gray-900">
                 <CardTitle className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200">
                     <Cable className="mr-2 h-5 w-5 " />
                     Connection Status
@@ -212,9 +214,11 @@ export default async function DashboardPage() {
             title="Dashboard"
             description="Overview of your account usage and potential features"
         >
+            <LogInTracker />
+            <GlobalClickTracker />
             <div className="space-y-6 p-2">
                 <Card className="rounded-lg bg-background shadow">
-                    <CardHeader className="flex flex-row items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-700">
+                    <CardHeader className="flex flex-row items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-900">
                         <div className="flex items-center">
                             <Image
                                 src={homepageicon}

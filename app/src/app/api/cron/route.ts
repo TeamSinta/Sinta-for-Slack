@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
+//@ts-nocheck
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+
 import {
     createSlackChannel,
     getEmailsfromSlack,
@@ -42,6 +42,7 @@ import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
+import { format, parseISO } from "date-fns";
 
 // naming change? why mutation??
 // async function handleHiringRoom(hiring_room){
@@ -62,7 +63,7 @@ async function getAllCandidates() {
     const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
     const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
 }
-function getSlackUserIds(hiringroom, candidates, userMapping) {
+function getSlackUserIds(hiringroom: { recipient: any[]; }, candidates: any, userMapping: any) {
     // function buildHiringRoomRecipients(hiringroom, candidates, userMapping){
     hiringroom.recipient.map((recipient: any) => {
         if (recipient.source === "greenhouse") {
@@ -106,7 +107,7 @@ function getSlackIdsOfGreenHouseUsers(
     });
     return slackIds;
 }
-function getSlackUsersFromRecipient(hiringroomRecipient) {
+function getSlackUsersFromRecipient(hiringroomRecipient: { recipients: any[]; }) {
     const slackUsers = [];
     console.log("hiring room recipient", hiringroomRecipient);
     hiringroomRecipient.recipients.forEach((recipient) => {
@@ -217,7 +218,7 @@ function buildSlackChannelNameForCandidate(
     return channelName;
 }
 
-export async function handleIndividualHiringroom(hiringroom) {
+export async function handleIndividualHiringroom(hiringroom: { id: any; objectField: string; slackChannelFormat: string; recipient: { recipients: any[]; }; }) {
     const hiringroomId = hiringroom.id;
     console.log("indivi room - ", hiringroomId);
     // return
@@ -372,14 +373,14 @@ export async function handleHiringrooms() {
     }
     return hiringroomsLength;
 }
-function sanitizeChannelName(name) {
+function sanitizeChannelName(name: string) {
     return name
         .toLowerCase() // convert to lowercase
         .replace(/[^a-z0-9-_]/g, "-") // replace invalid characters with hyphens
         .slice(0, 79); // ensure the name is less than 80 characters
 }
 
-export function combineGreenhouseRolesAndSlackUsers(workflowRecipient) {
+export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: { recipient?: any[]; recipients?: any; }) {
     const greenhouseRecipients = [];
     let hasGreenhouse = false;
     const greenhouseRoles = [];

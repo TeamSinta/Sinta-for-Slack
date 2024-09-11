@@ -15,7 +15,7 @@ export function cn(...inputs: ClassValue[]) {
 
 // it tells you if the current link is active or not based on the pathname
 export function isLinkActive(href: string, pathname: string) {
-    return pathname === href;
+    return pathname.startsWith(href);
 }
 
 export function setOrgCookie(orgId: string) {
@@ -129,4 +129,52 @@ export const clearWorkflowStorage = () => {
     localStorage.removeItem(ACTION_STORAGE_KEY);
     localStorage.removeItem(CONDITIONS_STORAGE_KEY);
     clearWorkflowName(); // Clear the workflow name as well
+};
+
+// Convert HTML (particularly from react quill) to slack markdown
+export const convertHtmlToSlackMrkdwn = (html: string) => {
+    // Convert <p> to single newlines (line breaks in Slack)
+    html = html.replace(/<\/?p>/g, "\n");
+
+    // Convert "<p><br></p>" to "/n" (Creating a new line in react quill is represented as <p><br></p>)
+    html = html.replace(/<p>\s*<br\s*\/?>\s*<\/p>/g, "\n");
+
+    // Convert <strong> and <b> to Slack's bold (*text*)
+    html = html.replace(/<(b|strong)>(.*?)<\/\1>/g, "*$2*");
+
+    // Convert <em> and <i> to Slack's italic (_text_)
+    html = html.replace(/<(i|em)>(.*?)<\/\1>/g, "_$2_");
+
+    // Convert <del>, <s>, and <strike> to Slack's strikethrough (~text~)
+    html = html.replace(/<(del|s|strike)>(.*?)<\/\1>/g, "~$2~");
+
+    // Convert <a> to Slack's link (<url|text>)
+    html = html.replace(/<a href="(.*?)".*?>(.*?)<\/a>/g, "<$1|$2>");
+
+    // Convert <ul> and <ol> lists to Slack-style lists
+    // Unordered list
+    html = html.replace(
+        /<ul>\s*(<li>.*?<\/li>)\s*<\/ul>/gs,
+        (match: string, p1: string) => p1.replace(/<li>(.*?)<\/li>/g, "• $1"),
+    );
+
+    // Ordered list
+    html = html.replace(
+        /<ol>\s*(<li>.*?<\/li>)\s*<\/ol>/gs,
+        (match: string, p1: string) => p1.replace(/<li>(.*?)<\/li>/g, "1. $1"),
+    );
+
+    // Convert <blockquote> to Slack's blockquote (> text)
+    html = html.replace(/<blockquote>(.*?)<\/blockquote>/g, "> $1");
+
+    // Convert <code> to Slack's inline code (`code`)
+    html = html.replace(/<code>(.*?)<\/code>/g, "`$1`");
+
+    // Convert <pre> to Slack's block code (```code```)
+    html = html.replace(/<pre>(.*?)<\/pre>/g, "```\n$1\n```");
+
+    // Remove any remaining HTML tags (optional)
+    html = html.replace(/<\/?[^>]+(>|$)/g, "");
+
+    return html;
 };
