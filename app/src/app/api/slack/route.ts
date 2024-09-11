@@ -38,6 +38,7 @@ import {
     inviteUsersToChannel,
     postWelcomeMessage,
 } from "@/server/slack/core";
+import { addSlackUserIdToDB } from "@/server/actions/slack/query";
 import { getServerAuthSession } from "@/server/auth";
 import { getOrganizations } from "@/server/actions/organization/queries";
 import MixpanelServer from "@/server/mixpanel";
@@ -119,8 +120,23 @@ export async function GET(req: NextRequest) {
                 json.refresh_token,
                 expiresAt,
             );
+
             console.log("Access token updated:", updateResponse);
             console.log(json);
+
+            // Store the user's ID
+            const updateUserResponse = await addSlackUserIdToDB(
+                json.authed_user.id,
+            );
+            if (!updateUserResponse) {
+                return new NextResponse(
+                    JSON.stringify({
+                        message: "Failed to set slack user ID.",
+                    }),
+                    { status: 500 },
+                );
+            }
+
             if (updateResponse === "OK") {
                 const url = `${siteUrls.teamsinta}/success/${json.team.id}`;
                 MixpanelServer.track("Integration Connected", {

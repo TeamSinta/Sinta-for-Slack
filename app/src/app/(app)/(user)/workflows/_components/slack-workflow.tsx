@@ -291,7 +291,7 @@ const SlackWorkflow: React.FC<SlackWorkflowProps> = ({
             {/* Multi-Select for Recipients */}
             <div className="my-4">
                 <Label>Recipients</Label>
-                <FancyMultiSelect
+                <FancyMultiySelect
                     selectedOptions={selectedRecipients}
                     onOptionChange={handleRecipientsChange}
                     options={options}
