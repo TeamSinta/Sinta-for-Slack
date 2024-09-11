@@ -1,4 +1,6 @@
 {
+  "id": "b1c13338-809b-41d8-bc1d-48b2a3cea134",
+  "prevId": "50aac6c4-7c09-42a4-a5d8-214b4cabbddf",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -75,6 +77,7 @@
       },
       "indexes": {
         "account_userId_idx": {
+          "name": "account_userId_idx",
           "columns": [
             {
               "expression": "userId",
@@ -83,26 +86,25 @@
               "nulls": "last"
             }
           ],
-          "with": {},
-          "name": "account_userId_idx",
           "isUnique": false,
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "teamsinta-saas-starterkit_account_userId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_account_userId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_account",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "userId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -173,15 +175,134 @@
         "teamsinta-saas-starterkit_feedback_userId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_feedback_userId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_feedback",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "userId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.teamsinta-saas-starterkit_hiringroom": {
+      "name": "teamsinta-saas-starterkit_hiringroom",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "objectField": {
+          "name": "objectField",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alertType": {
+          "name": "alertType",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conditions": {
+          "name": "conditions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trigger_config": {
+          "name": "trigger_config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipient": {
+          "name": "recipient",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "hiringroom_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Active'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modifiedAt": {
+          "name": "modifiedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slackChannelFormat": {
+          "name": "slackChannelFormat",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ownerId": {
+          "name": "ownerId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizationId": {
+          "name": "organizationId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "teamsinta-saas-starterkit_hiringroom_ownerId_teamsinta-saas-starterkit_user_id_fk": {
+          "name": "teamsinta-saas-starterkit_hiringroom_ownerId_teamsinta-saas-starterkit_user_id_fk",
+          "tableFrom": "teamsinta-saas-starterkit_hiringroom",
+          "tableTo": "teamsinta-saas-starterkit_user",
+          "columnsFrom": [
+            "ownerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "teamsinta-saas-starterkit_hiringroom_organizationId_teamsinta-saas-starterkit_organization_id_fk": {
+          "name": "teamsinta-saas-starterkit_hiringroom_organizationId_teamsinta-saas-starterkit_organization_id_fk",
+          "tableFrom": "teamsinta-saas-starterkit_hiringroom",
+          "tableTo": "teamsinta-saas-starterkit_organization",
+          "columnsFrom": [
+            "organizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -222,7 +343,13 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Viewer'"
+          "default": "'Interviewer'"
+        },
+        "slack_user_id": {
+          "name": "slack_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
         },
         "createdAt": {
           "name": "createdAt",
@@ -237,28 +364,28 @@
         "teamsinta-saas-starterkit_membersToOrganizations_memberId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_membersToOrganizations_memberId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_membersToOrganizations",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "memberId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "teamsinta-saas-starterkit_membersToOrganizations_organizationId_teamsinta-saas-starterkit_organization_id_fk": {
           "name": "teamsinta-saas-starterkit_membersToOrganizations_organizationId_teamsinta-saas-starterkit_organization_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_membersToOrganizations",
+          "tableTo": "teamsinta-saas-starterkit_organization",
           "columnsFrom": [
             "organizationId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_organization",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -306,6 +433,7 @@
       },
       "indexes": {
         "orgRequest_organizationId_idx": {
+          "name": "orgRequest_organizationId_idx",
           "columns": [
             {
               "expression": "organizationId",
@@ -314,39 +442,38 @@
               "nulls": "last"
             }
           ],
-          "with": {},
-          "name": "orgRequest_organizationId_idx",
           "isUnique": false,
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "teamsinta-saas-starterkit_orgRequest_userId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_orgRequest_userId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_orgRequest",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "userId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "teamsinta-saas-starterkit_orgRequest_organizationId_teamsinta-saas-starterkit_organization_id_fk": {
           "name": "teamsinta-saas-starterkit_orgRequest_organizationId_teamsinta-saas-starterkit_organization_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_orgRequest",
+          "tableTo": "teamsinta-saas-starterkit_organization",
           "columnsFrom": [
             "organizationId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_organization",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -394,21 +521,39 @@
           "primaryKey": false,
           "notNull": false
         },
-        "access_token": {
-          "name": "access_token",
-          "type": "varchar(1024)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "slack_access_token": {
           "name": "slack_access_token",
           "type": "varchar(1024)",
           "primaryKey": false,
           "notNull": false
         },
+        "slack_refresh_token": {
+          "name": "slack_refresh_token",
+          "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "token_expiry": {
+          "name": "token_expiry",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "incoming_webhook_url": {
           "name": "incoming_webhook_url",
           "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "greenhouse_api_token": {
+          "name": "greenhouse_api_token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "greenhouse_subdomain": {
+          "name": "greenhouse_subdomain",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         }
@@ -418,15 +563,15 @@
         "teamsinta-saas-starterkit_organization_ownerId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_organization_ownerId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_organization",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "ownerId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -457,6 +602,7 @@
       },
       "indexes": {
         "session_userId_idx": {
+          "name": "session_userId_idx",
           "columns": [
             {
               "expression": "userId",
@@ -465,26 +611,216 @@
               "nulls": "last"
             }
           ],
-          "with": {},
-          "name": "session_userId_idx",
           "isUnique": false,
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "teamsinta-saas-starterkit_session_userId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_session_userId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_session",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "userId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.teamsinta-saas-starterkit_slack_channels_created": {
+      "name": "teamsinta-saas-starterkit_slack_channels_created",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channelId": {
+          "name": "channelId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "greenhouseCandidateId": {
+          "name": "greenhouseCandidateId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "greenhouseJobId": {
+          "name": "greenhouseJobId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isArchived": {
+          "name": "isArchived",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "invited_users": {
+          "name": "invited_users",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "hiringroomId": {
+          "name": "hiringroomId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channelFormat": {
+          "name": "channelFormat",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.teamsinta-saas-starterkit_user_preferences": {
+      "name": "teamsinta-saas-starterkit_user_preferences",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizationId": {
+          "name": "organizationId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "org-member-role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "upcomingInterviews": {
+          "name": "upcomingInterviews",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "pendingFeedback": {
+          "name": "pendingFeedback",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "videoConferenceLink": {
+          "name": "videoConferenceLink",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "resources": {
+          "name": "resources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "teamsinta-saas-starterkit_user_preferences_userId_teamsinta-saas-starterkit_user_id_fk": {
+          "name": "teamsinta-saas-starterkit_user_preferences_userId_teamsinta-saas-starterkit_user_id_fk",
+          "tableFrom": "teamsinta-saas-starterkit_user_preferences",
+          "tableTo": "teamsinta-saas-starterkit_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "teamsinta-saas-starterkit_user_preferences_organizationId_teamsinta-saas-starterkit_organization_id_fk": {
+          "name": "teamsinta-saas-starterkit_user_preferences_organizationId_teamsinta-saas-starterkit_organization_id_fk",
+          "tableFrom": "teamsinta-saas-starterkit_user_preferences",
+          "tableTo": "teamsinta-saas-starterkit_organization",
+          "columnsFrom": [
+            "organizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -675,28 +1011,28 @@
         "teamsinta-saas-starterkit_workflow_ownerId_teamsinta-saas-starterkit_user_id_fk": {
           "name": "teamsinta-saas-starterkit_workflow_ownerId_teamsinta-saas-starterkit_user_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_workflow",
+          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsFrom": [
             "ownerId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "teamsinta-saas-starterkit_workflow_organizationId_teamsinta-saas-starterkit_organization_id_fk": {
           "name": "teamsinta-saas-starterkit_workflow_organizationId_teamsinta-saas-starterkit_organization_id_fk",
           "tableFrom": "teamsinta-saas-starterkit_workflow",
+          "tableTo": "teamsinta-saas-starterkit_organization",
           "columnsFrom": [
             "organizationId"
           ],
-          "tableTo": "teamsinta-saas-starterkit_organization",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -704,6 +1040,15 @@
     }
   },
   "enums": {
+    "public.assignment_status": {
+      "name": "assignment_status",
+      "schema": "public",
+      "values": [
+        "Active",
+        "Inactive",
+        "Archived"
+      ]
+    },
     "public.feedback-label": {
       "name": "feedback-label",
       "schema": "public",
@@ -725,14 +1070,32 @@
         "Closed"
       ]
     },
+    "public.hiringroom_status": {
+      "name": "hiringroom_status",
+      "schema": "public",
+      "values": [
+        "Active",
+        "Inactive",
+        "Archived"
+      ]
+    },
     "public.org-member-role": {
       "name": "org-member-role",
       "schema": "public",
       "values": [
-        "Viewer",
-        "Developer",
-        "Billing",
+        "Interviewer",
+        "Recruiter",
+        "Hiring Manager",
         "Admin"
+      ]
+    },
+    "public.slack_channels_created_status": {
+      "name": "slack_channels_created_status",
+      "schema": "public",
+      "values": [
+        "Active",
+        "Inactive",
+        "Archived"
       ]
     },
     "public.role": {
@@ -756,10 +1119,8 @@
   },
   "schemas": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "id": "50aac6c4-7c09-42a4-a5d8-214b4cabbddf",
-  "prevId": "00000000-0000-0000-0000-000000000000"
+    "tables": {}
+  }
 }
