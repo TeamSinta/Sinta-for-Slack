@@ -55,6 +55,8 @@ export const siteUrls = {
         blog: "/admin/blog",
         settings: "/admin/settings",
         feedbacks: "/admin/feedbacks",
+        analytics: "https://mixpanel.com/project/3406233/view/3910937/app/home",
+
     },
     profile: {
         settings: "/profile/settings",
