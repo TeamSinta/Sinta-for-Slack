@@ -135,9 +135,12 @@ export function WorkflowBuilder({
             objectField: workflowTriggers?.objectField,
             alertType: workflowTriggers?.alertType,
             organizationId: orgCookie,
-            triggerConfig: workflowTriggers?.triggerConfig,
+            triggerConfig: {
+                apiUrl: workflowTriggers?.apiUrl,
+                processor: workflowTriggers?.processor,
+            },
             recipient: recipient,
-            conditions: conditions,
+            conditions: [...workflowTriggers?.mainCondition, ...conditions],
             status: isActive ? "Active" : "Inactive",
         };
         await updateWorkflowMutate(newDbData);
