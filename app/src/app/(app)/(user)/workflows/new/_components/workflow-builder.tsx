@@ -169,6 +169,8 @@ export function WorkflowBuilder({
                 const workflowTriggers = {
                     objectField: workflow.objectField,
                     triggerConfig: workflow.triggerConfig,
+                    processor: workflow?.triggerConfig?.processor,
+                    apiUrl: workflow?.triggerConfig?.apiUrl,
                     alertType: workflow.alertType,
                     mainCondition: workflow.conditions.filter((condition) => {
                         return typeof condition.field === "object";
@@ -415,7 +417,6 @@ export function WorkflowBuilder({
         const actionExists = steps.some(
             (step) => step.type === "Action" && step.status === "valid",
         );
-
         if (actionExists) {
             saveStep(actionIndex, {
                 name: "Slack Action",
@@ -444,8 +445,6 @@ export function WorkflowBuilder({
     };
 
     const handleSaveTriggers = async (data) => {
-        localStorage.setItem(localStorageKeyTriggers, JSON.stringify(data));
-
         saveStep(1, {
             name: "Greenhouse Trigger",
             description: `Trigger: ${data.description.substring(0, 50)}...`,
@@ -483,7 +482,6 @@ export function WorkflowBuilder({
         const finalSteps = [triggerStep, ...newSteps, actionStep].filter(
             Boolean,
         ); // Filter out any undefined steps
-
         setSteps(finalSteps);
         setSelectedElement(null);
         await updateDbData();
