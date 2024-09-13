@@ -59,7 +59,7 @@ const fields = [
 const ConditionsComponent = ({
     onSaveConditions,
     workflowData,
-    selectedElement,
+    selectedElementId,
 }) => {
     const [conditions, setConditions] = useState([
         { id: 1, field: "", condition: "", value: "" },
@@ -71,19 +71,15 @@ const ConditionsComponent = ({
     const [highlightedConditionIndex, setHighlightedConditionIndex] =
         useState(null);
     useEffect(() => {
-        const conditions = getConditionsData();
-        setConditions(conditions);
-    }, []);
-
-    useEffect(() => {
-        if (selectedElement?.id && componentsRef.current[selectedElement.id]) {
-            componentsRef.current[selectedElement.id]?.scrollIntoView({
+        setConditions(getConditionsData());
+        if (selectedElementId && componentsRef.current[selectedElementId]) {
+            componentsRef.current[selectedElementId]?.scrollIntoView({
                 behavior: "smooth",
                 block: "nearest",
             });
-            setHighlightedConditionIndex(selectedElement?.id);
+            setHighlightedConditionIndex(selectedElementId);
         }
-    }, [selectedElement]);
+    }, [selectedElementId]);
 
     useEffect(() => {
         if (highlightedConditionIndex !== null) {
@@ -196,7 +192,11 @@ const ConditionsComponent = ({
                     {conditions.map((condition, index) => (
                         <Card
                             key={condition.id}
-                            className={"mb-4 "}
+                            className={cn(
+                                "mb-4 transition-colors duration-500",
+                                condition.id === highlightedConditionIndex &&
+                                    "border-emerald-500",
+                            )}
                             ref={(el) =>
                                 (componentsRef.current[condition.id] = el)
                             }
@@ -218,15 +218,11 @@ const ConditionsComponent = ({
                                     Define a condition to filter on.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent
-                                className={cn(
-                                    "space-y-4",
-                                    condition.id === selectedElement?.id &&
-                                        "border-2 border-x-emerald-800",
-                                )}
-                            >
+                            <CardContent className={"space-y-4 "}>
                                 <div className="flex flex-col space-y-2">
-                                    <div>{JSON.stringify(condition)}</div>
+                                    <div className="text-wrap break-all">
+                                        {JSON.stringify(condition)}
+                                    </div>
                                     <div>
                                         <Select
                                             value={condition.field}

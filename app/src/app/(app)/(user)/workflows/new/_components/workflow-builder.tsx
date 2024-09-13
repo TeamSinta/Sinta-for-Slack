@@ -264,6 +264,7 @@ export function WorkflowBuilder({
                 if (!conditionExists && typeof condition.field !== "object") {
                     newSteps.push({
                         id: newSteps.length + 1,
+                        conditionId: condition?.id as number,
                         type: "Condition",
                         name: `Condition: ${typeof condition.field === "object" ? condition.field.label : condition.field}`,
                         status: "valid",
@@ -350,6 +351,12 @@ export function WorkflowBuilder({
     const addConditionStep = () => {
         const newConditionStep = {
             id: steps.length + 1,
+            conditionId:
+                Math.max(
+                    ...steps
+                        .filter((s) => s.type === "Condition")
+                        .map((c) => c?.conditionId ?? 0),
+                ) + 1,
             type: "Condition",
             name: "",
             status: "skeleton",
@@ -775,7 +782,9 @@ export function WorkflowBuilder({
                             ))}
                         </AnimatePresence>
                     </div>
-                    <div>{JSON.stringify(selectedElement)}</div>
+                    <div className="max-w-80 text-wrap break-all">
+                        {JSON.stringify(selectedElement)}
+                    </div>
                 </div>
 
                 <AnimatePresence>
@@ -851,7 +860,9 @@ export function WorkflowBuilder({
                                                   )
                                                 : null
                                         }
-                                        element={selectedElement}
+                                        selectedElementId={
+                                            selectedElement.conditionId
+                                        }
                                     />
                                 )}
                             </div>
