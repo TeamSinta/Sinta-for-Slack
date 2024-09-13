@@ -85,6 +85,8 @@ export function WorkflowBuilder({
     const [workflowName, setWorkflowName] = useState("New Workflow");
     const [isEditingName, setIsEditingName] = useState(false);
     const [mainCondition, setMainCondition] = useState(null);
+    const [displayAddStepPopoverIndex, setDisplayAddStepPopoverIndex] =
+        useState([]);
 
     const { mutateAsync: updateStatusMutate, isPending: isUpdatingStatus } =
         useMutation({
@@ -206,6 +208,9 @@ export function WorkflowBuilder({
 
                 // Load steps from local storage now that it's populated
                 loadStepsFromLocalStorage();
+                setDisplayAddStepPopoverIndex(
+                    Array(workflowConditions.length).fill(false),
+                );
             } catch (error) {
                 console.error("Error loading workflow data:", error);
             }
@@ -370,6 +375,17 @@ export function WorkflowBuilder({
                 ...stepsAfterAction,
             ];
         });
+        setDisplayAddStepPopoverIndex((prev) =>
+            Array(prev.length + 1).fill(false),
+        );
+        // Add the new condition to local storage
+        const conditions = JSON.parse(
+            localStorage.getItem(localStorageKeyConditions),
+        );
+        localStorage.setItem(
+            localStorageKeyConditions,
+            JSON.stringify([...conditions, newConditionStep]),
+        );
         moveActionStepToEnd();
     };
 
@@ -681,23 +697,58 @@ export function WorkflowBuilder({
                                     {index < steps.length - 1 && (
                                         <div className="flex flex-col items-center ">
                                             <div className="mb-1 h-4 w-px bg-indigo-300"></div>
-                                            <Popover>
+                                            <Popover
+                                            // open={
+                                            //     displayAddStepPopoverIndex[
+                                            //         index
+                                            //     ]
+                                            // }
+                                            >
                                                 <PopoverTrigger asChild>
-                                                    <button className="text-indigo-500">
+                                                    <button
+                                                        className="text-indigo-500"
+                                                        // onClick={() => {
+                                                        //     setDisplayAddStepPopoverIndex(
+                                                        //         (prev) => {
+                                                        //             const res =
+                                                        //                 prev;
+                                                        //             res[index] =
+                                                        //                 !res[
+                                                        //                     index
+                                                        //                 ];
+                                                        //             return res;
+                                                        //         },
+                                                        //     );
+                                                        // }}
+                                                    >
                                                         <PlusCircleIcon className="h-6 w-6" />
                                                     </button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="rounded-lg p-4 shadow-lg">
                                                     <Select
+                                                        open={
+                                                            displayAddStepPopoverIndex[
+                                                                index
+                                                            ]
+                                                        }
                                                         onValueChange={(
                                                             value,
-                                                        ) =>
+                                                        ) => {
                                                             value ===
                                                                 "Condition" &&
-                                                            addConditionStep(
-                                                                index,
-                                                            )
-                                                        }
+                                                                addConditionStep(
+                                                                    index,
+                                                                );
+                                                            setDisplayAddStepPopoverIndex(
+                                                                (prev) => {
+                                                                    const res =
+                                                                        prev;
+                                                                    res[index] =
+                                                                        false;
+                                                                    return res;
+                                                                },
+                                                            );
+                                                        }}
                                                     >
                                                         <SelectTrigger className="flex w-full items-center space-x-2">
                                                             <PlusCircleIcon className="h-5 w-5 text-gray-500" />
