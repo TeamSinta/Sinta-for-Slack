@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Select,
     SelectContent,
@@ -19,6 +19,7 @@ import {
 import { Trash2, PlusCircle, FilterIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
+import { cn } from "@/lib/utils";
 
 const localStorageKey = "workflowConditions";
 
@@ -55,18 +56,44 @@ const fields = [
     { value: "coordinator_name", label: "Coordinator Name" },
 ];
 
-const ConditionsComponent = ({ onSaveConditions, workflowData }) => {
+const ConditionsComponent = ({
+    onSaveConditions,
+    workflowData,
+    selectedElement,
+}) => {
     const [conditions, setConditions] = useState([
         { id: 1, field: "", condition: "", value: "" },
     ]);
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-
+    const componentsRef = useRef<Record<number, HTMLDivElement | null>>({});
+    const [highlightedConditionIndex, setHighlightedConditionIndex] =
+        useState(null);
     useEffect(() => {
         const conditions = getConditionsData();
         setConditions(conditions);
     }, []);
+
+    useEffect(() => {
+        if (selectedElement?.id && componentsRef.current[selectedElement.id]) {
+            componentsRef.current[selectedElement.id]?.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+            });
+            setHighlightedConditionIndex(selectedElement?.id);
+        }
+    }, [selectedElement]);
+
+    useEffect(() => {
+        if (highlightedConditionIndex !== null) {
+            const timer = setTimeout(() => {
+                setHighlightedConditionIndex(null);
+            }, 2000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [highlightedConditionIndex]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -167,7 +194,13 @@ const ConditionsComponent = ({ onSaveConditions, workflowData }) => {
 
                 <div className="space-y-4">
                     {conditions.map((condition, index) => (
-                        <Card key={condition.id} className="mb-4">
+                        <Card
+                            key={condition.id}
+                            className={"mb-4 "}
+                            ref={(el) =>
+                                (componentsRef.current[condition.id] = el)
+                            }
+                        >
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     Condition
@@ -185,8 +218,15 @@ const ConditionsComponent = ({ onSaveConditions, workflowData }) => {
                                     Define a condition to filter on.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent
+                                className={cn(
+                                    "space-y-4",
+                                    condition.id === selectedElement?.id &&
+                                        "border-2 border-x-emerald-800",
+                                )}
+                            >
                                 <div className="flex flex-col space-y-2">
+                                    <div>{JSON.stringify(condition)}</div>
                                     <div>
                                         <Select
                                             value={condition.field}

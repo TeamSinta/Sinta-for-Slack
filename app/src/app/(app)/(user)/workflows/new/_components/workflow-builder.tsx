@@ -85,8 +85,8 @@ export function WorkflowBuilder({
     const [workflowName, setWorkflowName] = useState("New Workflow");
     const [isEditingName, setIsEditingName] = useState(false);
     const [mainCondition, setMainCondition] = useState(null);
-    const [displayAddStepPopoverIndex, setDisplayAddStepPopoverIndex] =
-        useState([]);
+    const [selectValue, setSelectValue] = useState(undefined);
+    const [openPopoverIndex, setOpenPopoverIndex] = useState(null);
 
     const { mutateAsync: updateStatusMutate, isPending: isUpdatingStatus } =
         useMutation({
@@ -208,9 +208,6 @@ export function WorkflowBuilder({
 
                 // Load steps from local storage now that it's populated
                 loadStepsFromLocalStorage();
-                setDisplayAddStepPopoverIndex(
-                    Array(workflowConditions.length).fill(false),
-                );
             } catch (error) {
                 console.error("Error loading workflow data:", error);
             }
@@ -375,9 +372,7 @@ export function WorkflowBuilder({
                 ...stepsAfterAction,
             ];
         });
-        setDisplayAddStepPopoverIndex((prev) =>
-            Array(prev.length + 1).fill(false),
-        );
+
         // Add the new condition to local storage
         const conditions = JSON.parse(
             localStorage.getItem(localStorageKeyConditions),
@@ -387,6 +382,9 @@ export function WorkflowBuilder({
             JSON.stringify([...conditions, newConditionStep]),
         );
         moveActionStepToEnd();
+        setSelectValue(undefined);
+        setOpenPopoverIndex(null);
+        setSelectedElement(newConditionStep);
     };
 
     const moveActionStepToEnd = () => {
@@ -698,39 +696,35 @@ export function WorkflowBuilder({
                                         <div className="flex flex-col items-center ">
                                             <div className="mb-1 h-4 w-px bg-indigo-300"></div>
                                             <Popover
-                                            // open={
-                                            //     displayAddStepPopoverIndex[
-                                            //         index
-                                            //     ]
-                                            // }
+                                                open={
+                                                    openPopoverIndex === index
+                                                }
+                                                onOpenChange={(open) => {
+                                                    if (open === true)
+                                                        setOpenPopoverIndex(
+                                                            index,
+                                                        );
+                                                    else
+                                                        setOpenPopoverIndex(
+                                                            false,
+                                                        );
+                                                }}
                                             >
                                                 <PopoverTrigger asChild>
                                                     <button
                                                         className="text-indigo-500"
-                                                        // onClick={() => {
-                                                        //     setDisplayAddStepPopoverIndex(
-                                                        //         (prev) => {
-                                                        //             const res =
-                                                        //                 prev;
-                                                        //             res[index] =
-                                                        //                 !res[
-                                                        //                     index
-                                                        //                 ];
-                                                        //             return res;
-                                                        //         },
-                                                        //     );
-                                                        // }}
+                                                        onClick={() =>
+                                                            setOpenPopoverIndex(
+                                                                index,
+                                                            )
+                                                        }
                                                     >
                                                         <PlusCircleIcon className="h-6 w-6" />
                                                     </button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="rounded-lg p-4 shadow-lg">
                                                     <Select
-                                                        open={
-                                                            displayAddStepPopoverIndex[
-                                                                index
-                                                            ]
-                                                        }
+                                                        value={setSelectValue}
                                                         onValueChange={(
                                                             value,
                                                         ) => {
@@ -739,20 +733,15 @@ export function WorkflowBuilder({
                                                                 addConditionStep(
                                                                     index,
                                                                 );
-                                                            setDisplayAddStepPopoverIndex(
-                                                                (prev) => {
-                                                                    const res =
-                                                                        prev;
-                                                                    res[index] =
-                                                                        false;
-                                                                    return res;
-                                                                },
+                                                            setSelectValue(
+                                                                value,
                                                             );
                                                         }}
                                                     >
                                                         <SelectTrigger className="flex w-full items-center space-x-2">
                                                             <PlusCircleIcon className="h-5 w-5 text-gray-500" />
-                                                            <SelectValue placeholder="Add Step" />
+                                                            {/* <SelectValue placeholder="Add Step" /> */}
+                                                            <div>Add Step</div>
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="Condition">
@@ -786,6 +775,7 @@ export function WorkflowBuilder({
                             ))}
                         </AnimatePresence>
                     </div>
+                    <div>{JSON.stringify(selectedElement)}</div>
                 </div>
 
                 <AnimatePresence>
@@ -861,6 +851,7 @@ export function WorkflowBuilder({
                                                   )
                                                 : null
                                         }
+                                        element={selectedElement}
                                     />
                                 )}
                             </div>
