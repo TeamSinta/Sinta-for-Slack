@@ -131,6 +131,12 @@ export function WorkflowBuilder({
         const conditions = JSON.parse(
             localStorage.getItem(localStorageKeyConditions),
         );
+        const trimmedConditions = conditions.map((item, index) => ({
+            id: item.id,
+            field: item.field,
+            condition: item.condition,
+            value: item.value,
+        }));
         const newDbData = {
             id: workflowId[0],
             name: workflowName,
@@ -142,7 +148,10 @@ export function WorkflowBuilder({
                 processor: workflowTriggers?.processor,
             },
             recipient: recipient,
-            conditions: [...workflowTriggers?.mainCondition, ...conditions],
+            conditions: [
+                ...workflowTriggers?.mainCondition,
+                ...trimmedConditions,
+            ],
             status: isActive ? "Active" : "Inactive",
         };
         await updateWorkflowMutate(newDbData);
@@ -186,11 +195,11 @@ export function WorkflowBuilder({
                     messageFields: workflow?.recipient.messageFields,
                     openingText: workflow?.recipient.openingText,
                 };
-                const workflowConditions = workflow.conditions.filter(
-                    (condition) => {
+                const workflowConditions = workflow.conditions
+                    .filter((condition) => {
                         return typeof condition.field !== "object";
-                    },
-                );
+                    })
+                    .map((item, index) => ({ ...item, id: index }));
 
                 // Store these parts into local storage
                 localStorage.setItem(
@@ -252,7 +261,7 @@ export function WorkflowBuilder({
             }
 
             // Add condition steps without duplicates
-            conditionsData.forEach((condition) => {
+            conditionsData.forEach((condition, index) => {
                 const conditionDescription = `${typeof condition.field === "object" ? condition.field.label : condition.field} ${condition.condition} ${typeof condition.value === "object" ? condition.value.name : condition.value}`;
 
                 const conditionExists = newSteps.some(
@@ -263,10 +272,9 @@ export function WorkflowBuilder({
 
                 if (!conditionExists && typeof condition.field !== "object") {
                     newSteps.push({
-                        id: newSteps.length + 1,
-                        conditionId: condition?.id as number,
+                        id: index,
                         type: "Condition",
-                        name: `Condition: ${typeof condition.field === "object" ? condition.field.label : condition.field}`,
+                        name: `Condition: ${condition.field}`,
                         status: "valid",
                         description: conditionDescription,
                         icon: filterIcon,
@@ -349,14 +357,14 @@ export function WorkflowBuilder({
     };
 
     const addConditionStep = () => {
+        const highestConditionId = Math.max(
+            ...steps
+                .filter((item) => item.type === "Condition")
+                .map((item) => item.id),
+            -1,
+        );
         const newConditionStep = {
-            id: steps.length + 1,
-            conditionId:
-                Math.max(
-                    ...steps
-                        .filter((s) => s.type === "Condition")
-                        .map((c) => c?.conditionId ?? 0),
-                ) + 1,
+            id: highestConditionId + 1,
             type: "Condition",
             name: "",
             status: "skeleton",
@@ -479,12 +487,12 @@ export function WorkflowBuilder({
         const existingConditions =
             JSON.parse(localStorage.getItem(localStorageKeyConditions)) || [];
 
-        // Filter out duplicates from the steps array
+        // Get conditions rendered in steps
         const filteredSteps = steps.filter((step) => step.type !== "Condition");
 
         // Add new conditions as separate steps
         const newSteps = existingConditions.map((condition, index) => ({
-            id: index + 1, // Adjust the ID as necessary
+            id: condition.id,
             type: "Condition",
             name: `Condition: ${condition.field}`,
             status: "valid",
@@ -492,6 +500,10 @@ export function WorkflowBuilder({
             icon: filterIcon,
             label: "Condition",
         }));
+
+        newSteps.forEach((condition, index) => {
+            newSteps[index].id = index;
+        });
 
         // Reorder steps to ensure that conditions come before actions
         const triggerStep = filteredSteps.find(
@@ -860,9 +872,7 @@ export function WorkflowBuilder({
                                                   )
                                                 : null
                                         }
-                                        selectedElementId={
-                                            selectedElement.conditionId
-                                        }
+                                        selectedElementId={selectedElement.id}
                                     />
                                 )}
                             </div>

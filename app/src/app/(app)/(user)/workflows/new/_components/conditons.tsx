@@ -16,7 +16,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/card";
-import { Trash2, PlusCircle, FilterIcon } from "lucide-react";
+import { Trash2, PlusCircle, FilterIcon, FileAudio2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,8 @@ import { cn } from "@/lib/utils";
 const localStorageKey = "workflowConditions";
 
 const saveConditionsData = (newConditions) => {
+    localStorage.setItem(localStorageKey, JSON.stringify(newConditions));
+    return;
     const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || [];
 
     // Filter out duplicate conditions before saving
@@ -37,8 +39,6 @@ const saveConditionsData = (newConditions) => {
                     c.value === condition.value,
             ),
     );
-
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
 };
 
 const getConditionsData = () => {
@@ -62,7 +62,7 @@ const ConditionsComponent = ({
     selectedElementId,
 }) => {
     const [conditions, setConditions] = useState([
-        { id: 1, field: "", condition: "", value: "" },
+        { id: -1, field: "", condition: "", value: "" },
     ]);
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [users, setUsers] = useState([]);
@@ -72,7 +72,10 @@ const ConditionsComponent = ({
         useState(null);
     useEffect(() => {
         setConditions(getConditionsData());
-        if (selectedElementId && componentsRef.current[selectedElementId]) {
+        if (
+            typeof selectedElementId === "number" &&
+            componentsRef.current[selectedElementId]
+        ) {
             componentsRef.current[selectedElementId]?.scrollIntoView({
                 behavior: "smooth",
                 block: "nearest",
@@ -119,10 +122,14 @@ const ConditionsComponent = ({
     };
 
     const addCondition = () => {
+        const highestConditionId = Math.max(
+            ...conditions.map((item) => item.id),
+            -1,
+        );
         setConditions((prevConditions) => [
             ...prevConditions,
             {
-                id: prevConditions.length + 1,
+                id: highestConditionId + 1,
                 field: "",
                 condition: "",
                 value: "",
@@ -147,31 +154,44 @@ const ConditionsComponent = ({
     const handleSave = () => {
         if (isSaveEnabled) {
             const existingConditions = getConditionsData();
+
+            // Remove the conditions from existing conditions that have been removed!
+            const filteredConditions = existingConditions.filter((c1) =>
+                conditions.some((c2) => c2.id === c1.id),
+            );
+
+            // Get NEW conditions (that are not saved)
             const newConditions = conditions.filter(
                 (condition) =>
-                    condition.field && condition.condition && condition.value,
+                    condition.field &&
+                    condition.condition &&
+                    condition.value &&
+                    !filteredConditions.some((c2) => condition.id === c2.id),
             );
 
             // Merge new and existing conditions and remove duplicates
             const updatedConditions = [
-                ...existingConditions,
-                ...newConditions,
-            ].filter(
-                (condition, index, self) =>
-                    index ===
-                    self.findIndex(
-                        (c) =>
-                            c.field === condition.field &&
-                            c.condition === condition.condition &&
-                            c.value === condition.value,
-                    ),
-            );
+                // ...filteredConditions,
+                // ...newConditions,
+                ...conditions,
+            ]
+                .filter(
+                    (condition, index, self) =>
+                        index ===
+                        self.findIndex(
+                            (c) =>
+                                c.field === condition.field &&
+                                c.condition === condition.condition &&
+                                c.value === condition.value,
+                        ),
+                )
+                .map((item, index) => ({ ...item, id: index }));
 
             saveConditionsData(updatedConditions); // Save unique conditions to local storage
-            onSaveConditions(newConditions); // Update WorkflowBuilder with only the new conditions
+            onSaveConditions(filteredConditions); // Update WorkflowBuilder with only the new conditions
 
             // Reset the conditions form after saving
-            setConditions([{ id: 1, field: "", condition: "", value: "" }]);
+            setConditions([{ id: -1, field: "", condition: "", value: "" }]);
         }
     };
 
