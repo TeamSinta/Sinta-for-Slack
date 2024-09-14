@@ -747,11 +747,43 @@ export function WorkflowBuilder({
                                                         onValueChange={(
                                                             value,
                                                         ) => {
-                                                            value ===
-                                                                "Condition" &&
-                                                                addConditionStep(
-                                                                    index,
+                                                            // If there is already an incomplete condition step, don't add another
+                                                            if (
+                                                                steps.some(
+                                                                    (
+                                                                        item,
+                                                                        index,
+                                                                    ) =>
+                                                                        item.type ===
+                                                                            "Condition" &&
+                                                                        item.status ===
+                                                                            "skeleton",
+                                                                )
+                                                            ) {
+                                                                setOpenPopoverIndex(
+                                                                    undefined,
                                                                 );
+                                                                setSelectedElement(
+                                                                    steps.at(
+                                                                        steps.findIndex(
+                                                                            (
+                                                                                item,
+                                                                                index,
+                                                                            ) =>
+                                                                                item.type ===
+                                                                                    "Condition" &&
+                                                                                item.status ===
+                                                                                    "skeleton",
+                                                                        ),
+                                                                    ),
+                                                                );
+                                                            } else {
+                                                                value ===
+                                                                    "Condition" &&
+                                                                    addConditionStep(
+                                                                        index,
+                                                                    );
+                                                            }
                                                             setSelectValue(
                                                                 value,
                                                             );
@@ -759,7 +791,6 @@ export function WorkflowBuilder({
                                                     >
                                                         <SelectTrigger className="flex w-full items-center space-x-2">
                                                             <PlusCircleIcon className="h-5 w-5 text-gray-500" />
-                                                            {/* <SelectValue placeholder="Add Step" /> */}
                                                             <div>Add Step</div>
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -793,9 +824,6 @@ export function WorkflowBuilder({
                                 </React.Fragment>
                             ))}
                         </AnimatePresence>
-                    </div>
-                    <div className="max-w-80 text-wrap break-all">
-                        {JSON.stringify(selectedElement)}
                     </div>
                 </div>
 

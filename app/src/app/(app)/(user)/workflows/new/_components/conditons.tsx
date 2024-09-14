@@ -240,9 +240,6 @@ const ConditionsComponent = ({
                             </CardHeader>
                             <CardContent className={"space-y-4 "}>
                                 <div className="flex flex-col space-y-2">
-                                    <div className="text-wrap break-all">
-                                        {JSON.stringify(condition)}
-                                    </div>
                                     <div>
                                         <Select
                                             value={condition.field}
