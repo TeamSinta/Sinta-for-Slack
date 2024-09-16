@@ -122,6 +122,11 @@ export function WorkflowBuilder({
     });
 
     async function updateDbData() {
+        // If user is creating a new workflow, don't store anything in the DB
+        // Storing is done when the Publish button is clicked
+        if (!edit) {
+            return;
+        }
         const workflowTriggers = JSON.parse(
             localStorage.getItem(localStorageKeyTriggers),
         );
