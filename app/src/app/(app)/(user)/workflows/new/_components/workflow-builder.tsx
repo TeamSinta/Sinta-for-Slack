@@ -558,11 +558,11 @@ export function WorkflowBuilder({
 
     return (
         <>
-            <header className="ml-[50px] w-[112%] flex-none border-b border-border bg-white p-4">
+            <header className="ml-[50px] w-[112%] flex-none border-b border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center justify-between">
                     <div className="flex w-[70%] items-center space-x-2">
                         <Link href="/workflows">
-                            <MoveLeft />
+                            <MoveLeft className="text-gray-500 dark:text-gray-300" />
                         </Link>
                         <div
                             className="flex w-[70%] items-center space-x-2"
@@ -583,7 +583,7 @@ export function WorkflowBuilder({
                                             handleNameBlur(); // Submit on Enter key press
                                         }
                                     }}
-                                    className="w-full rounded border border-gray-300 p-1 focus:outline-none"
+                                    className="w-full rounded border border-gray-300 p-1 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
                                     autoFocus
                                     style={{
                                         fontSize: "1.05rem", // Equivalent to h3 font size
@@ -594,13 +594,13 @@ export function WorkflowBuilder({
                                     }}
                                 />
                             ) : (
-                                <h3 className="font-heading text-lg font-bold">
+                                <h3 className="font-heading text-lg font-bold dark:text-gray-100">
                                     {workflowName}
                                 </h3>
                             )}
                             {!isEditingName && (
                                 <button
-                                    className="rounded-full p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                    className="rounded-full p-1 text-gray-500 hover:text-gray-700 focus:outline-none dark:text-gray-300 dark:hover:text-gray-100"
                                     onClick={handleDoubleClick} // Trigger edit mode on button click
                                 >
                                     <PencilIcon size={16} />
@@ -610,7 +610,7 @@ export function WorkflowBuilder({
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-300">
                             All changes saved
                         </span>
                         <WorkflowPublishModal
@@ -631,10 +631,10 @@ export function WorkflowBuilder({
 
             <div className="ml-[50px] flex h-[calc(100vh-64px)] w-[112%]">
                 <div
-                    className={`relative flex-grow overflow-y-auto bg-gray-50 p-6 shadow-inner ${selectedElement ? "pr-0" : "pr-8"}`}
+                    className={`relative flex-grow overflow-y-auto bg-gray-50 p-6 shadow-inner dark:bg-gray-900  dark:shadow-inner ${selectedElement ? "pr-0" : "pr-8"}`}
                 >
                     <div
-                        className="absolute inset-0"
+                        className="absolute inset-0 dark:bg-gray-800"
                         style={{
                             backgroundImage:
                                 "radial-gradient(#e5e7eb 1px, transparent 1px)",
@@ -656,8 +656,8 @@ export function WorkflowBuilder({
                                         <motion.div
                                             className={`relative flex w-full max-w-xl cursor-pointer items-center justify-between rounded-lg border-2 p-4 ${
                                                 step.status === "skeleton"
-                                                    ? "border-dashed border-gray-300 bg-gray-100"
-                                                    : "border-l-4 border-green-500 bg-white shadow"
+                                                    ? "border-dashed border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-800"
+                                                    : "border-l-4 border-green-500 bg-white shadow dark:bg-gray-700"
                                             }`}
                                             onClick={() =>
                                                 handleElementClick(step)
@@ -667,9 +667,9 @@ export function WorkflowBuilder({
                                             style={{ height: "80px" }}
                                         >
                                             <div
-                                                className={`absolute left-0 top-0 -ml-2 -mt-4 ${step.status === "skeleton" ? "bg-gray-200 text-gray-500" : "bg-indigo-100 text-black"} rounded-br-md rounded-tl-md px-3 py-1`}
+                                                className={`absolute left-0 top-0 -ml-2 -mt-4 ${step.status === "skeleton" ? "dark:bg-black-600 bg-gray-200 text-gray-500 dark:text-gray-300" : "bg-indigo-100 text-black dark:bg-indigo-700"} rounded-br-md rounded-tl-md px-3 py-1`}
                                             >
-                                                <span className="text-xs font-semibold">
+                                                <span className="text-xs font-semibold dark:text-white">
                                                     {step.label}
                                                 </span>
                                             </div>
@@ -680,15 +680,15 @@ export function WorkflowBuilder({
                                                         alt={`${step.type} Icon`}
                                                         width={20}
                                                         height={20}
-                                                        className="mr-4 text-gray-400"
+                                                        className="mr-4 text-gray-400 dark:text-gray-500"
                                                     />
                                                     <div>
-                                                        <span className="font-semibold text-gray-400">
+                                                        <span className="font-semibold text-gray-400 dark:text-gray-300">
                                                             Click to add{" "}
                                                             {step.type.toLowerCase()}{" "}
                                                             details
                                                         </span>
-                                                        <p className="text-sm text-gray-400">
+                                                        <p className="text-sm text-gray-400 dark:text-gray-300">
                                                             Enter details
                                                             here...
                                                         </p>
@@ -704,10 +704,10 @@ export function WorkflowBuilder({
                                                         className="mr-4"
                                                     />
                                                     <div>
-                                                        <span className="font-semibold">
+                                                        <span className="font-semibold dark:text-gray-100">
                                                             {step.name}
                                                         </span>
-                                                        <p className="text-sm text-gray-500">
+                                                        <p className="text-sm text-gray-500 dark:text-gray-300">
                                                             {step.description}
                                                         </p>
                                                     </div>
@@ -716,8 +716,8 @@ export function WorkflowBuilder({
                                         </motion.div>
                                     </motion.div>
                                     {index < steps.length - 1 && (
-                                        <div className="flex flex-col items-center ">
-                                            <div className="mb-1 h-4 w-px bg-indigo-300"></div>
+                                        <div className="flex flex-col items-center">
+                                            <div className="mb-1 h-4 w-px bg-indigo-300 dark:bg-indigo-500"></div>
                                             <Popover
                                                 open={
                                                     openPopoverIndex === index
@@ -735,7 +735,7 @@ export function WorkflowBuilder({
                                             >
                                                 <PopoverTrigger asChild>
                                                     <button
-                                                        className="text-indigo-500"
+                                                        className="text-indigo-500 dark:text-indigo-300"
                                                         onClick={() =>
                                                             setOpenPopoverIndex(
                                                                 index,
@@ -745,7 +745,7 @@ export function WorkflowBuilder({
                                                         <PlusCircleIcon className="h-6 w-6" />
                                                     </button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="rounded-lg p-4 shadow-lg">
+                                                <PopoverContent className="rounded-lg p-4 shadow-lg dark:bg-gray-800 dark:text-gray-200">
                                                     <Select
                                                         value={setSelectValue}
                                                         onValueChange={(
@@ -793,20 +793,20 @@ export function WorkflowBuilder({
                                                             );
                                                         }}
                                                     >
-                                                        <SelectTrigger className="flex w-full items-center space-x-2">
-                                                            <PlusCircleIcon className="h-5 w-5 text-gray-500" />
+                                                        <SelectTrigger className="flex w-full items-center space-x-2 dark:bg-gray-700">
+                                                            <PlusCircleIcon className="h-5 w-5 text-gray-500 dark:text-gray-300" />
                                                             <div>Add Step</div>
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="Condition">
                                                                 <div className="flex items-start">
-                                                                    <Filter className="mr-2 h-5 w-5 text-gray-600" />
+                                                                    <Filter className="mr-2 h-5 w-5 text-gray-600 dark:text-gray-400" />
                                                                     <div>
-                                                                        <p className="font-medium">
+                                                                        <p className="font-medium dark:text-gray-200">
                                                                             Add
                                                                             Condition
                                                                         </p>
-                                                                        <p className="text-sm text-gray-500">
+                                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
                                                                             Set
                                                                             up a
                                                                             rule
@@ -822,7 +822,7 @@ export function WorkflowBuilder({
                                                     </Select>
                                                 </PopoverContent>
                                             </Popover>
-                                            <div className="mt-1 h-4 w-px bg-indigo-300"></div>
+                                            <div className="mt-1 h-4 w-px bg-indigo-300 dark:bg-indigo-500"></div>
                                         </div>
                                     )}
                                 </React.Fragment>
@@ -834,7 +834,7 @@ export function WorkflowBuilder({
                 <AnimatePresence>
                     {selectedElement && (
                         <motion.div
-                            className="relative flex h-full overflow-y-auto bg-white p-6 shadow-lg"
+                            className="relative flex h-full overflow-y-auto bg-white p-6 shadow-lg dark:bg-gray-800"
                             style={{ width: sidebarWidth }}
                             initial={{ opacity: 0, x: 100 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -842,23 +842,23 @@ export function WorkflowBuilder({
                             transition={{ duration: 0.3 }}
                         >
                             <div
-                                className="absolute left-0 top-0 h-full w-1 cursor-ew-resize hover:bg-indigo-500"
+                                className="absolute left-0 top-0 h-full w-1 cursor-ew-resize hover:bg-indigo-500 dark:hover:bg-indigo-300"
                                 onMouseDown={startResizing}
                             />
                             <div className="absolute left-[-13px] top-1/2 z-10 flex -translate-y-1/2 transform items-center justify-center">
                                 <div
-                                    className="cursor-ew-resize rounded-full bg-gray-200 p-1 shadow"
+                                    className="cursor-ew-resize rounded-full bg-gray-200 p-1 shadow dark:bg-gray-600"
                                     onMouseDown={startResizing}
                                 >
                                     <MoveHorizontal
-                                        className="text-gray-600"
+                                        className="text-gray-600 dark:text-gray-300"
                                         size={16}
                                     />
                                 </div>
                             </div>
                             <div className="flex-grow">
                                 <button
-                                    className="absolute right-2 top-2 rounded-full p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                    className="absolute right-2 top-2 rounded-full p-1 text-gray-500 hover:text-gray-700 focus:outline-none dark:text-gray-300 dark:hover:text-gray-100"
                                     onClick={handleCloseSidebar}
                                 >
                                     <XIcon size={20} />

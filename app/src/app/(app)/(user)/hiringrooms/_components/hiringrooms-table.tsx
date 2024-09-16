@@ -9,8 +9,8 @@ import Image, { StaticImageData } from "next/image";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
 import flow from "../../../../../../public/RoleChannel.png";
-import jobsImage from "../../../../../../public/RoleChannel.png"; // Add your image here
-import candidatesImage from "../../../../../../public/Candidate-Channel.png"; // Add your image here
+import jobsImage from "../../../../../../public/RoleChannel.png";
+import candidatesImage from "../../../../../../public/Candidate-Channel.png";
 import { format } from "date-fns";
 
 // Map the appropriate images for the different object fields
@@ -92,10 +92,10 @@ export function HiringroomsTable({
                 <Link
                     key={hiringroom.id}
                     href="/hiringrooms/form"
-                    className="rounded-lg border border-border bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
+                    className="rounded-lg border border-border bg-white dark:bg-black dark:border-gray-600 p-4 shadow-md dark:shadow-inner transition-shadow hover:shadow-lg"
                 >
                     {/* Card Image */}
-                    <div className="flex h-40 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 md:h-48">
+                    <div className="flex h-40 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-500 md:h-48">
                         <Image
                             src={imageMap[hiringroom.objectField] || flow} // Use the objectField to select the appropriate image
                             alt={`${hiringroom.objectField}-image`}
@@ -105,7 +105,7 @@ export function HiringroomsTable({
 
                     {/* Card Content */}
                     <div className="p-4">
-                        <h3 className="mb-2 truncate text-xl font-semibold">
+                        <h3 className="mb-2 truncate text-xl font-semibold dark:text-gray-100">
                             {hiringroom.name}
                         </h3>
                         <div className="mb-3 flex flex-wrap gap-2">
@@ -113,7 +113,7 @@ export function HiringroomsTable({
                                 <Badge
                                     key={rec.value}
                                     variant="secondary"
-                                    className="flex items-center capitalize"
+                                    className="flex items-center capitalize dark:bg-gray-700 dark:text-gray-200"
                                 >
                                     <Image
                                         src={logoMap[rec.source] ?? slackLogo}
@@ -124,7 +124,7 @@ export function HiringroomsTable({
                                 </Badge>
                             ))}
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                             Last updated:{" "}
                             {format(new Date(hiringroom.createdAt), "PPpp")}
                         </p>
