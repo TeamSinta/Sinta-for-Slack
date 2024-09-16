@@ -478,9 +478,20 @@ export function WorkflowBuilder({
     };
 
     const handleSaveTriggers = async (data) => {
-        saveStep(1, {
-            name: "Greenhouse Trigger",
-            description: `Trigger: ${data.description.substring(0, 50)}...`,
+        // saveStep(1, {
+        //     name: "Greenhouse Trigger",
+        //     description: `Trigger: ${data.description.substring(0, 50)}...`,
+        // });
+
+        setSteps((prev) => {
+            const updatedSteps = [...prev];
+            updatedSteps.forEach((item) => {
+                if (item.type === "Trigger")
+                    return { ...item, ...data, status: "valid" };
+
+                return item;
+            });
+            return updatedSteps;
         });
         setSelectedElement(null);
         await updateDbData();
