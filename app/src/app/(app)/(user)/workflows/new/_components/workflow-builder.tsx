@@ -131,12 +131,16 @@ export function WorkflowBuilder({
         const conditions = JSON.parse(
             localStorage.getItem(localStorageKeyConditions),
         );
-        const trimmedConditions = conditions.map((item, index) => ({
-            id: item.id,
-            field: item.field,
-            condition: item.condition,
-            value: item.value,
-        }));
+        const trimmedConditions = conditions.reduce(
+            (acc, { id, field, condition, value }) => {
+                if (field?.length && condition?.length) {
+                    acc.push({ id, field, condition, value });
+                }
+                return acc;
+            },
+            [],
+        );
+
         const newDbData = {
             id: workflowId[0],
             name: workflowName,
