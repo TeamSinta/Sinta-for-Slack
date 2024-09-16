@@ -456,10 +456,18 @@ export function WorkflowBuilder({
             (step) => step.type === "Action" && step.status === "valid",
         );
         if (actionExists) {
-            saveStep(actionIndex, {
-                name: "Slack Action",
-                description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+            const newSteps = steps.map((item) => {
+                if (item.type === "Action")
+                    return {
+                        ...item,
+                        name: "Slack Action",
+                        description: `Alert: ${data.customMessageBody.substring(0, 50)}...`,
+                        status: "valid",
+                    };
+
+                return item;
             });
+            setSteps(newSteps);
             await updateDbData();
         } else {
             const newActionStep = {
@@ -841,9 +849,6 @@ export function WorkflowBuilder({
                                 </React.Fragment>
                             ))}
                         </AnimatePresence>
-                    </div>
-                    <div className="w-80  break-all">
-                        {JSON.stringify(steps)}
                     </div>
                 </div>
 
