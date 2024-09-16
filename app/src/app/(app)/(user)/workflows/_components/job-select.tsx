@@ -39,7 +39,7 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({
     return (
         <div className="flex-1">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Select Job {selectedJob}
+                Select Job{" "}
             </Label>
             <Select
                 onValueChange={(value) => onJobSelect(value)}

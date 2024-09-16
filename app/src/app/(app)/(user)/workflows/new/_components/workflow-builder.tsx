@@ -483,21 +483,18 @@ export function WorkflowBuilder({
     };
 
     const handleSaveTriggers = async (data) => {
-        // saveStep(1, {
-        //     name: "Greenhouse Trigger",
-        //     description: `Trigger: ${data.description.substring(0, 50)}...`,
-        // });
+        const newSteps = steps.map((item) => {
+            if (item.type === "Trigger")
+                return {
+                    ...item,
+                    name: "Greenhouse Trigger",
+                    description: `Trigger: ${data.description.substring(0, 50)}...`,
+                    status: "valid",
+                };
 
-        setSteps((prev) => {
-            const updatedSteps = [...prev];
-            updatedSteps.forEach((item) => {
-                if (item.type === "Trigger")
-                    return { ...item, ...data, status: "valid" };
-
-                return item;
-            });
-            return updatedSteps;
+            return item;
         });
+        setSteps(newSteps);
         setSelectedElement(null);
         await updateDbData();
     };
@@ -844,6 +841,9 @@ export function WorkflowBuilder({
                                 </React.Fragment>
                             ))}
                         </AnimatePresence>
+                    </div>
+                    <div className="w-80  break-all">
+                        {JSON.stringify(steps)}
                     </div>
                 </div>
 
