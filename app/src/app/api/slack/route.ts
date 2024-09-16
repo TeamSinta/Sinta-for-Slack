@@ -7,7 +7,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 
-
 // src/pages/api/slack/oauth.ts
 import { db } from "@/server/db";
 import { eq } from "drizzle-orm";
@@ -46,7 +45,6 @@ import { addSlackUserIdToDB } from "@/server/actions/slack/query";
 import { getServerAuthSession } from "@/server/auth";
 import { getOrganizations } from "@/server/actions/organization/queries";
 import MixpanelServer from "@/server/mixpanel";
-
 
 // Define the type for the response from Slack's OAuth endpoint
 interface SlackInteraction {
@@ -303,104 +301,101 @@ async function fetchCandidateData(view_id, accessToken) {
     return updateModal(updatePayload, accessToken); // Update the modal with the new candidate options
 }
 
-
 // Function to fetch real candidates and jobs and update the modal
 async function fetchCandidateDataForSearch(view_id, accessToken) {
-  // Fetch jobs from Greenhouse
-  const jobs = await fetchJobsFromGreenhouse(); // Fetch the jobs for the job filter (optional)
+    // Fetch jobs from Greenhouse
+    const jobs = await fetchJobsFromGreenhouse(); // Fetch the jobs for the job filter (optional)
 
-  const updatePayload = {
-    view_id: view_id,
-    view: {
-      type: "modal",
-      callback_id: "candidate_search_modal",
-      title: {
-        type: "plain_text",
-        text: "Search for a candidate",
-        emoji: true
-      },
-      submit: {
-        type: "plain_text",
-        text: "Search",
-        emoji: true
-      },
-      close: {
-        type: "plain_text",
-        text: "Cancel",
-        emoji: true
-      },
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "Search through candidate records to quickly find and review relevant profiles."
-          },
-          accessory: {
-            type: "image",
-            image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQRGdTs2tatWjail4b3hpHLIyI-6gXZLxhvw&s", // Placeholder image URL
-            alt_text: "Candidate Search Placeholder"
-          }
-        },
-        {
-          type: "input",
-          block_id: "candidate_search_block",
-          label: {
-            type: "plain_text",
-            text: "Search"
-          },
-          element: {
-            type: "plain_text_input",
-            action_id: "search_input",
-            placeholder: {
-              type: "plain_text",
-              text: "Type candidate name..."
-            }
-          },
-          hint: {
-            type: "plain_text",
-            text: "Press 'enter' to submit"
-          }
-        },
-        // Search input for entering candidate names
-        // Optional job selection input, fetched from Greenhouse jobs
-        {
-          type: "input",
-          optional: true,
-          block_id: "filter_by_type",
-          label: {
-            type: "plain_text",
-            text: "Filter by Jobs"
-          },
-          element: {
-            type: "static_select",
-            action_id: "record_type_select",
-            placeholder: {
-              type: "plain_text",
-              text: "Select a job"
-            },
-            options: jobs.map(job => ({
-              text: {
+    const updatePayload = {
+        view_id: view_id,
+        view: {
+            type: "modal",
+            callback_id: "candidate_search_modal",
+            title: {
                 type: "plain_text",
-                text: job.name
-              },
-              value: job.id.toString()
-            }))
-          }
-        }
+                text: "Search for a candidate",
+                emoji: true,
+            },
+            submit: {
+                type: "plain_text",
+                text: "Search",
+                emoji: true,
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+                emoji: true,
+            },
+            blocks: [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: "Search through candidate records to quickly find and review relevant profiles.",
+                    },
+                    accessory: {
+                        type: "image",
+                        image_url:
+                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQRGdTs2tatWjail4b3hpHLIyI-6gXZLxhvw&s", // Placeholder image URL
+                        alt_text: "Candidate Search Placeholder",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "candidate_search_block",
+                    label: {
+                        type: "plain_text",
+                        text: "Search",
+                    },
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "search_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Type candidate name...",
+                        },
+                    },
+                    hint: {
+                        type: "plain_text",
+                        text: "Press 'enter' to submit",
+                    },
+                },
+                // Search input for entering candidate names
+                // Optional job selection input, fetched from Greenhouse jobs
+                {
+                    type: "input",
+                    optional: true,
+                    block_id: "filter_by_type",
+                    label: {
+                        type: "plain_text",
+                        text: "Filter by Jobs",
+                    },
+                    element: {
+                        type: "static_select",
+                        action_id: "record_type_select",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select a job",
+                        },
+                        options: jobs.map((job) => ({
+                            text: {
+                                type: "plain_text",
+                                text: job.name,
+                            },
+                            value: job.id.toString(),
+                        })),
+                    },
+                },
+            ],
+        },
+    };
 
-      ]
-    }
-  };
+    // Update the modal with the new layout (initial layout without search results)
+    await updateModal(updatePayload, accessToken);
 
-  // Update the modal with the new layout (initial layout without search results)
-  await updateModal(updatePayload, accessToken);
-
-  // Return a 200 response to Slack
-  return new NextResponse(null, { status: 200 });
+    // Return a 200 response to Slack
+    return new NextResponse(null, { status: 200 });
 }
-
-
 
 async function handleMoveToNextStageSubmission(payload: SlackInteraction) {
     try {
@@ -549,452 +544,445 @@ async function handleDebriefSubmission(payload) {
     }
 }
 
-
 async function handleCandidateSearchSubmission(payload) {
-  const view_id = payload.view.id;
-  console.log("view_id", view_id);
-  const accessToken = await getAccessToken(payload.user.team_id);
+    const view_id = payload.view.id;
+    console.log("view_id", view_id);
+    const accessToken = await getAccessToken(payload.user.team_id);
 
+    // Call the async functions to handle the actual search
+    try {
+        // Show the loading modal first
+        // await updateModalToLoading(view_id, accessToken);
 
+        await fetchAndDisplaySearchResults(view_id, accessToken, payload);
 
-  // Call the async functions to handle the actual search
-  try {
-      // Show the loading modal first
-      // await updateModalToLoading(view_id, accessToken);
-
-      await fetchAndDisplaySearchResults(view_id, accessToken, payload);
-
-
-      // Fetch candidates and update modal with results
-  } catch (error) {
-      console.error("Error during candidate search:", error);
-
-
-  }
-
+        // Fetch candidates and update modal with results
+    } catch (error) {
+        console.error("Error during candidate search:", error);
+    }
 }
-
-
-
 
 async function updateModalToLoading(view_id, accessToken) {
-  const loadingModal = {
-      view_id: view_id,
-      view: {
-          type: "modal",
-          title: {
-              type: "plain_text",
-              text: "Searching...",
-          },
-          blocks: [
-              {
-                  type: "section",
-                  text: {
-                      type: "mrkdwn",
-                      text: "🔍 Searching for candidates... Please wait.",
-                  },
-              },
-              {
-                  type: "section",
-                  text: {
-                      type: "plain_text",
-                      text: "⏳ Loading...",
-                      emoji: true,
-                  },
-              },
-          ],
-      },
-  };
+    const loadingModal = {
+        view_id: view_id,
+        view: {
+            type: "modal",
+            title: {
+                type: "plain_text",
+                text: "Searching...",
+            },
+            blocks: [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: "🔍 Searching for candidates... Please wait.",
+                    },
+                },
+                {
+                    type: "section",
+                    text: {
+                        type: "plain_text",
+                        text: "⏳ Loading...",
+                        emoji: true,
+                    },
+                },
+            ],
+        },
+    };
 
-  // Call views.update to show the loading screen
-  const response = await fetch("https://slack.com/api/views.update", {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(loadingModal),
-  });
+    // Call views.update to show the loading screen
+    const response = await fetch("https://slack.com/api/views.update", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(loadingModal),
+    });
 
+    const data = await response.json();
+    console.log("Loading updateModalToLoading data:", data);
+    if (!data.ok) {
+        console.error("Error showing loading screen:", data.error);
+    }
 
-
-  const data = await response.json();
-  console.log("Loading updateModalToLoading data:", data);
-  if (!data.ok) {
-      console.error("Error showing loading screen:", data.error);
-  }
-
-  // Return an HTTP 200 response after showing the loading screen
-  return new NextResponse(null, {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-  });
+    // Return an HTTP 200 response after showing the loading screen
+    return new NextResponse(null, {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+    });
 }
-
 
 async function fetchAndDisplaySearchResults(view_id, accessToken, payload) {
-  try {
-      const searchTerm = payload.view.state.values.candidate_search_block.search_input.value.toLowerCase();
+    try {
+        const searchTerm =
+            payload.view.state.values.candidate_search_block.search_input.value.toLowerCase();
 
-      // Fetch candidates and jobs
-      const candidates = await fetchActiveCandidates();  // Fetch candidates
-      const jobs = await fetchJobsFromGreenhouse();  // Fetch jobs
+        // Fetch candidates and jobs
+        const candidates = await fetchActiveCandidates(); // Fetch candidates
+        const jobs = await fetchJobsFromGreenhouse(); // Fetch jobs
 
-      // Filter candidates based on the search term
-      const filteredCandidates = candidates.filter(candidate =>
-          candidate.name.toLowerCase().includes(searchTerm)
-      );
+        // Filter candidates based on the search term
+        const filteredCandidates = candidates.filter((candidate) =>
+            candidate.name.toLowerCase().includes(searchTerm),
+        );
 
-      // Build dynamic candidate blocks and ensure unique action_ids for each candidate
-      const candidateBlocks = filteredCandidates.map(candidate => [
-          {
-              type: "section",
-              text: {
-                  type: "mrkdwn",
-                  text: `*${candidate.name} - ${candidate.job}*\n*Stage*: ${candidate.stage}\n*Recruiter*: \n*Coordinator*: `,
-              },
-              accessory: {
-                  type: "image",
-                  image_url: candidate.image_url || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQRGdTs2tatWjail4b3hpHLIyI-6gXZLxhvw&s",
-                  alt_text: "Candidate Profile Picture",
-              },
-          },
-          {
-              type: "actions",
-              elements: [
-                  {
-                      type: "button",
-                      text: {
-                          type: "plain_text",
-                          text: "Post Record",
-                      },
-                      value: `post_record_${candidate.id}`,  // Unique value
-                      action_id: `post_record_${candidate.id}`,  // Unique action_id
-                  },
-                  {
-                      type: "button",
-                      text: {
-                          type: "plain_text",
-                          text: "View Candidate",
-                      },
-                      url: `https://greenhouse.io/candidates/${candidate.id}`,
-                      action_id: `view_record_${candidate.id}`,  // Unique action_id
-                  },
-              ],
-          },
-      ]).flat();
+        // Build dynamic candidate blocks and ensure unique action_ids for each candidate
+        const candidateBlocks = filteredCandidates
+            .map((candidate) => [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*${candidate.name} - ${candidate.job}*\n*Stage*: ${candidate.stage}\n*Recruiter*: \n*Coordinator*: `,
+                    },
+                    accessory: {
+                        type: "image",
+                        image_url:
+                            candidate.image_url ||
+                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQRGdTs2tatWjail4b3hpHLIyI-6gXZLxhvw&s",
+                        alt_text: "Candidate Profile Picture",
+                    },
+                },
+                {
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Post Record",
+                            },
+                            value: `post_record_${candidate.id}`, // Unique value
+                            action_id: `post_record_${candidate.id}`, // Unique action_id
+                        },
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "View Candidate",
+                            },
+                            url: `https://greenhouse.io/candidates/${candidate.id}`,
+                            action_id: `view_record_${candidate.id}`, // Unique action_id
+                        },
+                    ],
+                },
+            ])
+            .flat();
 
-      // If no candidates were found, display a message
-      if (filteredCandidates.length === 0) {
-          candidateBlocks.push({
-              type: "section",
-              text: {
-                  type: "mrkdwn",
-                  text: `No matching candidates found for *${searchTerm}*.`,
-              },
-          });
-      }
+        // If no candidates were found, display a message
+        if (filteredCandidates.length === 0) {
+            candidateBlocks.push({
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `No matching candidates found for *${searchTerm}*.`,
+                },
+            });
+        }
 
-      // Modal payload structure based on the original design
-      const updatedModal = {
-          view_id: view_id,
-          view: {
-              type: "modal",
-              title: {
-                  type: "plain_text",
-                  text: "Search for a candidate",
-                  emoji: true,
-              },
-              submit: {
-                  type: "plain_text",
-                  text: "Search",
-                  emoji: true,
-              },
-              close: {
-                  type: "plain_text",
-                  text: "Cancel",
-                  emoji: true,
-              },
-              blocks: [
-                  {
-                      type: "section",
-                      text: {
-                          type: "mrkdwn",
-                          text: "Search through candidate records to quickly find and review relevant profiles.",
-                      }
+        // Modal payload structure based on the original design
+        const updatedModal = {
+            view_id: view_id,
+            view: {
+                type: "modal",
+                title: {
+                    type: "plain_text",
+                    text: "Search for a candidate",
+                    emoji: true,
+                },
+                submit: {
+                    type: "plain_text",
+                    text: "Search",
+                    emoji: true,
+                },
+                close: {
+                    type: "plain_text",
+                    text: "Cancel",
+                    emoji: true,
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "Search through candidate records to quickly find and review relevant profiles.",
+                        },
+                    },
+                    {
+                        type: "input",
+                        block_id: "candidate_search",
+                        label: {
+                            type: "plain_text",
+                            text: "Search",
+                        },
+                        element: {
+                            type: "plain_text_input",
+                            action_id: "search_input",
+                            initial_value: searchTerm, // Preserves the search term
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Type candidate name...",
+                            },
+                        },
+                        hint: {
+                            type: "plain_text",
+                            text: "Press 'enter' to submit",
+                        },
+                    },
+                    {
+                        type: "input",
+                        block_id: "filter_by_type",
+                        label: {
+                            type: "plain_text",
+                            text: "Filter by Jobs (optional)",
+                        },
+                        element: {
+                            type: "static_select",
+                            action_id: "record_type_select",
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Select a Job (optional)",
+                            },
+                            options: jobs.map((job) => ({
+                                text: {
+                                    type: "plain_text",
+                                    text: job.name,
+                                },
+                                value: job.id.toString(),
+                            })),
+                        },
+                    },
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: `We found these results for *"${searchTerm}"* in *Candidates*.`,
+                        },
+                        accessory: {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "View all in Greenhouse",
+                            },
+                            value: "view_all",
+                            url: "https://greenhouse.io/candidates/search",
+                            action_id: "view_all_candidates",
+                        },
+                    },
+                    {
+                        type: "divider",
+                    },
+                    ...candidateBlocks, // Add the dynamically generated candidate results here
+                ],
+            },
+        };
 
-                  },
-                  {
-                      type: "input",
-                      block_id: "candidate_search",
-                      label: {
-                          type: "plain_text",
-                          text: "Search",
-                      },
-                      element: {
-                          type: "plain_text_input",
-                          action_id: "search_input",
-                          initial_value: searchTerm, // Preserves the search term
-                          placeholder: {
-                              type: "plain_text",
-                              text: "Type candidate name...",
-                          },
-                      },
-                      hint: {
-                          type: "plain_text",
-                          text: "Press 'enter' to submit",
-                      },
-                  },
-                  {
-                      type: "input",
-                      block_id: "filter_by_type",
-                      label: {
-                          type: "plain_text",
-                          text: "Filter by Jobs (optional)",
-                      },
-                      element: {
-                          type: "static_select",
-                          action_id: "record_type_select",
-                          placeholder: {
-                              type: "plain_text",
-                              text: "Select a Job (optional)",
-                          },
-                          options: jobs.map(job => ({
-                              text: {
-                                  type: "plain_text",
-                                  text: job.name,
-                              },
-                              value: job.id.toString(),
-                          })),
-                      },
-                  },
-                  {
-                      type: "section",
-                      text: {
-                          type: "mrkdwn",
-                          text: `We found these results for *"${searchTerm}"* in *Candidates*.`,
-                      },
-                      accessory: {
-                          type: "button",
-                          text: {
-                              type: "plain_text",
-                              text: "View all in Greenhouse",
-                          },
-                          value: "view_all",
-                          url: "https://greenhouse.io/candidates/search",
-                          action_id: "view_all_candidates",
-                      },
-                  },
-                  {
-                      type: "divider",
-                  },
-                  ...candidateBlocks,  // Add the dynamically generated candidate results here
-              ],
-          },
-      };
+        // Call views.update to replace the loading screen with results
+        const response = await fetch("https://slack.com/api/views.update", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8", // Ensure charset is included
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(updatedModal),
+        });
 
-      // Call views.update to replace the loading screen with results
-      const response = await fetch("https://slack.com/api/views.update", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json; charset=utf-8",  // Ensure charset is included
-              Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(updatedModal),
-      });
+        const data = await response.json();
+        console.log("Search results data:", data); // Use JSON.stringify to properly log objects
+        console.log("Search results data:", JSON.stringify(data, null, 2)); // Use JSON.stringify to properly log objects
 
-      const data = await response.json();
-      console.log("Search results data:", data);  // Use JSON.stringify to properly log objects
-      console.log("Search results data:", JSON.stringify(data, null, 2));  // Use JSON.stringify to properly log objects
+        if (!data.ok) {
+            console.error(
+                "Error updating modal with search results:",
+                data.error,
+            );
+        }
 
-      if (!data.ok) {
-          console.error("Error updating modal with search results:", data.error);
-      }
+        console.log("Search results updated successfully");
 
-      console.log("Search results updated successfully");
+        return new Response(null, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
+    } catch (error) {
+        console.error("Error fetching candidates or updating modal:", error);
 
-      return new Response(null, {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-      });
+        // In case of an error, show a failure message in the modal
+        const errorModal = {
+            view_id: view_id,
+            view: {
+                type: "modal",
+                title: {
+                    type: "plain_text",
+                    text: "Search Failed",
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "⚠️ An error occurred while searching for candidates. Please try again.",
+                        },
+                    },
+                ],
+            },
+        };
 
-  } catch (error) {
-      console.error("Error fetching candidates or updating modal:", error);
+        await fetch("https://slack.com/api/views.update", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8", // Ensure charset is included
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(errorModal),
+        });
 
-      // In case of an error, show a failure message in the modal
-      const errorModal = {
-          view_id: view_id,
-          view: {
-              type: "modal",
-              title: {
-                  type: "plain_text",
-                  text: "Search Failed",
-              },
-              blocks: [
-                  {
-                      type: "section",
-                      text: {
-                          type: "mrkdwn",
-                          text: "⚠️ An error occurred while searching for candidates. Please try again.",
-                      },
-                  },
-              ],
-          },
-      };
-
-      await fetch("https://slack.com/api/views.update", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json; charset=utf-8",  // Ensure charset is included
-              Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(errorModal),
-      });
-
-      // Send a failure response if the modal update fails
-      return new NextResponse(JSON.stringify({ error: "Failed to update view" }), {
-          status: 500,
-          headers: { "Content-Type": "application/json; charset=utf-8" },  // Ensure charset is included
-      });
-  }
+        // Send a failure response if the modal update fails
+        return new NextResponse(
+            JSON.stringify({ error: "Failed to update view" }),
+            {
+                status: 500,
+                headers: { "Content-Type": "application/json; charset=utf-8" }, // Ensure charset is included
+            },
+        );
+    }
 }
-
-
-
-
-
-
-
-
 
 // Function to handle Slack interactions
 async function handleSlackInteraction(payload: SlackInteraction) {
-  const { type, actions, trigger_id, team, response_url, message } = payload;
+    const { type, actions, trigger_id, team, response_url, message } = payload;
 
-  if (type === "block_actions") {
-      const action = actions[0];
-      const { action_id, value } = action;
+    if (type === "block_actions") {
+        const action = actions[0];
+        const { action_id, value } = action;
 
-      // Check for tab switch action_id
-      if (action_id === "home_tab" || action_id === "candidate_rooms_tab" || action_id === "hiring_rooms_tab" || action_id === "jobs_tab") {
-          // Call handleSlackEvent for tab switching actions
-          console.log(`Tab switch detected: ${action_id}`);
-          return handleSlackEvent(payload);
-      }
+        // Check for tab switch action_id
+        if (
+            action_id === "home_tab" ||
+            action_id === "candidate_rooms_tab" ||
+            action_id === "hiring_rooms_tab" ||
+            action_id === "jobs_tab"
+        ) {
+            // Call handleSlackEvent for tab switching actions
+            console.log(`Tab switch detected: ${action_id}`);
+            return handleSlackEvent(payload);
+        }
 
-      // If no value found for the rest of the actions, return an error
-      if (!value) {
-          console.error("No value found in the action");
-          return new NextResponse(
-              JSON.stringify({ error: "No value found in the action" }),
-              {
-                  status: 400,
-                  headers: { "Content-Type": "application/json" },
-              },
-          );
-      }
+        // If no value found for the rest of the actions, return an error
+        if (!value) {
+            console.error("No value found in the action");
+            return new NextResponse(
+                JSON.stringify({ error: "No value found in the action" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        }
 
-      // Handle specific button actions based on value or action_id
-      if (value.startsWith("LinkButton_")) {
-          return handleJsonPost({ message: "Link button clicked" });
-      }
+        // Handle specific button actions based on value or action_id
+        if (value.startsWith("LinkButton_")) {
+            return handleJsonPost({ message: "Link button clicked" });
+        }
 
-      const accessToken = await getAccessToken(team.id);
+        const accessToken = await getAccessToken(team.id);
 
-      // Parse candidate ID from action_id
-      const candidateIdMatch = action_id.match(/_(\d+)$/);
-      const candidateId = candidateIdMatch ? candidateIdMatch[1] : null;
+        // Parse candidate ID from action_id
+        const candidateIdMatch = action_id.match(/_(\d+)$/);
+        const candidateId = candidateIdMatch ? candidateIdMatch[1] : null;
 
-      if (action_id.startsWith("move_to_next_stage_")) {
-          const privateMetadata = JSON.stringify({
-              response_url,
-              message_blocks: message.blocks,
-              attachments: message.attachments,
-              candidate_id: candidateId,
-          });
+        if (action_id.startsWith("move_to_next_stage_")) {
+            const privateMetadata = JSON.stringify({
+                response_url,
+                message_blocks: message.blocks,
+                attachments: message.attachments,
+                candidate_id: candidateId,
+            });
 
-          const modalPayload = await createMoveToNextStageModal(
-              trigger_id,
-              candidateId,
-              privateMetadata,
-          );
-          return openModal(modalPayload, accessToken);
-      } else if (action_id.startsWith("reject_candidate_")) {
-          const privateMetadata = JSON.stringify({
-              response_url,
-              message_blocks: message.blocks,
-              attachments: message.attachments,
-              candidate_id: candidateId,
-          });
+            const modalPayload = await createMoveToNextStageModal(
+                trigger_id,
+                candidateId,
+                privateMetadata,
+            );
+            return openModal(modalPayload, accessToken);
+        } else if (action_id.startsWith("reject_candidate_")) {
+            const privateMetadata = JSON.stringify({
+                response_url,
+                message_blocks: message.blocks,
+                attachments: message.attachments,
+                candidate_id: candidateId,
+            });
 
-          const modalPayload = await createRejectCandidateModal(
-              trigger_id,
-              candidateId,
-              privateMetadata,
-          );
-          return openModal(modalPayload, accessToken);
-      }
-  }
+            const modalPayload = await createRejectCandidateModal(
+                trigger_id,
+                candidateId,
+                privateMetadata,
+            );
+            return openModal(modalPayload, accessToken);
+        }
+    }
 
-  // Handle view submissions (for modals)
-  else if (type === "view_submission") {
-      if (payload.view.callback_id === "submit_move_to_next_stage") {
-          return handleMoveToNextStageSubmission(payload);
-      } else if (payload.view.callback_id === "submit_reject_candidate") {
-          return handleRejectCandidateSubmission(payload);
-      } else if (payload.view.callback_id === "debrief_modal") {
-          return handleDebriefSubmission(payload);
-      } else if (payload.view.callback_id === "candidate_search_modal") {  // New case for candidate search
-          return handleCandidateSearchSubmission(payload);
-      }
-  }
+    // Handle view submissions (for modals)
+    else if (type === "view_submission") {
+        if (payload.view.callback_id === "submit_move_to_next_stage") {
+            return handleMoveToNextStageSubmission(payload);
+        } else if (payload.view.callback_id === "submit_reject_candidate") {
+            return handleRejectCandidateSubmission(payload);
+        } else if (payload.view.callback_id === "debrief_modal") {
+            return handleDebriefSubmission(payload);
+        } else if (payload.view.callback_id === "candidate_search_modal") {
+            // New case for candidate search
+            return handleCandidateSearchSubmission(payload);
+        }
+    }
 
-  // Return error for unhandled interaction types
-  return new NextResponse(
-      JSON.stringify({ error: "Unhandled interaction type" }),
-      {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-      },
-  );
+    // Return error for unhandled interaction types
+    return new NextResponse(
+        JSON.stringify({ error: "Unhandled interaction type" }),
+        {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+        },
+    );
 }
 // Function to open a modal in response to a button click
 async function openModal(modalPayload, accessToken) {
-  try {
-      // Send request to Slack's views.open API
-      const response = await fetch("https://slack.com/api/views.open", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json; charset=utf-8",
-              Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(modalPayload),
-      });
+    try {
+        // Send request to Slack's views.open API
+        const response = await fetch("https://slack.com/api/views.open", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(modalPayload),
+        });
 
-      // Parse the response
-      const data = await response.json();
+        // Parse the response
+        const data = await response.json();
 
-      if (response.ok && data.ok) {
-          // If the modal opens successfully, return the view ID and status 200
-          return { status: 200, view_id: data.view.id };
-      } else {
-          // Return an error response if Slack's response isn't successful
-          console.error("Error opening modal:", data.error);
-          return {
-              status: 400,
-              error: data.error || "Failed to open modal"
-          };
-      }
-  } catch (error) {
-      // Catch any other errors and return a response with status 500
-      console.error("Error opening modal:", error);
-      return {
-          status: 500,
-          error: "An error occurred while trying to open the modal"
-      };
-  }
+        if (response.ok && data.ok) {
+            // If the modal opens successfully, return the view ID and status 200
+            return { status: 200, view_id: data.view.id };
+        } else {
+            // Return an error response if Slack's response isn't successful
+            console.error("Error opening modal:", data.error);
+            return {
+                status: 400,
+                error: data.error || "Failed to open modal",
+            };
+        }
+    } catch (error) {
+        // Catch any other errors and return a response with status 500
+        console.error("Error opening modal:", error);
+        return {
+            status: 500,
+            error: "An error occurred while trying to open the modal",
+        };
+    }
 }
-
 
 async function updateModal(updatePayload, accessToken) {
     const response = await fetch("https://slack.com/api/views.update", {
@@ -1027,7 +1015,6 @@ async function updateModal(updatePayload, accessToken) {
         headers: { "Content-Type": "application/json" },
     });
 }
-
 
 async function createMoveToNextStageModal(
     trigger_id: string,
@@ -1449,106 +1436,106 @@ async function handleDebriefCommand(trigger_id, slackTeamId) {
 }
 
 async function handleSearchCommand(trigger_id, slackTeamId) {
-  const accessToken = await getAccessToken(slackTeamId);
+    const accessToken = await getAccessToken(slackTeamId);
 
-  // Initial placeholder modal with design similar to fetchCandidateDataForSearch
-  const initialModalPayload = {
-      trigger_id: trigger_id,
-      view: {
-          type: "modal",
-          callback_id: "candidate_search_modal",
-          title: {
-              type: "plain_text",
-              text: "Search for a candidate",
-              emoji: true
-          },
-          submit: {
-              type: "plain_text",
-              text: "Search",
-              emoji: true
-          },
-          close: {
-              type: "plain_text",
-              text: "Cancel",
-              emoji: true
-          },
-          blocks: [
-              {
-                  type: "section",
-                  text: {
-                      type: "mrkdwn",
-                      text: "Search through candidate records to quickly find and review relevant profiles."
-                  },
-                  accessory: {
-                      type: "image",
-                      image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQRGdTs2tatWjail4b3hpHLIyI-6gXZLxhvw&s", // Placeholder image URL
-                      alt_text: "Candidate Search Placeholder"
-                  }
-              },
-              {
-                  type: "input",
-                  block_id: "candidate_search_block",
-                  label: {
-                      type: "plain_text",
-                      text: "Search"
-                  },
-                  element: {
-                      type: "plain_text_input",
-                      action_id: "search_input",
-                      placeholder: {
-                          type: "plain_text",
-                          text: "Type candidate name..."
-                      }
-                  },
-                  hint: {
-                      type: "plain_text",
-                      text: "Press 'enter' to submit"
-                  }
-              },
-              {
-                  type: "input",
-                  block_id: "filter_by_type",
-                  label: {
-                      type: "plain_text",
-                      text: "Filter By Jobs"
-                  },
-                  element: {
-                      type: "static_select",
-                      action_id: "record_type_select",
-                      placeholder: {
-                          type: "plain_text",
-                          text: "Loading jobs..."
-                      },
-                      options: [
-                          {
-                              text: {
-                                  type: "plain_text",
-                                  text: "Loading..."
-                              },
-                              value: "loading"
-                          }
-                      ]
-                  }
-              }
-          ]
-      }
-  };
+    // Initial placeholder modal with design similar to fetchCandidateDataForSearch
+    const initialModalPayload = {
+        trigger_id: trigger_id,
+        view: {
+            type: "modal",
+            callback_id: "candidate_search_modal",
+            title: {
+                type: "plain_text",
+                text: "Search for a candidate",
+                emoji: true,
+            },
+            submit: {
+                type: "plain_text",
+                text: "Search",
+                emoji: true,
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+                emoji: true,
+            },
+            blocks: [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: "Search through candidate records to quickly find and review relevant profiles.",
+                    },
+                    accessory: {
+                        type: "image",
+                        image_url:
+                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQRGdTs2tatWjail4b3hpHLIyI-6gXZLxhvw&s", // Placeholder image URL
+                        alt_text: "Candidate Search Placeholder",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "candidate_search_block",
+                    label: {
+                        type: "plain_text",
+                        text: "Search",
+                    },
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "search_input",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Type candidate name...",
+                        },
+                    },
+                    hint: {
+                        type: "plain_text",
+                        text: "Press 'enter' to submit",
+                    },
+                },
+                {
+                    type: "input",
+                    block_id: "filter_by_type",
+                    label: {
+                        type: "plain_text",
+                        text: "Filter By Jobs",
+                    },
+                    element: {
+                        type: "static_select",
+                        action_id: "record_type_select",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Loading jobs...",
+                        },
+                        options: [
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: "Loading...",
+                                },
+                                value: "loading",
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    };
 
-  // Show initial modal with placeholder data
-  const { status, view_id } = await openModal(initialModalPayload, accessToken);
+    // Show initial modal with placeholder data
+    const { status, view_id } = await openModal(
+        initialModalPayload,
+        accessToken,
+    );
 
-  if (status === 200) {
-      // After the modal is opened, fetch actual candidates and jobs data
-      await fetchCandidateDataForSearch(view_id, accessToken);
-  }
+    if (status === 200) {
+        // After the modal is opened, fetch actual candidates and jobs data
+        await fetchCandidateDataForSearch(view_id, accessToken);
+    }
 
-  // Ensure a 200 response is returned after the modal is shown
-  return new NextResponse(null, { status: 200 });
+    // Ensure a 200 response is returned after the modal is shown
+    return new NextResponse(null, { status: 200 });
 }
-
-
-
-
 
 export async function POST(request: NextRequest): Promise<void | Response> {
     try {
@@ -1594,36 +1581,36 @@ export async function POST(request: NextRequest): Promise<void | Response> {
             } else {
                 return handleJsonPost(data);
             }
-        }else if (contentType?.includes("application/x-www-form-urlencoded")) {
-          const text = await request.text();
-          const params = new URLSearchParams(text);
-          console.log("params - ", params);
-          const command = params.get("command");
-          const trigger_id = params.get("trigger_id");
-          const team_id = params.get("team_id");
+        } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+            const text = await request.text();
+            const params = new URLSearchParams(text);
+            console.log("params - ", params);
+            const command = params.get("command");
+            const trigger_id = params.get("trigger_id");
+            const team_id = params.get("team_id");
 
-          if (command === "/debrief" && trigger_id) {
-              return handleDebriefCommand(trigger_id, team_id);
-          }
+            if (command === "/debrief" && trigger_id) {
+                return handleDebriefCommand(trigger_id, team_id);
+            }
 
-          // Fixed condition for /search-candidate by removing the extra space
-          if (command === "/search-candidate" && trigger_id) {
-              return handleSearchCommand(trigger_id, team_id);
-          }
+            // Fixed condition for /search-candidate by removing the extra space
+            if (command === "/search-candidate" && trigger_id) {
+                return handleSearchCommand(trigger_id, team_id);
+            }
 
-          const payloadRaw = params.get("payload");
+            const payloadRaw = params.get("payload");
 
-          if (payloadRaw) {
-              return handleSlackInteraction(JSON.parse(payloadRaw));
-          } else {
-              return new NextResponse(
-                  JSON.stringify({
-                      error: "Unrecognized form-urlencoded request",
-                  }),
-                  { status: 400 },
-              );
-          }
-      }
+            if (payloadRaw) {
+                return handleSlackInteraction(JSON.parse(payloadRaw));
+            } else {
+                return new NextResponse(
+                    JSON.stringify({
+                        error: "Unrecognized form-urlencoded request",
+                    }),
+                    { status: 400 },
+                );
+            }
+        }
     } catch (e) {
         console.error("Error handling POST request:", e);
         return new NextResponse(
