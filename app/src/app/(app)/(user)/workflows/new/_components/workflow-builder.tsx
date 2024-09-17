@@ -479,302 +479,277 @@ export function WorkflowBuilder({
 
     return (
         <>
-            <header className="ml-[50px] w-[112%] flex-none border-b border-border bg-white p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex w-[70%] items-center space-x-2">
-                        <Link href="/workflows">
-                            <MoveLeft />
-                        </Link>
-                        <div
-                            className="flex w-[70%] items-center space-x-2"
-                            onDoubleClick={handleDoubleClick}
-                        >
-                            {isEditingName ? (
-                                <input
-                                    type="text"
-                                    value={workflowName}
-                                    onChange={(e) => {
-                                        if (e.target.value.length <= 50) {
-                                            handleNameChange(e);
-                                        }
-                                    }}
-                                    onBlur={handleNameBlur}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleNameBlur(); // Submit on Enter key press
-                                        }
-                                    }}
-                                    className="w-full rounded border border-gray-300 p-1 focus:outline-none"
-                                    autoFocus
-                                    style={{
-                                        fontSize: "1.05rem", // Equivalent to h3 font size
-                                        fontWeight: "bold", // Equivalent to h3 font weight
-                                        lineHeight: "1.75rem", // Adjust line-height similar to h3
-                                        width: "100%",
-                                        maxWidth: "500px",
-                                    }}
-                                />
-                            ) : (
-                                <h3 className="font-heading text-lg font-bold">
-                                    {workflowName}
-                                </h3>
-                            )}
-                            {!isEditingName && (
-                                <button
-                                    className="rounded-full p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
-                                    onClick={handleDoubleClick} // Trigger edit mode on button click
-                                >
-                                    <PencilIcon size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
+<header className="ml-[50px] w-[112%] flex-none border-b border-border bg-white dark:bg-gray-800 dark:border-gray-700 p-4">
+  <div className="flex items-center justify-between">
+    <div className="flex w-[70%] items-center space-x-2">
+      <Link href="/workflows">
+        <MoveLeft className="text-gray-500 dark:text-gray-300" />
+      </Link>
+      <div
+        className="flex w-[70%] items-center space-x-2"
+        onDoubleClick={handleDoubleClick}
+      >
+        {isEditingName ? (
+          <input
+            type="text"
+            value={workflowName}
+            onChange={(e) => {
+              if (e.target.value.length <= 50) {
+                handleNameChange(e);
+              }
+            }}
+            onBlur={handleNameBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleNameBlur(); // Submit on Enter key press
+              }
+            }}
+            className="w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-1 focus:outline-none"
+            autoFocus
+            style={{
+              fontSize: "1.05rem", // Equivalent to h3 font size
+              fontWeight: "bold", // Equivalent to h3 font weight
+              lineHeight: "1.75rem", // Adjust line-height similar to h3
+              width: "100%",
+              maxWidth: "500px",
+            }}
+          />
+        ) : (
+          <h3 className="font-heading text-lg font-bold dark:text-gray-100">
+            {workflowName}
+          </h3>
+        )}
+        {!isEditingName && (
+          <button
+            className="rounded-full p-1 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none"
+            onClick={handleDoubleClick} // Trigger edit mode on button click
+          >
+            <PencilIcon size={16} />
+          </button>
+        )}
+      </div>
+    </div>
 
-                    <div className="flex items-center space-x-4">
-                        <span className="text-xs text-gray-500">
-                            All changes saved
-                        </span>
-                        <WorkflowPublishModal
-                            edit={edit}
-                            workflowId={workflowId}
-                        />
-                        <div className="flex items-center space-x-1">
-                            <Switch
-                                className="data-[state=checked]:bg-indigo-500"
-                                checked={isActive}
-                                onCheckedChange={handleSwitchToggle}
-                                disabled={isUpdatingStatus || !workflowId}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </header>
+    <div className="flex items-center space-x-4">
+      <span className="text-xs text-gray-500 dark:text-gray-300">
+        All changes saved
+      </span>
+      <WorkflowPublishModal
+        edit={edit}
+        workflowId={workflowId}
+      />
+      <div className="flex items-center space-x-1">
+        <Switch
+          className="data-[state=checked]:bg-indigo-500"
+          checked={isActive}
+          onCheckedChange={handleSwitchToggle}
+          disabled={isUpdatingStatus || !workflowId}
+        />
+      </div>
+    </div>
+  </div>
+</header>
 
-            <div className="ml-[50px] flex h-[calc(100vh-64px)] w-[112%]">
+<div className="ml-[50px] flex h-[calc(100vh-64px)] w-[112%]">
+  <div
+    className={`relative flex-grow overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 dark:shadow-inner  shadow-inner ${selectedElement ? "pr-0" : "pr-8"}`}
+  >
+    <div
+      className="absolute inset-0 dark:bg-gray-800"
+      style={{
+        backgroundImage:
+          "radial-gradient(#e5e7eb 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+      }}
+    ></div>
+
+    <div className="relative mr-[20px] mt-8 flex flex-col items-center space-y-3">
+      <AnimatePresence>
+        {steps.map((step, index) => (
+          <React.Fragment key={step.id}>
+            <motion.div
+              className="relative flex w-full flex-col items-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                className={`relative flex w-full max-w-xl cursor-pointer items-center justify-between rounded-lg border-2 p-4 ${
+                  step.status === "skeleton"
+                    ? "border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800"
+                    : "border-l-4 border-green-500 bg-white dark:bg-gray-700 shadow"
+                }`}
+                onClick={() =>
+                  handleElementClick(step)
+                }
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.2 }}
+                style={{ height: "80px" }}
+              >
                 <div
-                    className={`relative flex-grow overflow-y-auto bg-gray-50 p-6 shadow-inner ${selectedElement ? "pr-0" : "pr-8"}`}
+                  className={`absolute left-0 top-0 -ml-2 -mt-4 ${step.status === "skeleton" ? "bg-gray-200 dark:bg-black-600 text-gray-500 dark:text-gray-300" : "bg-indigo-100 text-black dark:bg-indigo-700"} rounded-br-md rounded-tl-md px-3 py-1`}
                 >
-                    <div
-                        className="absolute inset-0"
-                        style={{
-                            backgroundImage:
-                                "radial-gradient(#e5e7eb 1px, transparent 1px)",
-                            backgroundSize: "20px 20px",
-                        }}
-                    ></div>
-
-                    <div className="relative mr-[20px] mt-8 flex flex-col items-center space-y-3">
-                        <AnimatePresence>
-                            {steps.map((step, index) => (
-                                <React.Fragment key={step.id}>
-                                    <motion.div
-                                        className="relative flex w-full flex-col items-center"
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -20 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <motion.div
-                                            className={`relative flex w-full max-w-xl cursor-pointer items-center justify-between rounded-lg border-2 p-4 ${
-                                                step.status === "skeleton"
-                                                    ? "border-dashed border-gray-300 bg-gray-100"
-                                                    : "border-l-4 border-green-500 bg-white shadow"
-                                            }`}
-                                            onClick={() =>
-                                                handleElementClick(step)
-                                            }
-                                            whileHover={{ scale: 1.03 }}
-                                            transition={{ duration: 0.2 }}
-                                            style={{ height: "80px" }}
-                                        >
-                                            <div
-                                                className={`absolute left-0 top-0 -ml-2 -mt-4 ${step.status === "skeleton" ? "bg-gray-200 text-gray-500" : "bg-indigo-100 text-black"} rounded-br-md rounded-tl-md px-3 py-1`}
-                                            >
-                                                <span className="text-xs font-semibold">
-                                                    {step.label}
-                                                </span>
-                                            </div>
-                                            {step.status === "skeleton" ? (
-                                                <div className="flex items-center">
-                                                    <Image
-                                                        src={step.icon}
-                                                        alt={`${step.type} Icon`}
-                                                        width={20}
-                                                        height={20}
-                                                        className="mr-4 text-gray-400"
-                                                    />
-                                                    <div>
-                                                        <span className="font-semibold text-gray-400">
-                                                            Click to add{" "}
-                                                            {step.type.toLowerCase()}{" "}
-                                                            details
-                                                        </span>
-                                                        <p className="text-sm text-gray-400">
-                                                            Enter details
-                                                            here...
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center">
-                                                    <Image
-                                                        src={step.icon}
-                                                        alt={`${step.type} Icon`}
-                                                        width={30}
-                                                        height={30}
-                                                        className="mr-4"
-                                                    />
-                                                    <div>
-                                                        <span className="font-semibold">
-                                                            {step.name}
-                                                        </span>
-                                                        <p className="text-sm text-gray-500">
-                                                            {step.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    </motion.div>
-                                    {index < steps.length - 1 && (
-                                        <div className="flex flex-col items-center ">
-                                            <div className="mb-1 h-4 w-px bg-indigo-300"></div>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <button className="text-indigo-500">
-                                                        <PlusCircleIcon className="h-6 w-6" />
-                                                    </button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="rounded-lg p-4 shadow-lg">
-                                                    <Select
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            value ===
-                                                                "Condition" &&
-                                                            addConditionStep(
-                                                                index,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="flex w-full items-center space-x-2">
-                                                            <PlusCircleIcon className="h-5 w-5 text-gray-500" />
-                                                            <SelectValue placeholder="Add Step" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="Condition">
-                                                                <div className="flex items-start">
-                                                                    <Filter className="mr-2 h-5 w-5 text-gray-600" />
-                                                                    <div>
-                                                                        <p className="font-medium">
-                                                                            Add
-                                                                            Condition
-                                                                        </p>
-                                                                        <p className="text-sm text-gray-500">
-                                                                            Set
-                                                                            up a
-                                                                            rule
-                                                                            to
-                                                                            refine
-                                                                            your
-                                                                            workflow
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </PopoverContent>
-                                            </Popover>
-                                            <div className="mt-1 h-4 w-px bg-indigo-300"></div>
-                                        </div>
-                                    )}
-                                </React.Fragment>
-                            ))}
-                        </AnimatePresence>
-                    </div>
+                  <span className="text-xs font-semibold dark:text-white">
+                    {step.label}
+                  </span>
                 </div>
-
-                <AnimatePresence>
-                    {selectedElement && (
-                        <motion.div
-                            className="relative flex h-full overflow-y-auto bg-white p-6 shadow-lg"
-                            style={{ width: sidebarWidth }}
-                            initial={{ opacity: 0, x: 100 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 100 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <div
-                                className="absolute left-0 top-0 h-full w-1 cursor-ew-resize hover:bg-indigo-500"
-                                onMouseDown={startResizing}
-                            />
-                            <div className="absolute left-[-13px] top-1/2 z-10 flex -translate-y-1/2 transform items-center justify-center">
-                                <div
-                                    className="cursor-ew-resize rounded-full bg-gray-200 p-1 shadow"
-                                    onMouseDown={startResizing}
-                                >
-                                    <MoveHorizontal
-                                        className="text-gray-600"
-                                        size={16}
-                                    />
-                                </div>
+                {step.status === "skeleton" ? (
+                  <div className="flex items-center">
+                    <Image
+                      src={step.icon}
+                      alt={`${step.type} Icon`}
+                      width={20}
+                      height={20}
+                      className="mr-4 text-gray-400 dark:text-gray-500"
+                    />
+                    <div>
+                      <span className="font-semibold text-gray-400 dark:text-gray-300">
+                        Click to add {step.type.toLowerCase()} details
+                      </span>
+                      <p className="text-sm text-gray-400 dark:text-gray-300">
+                        Enter details here...
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <Image
+                      src={step.icon}
+                      alt={`${step.type} Icon`}
+                      width={30}
+                      height={30}
+                      className="mr-4"
+                    />
+                    <div>
+                      <span className="font-semibold dark:text-gray-100">
+                        {step.name}
+                      </span>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+            {index < steps.length - 1 && (
+              <div className="flex flex-col items-center">
+                <div className="mb-1 h-4 w-px bg-indigo-300 dark:bg-indigo-500"></div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="text-indigo-500 dark:text-indigo-300">
+                      <PlusCircleIcon className="h-6 w-6" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="rounded-lg p-4 shadow-lg dark:bg-gray-800 dark:text-gray-200">
+                    <Select
+                      onValueChange={(value) =>
+                        value === "Condition" && addConditionStep(index)
+                      }
+                    >
+                      <SelectTrigger className="flex w-full items-center space-x-2 dark:bg-gray-700">
+                        <PlusCircleIcon className="h-5 w-5 text-gray-500 dark:text-gray-300" />
+                        <SelectValue placeholder="Add Step" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Condition">
+                          <div className="flex items-start">
+                            <Filter className="mr-2 h-5 w-5 text-gray-600 dark:text-gray-400" />
+                            <div>
+                              <p className="font-medium dark:text-gray-200">
+                                Add Condition
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Set up a rule to refine your workflow
+                              </p>
                             </div>
-                            <div className="flex-grow">
-                                <button
-                                    className="absolute right-2 top-2 rounded-full p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
-                                    onClick={handleCloseSidebar}
-                                >
-                                    <XIcon size={20} />
-                                </button>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </PopoverContent>
+                </Popover>
+                <div className="mt-1 h-4 w-px bg-indigo-300 dark:bg-indigo-500"></div>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </AnimatePresence>
+    </div>
+  </div>
 
-                                {selectedElement.type === "Trigger" && (
-                                    <TriggersComponent
-                                        onSaveTrigger={handleSaveTriggers}
-                                        workflowData={
-                                            edit
-                                                ? JSON.parse(
-                                                      localStorage.getItem(
-                                                          localStorageKeyTriggers,
-                                                      ),
-                                                  )
-                                                : null
-                                        }
-                                    />
-                                )}
-                                {selectedElement.type === "Action" && (
-                                    <Actions
-                                        onSaveActions={handleSaveActions}
-                                        workflowData={
-                                            edit
-                                                ? JSON.parse(
-                                                      localStorage.getItem(
-                                                          localStorageKeyActions,
-                                                      ),
-                                                  )
-                                                : null
-                                        }
-                                    />
-                                )}
-                                {selectedElement.type === "Condition" && (
-                                    <ConditionsComponent
-                                        onSaveConditions={handleSaveConditions}
-                                        workflowData={
-                                            edit
-                                                ? JSON.parse(
-                                                      localStorage.getItem(
-                                                          localStorageKeyConditions,
-                                                      ),
-                                                  )
-                                                : null
-                                        }
-                                    />
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+  <AnimatePresence>
+    {selectedElement && (
+      <motion.div
+        className="relative flex h-full overflow-y-auto bg-white dark:bg-gray-800 p-6 shadow-lg"
+        style={{ width: sidebarWidth }}
+        initial={{ opacity: 0, x: 100 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 100 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div
+          className="absolute left-0 top-0 h-full w-1 cursor-ew-resize hover:bg-indigo-500 dark:hover:bg-indigo-300"
+          onMouseDown={startResizing}
+        />
+        <div className="absolute left-[-13px] top-1/2 z-10 flex -translate-y-1/2 transform items-center justify-center">
+          <div
+            className="cursor-ew-resize rounded-full bg-gray-200 dark:bg-gray-600 p-1 shadow"
+            onMouseDown={startResizing}
+          >
+            <MoveHorizontal className="text-gray-600 dark:text-gray-300" size={16} />
+          </div>
+        </div>
+        <div className="flex-grow">
+          <button
+            className="absolute right-2 top-2 rounded-full p-1 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none"
+            onClick={handleCloseSidebar}
+          >
+            <XIcon size={20} />
+          </button>
+
+          {selectedElement.type === "Trigger" && (
+            <TriggersComponent
+              onSaveTrigger={handleSaveTriggers}
+              workflowData={
+                edit
+                  ? JSON.parse(
+                      localStorage.getItem(localStorageKeyTriggers),
+                    )
+                  : null
+              }
+            />
+          )}
+          {selectedElement.type === "Action" && (
+            <Actions
+              onSaveActions={handleSaveActions}
+              workflowData={
+                edit
+                  ? JSON.parse(
+                      localStorage.getItem(localStorageKeyActions),
+                    )
+                  : null
+              }
+            />
+          )}
+          {selectedElement.type === "Condition" && (
+            <ConditionsComponent
+              onSaveConditions={handleSaveConditions}
+              workflowData={
+                edit
+                  ? JSON.parse(
+                      localStorage.getItem(localStorageKeyConditions),
+                    )
+                  : null
+              }
+            />
+          )}
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
         </>
     );
 }

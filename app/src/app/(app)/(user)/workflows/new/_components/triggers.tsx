@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import JobsDropdown from "../../_components/job-select";
 import StagesDropdown from "../../_components/stages-dropdown";
 import { customFetchTester } from "@/utils/fetch";
+import TestResult from "./testResults";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -594,76 +595,12 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
 
                                 {/* Test Result Display */}
                                 {testResult && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{
-                                            duration: 0.5,
-                                            ease: "easeOut",
-                                        }}
-                                        className={`mt-4 rounded-lg p-6 shadow-md ${
-                                            testResult.success
-                                                ? "border-l-4 border-green-400 bg-green-50 text-green-800"
-                                                : "border-l-4 border-red-400 bg-red-50 text-red-800"
-                                        }`}
-                                        style={{
-                                            maxWidth: "100%",
-                                            wordWrap: "break-word",
-                                        }}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-xl font-bold">
-                                                {testResult.success
-                                                    ? "Test Successful"
-                                                    : "Test Failed"}
-                                            </h3>
-                                            <span className="font-semibold">
-                                                Status Code: {testResult.status}
-                                            </span>
-                                        </div>
-                                        <div className="mt-2">
-                                            <p className="font-medium">
-                                                Response Data:
-                                            </p>
-                                            <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-100 p-2 text-sm">
-                                                {previewData &&
-                                                previewData.length > 300
-                                                    ? `${previewData.slice(0, 300)}...`
-                                                    : previewData ||
-                                                      "No data available"}
-                                            </pre>
-                                            {previewData &&
-                                                previewData.length > 300 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            setShowFullData(
-                                                                !showFullData,
-                                                            )
-                                                        }
-                                                        className="mt-2 text-sm text-blue-500 hover:underline"
-                                                    >
-                                                        {showFullData
-                                                            ? "Show Less"
-                                                            : "Show More"}
-                                                    </button>
-                                                )}
-                                            {showFullData && previewData && (
-                                                <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-100 p-2 text-sm">
-                                                    {JSON.stringify(
-                                                        testResult.data,
-                                                        null,
-                                                        2,
-                                                    )}
-                                                </pre>
-                                            )}
-                                        </div>
-                                        <div className="mt-2">
-                                            <p className="font-medium">
-                                                Message:
-                                            </p>
-                                            <p>{testResult.message}</p>
-                                        </div>
-                                    </motion.div>
+                                    <TestResult
+                                        {...testResult}
+                                        data={previewData}
+                                        showFullData={showFullData}
+                                        setShowFullData={setShowFullData}
+                                    />
                                 )}
                             </CardContent>
                         </Card>

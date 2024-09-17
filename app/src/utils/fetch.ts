@@ -28,7 +28,6 @@ export async function customFetch(
                 `HTTP error! Status: ${response.status}, Body: ${JSON.stringify(response.data)}`,
             );
         }
-        console.log("response.data  ", response);
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -72,7 +71,6 @@ export async function customFetchTester(
             },
         );
 
-        console.log("response.data  ", response);
         return response;
     } catch (error) {
         if (axios.isAxiosError(error)) {

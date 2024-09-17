@@ -138,7 +138,6 @@ export async function matchUsers(
     greenhouseUsers: Record<string, { id: string; email: string }>,
     slackUsers: { value: string; label: string; email: string }[],
 ): Promise<Record<string, string>> {
-    console.log("WTF IN MATCH");
     // candidate -> application -> greenhouseUser role -> greenhouse User -> slackUser
     const slackUserMap = slackUsers.reduce(
         (acc: Record<string, string>, user) => {
@@ -158,7 +157,6 @@ export async function matchUsers(
             // console.log('email - ',email)
             // console.log('slackId - ',slackId)
             if (slackId) {
-                console.log("email - in user matching", email);
                 userMapping[greenhouseUser.id] = slackId; // Use Greenhouse user ID as the key
             }
         }
@@ -174,26 +172,20 @@ export function addGreenhouseSlackValue(
     candidates.forEach((candidate: any) => {
         const role = recipient.value as string;
         if (role.includes("ecruiter")) {
-            console.log("found role recruiter- ", candidate.recruiter?.id);
             if (candidate.recruiter) {
                 const slackId = userMapping[candidate.recruiter.id];
                 if (slackId) {
-                    console.log("entered map");
                     recipient.slackValue = slackId;
                 } else {
-                    console.log("else map", candidate.recruiter.first_name);
                     recipient.slackValue = "no bucks";
                 }
             }
         } else if (role.includes("oordinator")) {
-            console.log("found role - ", candidate.coordinator?.id);
             if (candidate.coordinator) {
                 const slackId = userMapping[candidate.coordinator.id];
                 if (slackId) {
-                    console.log("entered map");
                     recipient.slackValue = slackId;
                 } else {
-                    console.log("else map", candidate.coordinator.first_name);
                     recipient.slackValue = "no bucks coordinator";
                 }
             }
@@ -298,7 +290,7 @@ export async function filterScheduledInterviewsDataForSlack(
         };
 
         // Log interviewers to debug
-        console.log("Interviewers:", interview.interviewers);
+        // console.log("Interviewers:", interview.interviewers);
 
         // Replace placeholders in customMessageBody
         let customMessageBody = workflow.customMessageBody;
@@ -322,10 +314,10 @@ export async function filterScheduledInterviewsDataForSlack(
                 const role = recipient.value as string;
                 if (role.includes("nterviewer")) {
                     interview.interviewers.forEach((int) => {
-                        console.log("Checking interviewer:", int);
+                        // console.log("Checking interviewer:", int);
                         const slackId = userMapping[int.id];
                         if (slackId) {
-                            console.log("Interviewer Slack ID:", slackId);
+                            // console.log("Interviewer Slack ID:", slackId);
                             recipient.slackValue = slackId;
                         } else {
                             recipient.slackValue = "no match";

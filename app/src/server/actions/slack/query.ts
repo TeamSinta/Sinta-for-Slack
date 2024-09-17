@@ -9,6 +9,7 @@ import {
 } from "@/server/db/schema";
 import { and, eq, type SQLWrapper } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
+import { getServerAuthSession } from "@/server/auth";
 
 export async function getAccessToken(teamId: string): Promise<string> {
     if (!teamId) {
@@ -127,6 +128,23 @@ export async function setAccessToken(
         .execute();
 
     return result ? "OK" : "Failed to update access token";
+}
+
+export async function addSlackUserIdToDB(slackUserId: string) {
+    const { currentOrg } = await getOrganizations();
+    const user = await getServerAuthSession();
+    if (!user) return null;
+    const result = await db
+        .update(membersToOrganizations)
+        .set({ slack_user_id: slackUserId })
+        .where(
+            and(
+                eq(membersToOrganizations.organizationId, currentOrg.id),
+                eq(membersToOrganizations.memberId, user?.user?.id),
+            ),
+        );
+
+    return true;
 }
 
 export async function checkForSlackTeamIDConflict(teamId: string | SQLWrapper) {
