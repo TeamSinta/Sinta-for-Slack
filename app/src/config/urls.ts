@@ -6,7 +6,6 @@
  * 2. Import the siteUrls object from "@/config/urls" in the file where you want to use the URL.
  * 3. Use the URL in the file.
  */
-
 export const siteUrls = {
     publicUrl: "https://teamsinta.com/",
     github: "https://github.com/msinta/",
