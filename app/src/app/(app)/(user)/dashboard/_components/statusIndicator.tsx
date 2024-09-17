@@ -19,7 +19,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
             {/* Image component with proper src prop */}
             <Image src={icon} alt="" width={20} height={20} className="mr-2" />
             <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-700 dark:text-white">
+                <span className="font-medium text-sm text-gray-700 dark:text-white">
                     {text}
                 </span>
                 <span
