@@ -36,6 +36,7 @@ export const env = createEnv({
         GREENHOUSE_API_HARVEST: z.string(),
         OPENAI_API_KEY: z.string(),
         BRANCH_NAME: z.string(),
+        GREENHOUSE_SECRET_KEY: z.string(),
     },
 
     /**
@@ -70,6 +71,7 @@ export const env = createEnv({
         GREENHOUSE_API_HARVEST: process.env.GREENHOUSE_API_HARVEST,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         BRANCH_NAME: process.env.BRANCH_NAME,
+        GREENHOUSE_SECRET_KEY: process.env.GREENHOUSE_SECRET_KEY,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
