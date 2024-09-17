@@ -14,105 +14,107 @@ import {
     filterInterviewsForUser,
 } from "@/server/greenhouse/core";
 
-
 export async function handleSlackEvent(data: any) {
-  // Check if the event type is "block_actions"
-  if (data.type === "block_actions") {
-      // Handle block actions, specifically tab switching
-      const userId = data?.user?.id; // User ID for block_actions
-      const teamId = data?.team?.id; // Team ID for block_actions
-      const action = data?.actions?.[0]?.action_id; // Action ID for block_actions
-      const tab = "home"; // Default to "home" as block_actions doesn't have tab
+    // Check if the event type is "block_actions"
+    if (data.type === "block_actions") {
+        // Handle block actions, specifically tab switching
+        const userId = data?.user?.id; // User ID for block_actions
+        const teamId = data?.team?.id; // Team ID for block_actions
+        const action = data?.actions?.[0]?.action_id; // Action ID for block_actions
+        const tab = "home"; // Default to "home" as block_actions doesn't have tab
 
-      console.log("action:", action);
-      console.log("tab:", tab);
+        console.log("action:", action);
+        console.log("tab:", tab);
 
-      // Handle tab switching actions for block actions
-      if (action) {
-          switch (action) {
-              case "home_tab":
-                  return loadUserDashboard(userId, teamId, "home");
-              case "hiring_rooms_tab":
-                  return loadUserDashboard(userId, teamId, "hiring_rooms");
-              case "candidate_rooms_tab":
-                  return loadUserDashboard(userId, teamId, "candidates");
-              case "jobs_tab":
-                  return loadUserDashboard(userId, teamId, "jobs");
-              default:
-                  console.error("Unknown action_id:", action);
-                  return new NextResponse(
-                      JSON.stringify({ error: "Unknown action_id" }),
-                      {
-                          status: 400,
-                          headers: { "Content-Type": "application/json" },
-                      },
-                  );
-          }
-      }
-  } else {
-      // Handle regular Slack events
-      console.log("Slack Event:", data.event);
+        // Handle tab switching actions for block actions
+        if (action) {
+            switch (action) {
+                case "home_tab":
+                    return loadUserDashboard(userId, teamId, "home");
+                case "hiring_rooms_tab":
+                    return loadUserDashboard(userId, teamId, "hiring_rooms");
+                case "candidate_rooms_tab":
+                    return loadUserDashboard(userId, teamId, "candidates");
+                case "jobs_tab":
+                    return loadUserDashboard(userId, teamId, "jobs");
+                default:
+                    console.error("Unknown action_id:", action);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Unknown action_id" }),
+                        {
+                            status: 400,
+                            headers: { "Content-Type": "application/json" },
+                        },
+                    );
+            }
+        }
+    } else {
+        // Handle regular Slack events
+        console.log("Slack Event:", data.event);
 
-      const userId = data?.event?.user;
-      const teamId = data?.event?.view?.team_id;
-      const tab = data?.event?.tab;
-      const action = data?.actions?.[0]?.action_id;
+        const userId = data?.event?.user;
+        const teamId = data?.event?.view?.team_id;
+        const tab = data?.event?.tab;
+        const action = data?.actions?.[0]?.action_id;
 
-      console.log("action:", action);
-      console.log("tab:", tab);
+        console.log("action:", action);
+        console.log("tab:", tab);
 
-      // If the tab is not 'home', return a 200 response immediately
-      if (tab !== "home") {
-          return new NextResponse(
-              JSON.stringify({
-                  message: "Non-home tab event received and ignored",
-              }),
-              { status: 200, headers: { "Content-Type": "application/json" } },
-          );
-      }
+        // If the tab is not 'home', return a 200 response immediately
+        if (tab !== "home") {
+            return new NextResponse(
+                JSON.stringify({
+                    message: "Non-home tab event received and ignored",
+                }),
+                {
+                    status: 200,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        }
 
-      // Make sure the values are not undefined
-      if (!userId || !teamId) {
-          throw new Error("Invalid userId, teamId, or tab not 'home'");
-      }
+        // Make sure the values are not undefined
+        if (!userId || !teamId) {
+            throw new Error("Invalid userId, teamId, or tab not 'home'");
+        }
 
-      // Handle tab switching actions for regular events
-      if (action) {
-          switch (action) {
-              case "home_tab":
-                  return loadUserDashboard(userId, teamId, "home");
-              case "hiring_rooms_tab":
-                  return loadUserDashboard(userId, teamId, "hiring_rooms");
-              case "candidate_rooms_tab":
-                  return loadUserDashboard(userId, teamId, "candidates");
-              case "jobs_tab":
-                  return loadUserDashboard(userId, teamId, "jobs");
-              default:
-                  console.error("Unknown action_id:", action);
-                  return new NextResponse(
-                      JSON.stringify({ error: "Unknown action_id" }),
-                      {
-                          status: 400,
-                          headers: { "Content-Type": "application/json" },
-                      },
-                  );
-          }
-      }
+        // Handle tab switching actions for regular events
+        if (action) {
+            switch (action) {
+                case "home_tab":
+                    return loadUserDashboard(userId, teamId, "home");
+                case "hiring_rooms_tab":
+                    return loadUserDashboard(userId, teamId, "hiring_rooms");
+                case "candidate_rooms_tab":
+                    return loadUserDashboard(userId, teamId, "candidates");
+                case "jobs_tab":
+                    return loadUserDashboard(userId, teamId, "jobs");
+                default:
+                    console.error("Unknown action_id:", action);
+                    return new NextResponse(
+                        JSON.stringify({ error: "Unknown action_id" }),
+                        {
+                            status: 400,
+                            headers: { "Content-Type": "application/json" },
+                        },
+                    );
+            }
+        }
 
-      // Perform your database operations or other logic here
-      const isMember = await isUserMemberOfOrg({
-          slackUserId: userId,
-          slackTeamId: teamId,
-      });
+        // Perform your database operations or other logic here
+        const isMember = await isUserMemberOfOrg({
+            slackUserId: userId,
+            slackTeamId: teamId,
+        });
 
-      console.log("Is member:", isMember);
+        console.log("Is member:", isMember);
 
-      if (!isMember) {
-          return showInviteScreen(userId, teamId);
-      } else {
-          return loadUserDashboard(userId, teamId, "home");
-      }
-  }
+        if (!isMember) {
+            return showInviteScreen(userId, teamId);
+        } else {
+            return loadUserDashboard(userId, teamId, "home");
+        }
+    }
 }
 
 export async function POST(request: Request) {
@@ -272,14 +274,14 @@ async function loadUserDashboard(userId: string, teamId: string, p0: string) {
                                 : undefined,
                     },
                     {
-                      type: "button",
-                      text: {
-                          type: "plain_text",
-                          text: "👤 Candidates",
-                          emoji: true,
-                      },
-                      action_id: "candidate_rooms_tab",
-                  },
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "👤 Candidates",
+                            emoji: true,
+                        },
+                        action_id: "candidate_rooms_tab",
+                    },
                     {
                         type: "button",
                         text: {
@@ -422,7 +424,9 @@ async function loadUserDashboard(userId: string, teamId: string, p0: string) {
                                     text: "Complete Feedback",
                                     emoji: true,
                                 },
-                                url: interview.feedbackLink || "https://5bc1e5fa5023dc7a.ngrok.app/workspaces",
+                                url:
+                                    interview.feedbackLink ||
+                                    "https://5bc1e5fa5023dc7a.ngrok.app/workspaces",
                                 style: "primary",
                             },
                         });
@@ -482,397 +486,324 @@ async function loadUserDashboard(userId: string, teamId: string, p0: string) {
         } else if (selectedTab === "candidates") {
             // Step 8: Handle non-home tabs
 
-
-          blocks.push({
-              type: "header",
-              text: {
-                  type: "plain_text",
-                  text: "👤 Candidate View",
-                  emoji: true,
-              },
-          });
-
-          blocks.push({
-              type: "section",
-              text: {
-                  type: "mrkdwn",
-                  text: "View and manage all candidate details, stages, and actions in *one* place.",
-              },
-          });
-
-          blocks.push({
-              type: "divider",
-          });
-
-          // Example candidates (you can dynamically fetch these based on your data)
-          const candidates = [
-              {
-                  name: "John Doe",
-                  stage: "Interviewing",
-                  nextSteps: "Technical Interview with <@U06UPA4MQ13> @ 10/24/24",
-                  progress: "🟩🟩🟩⬜⬜",
-              },
-              {
-                  name: "Jane Smith",
-                  stage: "Screening",
-                  nextSteps: "Interview completed",
-                  progress: "🟩🟩⬜⬜⬜",
-              },
-              {
-                  name: "Bob Brown",
-                  stage: "Offer Stage",
-                  nextSteps: "Offer presented",
-                  progress: "🟩🟩🟩🟩⬜",
-              },
-              {
-                  name: "Ann Lee",
-                  stage: "Final Review",
-                  nextSteps: "Screening Interview with <@U06UKCS4NDU>",
-                  progress: "🟩🟩🟩🟩⬜",
-              },
-          ];
-
-          candidates.forEach((candidate) => {
-              blocks.push({
-                  type: "section",
-                  text: {
-                      type: "mrkdwn",
-                      text: `<https://candidateprofile.com/${candidate.name
-                          .toLowerCase()
-                          .replace(" ", "")}|*${candidate.name}*>`,
-                  },
-              });
-
-              blocks.push({
-                  type: "section",
-                  text: {
-                      type: "mrkdwn",
-                      text: `*Stage:* ${candidate.stage}\n*Next Steps:* ${candidate.nextSteps}`,
-                  },
-              });
-
-              blocks.push({
-                  type: "section",
-                  text: {
-                      type: "mrkdwn",
-                      text: `*Progress:*\n${candidate.progress}`,
-                  },
-              });
-
-              blocks.push({
-                  type: "actions",
-                  elements: [
-                      {
-                          type: "button",
-                          text: {
-                              type: "plain_text",
-                              text: "Move to Stage",
-                              emoji: true,
-                          },
-                          style: "primary",
-                          value: "move_stage",
-                      },
-                      {
-                          type: "button",
-                          text: {
-                              type: "plain_text",
-                              text: "Reject",
-                              emoji: true,
-                          },
-                          style: "danger",
-                          value: "reject",
-                      },
-                      {
-                          type: "button",
-                          text: {
-                              type: "plain_text",
-                              text: "Create Candidate Channel",
-                              emoji: true,
-                          },
-                          value: "create_channel",
-                      },
-                      {
-                          type: "button",
-                          text: {
-                              type: "plain_text",
-                              text: "See Profile",
-                              emoji: true,
-                          },
-                          value: "profile",
-                      },
-                      {
-                          type: "overflow",
-                          options: [
-                              {
-                                  text: {
-                                      type: "plain_text",
-                                      text: "See all interviews",
-                                  },
-                                  value: "interviews",
-                              },
-                              {
-                                  text: {
-                                      type: "plain_text",
-                                      text: "See activity feed",
-                                  },
-                                  value: "activity",
-                              },
-                              {
-                                  text: {
-                                      type: "plain_text",
-                                      text: "View scorecards",
-                                  },
-                                  value: "scorecards",
-                              },
-                          ],
-                      },
-                  ],
-              });
-
-              blocks.push({
-                  type: "divider",
-              });
-          });
-      }
-
-      else if (selectedTab === "hiring_rooms") {
-        // Step 8: Handle non-home tabs for "Hiring Channels"
-        blocks.push({
-            type: "header",
-            text: {
-                type: "plain_text",
-                text: "🛠️ Hiring Channels View",
-                emoji: true,
-            },
-        });
-
-        blocks.push({
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: "Manage all your debrief, role, and candidate channels in *one* place.",
-            },
-        });
-
-        blocks.push({
-            type: "divider",
-        });
-
-        // Debrief Rooms
-        blocks.push({
-            type: "header",
-            text: {
-                type: "plain_text",
-                text: "Debrief Rooms",
-            },
-        });
-
-        const debriefRooms = [
-            {
-                channel: "#debrief-director-of-sales-development",
-                role: "Director of Sales Development",
-            },
-        ];
-
-        debriefRooms.forEach((room) => {
             blocks.push({
-                type: "section",
+                type: "header",
                 text: {
-                    type: "mrkdwn",
-                    text: `*${room.channel}*\nRole: ${room.role}`,
-                },
-                accessory: {
-                    type: "button",
-                    text: {
-                        type: "plain_text",
-                        text: "Archive",
-                        emoji: true,
-                    },
-                    value: "archive_room",
-                },
-            });
-
-            blocks.push({
-                type: "divider",
-            });
-        });
-
-        // Role Channels
-        blocks.push({
-            type: "header",
-            text: {
-                type: "plain_text",
-                text: "Role Channels",
-            },
-        });
-
-        const roleChannels = [
-            {
-                channel: "#hire-sales-engineering-2024",
-                role: "Head of Engineering",
-            },
-            {
-                channel: "#hire-head-of-sales",
-                role: "Head of Sales",
-            },
-            {
-                channel: "#hire-head-ops-2024",
-                role: "Head of Operations",
-            },
-        ];
-
-        roleChannels.forEach((roleChannel) => {
-            blocks.push({
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `*${roleChannel.channel}*\nRole: ${roleChannel.role}`,
-                },
-                accessory: {
-                    type: "button",
-                    text: {
-                        type: "plain_text",
-                        text: "Archive",
-                        emoji: true,
-                    },
-                    value: "archive_room",
-                },
-            });
-
-            blocks.push({
-                type: "divider",
-            });
-        });
-
-        // Candidate Channels
-        blocks.push({
-            type: "header",
-            text: {
-                type: "plain_text",
-                text: "Candidate Channels",
-            },
-        });
-
-        const candidateChannels = [
-            {
-                channel: "#sales-development--enet-2024-04-07-dave-matthews",
-                role: "Sales Development Repenentative",
-            },
-        ];
-
-        candidateChannels.forEach((candidateChannel) => {
-            blocks.push({
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `*${candidateChannel.channel}*\nCandidate: ${candidateChannel.role}`,
-                },
-                accessory: {
-                    type: "button",
-                    text: {
-                        type: "plain_text",
-                        text: "Archive",
-                        emoji: true,
-                    },
-                    value: "archive_room",
-                },
-            });
-
-            blocks.push({
-                type: "divider",
-            });
-        });
-      }
-
-      else if (selectedTab === "jobs") {
-        // Step 8: Handle non-home tabs for "Jobs View"
-
-        blocks.push({
-            type: "header",
-            text: {
-                type: "plain_text",
-                text: "📋 Jobs View",
-                emoji: true,
-            },
-        });
-
-        blocks.push({
-            type: "context",
-            elements: [
-                {
                     type: "plain_text",
-                    text: "View and manage all job roles, teams, and hiring rooms.",
+                    text: "👤 Candidate View",
                     emoji: true,
                 },
-            ],
-        });
+            });
 
-        blocks.push({
-            type: "divider",
-        });
-
-        // Job roles
-        const jobs = [
-            {
-                role: "Head of Engineering",
-                department: "Engineering",
-                team: [
-                    { name: "Recruiting Coordinator", id: "<@U05Q2TYGV5X>" },
-                    { name: "Hiring Manager", id: "<@U04L1685M5J>" },
-                ],
-                channel: "<#C06UJKWG4G2>",
-            },
-            {
-                role: "Head of Sales",
-                department: "Sales",
-                team: [
-                    { name: "Recruiting Coordinator", id: "<@U04KS4AQG0N>" },
-                    { name: "Hiring Manager", id: "<@U07JZV45HTQ>" },
-                ],
-                channel: "<#C07BW7W025R>",
-            },
-            {
-                role: "Head of Operations",
-                department: "Operations",
-                team: [
-                    { name: "Recruiting Coordinator", id: "<@U06CKTBCABG>" },
-                    { name: "Hiring Manager", id: "<@U06PELS9R7Z>" },
-                ],
-                channel: "<#C07CK50C7RN>",
-            },
-        ];
-
-        jobs.forEach((job) => {
             blocks.push({
                 type: "section",
                 text: {
                     type: "mrkdwn",
-                    text: `*Role:* ${job.role}\n*Department:* ${job.department}\n*Hiring Team:* ${job.team
-                        .map((member) => `${member.id} (${member.name})`)
-                        .join(", ")}\n*Hiring Room Channel:* ${job.channel}`,
+                    text: "View and manage all candidate details, stages, and actions in *one* place.",
                 },
             });
 
             blocks.push({
-                type: "actions",
+                type: "divider",
+            });
+
+            // Example candidates (you can dynamically fetch these based on your data)
+            const candidates = [
+                {
+                    name: "John Doe",
+                    stage: "Interviewing",
+                    nextSteps:
+                        "Technical Interview with <@U06UPA4MQ13> @ 10/24/24",
+                    progress: "🟩🟩🟩⬜⬜",
+                },
+                {
+                    name: "Jane Smith",
+                    stage: "Screening",
+                    nextSteps: "Interview completed",
+                    progress: "🟩🟩⬜⬜⬜",
+                },
+                {
+                    name: "Bob Brown",
+                    stage: "Offer Stage",
+                    nextSteps: "Offer presented",
+                    progress: "🟩🟩🟩🟩⬜",
+                },
+                {
+                    name: "Ann Lee",
+                    stage: "Final Review",
+                    nextSteps: "Screening Interview with <@U06UKCS4NDU>",
+                    progress: "🟩🟩🟩🟩⬜",
+                },
+            ];
+
+            candidates.forEach((candidate) => {
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `<https://candidateprofile.com/${candidate.name
+                            .toLowerCase()
+                            .replace(" ", "")}|*${candidate.name}*>`,
+                    },
+                });
+
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*Stage:* ${candidate.stage}\n*Next Steps:* ${candidate.nextSteps}`,
+                    },
+                });
+
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*Progress:*\n${candidate.progress}`,
+                    },
+                });
+
+                blocks.push({
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Move to Stage",
+                                emoji: true,
+                            },
+                            style: "primary",
+                            value: "move_stage",
+                        },
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Reject",
+                                emoji: true,
+                            },
+                            style: "danger",
+                            value: "reject",
+                        },
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Create Candidate Channel",
+                                emoji: true,
+                            },
+                            value: "create_channel",
+                        },
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "See Profile",
+                                emoji: true,
+                            },
+                            value: "profile",
+                        },
+                        {
+                            type: "overflow",
+                            options: [
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "See all interviews",
+                                    },
+                                    value: "interviews",
+                                },
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "See activity feed",
+                                    },
+                                    value: "activity",
+                                },
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "View scorecards",
+                                    },
+                                    value: "scorecards",
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                blocks.push({
+                    type: "divider",
+                });
+            });
+        } else if (selectedTab === "hiring_rooms") {
+            // Step 8: Handle non-home tabs for "Hiring Channels"
+            blocks.push({
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: "🛠️ Hiring Channels View",
+                    emoji: true,
+                },
+            });
+
+            blocks.push({
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: "Manage all your debrief, role, and candidate channels in *one* place.",
+                },
+            });
+
+            blocks.push({
+                type: "divider",
+            });
+
+            // Debrief Rooms
+            blocks.push({
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: "Debrief Rooms",
+                },
+            });
+
+            const debriefRooms = [
+                {
+                    channel: "#debrief-director-of-sales-development",
+                    role: "Director of Sales Development",
+                },
+            ];
+
+            debriefRooms.forEach((room) => {
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*${room.channel}*\nRole: ${room.role}`,
+                    },
+                    accessory: {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "Archive",
+                            emoji: true,
+                        },
+                        value: "archive_room",
+                    },
+                });
+
+                blocks.push({
+                    type: "divider",
+                });
+            });
+
+            // Role Channels
+            blocks.push({
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: "Role Channels",
+                },
+            });
+
+            const roleChannels = [
+                {
+                    channel: "#hire-sales-engineering-2024",
+                    role: "Head of Engineering",
+                },
+                {
+                    channel: "#hire-head-of-sales",
+                    role: "Head of Sales",
+                },
+                {
+                    channel: "#hire-head-ops-2024",
+                    role: "Head of Operations",
+                },
+            ];
+
+            roleChannels.forEach((roleChannel) => {
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*${roleChannel.channel}*\nRole: ${roleChannel.role}`,
+                    },
+                    accessory: {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "Archive",
+                            emoji: true,
+                        },
+                        value: "archive_room",
+                    },
+                });
+
+                blocks.push({
+                    type: "divider",
+                });
+            });
+
+            // Candidate Channels
+            blocks.push({
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: "Candidate Channels",
+                },
+            });
+
+            const candidateChannels = [
+                {
+                    channel:
+                        "#sales-development--enet-2024-04-07-dave-matthews",
+                    role: "Sales Development Repenentative",
+                },
+            ];
+
+            candidateChannels.forEach((candidateChannel) => {
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*${candidateChannel.channel}*\nCandidate: ${candidateChannel.role}`,
+                    },
+                    accessory: {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "Archive",
+                            emoji: true,
+                        },
+                        value: "archive_room",
+                    },
+                });
+
+                blocks.push({
+                    type: "divider",
+                });
+            });
+        } else if (selectedTab === "jobs") {
+            // Step 8: Handle non-home tabs for "Jobs View"
+
+            blocks.push({
+                type: "header",
+                text: {
+                    type: "plain_text",
+                    text: "📋 Jobs View",
+                    emoji: true,
+                },
+            });
+
+            blocks.push({
+                type: "context",
                 elements: [
                     {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "Job details",
-                            emoji: true,
-                        },
-                        value: "view_job",
-                    },
-                    {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "Create Hiring Room",
-                            emoji: true,
-                        },
-                        value: "create_room",
+                        type: "plain_text",
+                        text: "View and manage all job roles, teams, and hiring rooms.",
+                        emoji: true,
                     },
                 ],
             });
@@ -880,12 +811,89 @@ async function loadUserDashboard(userId: string, teamId: string, p0: string) {
             blocks.push({
                 type: "divider",
             });
-        });
-    }
 
+            // Job roles
+            const jobs = [
+                {
+                    role: "Head of Engineering",
+                    department: "Engineering",
+                    team: [
+                        {
+                            name: "Recruiting Coordinator",
+                            id: "<@U05Q2TYGV5X>",
+                        },
+                        { name: "Hiring Manager", id: "<@U04L1685M5J>" },
+                    ],
+                    channel: "<#C06UJKWG4G2>",
+                },
+                {
+                    role: "Head of Sales",
+                    department: "Sales",
+                    team: [
+                        {
+                            name: "Recruiting Coordinator",
+                            id: "<@U04KS4AQG0N>",
+                        },
+                        { name: "Hiring Manager", id: "<@U07JZV45HTQ>" },
+                    ],
+                    channel: "<#C07BW7W025R>",
+                },
+                {
+                    role: "Head of Operations",
+                    department: "Operations",
+                    team: [
+                        {
+                            name: "Recruiting Coordinator",
+                            id: "<@U06CKTBCABG>",
+                        },
+                        { name: "Hiring Manager", id: "<@U06PELS9R7Z>" },
+                    ],
+                    channel: "<#C07CK50C7RN>",
+                },
+            ];
 
-        else
-        {
+            jobs.forEach((job) => {
+                blocks.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*Role:* ${job.role}\n*Department:* ${job.department}\n*Hiring Team:* ${job.team
+                            .map((member) => `${member.id} (${member.name})`)
+                            .join(
+                                ", ",
+                            )}\n*Hiring Room Channel:* ${job.channel}`,
+                    },
+                });
+
+                blocks.push({
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Job details",
+                                emoji: true,
+                            },
+                            value: "view_job",
+                        },
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Create Hiring Room",
+                                emoji: true,
+                            },
+                            value: "create_room",
+                        },
+                    ],
+                });
+
+                blocks.push({
+                    type: "divider",
+                });
+            });
+        } else {
             // Step 8: Handle non-home tabs
             blocks.push({
                 type: "section",
@@ -944,7 +952,6 @@ async function updateSlackHomeTab(userId: string, teamId: string, blocks: any) {
     const data = await response.json();
     console.log(data);
     console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you're sending
-
 
     if (!data.ok) {
         throw new Error(`Failed to update Slack Home Tab: ${data.error}`);

@@ -25,11 +25,13 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({
     selectedJob,
 }) => {
     const [jobs, setJobs] = useState<Job[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchJobs = async () => {
             const jobs = await fetchJobsFromGreenhouse();
             setJobs(jobs);
+            setIsLoading(false);
         };
         void fetchJobs();
     }, []);
@@ -37,14 +39,19 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({
     return (
         <div className="flex-1">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Select Job
+                Select Job{" "}
             </Label>
             <Select
                 onValueChange={(value) => onJobSelect(value)}
-                defaultValue={selectedJob ?? undefined}
+                value={selectedJob ?? undefined}
+                disabled={isLoading}
             >
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
-                    <SelectValue placeholder="Select Greenhouse Job" />
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : (
+                        <SelectValue placeholder={"Select Greenhouse Job"} />
+                    )}
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>

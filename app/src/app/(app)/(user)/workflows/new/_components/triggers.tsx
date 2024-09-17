@@ -32,12 +32,14 @@ import { Input } from "@/components/ui/input";
 const localStorageKey = "workflowTriggers";
 
 const saveTriggerData = (data) => {
-    const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
-    const updatedData = { ...storedData, ...data };
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+    localStorage.setItem(localStorageKey, JSON.stringify(data));
 };
 
-const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
+const getTriggerData = () => {
+    return JSON.parse(localStorage.getItem(localStorageKey)) || {};
+};
+
+const TriggersComponent = ({ onSaveTrigger }) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
     const [selectedStage, setSelectedStage] = useState(null);
@@ -101,7 +103,8 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
     ];
 
     useEffect(() => {
-        if (workflowData) {
+        const workflowData = getTriggerData();
+        if (workflowData && Object.keys(workflowData).length > 0) {
             const matchedEvent = events.find(
                 (event) =>
                     event.objectField === workflowData.objectField &&
@@ -121,7 +124,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
         } else {
             setSelectedEvent(null); // Set to null if no workflowData
         }
-    }, [workflowData]);
+    }, []);
 
     const handleEventChange = (eventTitle) => {
         const selected = events.find((event) => event.title === eventTitle);
@@ -182,6 +185,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                 pollingInterval,
                 pollingTimeUnit,
                 description: triggerDescription,
+                triggerConfig: {
+                    processor: selectedJob,
+                    apiUrl: selectedEvent.apiUrl,
+                },
                 processor: selectedJob,
                 mainCondition:
                     selectedStage && days

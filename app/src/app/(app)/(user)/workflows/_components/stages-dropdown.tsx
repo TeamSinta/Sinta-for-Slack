@@ -27,12 +27,13 @@ const StagesDropdown: React.FC<StagesDropdownProps> = ({
     selectedStage,
 }) => {
     const [stages, setStages] = useState<Stage[]>([]);
-
+    const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         const fetchStages = async () => {
             if (jobId) {
                 const stages = await fetchStagesForJob(jobId);
                 setStages(stages);
+                setIsLoading(false);
             }
         };
         void fetchStages();
@@ -55,10 +56,16 @@ const StagesDropdown: React.FC<StagesDropdownProps> = ({
                         );
                     }
                 }}
-                defaultValue={selectedStage ?? undefined}
+                // defaultValue={selectedStage ?? undefined}
+                value={selectedStage ?? undefined}
+                disabled={isLoading}
             >
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
-                    <SelectValue placeholder="Select Stage" />
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : (
+                        <SelectValue placeholder="Select Stage" />
+                    )}
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
