@@ -17,9 +17,13 @@ interface Job {
 
 interface JobsDropdownProps {
     onJobSelect: (jobId: string) => void;
+    selectedJob: string;
 }
 
-const JobsDropdown: React.FC<JobsDropdownProps> = ({ onJobSelect }) => {
+const JobsDropdown: React.FC<JobsDropdownProps> = ({
+    onJobSelect,
+    selectedJob,
+}) => {
     const [jobs, setJobs] = useState<Job[]>([]);
 
     useEffect(() => {
@@ -35,7 +39,10 @@ const JobsDropdown: React.FC<JobsDropdownProps> = ({ onJobSelect }) => {
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Select Job
             </Label>
-            <Select onValueChange={(value) => onJobSelect(value)}>
+            <Select
+                onValueChange={(value) => onJobSelect(value)}
+                defaultValue={selectedJob ?? undefined}
+            >
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
                     <SelectValue placeholder="Select Greenhouse Job" />
                 </SelectTrigger>

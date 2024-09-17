@@ -18,11 +18,13 @@ interface Stage {
 interface StagesDropdownProps {
     jobId: string;
     onStageSelect: (stageId: string, stageLabel: string) => void;
+    selectedStage?: string;
 }
 
 const StagesDropdown: React.FC<StagesDropdownProps> = ({
     jobId,
     onStageSelect,
+    selectedStage,
 }) => {
     const [stages, setStages] = useState<Stage[]>([]);
 
@@ -53,6 +55,7 @@ const StagesDropdown: React.FC<StagesDropdownProps> = ({
                         );
                     }
                 }}
+                defaultValue={selectedStage ?? undefined}
             >
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
                     <SelectValue placeholder="Select Stage" />

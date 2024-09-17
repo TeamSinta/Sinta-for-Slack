@@ -108,6 +108,16 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                     event.alertType === workflowData.alertType,
             );
             setSelectedEvent(matchedEvent || null); // If no match, set to null
+            setSelectedJob(
+                (workflowData.triggerConfig?.processor as string) ?? null,
+            );
+            if (workflowData.mainCondition.length > 0) {
+                setSelectedStage({
+                    id: workflowData?.mainCondition[0]?.field?.value,
+                    name: workflowData?.mainCondition[0]?.field?.label,
+                });
+                setDays(workflowData.mainCondition[0].value);
+            }
         } else {
             setSelectedEvent(null); // Set to null if no workflowData
         }
@@ -121,7 +131,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
         setSelectedTrigger(null);
     };
 
-    const handleJobChange = (jobId) => {
+    const handleJobChange = (jobId: string) => {
         setSelectedJob(jobId);
         setSelectedStage(null);
     };
@@ -187,7 +197,6 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                           ]
                         : [],
             };
-
             saveTriggerData(triggerData);
             onSaveTrigger(triggerData);
         }
@@ -505,7 +514,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {/* Show JobsDropdown for all events */}
-                                <JobsDropdown onJobSelect={handleJobChange} />
+                                <JobsDropdown
+                                    onJobSelect={handleJobChange}
+                                    selectedJob={selectedJob}
+                                />
 
                                 {/* Additional StagesDropdown for "Stuck in Pipeline" */}
                                 {selectedEvent?.title === "Stuck in Pipeline" &&
@@ -515,6 +527,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                                 jobId={selectedJob}
                                                 onStageSelect={
                                                     handleStageChange
+                                                }
+                                                selectedStage={
+                                                    selectedStage?.id ??
+                                                    undefined
                                                 }
                                             />
 
