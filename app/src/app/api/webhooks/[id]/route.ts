@@ -19,16 +19,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!secretKey) {
       return NextResponse.json({ error: 'Organization not found or secret key missing' }, { status: 404 });
     }
-
     // 3. Read the body of the request
     const body = await req.text(); // We read the body as text for signature verification
-
     // 4. Verify the webhook signature
     const isVerified = verifySignature(signature, body, secretKey);
     if (!isVerified) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
-
     // 5. Parse the body as JSON
     const payload = JSON.parse(body);
 
@@ -48,31 +45,74 @@ async function processWebhookEvent(application: any, orgID: string) {
   const workflows = await fetchStuckInStageWorkflows(orgID);
 
   for (const workflow of workflows) {
-      const { conditions } = workflow;
-      const conditionsMet = checkCandidateAgainstConditions(application, conditions);
-      if (conditionsMet) {
-          const numberOfDays = extractDaysFromConditions(conditions);
-          scheduleCronTask(workflow, application, numberOfDays);
-      }
+    const { conditions } = workflow;
+    const conditionsMet = checkCandidateAgainstConditions(application, conditions);
+
+    if (conditionsMet) {
+      const numberOfDays = extractDaysFromConditions(conditions);
+      scheduleCronTask(workflow, application, numberOfDays);
+    } else {
+      console.log(`Candidate did not meet conditions for workflow "${workflow.name}".`);
+    }
   }
 
   console.log('Webhook processing complete.');
 }
 
-// Function to check if the candidate meets the workflow conditions (pseudo-code for now)
-function checkCandidateAgainstConditions(application: any, conditions: any[]): boolean {
-  // Iterate through conditions and compare to candidate's application data
-  // Example:
-  // - Check if candidate is in a specific stage
-  // - Check how many days the candidate has been in that stage
-  // - Compare to the conditions set in the workflow
-  // Return true if all conditions are met, otherwise false
 
-  return false; // Placeholder return value, to be implemented
+// Function to check if the candidate meets the workflow conditions
+function checkCandidateAgainstConditions(application: any, conditions: any[]): boolean {
+  // Iterate through all conditions
+  for (const condition of conditions) {
+    const { field, operator, value } = condition;
+    // Get the candidate's data field
+    const candidateField = application[field];
+    // Compare candidate field with condition's value based on the operator
+    switch (operator) {
+      case 'equals':
+        if (candidateField !== value) return false;
+        break;
+      case 'not_equals':
+        if (candidateField === value) return false;
+        break;
+      case 'contains':
+        if (!candidateField.includes(value)) return false;
+        break;
+      case 'greater_than':
+        if (!(candidateField > value)) return false;
+        break;
+      case 'less_than':
+        if (!(candidateField < value)) return false;
+        break;
+      case 'is_true':
+        if (!candidateField) return false;
+        break;
+      case 'is_false':
+        if (candidateField) return false;
+        break;
+      case 'exists':
+        if (candidateField === undefined || candidateField === null) return false;
+        break;
+      case 'does_not_exist':
+        if (candidateField !== undefined && candidateField !== null) return false;
+        break;
+      default:
+        console.warn(`Unknown operator: ${operator}`);
+        return false;
+    }
+  }
+  // If all conditions are met
+  return true;
 }
+
 
 // Function to schedule a task using a cron system (pseudo-code for now)
 function scheduleCronTask(workflow: any, application: any, numberOfDays: number) {
+  // Iterate through conditions to find any related to "days stuck in stage"
+  // Example:
+  // - Parse the days condition field to determine the number of days
+  // Return the number of days as a number
+
   // Integrate with Mergent or another cron system
   // Example:
   // - Schedule a task to notify or remind about the candidate in X number of days
@@ -81,12 +121,23 @@ function scheduleCronTask(workflow: any, application: any, numberOfDays: number)
   console.log(`Scheduling task for workflow "${workflow.name}" in ${numberOfDays} days.`);
 }
 
-// Helper function to extract the number of days from the conditions (pseudo-code for now)
-function extractDaysFromConditions(conditions: unknown[]): number {
-  // Iterate through conditions to find any related to "days stuck in stage"
-  // Example:
-  // - Parse the days condition field to determine the number of days
-  // Return the number of days as a number
 
-  return 0; // Placeholder return value, to be implemented
+function extractDaysFromConditions(conditions: any[]): number {
+  // Initialize default value for number of days
+  let days = 0;
+
+  // Iterate through the conditions
+  for (const condition of conditions) {
+    if (condition.conditionType === "main" && condition.unit === "Days") {
+      // Parse the value field as a number
+      const daysValue = parseInt(condition.value, 10);
+
+      if (!isNaN(daysValue)) {
+        days = daysValue;
+        break; // Assume there's only one main condition with days
+      }
+    }
+  }
+
+  return days; // Return the number of days found, or 0 if none
 }
