@@ -19,6 +19,13 @@ interface RequestBody {
     jobName: string;
 }
 
+// Prevent users from being spammed multiple times with the same notification
+let prevWorkflowId: string;
+let prevCandidateId: string;
+let prevJobId: string;
+let lastNotifyTime = 0;
+const NOTIFICATION_COOLDOWN = 10 * 1000; // 10 second cooldown
+
 export async function POST(request: NextRequest) {
     const body = await request.json();
     // console.log("BODY", body);
@@ -30,7 +37,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { workflow, applicationDetails } = body;
+    if (
+        prevWorkflowId === String(workflow.id) &&
+        prevCandidateId === String(applicationDetails.candidateId) &&
+        prevJobId === String(applicationDetails.jobId)
+    ) {
+        if (Date.now() - lastNotifyTime < NOTIFICATION_COOLDOWN) {
+            return NextResponse.json({}, { status: 200 });
+        }
+    }
+
     try {
+        // Get the updated candidate Application and compare it to the one in Body
         const currentApplicationState = await getCandidateJobApplication(
             applicationDetails.candidateId,
             applicationDetails.jobId,
@@ -65,6 +83,10 @@ export async function POST(request: NextRequest) {
                     slackTeamID,
                     subDomain,
                 );
+                prevWorkflowId = workflow.id;
+                prevCandidateId = applicationDetails.candidateId;
+                prevJobId = applicationDetails.jobId;
+                lastNotifyTime = Date.now();
             }
         }
     } catch {
