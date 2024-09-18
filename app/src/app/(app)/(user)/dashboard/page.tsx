@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import LogInTracker from "./_components/logInTracker";
 import GlobalClickTracker from "./_components/globalClickTracker";
 import { Icon } from "@radix-ui/react-select";
+import OnboardingModal from "./_components/onboardingModal";
 
 const mockData = {
     welcomeText: "Welcome to your Sinta Launchpad",
@@ -252,6 +253,7 @@ export default async function DashboardPage() {
               </div>
                     </CardHeader>
                 </Card>
+                <OnboardingModal/>
 
               {slackIntegration && greenhouseIntegration ? (
                   workflowsExist ? (
