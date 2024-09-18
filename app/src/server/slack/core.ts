@@ -176,10 +176,6 @@ export async function sendSlackNotification(
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
-    console.log("workflow RECIPIENTS", workflowRecipient);
-    console.log("message", filteredSlackData);
-    console.log("SLACKTEAMID", slackTeamID);
-    console.log("SUBDOMAIN", subDomain);
 
     for (const recipient of allRecipients) {
         console.log("Recipient:", recipient);

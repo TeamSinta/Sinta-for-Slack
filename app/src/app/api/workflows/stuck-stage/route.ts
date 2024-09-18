@@ -5,12 +5,8 @@ import {
     filterStuckinStageDataConditions,
     getCandidateJobApplication,
 } from "@/server/greenhouse/core";
-import {
-    sendSlackButtonNotification,
-    sendSlackNotification,
-} from "@/server/slack/core";
+import { sendSlackNotification } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
-import { ConsoleLogWriter } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RequestBody {
@@ -25,7 +21,7 @@ interface RequestBody {
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
-    console.log("BODY", body);
+    // console.log("BODY", body);
     if (!body.workflow || !body.applicationDetails) {
         return NextResponse.json(
             { message: "Missing required fields" },
@@ -39,7 +35,6 @@ export async function POST(request: NextRequest) {
             applicationDetails.candidateId,
             applicationDetails.jobId,
         );
-        console.log("CURRENT APPLICATION STATE", currentApplicationState);
         if (currentApplicationState.stageId !== applicationDetails.stageId)
             console.log("Application is not stuck! Yay!");
         // Application is stuck! Send a slack notif and then reschedule the task to be run tomorrow
@@ -54,7 +49,6 @@ export async function POST(request: NextRequest) {
                     data,
                     workflow.conditions,
                 );
-            console.log("FILTERED CONDITIONS DATA", filteredConditionsData);
             const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
             const subDomain = await getSubdomainByWorkflowID(workflow.id);
             const filteredSlackDataWithMessage =
@@ -63,10 +57,7 @@ export async function POST(request: NextRequest) {
                     workflow.recipient,
                     slackTeamID,
                 );
-            console.log(
-                "filteredSlackDataWithMessage - ",
-                filteredSlackDataWithMessage,
-            );
+
             if (filteredSlackDataWithMessage.length > 0) {
                 await sendSlackNotification(
                     filteredSlackDataWithMessage,
