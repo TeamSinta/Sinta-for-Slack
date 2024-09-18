@@ -20,8 +20,7 @@ export const siteUrls = {
     blog: "/blog",
     docs: "/docs/introduction",
     maintenance: "/maintenance",
-    // teamsinta: "https://app.teamsinta.com/",
-    teamsinta: "https://wubaboo.ngrok.app/",
+    teamsinta: "https://app.teamsinta.com/",
     dashboard: {
         home: "/dashboard",
     },
