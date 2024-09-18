@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { getOrganizations } from "../organization/queries";
 import MixpanelServer from "@/server/mixpanel";
 import { getServerAuthSession } from "@/server/auth";
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export async function setGreenhouseDetails(
     subDomain: string,
@@ -35,29 +35,28 @@ export async function setGreenhouseDetails(
     return result ? "OK" : "Failed to update details";
 }
 
-
 const generateSecretKey = () => {
-  return crypto.randomBytes(16).toString('hex');
+    return crypto.randomBytes(16).toString("hex");
 };
 
 // Separate function to add the secret key to the org table
 export async function addSecretKeyToOrg() {
-  // Get the current organization
-  const { currentOrg } = await getOrganizations();
-  const orgID = currentOrg.id;
+    // Get the current organization
+    const { currentOrg } = await getOrganizations();
+    const orgID = currentOrg.id;
 
-  // Generate the secret key
-  const secretKey = generateSecretKey();
+    // Generate the secret key
+    const secretKey = generateSecretKey();
 
-  // Update the org with the new secret key
-  const result = await db
-      .update(organizations)
-      .set({
-          greenhouse_secret_key: secretKey, // Assuming the column name is greenhouse_secret_key
-      })
-      .where(eq(organizations.id, orgID))
-      .execute();
+    // Update the org with the new secret key
+    const result = await db
+        .update(organizations)
+        .set({
+            greenhouse_secret_key: secretKey, // Assuming the column name is greenhouse_secret_key
+        })
+        .where(eq(organizations.id, orgID))
+        .execute();
 
-  // Return the result and secret key
-  return result ? { status: "OK", secretKey } : { status: "Failed" };
+    // Return the result and secret key
+    return result ? { status: "OK", secretKey } : { status: "Failed" };
 }

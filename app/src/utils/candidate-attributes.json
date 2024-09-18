@@ -1,114 +1,114 @@
 {
-  "candidate": {
-    "attributes": [
-      {
-        "field": "id",
-        "description": "Application ID"
-      },
-      {
-        "field": "prospect",
-        "description": "If true, this is a prospect application, meaning the person is a prospect and has not applied for a job."
-      },
-      {
-        "field": "status",
-        "description": "One of: active, rejected, hired, converted."
-      },
-      {
-        "field": "jobs",
-        "description": "An array containing the jobs that the candidate applied for."
-      },
-      {
-        "field": "job_post_id",
-        "description": "The ID of the job post through which the candidate applied."
-      },
-      {
-        "field": "candidate_id",
-        "description": "The ID of the candidate applying for this job."
-      },
-      {
-        "field": "current_stage",
-        "description": "The current stage this application is in."
-      },
-      {
-        "field": "credited_to.id",
-        "description": "The ID of the user credited for this application."
-      },
-      {
-        "field": "location",
-        "description": "The contents of the location question on a job post."
-      },
-      {
-        "field": "answers",
-        "description": "The answers provided to questions in the job post for this application."
-      },
-      {
-        "field": "custom_fields",
-        "description": "Contains a hash of custom fields configured for this resource."
-      },
-      {
-        "field": "keyed_custom_fields",
-        "description": "Contains more detailed information about custom fields with immutable keys."
-      },
-      {
-        "field": "prospective_department",
-        "description": "The department that this prospect application is being considered for."
-      },
-      {
-        "field": "prospective_office",
-        "description": "The office associated with this prospect application."
-      },
-      {
-        "field": "company",
-        "description": "The company at which the candidate currently works."
-      },
-      {
-        "field": "title",
-        "description": "The candidate's current title."
-      },
-      {
-        "field": "is_private",
-        "description": "Whether the candidate is private or not. One of: ['true', 'false']."
-      },
-      {
-        "field": "application_ids",
-        "description": "An array of application IDs associated with this candidate."
-      },
-      {
-        "field": "phone_numbers[].type",
-        "description": "One of: ['home', 'work', 'mobile', 'skype', 'other']."
-      },
-      {
-        "field": "addresses[].type",
-        "description": "One of: ['home', 'work', 'other']."
-      },
-      {
-        "field": "email_addresses[].type",
-        "description": "One of: ['personal', 'work', 'other']."
-      },
-      {
-        "field": "website_addresses[].type",
-        "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other']."
-      },
-      {
-        "field": "recruiter",
-        "description": "The recruiter responsible for this candidate."
-      },
-      {
-        "field": "coordinator",
-        "description": "The coordinator responsible for this candidate."
-      },
-      {
-        "field": "attachments[].type",
-        "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other']."
-      },
-      {
-        "field": "attachments[].url",
-        "description": "URL to attachment. URLs expire in 7 days."
-      },
-      {
-        "field": "linked_user_ids",
-        "description": "If the candidate is an internal applicant, returns the Greenhouse user ID of the candidate."
-      }
-    ]
-  }
+    "candidate": {
+        "attributes": [
+            {
+                "field": "id",
+                "description": "Application ID"
+            },
+            {
+                "field": "prospect",
+                "description": "If true, this is a prospect application, meaning the person is a prospect and has not applied for a job."
+            },
+            {
+                "field": "status",
+                "description": "One of: active, rejected, hired, converted."
+            },
+            {
+                "field": "jobs",
+                "description": "An array containing the jobs that the candidate applied for."
+            },
+            {
+                "field": "job_post_id",
+                "description": "The ID of the job post through which the candidate applied."
+            },
+            {
+                "field": "candidate_id",
+                "description": "The ID of the candidate applying for this job."
+            },
+            {
+                "field": "current_stage",
+                "description": "The current stage this application is in."
+            },
+            {
+                "field": "credited_to.id",
+                "description": "The ID of the user credited for this application."
+            },
+            {
+                "field": "location",
+                "description": "The contents of the location question on a job post."
+            },
+            {
+                "field": "answers",
+                "description": "The answers provided to questions in the job post for this application."
+            },
+            {
+                "field": "custom_fields",
+                "description": "Contains a hash of custom fields configured for this resource."
+            },
+            {
+                "field": "keyed_custom_fields",
+                "description": "Contains more detailed information about custom fields with immutable keys."
+            },
+            {
+                "field": "prospective_department",
+                "description": "The department that this prospect application is being considered for."
+            },
+            {
+                "field": "prospective_office",
+                "description": "The office associated with this prospect application."
+            },
+            {
+                "field": "company",
+                "description": "The company at which the candidate currently works."
+            },
+            {
+                "field": "title",
+                "description": "The candidate's current title."
+            },
+            {
+                "field": "is_private",
+                "description": "Whether the candidate is private or not. One of: ['true', 'false']."
+            },
+            {
+                "field": "application_ids",
+                "description": "An array of application IDs associated with this candidate."
+            },
+            {
+                "field": "phone_numbers[].type",
+                "description": "One of: ['home', 'work', 'mobile', 'skype', 'other']."
+            },
+            {
+                "field": "addresses[].type",
+                "description": "One of: ['home', 'work', 'other']."
+            },
+            {
+                "field": "email_addresses[].type",
+                "description": "One of: ['personal', 'work', 'other']."
+            },
+            {
+                "field": "website_addresses[].type",
+                "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other']."
+            },
+            {
+                "field": "recruiter",
+                "description": "The recruiter responsible for this candidate."
+            },
+            {
+                "field": "coordinator",
+                "description": "The coordinator responsible for this candidate."
+            },
+            {
+                "field": "attachments[].type",
+                "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other']."
+            },
+            {
+                "field": "attachments[].url",
+                "description": "URL to attachment. URLs expire in 7 days."
+            },
+            {
+                "field": "linked_user_ids",
+                "description": "If the candidate is an internal applicant, returns the Greenhouse user ID of the candidate."
+            }
+        ]
+    }
 }

@@ -22,12 +22,12 @@ export const protectedProcedure = async () => {
     const user = await getUser();
 
     if (!user) {
-      // Log the error (or handle it in another way)
-      console.error("User is not authenticated");
+        // Log the error (or handle it in another way)
+        console.error("User is not authenticated");
 
-      // Perform the redirect
-      redirect(siteUrls.auth.login);
-  }
+        // Perform the redirect
+        redirect(siteUrls.auth.login);
+    }
 
     return {
         user: user as User,

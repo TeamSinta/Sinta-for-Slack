@@ -1,50 +1,50 @@
 {
-  "offer": {
-    "attributes": [
-      {
-        "field": "id",
-        "description": "The offer's unique identifier"
-      },
-      {
-        "field": "version",
-        "description": "The version number of this offer. When an existing offer is updated, a new one is typically created with an incremented version."
-      },
-      {
-        "field": "application_id",
-        "description": "The ID of the associated application."
-      },
-      {
-        "field": "created_at",
-        "description": "Date when this offer was created."
-      },
-      {
-        "field": "resolved_at",
-        "description": "Date when this offer was resolved (e.g., when it was accepted, rejected)."
-      },
-      {
-        "field": "sent_at",
-        "description": "Date when this offer was sent to the candidate."
-      },
-      {
-        "field": "starts_at",
-        "description": "Date when the candidate starts. This is the date entered in the Start Date field on the candidate's Offer Details."
-      },
-      {
-        "field": "status",
-        "description": "One of: unresolved, accepted, rejected, deprecated."
-      },
-      {
-        "field": "custom_fields",
-        "description": "Contains a hash of the custom fields configured for this resource."
-      },
-      {
-        "field": "keyed_custom_fields",
-        "description": "Contains the same information as custom_fields but includes more detailed data with an immutable key."
-      },
-      {
-        "field": "opening",
-        "description": "The Job Opening associated with the offer. Null if none."
-      }
-    ]
-  }
+    "offer": {
+        "attributes": [
+            {
+                "field": "id",
+                "description": "The offer's unique identifier"
+            },
+            {
+                "field": "version",
+                "description": "The version number of this offer. When an existing offer is updated, a new one is typically created with an incremented version."
+            },
+            {
+                "field": "application_id",
+                "description": "The ID of the associated application."
+            },
+            {
+                "field": "created_at",
+                "description": "Date when this offer was created."
+            },
+            {
+                "field": "resolved_at",
+                "description": "Date when this offer was resolved (e.g., when it was accepted, rejected)."
+            },
+            {
+                "field": "sent_at",
+                "description": "Date when this offer was sent to the candidate."
+            },
+            {
+                "field": "starts_at",
+                "description": "Date when the candidate starts. This is the date entered in the Start Date field on the candidate's Offer Details."
+            },
+            {
+                "field": "status",
+                "description": "One of: unresolved, accepted, rejected, deprecated."
+            },
+            {
+                "field": "custom_fields",
+                "description": "Contains a hash of the custom fields configured for this resource."
+            },
+            {
+                "field": "keyed_custom_fields",
+                "description": "Contains the same information as custom_fields but includes more detailed data with an immutable key."
+            },
+            {
+                "field": "opening",
+                "description": "The Job Opening associated with the offer. Null if none."
+            }
+        ]
+    }
 }
