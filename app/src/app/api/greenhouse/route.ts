@@ -72,10 +72,9 @@ export async function POST(request: NextRequest) {
             "On-Behalf-Of": "4036341008", // Greenhouse user ID for auditing
             // ...options.headers,
         };
-        if (url.includes("/v1/candidates/")) {
+        if (url.includes("/v1/candidates/blahahahah")) {
             // const optData = options.data
             // return NextResponse.json({});
-
             // const response = await fetch(requestUrl, { ...options, headers });
             const responseData = await handleGreenhouseCandidateRequest(
                 url,
