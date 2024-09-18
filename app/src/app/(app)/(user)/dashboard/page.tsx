@@ -64,7 +64,7 @@ export default async function DashboardPage() {
               </div>
           </CardHeader>
           <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 mt-3">
                   {!slackIntegration && (
                       <div className="flex items-center justify-between">
                           <StatusIndicator
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
               <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-              <div className="flex items-center justify-between py-3">
+              <div className="flex items-center justify-between py-3 mt-3">
               <div className="flex items-center space-x-2">
                   <CheckCircleIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
