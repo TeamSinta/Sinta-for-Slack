@@ -37,12 +37,20 @@ export async function POST(request: NextRequest) {
     }
 
     const { workflow, applicationDetails } = body;
+    console.log("---------------------");
+    console.log(prevWorkflowId, workflow.id);
+    console.log(prevCandidateId, applicationDetails.candidateId);
+    console.log(prevJobId, applicationDetails.jobId);
     if (
         prevWorkflowId === String(workflow.id) &&
         prevCandidateId === String(applicationDetails.candidateId) &&
         prevJobId === String(applicationDetails.jobId)
     ) {
+        console.log("MADE IT IN HERE");
         if (Date.now() - lastNotifyTime < NOTIFICATION_COOLDOWN) {
+            console.log("RETURNING EARLY!!!!!!!!!!!!!!!!!");
+            console.log("RETURNING EARLY!!!!!!!!!!!!!!!!!");
+            console.log("RETURNING EARLY!!!!!!!!!!!!!!!!!");
             return NextResponse.json({}, { status: 200 });
         }
     }
@@ -83,13 +91,15 @@ export async function POST(request: NextRequest) {
                     slackTeamID,
                     subDomain,
                 );
+
                 prevWorkflowId = workflow.id;
                 prevCandidateId = applicationDetails.candidateId;
                 prevJobId = applicationDetails.jobId;
                 lastNotifyTime = Date.now();
             }
         }
-    } catch {
+    } catch (e) {
+        console.log("ERROR", e);
         return NextResponse.json({}, { status: 500 });
     }
 
