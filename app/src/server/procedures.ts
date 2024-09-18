@@ -7,6 +7,9 @@ import { getUser } from "@/server/auth";
 import { type User } from "next-auth";
 import { usersRoleEnum } from "@/server/db/schema";
 import { z } from "zod";
+import { siteUrls } from "@/config/urls";
+import { push } from "mixpanel-browser";
+import { redirect } from "next/navigation";
 
 const userRoles = z.enum(usersRoleEnum.enumValues);
 
@@ -19,8 +22,12 @@ export const protectedProcedure = async () => {
     const user = await getUser();
 
     if (!user) {
-        throw new Error("You is not authenticated");
-    }
+      // Log the error (or handle it in another way)
+      console.error("User is not authenticated");
+
+      // Perform the redirect
+      redirect(siteUrls.auth.login);
+  }
 
     return {
         user: user as User,
