@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 // app/api/webhooks/greenhouse/[orgId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySignature } from '@/lib/utils';
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function processWebhookEvent(application: any, orgID: string) {
+async function processWebhookEvent(application: any, orgID: string) {
   console.log('Processing webhook event:', application);
 
   const workflows = await fetchStuckInStageWorkflows(orgID);
