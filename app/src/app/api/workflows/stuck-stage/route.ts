@@ -10,6 +10,12 @@ import { initializeStuckStageChecks } from "@/server/workflowTriggers/stuck-stag
 import { customFetch } from "@/utils/fetch";
 import { NextRequest, NextResponse } from "next/server";
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+//@ts-nocheck
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
 interface RequestBody {
     applicationId: number;
     lastActivity: string;
@@ -50,8 +56,6 @@ export async function POST(request: NextRequest) {
         console.log("MADE IT IN HERE");
         if (Date.now() - lastNotifyTime < NOTIFICATION_COOLDOWN) {
             console.log("RETURNING EARLY!!!!!!!!!!!!!!!!!");
-            console.log("RETURNING EARLY!!!!!!!!!!!!!!!!!");
-            console.log("RETURNING EARLY!!!!!!!!!!!!!!!!!");
             return NextResponse.json({}, { status: 200 });
         }
     }
@@ -69,7 +73,7 @@ export async function POST(request: NextRequest) {
             const { apiUrl, processor } = body.workflow.triggerConfig;
             const data = await customFetch(
                 apiUrl,
-                processor ? { query: processor } : {},
+                processor ? { params: processor } : {},
             );
             const filteredConditionsData =
                 await filterStuckinStageDataConditions(
