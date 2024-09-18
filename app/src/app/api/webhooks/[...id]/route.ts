@@ -1,28 +1,35 @@
-// app/api/webhooks/greenhouse/route.ts
-import { env } from '@/env';
-import { verifySignature } from '@/lib/utils';
+// app/api/webhooks/greenhouse/[orgId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { verifySignature } from '@/lib/utils';
+import { getSecretKeyForOrg } from '@/server/actions/greenhouse/query';
 
-// Webhook handler function
-export async function POST(req: NextRequest) {
+// Webhook handler function for dynamic orgID route
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const orgID = params.id; // Extract the orgId from the URL parameters
+
   try {
     // 1. Extract the Signature header from the request
     const signature = req.headers.get('Signature');
-    const secretKey = env.GREENHOUSE_SECRET_KEY; // Secret key from Greenhouse Webhook config
+    console.log(orgID, "orgID")
+    // 2. Fetch the secret key for the organization using orgID
+    const secretKey = await getSecretKeyForOrg(orgID);
 
-    // 2. Read the body of the request
+
+    if (!secretKey) {
+      return NextResponse.json({ error: 'Organization not found or secret key missing' }, { status: 404 });
+    }
+
+    // 3. Read the body of the request
     const body = await req.text(); // We read the body as text for signature verification
 
-    // 3. Verify the webhook signature
+    // 4. Verify the webhook signature
     const isVerified = verifySignature(signature, body, secretKey);
     if (!isVerified) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    // 4. Parse the body as JSON
+    // 5. Parse the body as JSON
     const payload = JSON.parse(body);
-
-    // 5. Extract necessary data from the webhook payload (example: candidate and application IDs)
 
     // 6. Call a function to process the webhook (e.g., filter stuck-in-stage workflows)
     await processWebhookEvent(payload);
@@ -33,6 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error processing webhook' }, { status: 500 });
   }
 }
+
 
 
 // utils/processWebhookEvent.ts

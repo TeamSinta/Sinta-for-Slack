@@ -45,7 +45,7 @@ export function RequestCard({ org, orgId }: RequestCardProps) {
                         Request to join {org?.name}
                     </CardTitle>
                     <CardDescription className="text-center">
-                        You can send joinning request to {org?.name}.
+                        You can send joining request to {org?.name}.
                     </CardDescription>
                 </div>
             </CardHeader>

@@ -287,6 +287,7 @@ export const organizations = createTable("organization", {
     incoming_webhook_url: varchar("incoming_webhook_url", { length: 1024 }),
     greenhouse_api_token: varchar("greenhouse_api_token", { length: 255 }),
     greenhouse_subdomain: varchar("greenhouse_subdomain", { length: 255 }), // New column
+    greenhouse_secret_key: varchar("greenhouse_secret_key", { length: 255 }), // New column
 });
 
 export const organizationsInsertSchema = createInsertSchema(organizations);
