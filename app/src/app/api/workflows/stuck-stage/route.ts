@@ -6,6 +6,7 @@ import {
     getCandidateJobApplication,
 } from "@/server/greenhouse/core";
 import { sendSlackNotification } from "@/server/slack/core";
+import { initializeStuckStageChecks } from "@/server/workflowTriggers/stuck-stage";
 import { customFetch } from "@/utils/fetch";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -96,6 +97,14 @@ export async function POST(request: NextRequest) {
                 prevCandidateId = applicationDetails.candidateId;
                 prevJobId = applicationDetails.jobId;
                 lastNotifyTime = Date.now();
+
+                // Schedule the next event
+                await initializeStuckStageChecks(
+                    workflow,
+                    null,
+                    applicationDetails,
+                    1,
+                );
             }
         }
     } catch (e) {
