@@ -26,7 +26,10 @@ export async function initializeStuckStageChecks(
 
     const scheduledDate = new Date();
     scheduledDate.setDate(scheduledDate.getDate() + daysToBeStuck);
-    console.log("STUCK STAGE - SCHEDULED DATE: ", scheduledDate);
+    console.log(
+        "Scheduling a task to check if the candidate is stuck to be run at ",
+        scheduledDate,
+    );
 
     // The schedules the task to be run in the next 5 days
     scheduleTask(
@@ -35,32 +38,4 @@ export async function initializeStuckStageChecks(
         JSON.stringify({ applicationDetails, workflow }),
         // scheduledDate,
     );
-}
-
-export async function stuckStage(
-    candidateId: string,
-    scheduleEventInXDays: number,
-    previousStage?: Stage,
-): Promise<any> {
-    if (!candidateId) throw new Error("Candidate ID not provided");
-
-    const candidate = await fetchCandidateDetails(candidateId);
-    if (!candidate) throw new Error("Candidate not found");
-
-    const candidateStages = candidate.applications.map((item: any) => ({
-        applicationId: item.id,
-        lastActivity: item?.last_activity_at,
-        stageId: item.current_stage?.id,
-        stageName: item.current_stage?.name.id,
-    }));
-
-    if (
-        previousStage &&
-        candidateStages.some(
-            (stage: Stage) =>
-                stage.applicationId === previousStage.applicationId &&
-                stage.stageId === previousStage.stageId,
-        )
-    ) {
-    }
 }
