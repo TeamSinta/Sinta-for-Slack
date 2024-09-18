@@ -43,6 +43,25 @@ export async function getWorkflows() {
 
     return data;
 }
+
+export async function fetchStuckInStageWorkflows(orgID: string) {
+  const { data } = await db.transaction(async (tx) => {
+      const data = await tx
+          .select()
+          .from(workflows)
+          .where(
+              and(
+                  eq(workflows.organizationId, orgID), // Condition 1: Match orgID
+                  eq(workflows.alertType, 'stuck-in-stage') // Condition 2: Match alertType
+              )
+          )
+          .execute();
+
+      return { data }; // Returning all workflows that match the criteria
+  });
+
+  return data;
+}
 export async function getPaginatedWorkflowsQuery(
     input: GetPaginatedWorkflowsQueryProps,
 ) {
