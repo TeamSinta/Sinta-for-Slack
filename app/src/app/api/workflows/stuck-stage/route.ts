@@ -5,8 +5,12 @@ import {
     filterStuckinStageDataConditions,
     getCandidateJobApplication,
 } from "@/server/greenhouse/core";
-import { sendSlackButtonNotification } from "@/server/slack/core";
+import {
+    sendSlackButtonNotification,
+    sendSlackNotification,
+} from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
+import { ConsoleLogWriter } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RequestBody {
@@ -31,10 +35,11 @@ export async function POST(request: NextRequest) {
 
     const { workflow, applicationDetails } = body;
     try {
-        const currentApplicationState = getCandidateJobApplication(
+        const currentApplicationState = await getCandidateJobApplication(
             applicationDetails.candidateId,
             applicationDetails.jobId,
         );
+        console.log("CURRENT APPLICATION STATE", currentApplicationState);
         if (currentApplicationState.stageId !== applicationDetails.stageId)
             console.log("Application is not stuck! Yay!");
         // Application is stuck! Send a slack notif and then reschedule the task to be run tomorrow
@@ -49,9 +54,9 @@ export async function POST(request: NextRequest) {
                     data,
                     workflow.conditions,
                 );
+            console.log("FILTERED CONDITIONS DATA", filteredConditionsData);
             const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
             const subDomain = await getSubdomainByWorkflowID(workflow.id);
-
             const filteredSlackDataWithMessage =
                 await filterCandidatesDataForSlack(
                     filteredConditionsData,
@@ -63,12 +68,11 @@ export async function POST(request: NextRequest) {
                 filteredSlackDataWithMessage,
             );
             if (filteredSlackDataWithMessage.length > 0) {
-                await sendSlackButtonNotification(
+                await sendSlackNotification(
                     filteredSlackDataWithMessage,
                     workflow.recipient,
                     slackTeamID,
                     subDomain,
-                    filteredConditionsData,
                 );
             }
         }

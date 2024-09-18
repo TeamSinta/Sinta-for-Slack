@@ -176,6 +176,10 @@ export async function sendSlackNotification(
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
+    console.log("workflow RECIPIENTS", workflowRecipient);
+    console.log("message", filteredSlackData);
+    console.log("SLACKTEAMID", slackTeamID);
+    console.log("SUBDOMAIN", subDomain);
 
     for (const recipient of allRecipients) {
         console.log("Recipient:", recipient);
@@ -245,72 +249,78 @@ export async function sendSlackNotification(
                                     type: "section",
                                     text: {
                                         type: "mrkdwn",
-                                        text: data.customMessageBody,
+                                        // text: data.customMessageBody,
+                                        text: workflowRecipient.customMessageBody,
                                     },
                                 },
-                                {
-                                    type: "actions",
-                                    block_id: `block_id_${interviewId}`,
-                                    elements:
-                                        workflowRecipient.messageButtons.map(
-                                            (button) => {
-                                                const buttonElement: any = {
-                                                    type: "button",
-                                                    text: {
-                                                        type: "plain_text",
-                                                        text: button.label,
-                                                        emoji: true,
-                                                    },
-                                                    value: `${button.updateType ?? button.type}_${interviewId}`, // Include interviewId in the value
-                                                };
+                                ...(workflowRecipient.messageButtons.length > 0
+                                    ? [
+                                          {
+                                              type: "actions",
+                                              block_id: `block_id_${interviewId}`,
+                                              elements:
+                                                  workflowRecipient.messageButtons.map(
+                                                      (button) => {
+                                                          const buttonElement: any =
+                                                              {
+                                                                  type: "button",
+                                                                  text: {
+                                                                      type: "plain_text",
+                                                                      text: button.label,
+                                                                      emoji: true,
+                                                                  },
+                                                                  value: `${button.updateType ?? button.type}_${interviewId}`, // Include interviewId in the value
+                                                              };
 
-                                                if (
-                                                    button.type ===
-                                                    "UpdateButton"
-                                                ) {
-                                                    if (
-                                                        button.updateType ===
-                                                        "MoveToNextStage"
-                                                    ) {
-                                                        buttonElement.style =
-                                                            "primary";
-                                                        buttonElement.action_id = `move_to_next_stage_${interviewId}`;
-                                                    } else if (
-                                                        button.updateType ===
-                                                        "RejectCandidate"
-                                                    ) {
-                                                        buttonElement.style =
-                                                            "danger";
-                                                        buttonElement.action_id = `reject_candidate_${interviewId}`;
-                                                    }
-                                                } else if (
-                                                    button.linkType ===
-                                                    "Dynamic"
-                                                ) {
-                                                    const baseURL = `https://${subDomain}.greenhouse.io`;
-                                                    if (
-                                                        button.action ===
-                                                        "candidateRecord"
-                                                    ) {
-                                                        buttonElement.url = `${baseURL}/people/${interviewId}`;
-                                                    } else if (
-                                                        button.action ===
-                                                        "jobRecord"
-                                                    ) {
-                                                        buttonElement.url = `${baseURL}/sdash/${interviewId}`;
-                                                    }
-                                                    buttonElement.type =
-                                                        "button";
-                                                } else {
-                                                    buttonElement.action_id =
-                                                        button.action ||
-                                                        `${button.type.toLowerCase()}_action_${interviewId}`;
-                                                }
+                                                          if (
+                                                              button.type ===
+                                                              "UpdateButton"
+                                                          ) {
+                                                              if (
+                                                                  button.updateType ===
+                                                                  "MoveToNextStage"
+                                                              ) {
+                                                                  buttonElement.style =
+                                                                      "primary";
+                                                                  buttonElement.action_id = `move_to_next_stage_${interviewId}`;
+                                                              } else if (
+                                                                  button.updateType ===
+                                                                  "RejectCandidate"
+                                                              ) {
+                                                                  buttonElement.style =
+                                                                      "danger";
+                                                                  buttonElement.action_id = `reject_candidate_${interviewId}`;
+                                                              }
+                                                          } else if (
+                                                              button.linkType ===
+                                                              "Dynamic"
+                                                          ) {
+                                                              const baseURL = `https://${subDomain}.greenhouse.io`;
+                                                              if (
+                                                                  button.action ===
+                                                                  "candidateRecord"
+                                                              ) {
+                                                                  buttonElement.url = `${baseURL}/people/${interviewId}`;
+                                                              } else if (
+                                                                  button.action ===
+                                                                  "jobRecord"
+                                                              ) {
+                                                                  buttonElement.url = `${baseURL}/sdash/${interviewId}`;
+                                                              }
+                                                              buttonElement.type =
+                                                                  "button";
+                                                          } else {
+                                                              buttonElement.action_id =
+                                                                  button.action ||
+                                                                  `${button.type.toLowerCase()}_action_${interviewId}`;
+                                                          }
 
-                                                return buttonElement;
-                                            },
-                                        ),
-                                },
+                                                          return buttonElement;
+                                                      },
+                                                  ),
+                                          },
+                                      ]
+                                    : []),
                             ];
                         })
                         .flat(), // Flatten the array of arrays
@@ -331,6 +341,9 @@ export async function sendSlackNotification(
             }),
         });
 
+        const data = await response.json();
+        console.log(data);
+        console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
         console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();

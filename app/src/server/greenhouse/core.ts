@@ -852,7 +852,10 @@ export const filterScheduledInterviewsWithConditions = (
     });
 };
 
-export function getCandidateJobApplication(candidateId: string, jobId: number) {
+export async function getCandidateJobApplication(
+    candidateId: string,
+    jobId: number,
+) {
     const candidate = await fetchCandidateDetails(candidateId);
     if (!candidate) throw new Error("Candidate not found");
 
