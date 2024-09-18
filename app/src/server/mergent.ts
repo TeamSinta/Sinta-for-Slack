@@ -9,3 +9,10 @@ export function scheduleTask(url: string, body: any, date?: Date) {
         .then((task) => console.log("TASK SUCESS", task))
         .catch((error) => console.log("MERGENT TASK ERROR", error));
 }
+
+export function deleteTask(taskId: string) {
+    mergent.tasks
+        .delete(taskId)
+        .then((task) => console.log("TASK SUCESS", task))
+        .catch((error) => console.log("MERGENT TASK ERROR", error));
+}

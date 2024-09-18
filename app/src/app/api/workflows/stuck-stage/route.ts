@@ -1,39 +1,80 @@
+import { filterCandidatesDataForSlack } from "@/lib/slack";
+import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
+import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 import {
-    fetchCandidateDetails,
-    fetchCandidates,
+    filterStuckinStageDataConditions,
+    getCandidateJobApplication,
 } from "@/server/greenhouse/core";
-import { initializeStuckStageChecks } from "@/server/workflowTriggers/stuck-stage";
+import { sendSlackButtonNotification } from "@/server/slack/core";
+import { customFetch } from "@/utils/fetch";
 import { NextRequest, NextResponse } from "next/server";
+
+interface RequestBody {
+    applicationId: number;
+    lastActivity: string;
+    stageId: number;
+    stageName: string;
+    candidateId: string;
+    jobId: number;
+    jobName: string;
+}
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
-    await initializeStuckStageChecks(body.candidateId, body.daysToBeStuck);
-    return NextResponse.json({}, { status: 200 });
-    if (!body.candidateId) {
+    console.log("BODY", body);
+    if (!body.workflow || !body.applicationDetails) {
         return NextResponse.json(
             { message: "Missing required fields" },
             { status: 400 },
         );
     }
 
+    const { workflow, applicationDetails } = body;
     try {
-        const candidate = await fetchCandidateDetails(body.candidateId);
-        if (!candidate)
-            return NextResponse.json(
-                { message: "Candidate not found" },
-                { status: 404 },
+        const currentApplicationState = getCandidateJobApplication(
+            applicationDetails.candidateId,
+            applicationDetails.jobId,
+        );
+        if (currentApplicationState.stageId !== applicationDetails.stageId)
+            console.log("Application is not stuck! Yay!");
+        // Application is stuck! Send a slack notif and then reschedule the task to be run tomorrow
+        else {
+            const { apiUrl, processor } = body.workflow.triggerConfig;
+            const data = await customFetch(
+                apiUrl,
+                processor ? { query: processor } : {},
             );
+            const filteredConditionsData =
+                await filterStuckinStageDataConditions(
+                    data,
+                    workflow.conditions,
+                );
+            const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
+            const subDomain = await getSubdomainByWorkflowID(workflow.id);
 
-        const candidateStages = candidate.applications.map((item: any) => ({
-            id: item.id,
-            lastActivity: item?.last_activity_at,
-            jobs: item.jobs,
-            current_stage: item.current_stage,
-        }));
+            const filteredSlackDataWithMessage =
+                await filterCandidatesDataForSlack(
+                    filteredConditionsData,
+                    workflow.recipient,
+                    slackTeamID,
+                );
+            console.log(
+                "filteredSlackDataWithMessage - ",
+                filteredSlackDataWithMessage,
+            );
+            if (filteredSlackDataWithMessage.length > 0) {
+                await sendSlackButtonNotification(
+                    filteredSlackDataWithMessage,
+                    workflow.recipient,
+                    slackTeamID,
+                    subDomain,
+                    filteredConditionsData,
+                );
+            }
+        }
     } catch {
         return NextResponse.json({}, { status: 500 });
     }
 
-    console.log("RECEIVED TASK", body);
     return NextResponse.json(body, { status: 200 });
 }

@@ -851,3 +851,40 @@ export const filterScheduledInterviewsWithConditions = (
         });
     });
 };
+
+export function getCandidateJobApplication(candidateId: string, jobId: number) {
+    const candidate = await fetchCandidateDetails(candidateId);
+    if (!candidate) throw new Error("Candidate not found");
+
+    // Get the stage for the candidate associated with the specified job
+    const candidateStages = candidate.applications
+        .filter((application: any) =>
+            application.jobs.some((job: any) => job.id === jobId),
+        )
+        .map((item: any) => ({
+            applicationId: item.id,
+            lastActivity: item?.last_activity_at,
+            stageId: item.current_stage?.id,
+            stageName: item.current_stage?.name,
+            candidateId: candidateId,
+            jobId: item.jobs[0].id,
+            jobName: item.jobs[0].name,
+        }));
+
+    if (candidateStages.length === 0)
+        throw new Error("No applications found for the candidate");
+
+    return candidateStages[0];
+}
+
+export function getStuckInStageApplicationDetails(application: any) {
+    return {
+        applicationId: application.id,
+        lastActivity: application.last_activity_at,
+        stageId: application.current_stage?.id,
+        stageName: application.current_stage?.name,
+        candidateId: application.candidate_id,
+        jobId: application.jobs[0].id,
+        jobName: application.jobs[0].name,
+    };
+}
