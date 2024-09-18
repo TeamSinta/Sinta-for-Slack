@@ -40,10 +40,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-
-
-// utils/processWebhookEvent.ts
-
 export async function processWebhookEvent(application: any, orgID: string) {
   console.log('Processing webhook event:', application);
 
@@ -84,7 +80,7 @@ function scheduleCronTask(workflow: any, application: any, numberOfDays: number)
 }
 
 // Helper function to extract the number of days from the conditions (pseudo-code for now)
-function extractDaysFromConditions(conditions: any[]): number {
+function extractDaysFromConditions(conditions: unknown[]): number {
   // Iterate through conditions to find any related to "days stuck in stage"
   // Example:
   // - Parse the days condition field to determine the number of days
