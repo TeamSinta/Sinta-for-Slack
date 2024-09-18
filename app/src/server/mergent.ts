@@ -15,13 +15,13 @@ export function scheduleTask(
             ...(date && { scheduledFor: date }),
             name,
         })
-        .then((task) => console.log("TASK SCHEDULED SUCESSFULLY", task))
+        .then((task) => console.log("TASK SCHEDULED SUCESSFULLY"))
         .catch((error) => console.log("MERGENT TASK ERROR", error));
 }
 
 export function deleteTask(taskId: string) {
     mergent.tasks
         .delete(taskId)
-        .then((task) => console.log("TASK DELETED SUCESSFULLY", task))
+        .then((task) => console.log("TASK DELETED SUCESSFULLY"))
         .catch((error) => console.log("MERGENT TASK ERROR", error));
 }
