@@ -1,7 +1,7 @@
 import { orgConfig } from "@/config/organization";
 import { env } from "@/env";
 import { type ClassValue, clsx } from "clsx";
-import crypto from 'crypto';
+import crypto from "crypto";
 import { twMerge } from "tailwind-merge";
 
 const TRIGGER_STORAGE_KEY = "workflowTriggers";
@@ -179,26 +179,28 @@ export const convertHtmlToSlackMrkdwn = (html: string) => {
     return html;
 };
 
-
 export function thousandToK(value: number) {
-  return value / 1000;
+    return value / 1000;
 }
 
+export function verifySignature(
+    signature: string | null,
+    body: string,
+    secret: string | undefined,
+): boolean {
+    if (!signature || !secret) return false;
 
-export function verifySignature(signature: string | null, body: string, secret: string | undefined): boolean {
-  if (!signature || !secret) return false;
+    // Extract the hash from the signature (everything after "sha256 ")
+    const hash = signature.split(" ")[1];
 
-  // Extract the hash from the signature (everything after "sha256 ")
-  const hash = signature.split(' ')[1];
+    // Create an HMAC using the secret key and the request body
+    const hmac = crypto.createHmac("sha256", secret);
+    hmac.update(body);
+    const computedHash = hmac.digest("hex");
 
-  // Create an HMAC using the secret key and the request body
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(body);
-  const computedHash = hmac.digest('hex');
-
-  // Compare the computed HMAC with the one sent in the signature header
-  if (typeof hash === 'undefined') {
-    return false;
-  }
-  return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(hash));
+    // Compare the computed HMAC with the one sent in the signature header
+    if (typeof hash === "undefined") {
+        return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(hash));
 }
