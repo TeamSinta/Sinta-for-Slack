@@ -1,6 +1,6 @@
-// @ts-nocheck
+//@ts-nocheck
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Select,
     SelectContent,
@@ -19,50 +19,88 @@ import {
 import { Trash2, PlusCircle, FilterIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
+import offerAttributes from "../../../../../../utils/offer-attributes.json"; // This is where your JSON file for offers is stored
+import candidateAttributes from "../../../../../../utils/candidate-attributes.json"; // This is for the candidate attributes
+import { ConditionSelector } from "./conditionsSelector";
 
 const localStorageKey = "workflowConditions";
 
 const saveConditionsData = (newConditions) => {
-    const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || [];
-
-    // Filter out duplicate conditions before saving
-    const updatedData = [...storedData, ...newConditions].filter(
-        (condition, index, self) =>
-            index ===
-            self.findIndex(
-                (c) =>
-                    c.field === condition.field &&
-                    c.condition === condition.condition &&
-                    c.value === condition.value,
-            ),
-    );
-
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+    localStorage.setItem(localStorageKey, JSON.stringify(newConditions));
 };
 
 const getConditionsData = () => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || [];
 };
 
-const fields = [
-    { value: "name", label: "Candidate Name" },
-    { value: "title", label: "Job Title" },
-    { value: "company", label: "Company" },
-    { value: "email", label: "Email Address" },
-    { value: "phone", label: "Phone Number" },
-    { value: "social_media", label: "Social Media" },
-    { value: "recruiter_name", label: "Recruiter Name" },
-    { value: "coordinator_name", label: "Coordinator Name" },
-];
-
-const ConditionsComponent = ({ onSaveConditions }) => {
+const ConditionsComponent = ({
+    onSaveConditions,
+    selectedElementId,
+    workflowData,
+}) => {
     const [conditions, setConditions] = useState([
-        { id: 1, field: "", condition: "", value: "" },
+        { id: -1, field: "", condition: "", value: "" },
     ]);
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const componentsRef = useRef<Record<number, HTMLDivElement | null>>({});
+    const [highlightedConditionIndex, setHighlightedConditionIndex] =
+        useState(null);
+    const [triggerConfig, setTriggerConfig] = useState(null); // Hold the trigger config
+    const [fields, setFields] = useState([]); // Dynamically load fields based on API URL
 
+    // Fetching triggerConfig from localStorage
+    useEffect(() => {
+        const localTriggerConfig = localStorage.getItem("workflowTriggers");
+        if (localTriggerConfig) {
+            const parsedConfig = JSON.parse(localTriggerConfig);
+            setTriggerConfig(parsedConfig);
+
+            // Dynamically set the fields based on the API URL
+            const objectField = parsedConfig.objectField;
+            if (
+                objectField &&
+                objectField.toLowerCase().includes("approvals")
+            ) {
+                // Set offer attributes if the objectField indicates Approvals
+                setFields(offerAttributes.offer.attributes);
+            } else if (
+                objectField &&
+                objectField.toLowerCase().includes("candidates")
+            ) {
+                // Set candidate attributes if the objectField indicates Candidates
+                setFields(candidateAttributes.candidate.attributes);
+            }
+        }
+    }, []);
+
+    // Load previously saved conditions
+    useEffect(() => {
+        setConditions(getConditionsData());
+        if (
+            typeof selectedElementId === "number" &&
+            componentsRef.current[selectedElementId]
+        ) {
+            componentsRef.current[selectedElementId]?.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+            });
+            setHighlightedConditionIndex(selectedElementId);
+        }
+    }, [selectedElementId]);
+
+    // Timeout for highlighted conditions
+    useEffect(() => {
+        if (highlightedConditionIndex !== null) {
+            const timer = setTimeout(() => {
+                setHighlightedConditionIndex(null);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightedConditionIndex]);
+
+    // Fetching Greenhouse users
     useEffect(() => {
         const fetchUsers = async () => {
             setIsLoading(true);
@@ -76,7 +114,6 @@ const ConditionsComponent = ({ onSaveConditions }) => {
                 setIsLoading(false);
             }
         };
-
         fetchUsers();
     }, []);
 
@@ -91,14 +128,13 @@ const ConditionsComponent = ({ onSaveConditions }) => {
     };
 
     const addCondition = () => {
+        const highestConditionId = Math.max(
+            ...conditions.map((item) => item.id),
+            -1,
+        );
         setConditions((prevConditions) => [
             ...prevConditions,
-            {
-                id: prevConditions.length + 1,
-                field: "",
-                condition: "",
-                value: "",
-            },
+            { id: highestConditionId + 1, field: "", condition: "", value: "" },
         ]);
     };
 
@@ -108,6 +144,7 @@ const ConditionsComponent = ({ onSaveConditions }) => {
         );
     };
 
+    // Enable or disable the Save button based on whether all fields are filled
     useEffect(() => {
         const allFieldsFilled = conditions.every(
             (condition) =>
@@ -118,33 +155,17 @@ const ConditionsComponent = ({ onSaveConditions }) => {
 
     const handleSave = () => {
         if (isSaveEnabled) {
-            const existingConditions = getConditionsData();
-            const newConditions = conditions.filter(
-                (condition) =>
-                    condition.field && condition.condition && condition.value,
-            );
-
-            // Merge new and existing conditions and remove duplicates
-            const updatedConditions = [
-                ...existingConditions,
-                ...newConditions,
-            ].filter(
-                (condition, index, self) =>
-                    index ===
-                    self.findIndex(
-                        (c) =>
-                            c.field === condition.field &&
-                            c.condition === condition.condition &&
-                            c.value === condition.value,
-                    ),
-            );
-
-            saveConditionsData(updatedConditions); // Save unique conditions to local storage
-            onSaveConditions(newConditions); // Update WorkflowBuilder with only the new conditions
+            const updatedConditions = [...conditions];
+            saveConditionsData(updatedConditions);
+            onSaveConditions(updatedConditions);
 
             // Reset the conditions form after saving
-            setConditions([{ id: 1, field: "", condition: "", value: "" }]);
+            setConditions([{ id: -1, field: "", condition: "", value: "" }]);
         }
+    };
+
+    const handleFieldChange = (id, field) => {
+        handleConditionChange(id, "field", field); // Update field in the condition
     };
 
     return (
@@ -161,8 +182,14 @@ const ConditionsComponent = ({ onSaveConditions }) => {
                 </p>
 
                 <div className="space-y-4">
-                    {conditions.map((condition, index) => (
-                        <Card key={condition.id} className="mb-4">
+                    {conditions.map((condition) => (
+                        <Card
+                            key={condition.id}
+                            className={`mb-4 transition-colors duration-500 ${condition.id === highlightedConditionIndex ? "border-emerald-500" : ""}`}
+                            ref={(el) =>
+                                (componentsRef.current[condition.id] = el)
+                            }
+                        >
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     Condition
@@ -182,36 +209,20 @@ const ConditionsComponent = ({ onSaveConditions }) => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex flex-col space-y-2">
+                                    {/* Field Selector */}
                                     <div>
-                                        <Select
-                                            value={condition.field}
-                                            onValueChange={(value) =>
-                                                handleConditionChange(
+                                        <ConditionSelector
+                                            attributes={fields}
+                                            onFieldSelect={(field) =>
+                                                handleFieldChange(
                                                     condition.id,
-                                                    "field",
-                                                    value,
+                                                    field,
                                                 )
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id={`field-${condition.id}`}
-                                                className="mt-1 w-full"
-                                            >
-                                                <SelectValue placeholder="Choose field..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {fields.map((field) => (
-                                                    <SelectItem
-                                                        key={field.value}
-                                                        value={field.value}
-                                                    >
-                                                        {field.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            } // Update the field based on user selection
+                                        />
                                     </div>
 
+                                    {/* Condition Selector */}
                                     <div>
                                         <Select
                                             value={condition.condition}
@@ -223,26 +234,54 @@ const ConditionsComponent = ({ onSaveConditions }) => {
                                                 )
                                             }
                                         >
-                                            <SelectTrigger
-                                                id={`condition-${condition.id}`}
-                                                className="mt-1 w-full"
-                                            >
+                                            <SelectTrigger className="mt-1 w-full rounded">
                                                 <SelectValue placeholder="Choose condition..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="equals">
-                                                    Equals
-                                                </SelectItem>
-                                                <SelectItem value="not_equals">
-                                                    Not Equals
-                                                </SelectItem>
                                                 <SelectItem value="contains">
-                                                    Contains
+                                                    (Text) Contains
+                                                </SelectItem>
+                                                <SelectItem value="not_contains">
+                                                    (Text) Does not contain
+                                                </SelectItem>
+                                                <SelectItem value="exactly_matches">
+                                                    (Text) Exactly matches
+                                                </SelectItem>
+                                                <SelectItem value="not_exactly_matches">
+                                                    (Text) Does not exactly
+                                                    match
+                                                </SelectItem>
+                                                <SelectItem value="starts_with">
+                                                    (Text) Starts with
+                                                </SelectItem>
+                                                <SelectItem value="not_starts_with">
+                                                    (Text) Does not start with
+                                                </SelectItem>
+                                                <SelectItem value="ends_with">
+                                                    (Text) Ends with
+                                                </SelectItem>
+
+                                                <SelectItem value="greater_than">
+                                                    (Number) Greater than
+                                                </SelectItem>
+                                                <SelectItem value="less_than">
+                                                    (Number) Less than
+                                                </SelectItem>
+
+                                                <SelectItem value="after">
+                                                    (Date/Time) After
+                                                </SelectItem>
+                                                <SelectItem value="before">
+                                                    (Date/Time) Before
+                                                </SelectItem>
+                                                <SelectItem value="equals">
+                                                    (Date/Time) Equals
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
 
+                                    {/* Value Input */}
                                     <div>
                                         {[
                                             "coordinator_name",
@@ -268,17 +307,8 @@ const ConditionsComponent = ({ onSaveConditions }) => {
                                                 }
                                                 disabled={isLoading}
                                             >
-                                                <SelectTrigger
-                                                    id={`value-${condition.id}`}
-                                                    className="mt-1 w-full"
-                                                >
-                                                    <SelectValue placeholder="Choose user...">
-                                                        {typeof condition.value ===
-                                                        "object"
-                                                            ? condition.value
-                                                                  .name
-                                                            : "Choose user..."}
-                                                    </SelectValue>
+                                                <SelectTrigger className="mt-1 w-full">
+                                                    <SelectValue placeholder="Choose user..." />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {users.map((user) => (
@@ -303,9 +333,8 @@ const ConditionsComponent = ({ onSaveConditions }) => {
                                                         e.target.value,
                                                     )
                                                 }
-                                                placeholder="Enter value..."
-                                                id={`value-${condition.id}`}
-                                                className="mt-1 w-full rounded border p-2"
+                                                placeholder="Enter value"
+                                                className="text-md mt-1 w-full rounded border p-1 px-2 "
                                             />
                                         )}
                                     </div>

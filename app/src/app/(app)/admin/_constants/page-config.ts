@@ -4,7 +4,7 @@
  */
 
 export const adminDashConfig = {
-  title: "Admin Dashboard",
-  description:
-      "View insights and analytics to monitor your app's performance and user behavior.",
+    title: "Admin Dashboard",
+    description:
+        "View insights and analytics to monitor your app's performance and user behavior.",
 } as const;

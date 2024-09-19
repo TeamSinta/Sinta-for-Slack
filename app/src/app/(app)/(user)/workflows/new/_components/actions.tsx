@@ -122,6 +122,19 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const session = useSession();
 
     useEffect(() => {
+        const actionData = getActionData();
+        if (actionData) {
+            if (actionData?.customMessageBody)
+                setCustomMessageBody(actionData?.customMessageBody);
+            if (actionData?.messageFields)
+                setSelectedFields(actionData?.messageFields);
+            if (actionData?.messageButtons)
+                setButtons(actionData?.messageButtons);
+            if (actionData?.recipients)
+                setSelectedRecipients(actionData?.recipients);
+        }
+    }, []);
+    useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
             try {

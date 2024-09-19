@@ -92,7 +92,7 @@ export function HiringroomsTable({
                 <Link
                     key={hiringroom.id}
                     href="/hiringrooms/form"
-                    className="rounded-lg border border-border bg-white dark:bg-black dark:border-gray-600 p-4 shadow-md dark:shadow-inner transition-shadow hover:shadow-lg"
+                    className="rounded-lg border border-border bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-gray-600 dark:bg-black dark:shadow-inner"
                 >
                     {/* Card Image */}
                     <div className="flex h-40 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-500 md:h-48">
