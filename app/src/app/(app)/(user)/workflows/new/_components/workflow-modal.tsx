@@ -33,7 +33,7 @@ export const WorkflowPublishModal = ({
     workflowId?: string;
     steps: any;
 }) => {
-    const [stepStatus, setStepStatus] = useState({});
+    const [stepStatus, setStepStatus] = useState([]);
     const [isRunningTest, setIsRunningTest] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
@@ -47,7 +47,7 @@ export const WorkflowPublishModal = ({
 
     function handleSuccessfulPublish() {
         clearLocalStorage();
-        setStepStatus({});
+        setStepStatus([]);
         setErrorMessage(""); // Clear any previous error messages
         toast.success(
             edit
@@ -152,18 +152,26 @@ export const WorkflowPublishModal = ({
 
     const handlePublish = async () => {
         setIsRunningTest(true);
-        setStepStatus({});
+        setStepStatus([]);
         setErrorMessage(""); // Clear any previous error messages
 
         let hasError = false;
 
-        for (const step of steps) {
-            setStepStatus((prev) => ({ ...prev, [step.id]: "loading" }));
+        for (const step in steps) {
+            setStepStatus((prev) => [...prev, "loading"]);
             try {
                 await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay to simulate API call
-                setStepStatus((prev) => ({ ...prev, [step.id]: "success" }));
+                setStepStatus((prev) => {
+                    const res = prev;
+                    res[step] = "success";
+                    return res;
+                });
             } catch {
-                setStepStatus((prev) => ({ ...prev, [step.id]: "error" }));
+                setStepStatus((prev) => {
+                    const res = prev;
+                    res[step] = "error";
+                    return res;
+                });
                 setErrorMessage(
                     `Error in ${step.type}. Please check and try again.`,
                 );
@@ -176,27 +184,28 @@ export const WorkflowPublishModal = ({
 
         if (!hasError) {
             try {
-                // Combine conditionsData with triggerData.mainCondition
-                // const combinedConditions = [
-                //     ...conditionsData,
-                //     ...(triggerData.mainCondition || []),
-                // ];
+                if (!edit) {
+                    // Combine conditionsData with triggerData.mainCondition
+                    const combinedConditions = [
+                        ...conditionsData,
+                        ...(triggerData.mainCondition || []),
+                    ];
 
-                // await mutateAsync({
-                //     id: workflowId, // Include the workflowId when updating
-                //     name: workflowName, // Use the name from local storage or fallback to event name
-                //     objectField: triggerData.objectField, // Use sorted trigger data's object field
-                //     alertType: triggerData.alertType, // Adjust this as needed
-                //     conditions: combinedConditions, // Send combined conditions
-                //     triggerConfig: {
-                //         apiUrl: triggerData.apiUrl,
-                //         processor: triggerData.processor,
-                //     },
-                //     recipient: actionData,
-                //     status: "active",
-                //     organizationId: "your-organization-id", // Adjust this as needed
-                // });
-                handleSuccessfulPublish();
+                    await mutateAsync({
+                        id: workflowId, // Include the workflowId when updating
+                        name: workflowName, // Use the name from local storage or fallback to event name
+                        objectField: triggerData.objectField, // Use sorted trigger data's object field
+                        alertType: triggerData.alertType, // Adjust this as needed
+                        conditions: combinedConditions, // Send combined conditions
+                        triggerConfig: {
+                            apiUrl: triggerData.apiUrl,
+                            processor: triggerData.processor,
+                        },
+                        recipient: actionData,
+                        status: "active",
+                        organizationId: "your-organization-id", // Adjust this as needed
+                    });
+                } else handleSuccessfulPublish();
             } catch (error) {
                 setStepStatus((prev) => ({
                     ...prev,
@@ -235,17 +244,17 @@ export const WorkflowPublishModal = ({
                     </Alert>
                 )}
                 <div className="space-y-2">
-                    {steps.map((step) => (
+                    {steps.map((step, index: number) => (
                         <div
-                            key={step.id}
-                            className={`flex items-center justify-between rounded border bg-gray-50 p-3 ${stepStatus[step.id] === "error" ? "border-red-500" : ""}`}
+                            key={index}
+                            className={`flex items-center justify-between rounded border bg-gray-50 p-3 ${stepStatus[index] === "error" ? "border-red-500" : ""}`}
                         >
                             <div className="flex items-center space-x-2">
-                                {stepStatus[step.id] === "loading" ? (
+                                {stepStatus[index] === "loading" ? (
                                     <Loader2Icon className="animate-spin text-blue-500" />
-                                ) : stepStatus[step.id] === "success" ? (
+                                ) : stepStatus[index] === "success" ? (
                                     <CircleCheck className="text-green-500" />
-                                ) : stepStatus[step.id] === "error" ? (
+                                ) : stepStatus[index] === "error" ? (
                                     <CircleX className="text-red-500" />
                                 ) : (
                                     <CircleCheck className="text-gray-400" />
