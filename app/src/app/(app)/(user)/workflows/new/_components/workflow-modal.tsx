@@ -131,6 +131,7 @@ export const WorkflowPublishModal = ({
         // ];
 
         // setSteps(combinedSteps);
+        setStepStatus([]);
         validateData(); // Validate data when the modal opens
     };
 
@@ -161,6 +162,10 @@ export const WorkflowPublishModal = ({
             setStepStatus((prev) => [...prev, "loading"]);
             try {
                 await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay to simulate API call
+
+                // console.log("STEPS", steps[step]);
+                if (!(steps[step].name && steps[step].status === "valid"))
+                    throw Error("Blank Condition");
                 setStepStatus((prev) => {
                     const res = prev;
                     res[step] = "success";
@@ -173,7 +178,7 @@ export const WorkflowPublishModal = ({
                     return res;
                 });
                 setErrorMessage(
-                    `Error in ${step.type}. Please check and try again.`,
+                    `Error in ${steps[step].type}. Please check and try again.`,
                 );
                 hasError = true;
                 break; // Stop after the first error
