@@ -27,11 +27,12 @@ import useGetCookie from "@/hooks/use-get-cookie";
 export const WorkflowPublishModal = ({
     edit = false,
     workflowId,
+    steps,
 }: {
     edit?: boolean;
     workflowId?: string;
+    steps: any;
 }) => {
-    const [steps, setSteps] = useState([]);
     const [stepStatus, setStepStatus] = useState({});
     const [isRunningTest, setIsRunningTest] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -44,6 +45,17 @@ export const WorkflowPublishModal = ({
     const conditionsData = getConditionsData();
     const workflowName = getWorkflowName() || triggerData.event;
 
+    function handleSuccessfulPublish() {
+        clearLocalStorage();
+        setStepStatus({});
+        setErrorMessage(""); // Clear any previous error messages
+        toast.success(
+            edit
+                ? "Workflow updated successfully"
+                : "Workflow created successfully",
+        );
+        router.push("/workflows");
+    }
     const {
         mutateAsync,
         isPending: isMutatePending,
@@ -53,15 +65,7 @@ export const WorkflowPublishModal = ({
         onSuccess: () => {
             router.refresh();
             reset();
-            clearLocalStorage();
-            setStepStatus({});
-            setErrorMessage(""); // Clear any previous error messages
-            toast.success(
-                edit
-                    ? "Workflow updated successfully"
-                    : "Workflow created successfully",
-            );
-            router.push("/workflows");
+            handleSuccessfulPublish();
         },
         onError: (error) => {
             const errorMsg = error?.message ?? "Failed to submit Workflow";
@@ -74,7 +78,9 @@ export const WorkflowPublishModal = ({
     };
 
     const validateData = () => {
-        const isTriggerValid = triggerData?.event && triggerData.description;
+        const isTriggerValid =
+            triggerData?.objectField &&
+            (triggerData?.apiUrl || triggerData?.triggerConfig?.apiUrl);
         const isActionValid =
             actionData?.recipients && actionData.customMessageBody;
         setIsButtonDisabled(!(isTriggerValid && isActionValid));
@@ -97,34 +103,34 @@ export const WorkflowPublishModal = ({
 
     const handleOpenModal = (open: boolean) => {
         trackModalEvent(open);
-        const combinedSteps = [
-            {
-                id: 1,
-                type: "Trigger",
-                ...triggerData,
-                description: triggerData.description
-                    ? `Trigger: ${triggerData.description}`
-                    : "Missing trigger data",
-            },
-            ...conditionsData.map((condition, index) => ({
-                id: index + 2,
-                type: "Condition",
-                field: condition.field,
-                condition: condition.condition,
-                value: condition.value.name || condition.value,
-                description: `${condition.field} ${condition.condition} ${condition.value.name || condition.value}`,
-            })),
-            {
-                id: conditionsData.length + 2,
-                type: "Action",
-                ...actionData,
-                description: actionData.customMessageBody
-                    ? `Alert: ${actionData.customMessageBody.substring(0, 50)}...`
-                    : "Missing action data",
-            },
-        ];
+        // const combinedSteps = [
+        //     {
+        //         id: 1,
+        //         type: "Trigger",
+        //         ...triggerData,
+        //         description: triggerData.description
+        //             ? `Trigger: ${triggerData.description}`
+        //             : "Missing trigger data",
+        //     },
+        //     ...conditionsData.map((condition, index) => ({
+        //         id: index + 2,
+        //         type: "Condition",
+        //         field: condition.field,
+        //         condition: condition.condition,
+        //         value: condition.value.name || condition.value,
+        //         description: `${condition.field} ${condition.condition} ${condition.value.name || condition.value}`,
+        //     })),
+        //     {
+        //         id: conditionsData.length + 2,
+        //         type: "Action",
+        //         ...actionData,
+        //         description: actionData.customMessageBody
+        //             ? `Alert: ${actionData.customMessageBody.substring(0, 50)}...`
+        //             : "Missing action data",
+        //     },
+        // ];
 
-        setSteps(combinedSteps);
+        // setSteps(combinedSteps);
         validateData(); // Validate data when the modal opens
     };
 
@@ -171,25 +177,26 @@ export const WorkflowPublishModal = ({
         if (!hasError) {
             try {
                 // Combine conditionsData with triggerData.mainCondition
-                const combinedConditions = [
-                    ...conditionsData,
-                    ...(triggerData.mainCondition || []),
-                ];
+                // const combinedConditions = [
+                //     ...conditionsData,
+                //     ...(triggerData.mainCondition || []),
+                // ];
 
-                await mutateAsync({
-                    id: workflowId, // Include the workflowId when updating
-                    name: workflowName, // Use the name from local storage or fallback to event name
-                    objectField: triggerData.objectField, // Use sorted trigger data's object field
-                    alertType: triggerData.alertType, // Adjust this as needed
-                    conditions: combinedConditions, // Send combined conditions
-                    triggerConfig: {
-                        apiUrl: triggerData.apiUrl,
-                        processor: triggerData.processor,
-                    },
-                    recipient: actionData,
-                    status: "active",
-                    organizationId: "your-organization-id", // Adjust this as needed
-                });
+                // await mutateAsync({
+                //     id: workflowId, // Include the workflowId when updating
+                //     name: workflowName, // Use the name from local storage or fallback to event name
+                //     objectField: triggerData.objectField, // Use sorted trigger data's object field
+                //     alertType: triggerData.alertType, // Adjust this as needed
+                //     conditions: combinedConditions, // Send combined conditions
+                //     triggerConfig: {
+                //         apiUrl: triggerData.apiUrl,
+                //         processor: triggerData.processor,
+                //     },
+                //     recipient: actionData,
+                //     status: "active",
+                //     organizationId: "your-organization-id", // Adjust this as needed
+                // });
+                handleSuccessfulPublish();
             } catch (error) {
                 setStepStatus((prev) => ({
                     ...prev,

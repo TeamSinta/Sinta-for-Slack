@@ -637,6 +637,7 @@ export function WorkflowBuilder({
                         <WorkflowPublishModal
                             edit={edit}
                             workflowId={workflowId}
+                            steps={steps}
                         />
                         <div className="flex items-center space-x-1">
                             <Switch
