@@ -103,52 +103,8 @@ export const WorkflowPublishModal = ({
 
     const handleOpenModal = (open: boolean) => {
         trackModalEvent(open);
-        // const combinedSteps = [
-        //     {
-        //         id: 1,
-        //         type: "Trigger",
-        //         ...triggerData,
-        //         description: triggerData.description
-        //             ? `Trigger: ${triggerData.description}`
-        //             : "Missing trigger data",
-        //     },
-        //     ...conditionsData.map((condition, index) => ({
-        //         id: index + 2,
-        //         type: "Condition",
-        //         field: condition.field,
-        //         condition: condition.condition,
-        //         value: condition.value.name || condition.value,
-        //         description: `${condition.field} ${condition.condition} ${condition.value.name || condition.value}`,
-        //     })),
-        //     {
-        //         id: conditionsData.length + 2,
-        //         type: "Action",
-        //         ...actionData,
-        //         description: actionData.customMessageBody
-        //             ? `Alert: ${actionData.customMessageBody.substring(0, 50)}...`
-        //             : "Missing action data",
-        //     },
-        // ];
-
-        // setSteps(combinedSteps);
         setStepStatus([]);
         validateData(); // Validate data when the modal opens
-    };
-
-    const sortTriggerData = (data) => {
-        const sortedData = {
-            alertType: data.alertType,
-            apiUrl: data.apiUrl,
-            description: data.description,
-            event: data.event,
-            objectField: data.objectField,
-            processor: data.processor,
-            trigger: data.trigger,
-            mainCondition: data.mainCondition?.sort((a, b) =>
-                a.field.label.localeCompare(b.field.label),
-            ),
-        };
-        return sortedData;
     };
 
     const handlePublish = async () => {
@@ -163,9 +119,8 @@ export const WorkflowPublishModal = ({
             try {
                 await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay to simulate API call
 
-                // console.log("STEPS", steps[step]);
                 if (!(steps[step].name && steps[step].status === "valid"))
-                    throw Error("Blank Condition");
+                    throw Error("Invalid Step");
                 setStepStatus((prev) => {
                     const res = prev;
                     res[step] = "success";
