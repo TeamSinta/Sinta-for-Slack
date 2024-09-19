@@ -123,6 +123,14 @@ export const GreenhouseIntegrationCard: React.FC<
                 </div>
                 <div className="flex items-center">
                     <Button
+                        className="ml-2 rounded bg-gray-400 px-4 py-2 text-sm text-white hover:bg-gray-600"
+                        onClick={() =>
+                            router.push("/integrations/greenhouse-config")
+                        } // Redirect to config page
+                    >
+                        Config
+                    </Button>
+                    <Button
                         className="ml-2 rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
                         onClick={() => {
                             trackModalEvent(true);
@@ -135,7 +143,9 @@ export const GreenhouseIntegrationCard: React.FC<
             </Card>
             <Dialog
                 open={isModalOpen}
-                onOpenChange={(open) => {
+                onOpenChange={(
+                    open: boolean | ((prevState: boolean) => boolean),
+                ) => {
                     if (!open) trackModalEvent(false);
                     setIsModalOpen(open);
                 }}

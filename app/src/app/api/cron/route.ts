@@ -63,7 +63,11 @@ async function getAllCandidates() {
     const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
     const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
 }
-function getSlackUserIds(hiringroom: { recipient: any[]; }, candidates: any, userMapping: any) {
+function getSlackUserIds(
+    hiringroom: { recipient: any[] },
+    candidates: any,
+    userMapping: any,
+) {
     // function buildHiringRoomRecipients(hiringroom, candidates, userMapping){
     hiringroom.recipient.map((recipient: any) => {
         if (recipient.source === "greenhouse") {
@@ -107,7 +111,9 @@ function getSlackIdsOfGreenHouseUsers(
     });
     return slackIds;
 }
-function getSlackUsersFromRecipient(hiringroomRecipient: { recipients: any[]; }) {
+function getSlackUsersFromRecipient(hiringroomRecipient: {
+    recipients: any[];
+}) {
     const slackUsers = [];
     console.log("hiring room recipient", hiringroomRecipient);
     hiringroomRecipient.recipients.forEach((recipient) => {
@@ -218,7 +224,12 @@ function buildSlackChannelNameForCandidate(
     return channelName;
 }
 
-export async function handleIndividualHiringroom(hiringroom: { id: any; objectField: string; slackChannelFormat: string; recipient: { recipients: any[]; }; }) {
+export async function handleIndividualHiringroom(hiringroom: {
+    id: any;
+    objectField: string;
+    slackChannelFormat: string;
+    recipient: { recipients: any[] };
+}) {
     const hiringroomId = hiringroom.id;
     console.log("indivi room - ", hiringroomId);
     // return
@@ -380,7 +391,10 @@ function sanitizeChannelName(name: string) {
         .slice(0, 79); // ensure the name is less than 80 characters
 }
 
-export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: { recipient?: any[]; recipients?: any; }) {
+export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
+    recipient?: any[];
+    recipients?: any;
+}) {
     const greenhouseRecipients = [];
     let hasGreenhouse = false;
     const greenhouseRoles = [];

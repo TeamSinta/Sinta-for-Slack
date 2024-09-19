@@ -32,12 +32,14 @@ import { Input } from "@/components/ui/input";
 const localStorageKey = "workflowTriggers";
 
 const saveTriggerData = (data) => {
-    const storedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
-    const updatedData = { ...storedData, ...data };
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+    localStorage.setItem(localStorageKey, JSON.stringify(data));
 };
 
-const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
+const getTriggerData = () => {
+    return JSON.parse(localStorage.getItem(localStorageKey)) || {};
+};
+
+const TriggersComponent = ({ onSaveTrigger }) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
     const [selectedStage, setSelectedStage] = useState(null);
@@ -101,17 +103,28 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
     ];
 
     useEffect(() => {
-        if (workflowData) {
+        const workflowData = getTriggerData();
+        if (workflowData && Object.keys(workflowData).length > 0) {
             const matchedEvent = events.find(
                 (event) =>
                     event.objectField === workflowData.objectField &&
                     event.alertType === workflowData.alertType,
             );
             setSelectedEvent(matchedEvent || null); // If no match, set to null
+            setSelectedJob(
+                (workflowData.triggerConfig?.processor as string) ?? null,
+            );
+            if (workflowData.mainCondition.length > 0) {
+                setSelectedStage({
+                    id: workflowData?.mainCondition[0]?.field?.value,
+                    name: workflowData?.mainCondition[0]?.field?.label,
+                });
+                setDays(workflowData.mainCondition[0].value);
+            }
         } else {
             setSelectedEvent(null); // Set to null if no workflowData
         }
-    }, [workflowData]);
+    }, []);
 
     const handleEventChange = (eventTitle) => {
         const selected = events.find((event) => event.title === eventTitle);
@@ -121,7 +134,7 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
         setSelectedTrigger(null);
     };
 
-    const handleJobChange = (jobId) => {
+    const handleJobChange = (jobId: string) => {
         setSelectedJob(jobId);
         setSelectedStage(null);
     };
@@ -172,6 +185,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                 pollingInterval,
                 pollingTimeUnit,
                 description: triggerDescription,
+                triggerConfig: {
+                    processor: selectedJob,
+                    apiUrl: selectedEvent.apiUrl,
+                },
                 processor: selectedJob,
                 mainCondition:
                     selectedStage && days
@@ -187,7 +204,6 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                           ]
                         : [],
             };
-
             saveTriggerData(triggerData);
             onSaveTrigger(triggerData);
         }
@@ -505,7 +521,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {/* Show JobsDropdown for all events */}
-                                <JobsDropdown onJobSelect={handleJobChange} />
+                                <JobsDropdown
+                                    onJobSelect={handleJobChange}
+                                    selectedJob={selectedJob}
+                                />
 
                                 {/* Additional StagesDropdown for "Stuck in Pipeline" */}
                                 {selectedEvent?.title === "Stuck in Pipeline" &&
@@ -515,6 +534,10 @@ const TriggersComponent = ({ workflowData, onSaveTrigger }) => {
                                                 jobId={selectedJob}
                                                 onStageSelect={
                                                     handleStageChange
+                                                }
+                                                selectedStage={
+                                                    selectedStage?.id ??
+                                                    undefined
                                                 }
                                             />
 

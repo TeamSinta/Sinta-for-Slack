@@ -12,7 +12,7 @@
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { env } from "@/env";
-import { type Candidate } from "@/types/greenhouse";
+// import { type Candidate } from "@/types/greenhouse";
 import { getEmailsfromSlack } from "@/server/slack/core";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 
