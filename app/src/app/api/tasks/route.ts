@@ -141,8 +141,8 @@ export async function POST(request: NextRequest) {
     await initializeStuckStageChecks(
         SAMPLE_WORKFLOW,
         SAMPLE_STUCK_APPLICATION,
-        null,
         body.daysToBeStuck,
+        null,
     );
     return NextResponse.json({}, { status: 200 });
 }
