@@ -685,7 +685,6 @@ export async function filterStuckinStageDataConditions(
     console.log("stageName", stageName);
     console.log("thresholdDays", thresholdDays);
     console.log("operator", operator);
-    console.log("candidates", candidates);
     console.log("conditions", conditions);
     for (const candidate of candidates) {
         const candidateId = candidate.id;
@@ -872,6 +871,7 @@ export async function getCandidateJobApplication(
             candidateId: candidateId,
             jobId: item.jobs[0].id,
             jobName: item.jobs[0].name,
+            candidateDetails: candidate,
         }));
 
     if (candidateStages.length === 0)
@@ -881,13 +881,15 @@ export async function getCandidateJobApplication(
 }
 
 export function getStuckInStageApplicationDetails(application: any) {
-    return {
-        applicationId: application.id,
-        lastActivity: application.last_activity_at,
-        stageId: application.current_stage?.id,
-        stageName: application.current_stage?.name,
-        candidateId: application.candidate_id,
-        jobId: application.jobs[0].id,
-        jobName: application.jobs[0].name,
-    };
+  console.log("Application - ", application);
+
+  return {
+      applicationId: application?.application?.id || null,
+      lastActivity: application?.application?.last_activity_at || null,
+      stageId: application?.application?.current_stage?.id || null,
+      stageName: application?.application?.current_stage?.name || null,
+      candidateId: application?.application?.candidate?.id || null,
+      jobId: application?.application?.jobs?.[0]?.id || null,
+      jobName: application?.application?.jobs?.[0]?.name || null,
+  };
 }

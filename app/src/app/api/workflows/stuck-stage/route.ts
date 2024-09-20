@@ -75,16 +75,12 @@ export async function POST(request: NextRequest) {
                 apiUrl,
                 processor ? { params: processor } : {},
             );
-            const filteredConditionsData =
-                await filterStuckinStageDataConditions(
-                    data,
-                    workflow.conditions,
-                );
+            console.log(currentApplicationState, "CURRENT APPLICATION STATE");
             const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
             const subDomain = await getSubdomainByWorkflowID(workflow.id);
             const filteredSlackDataWithMessage =
                 await filterCandidatesDataForSlack(
-                    filteredConditionsData,
+                    [currentApplicationState.candidateDetails],
                     workflow.recipient,
                     slackTeamID,
                 );
@@ -95,6 +91,7 @@ export async function POST(request: NextRequest) {
                     workflow.recipient,
                     slackTeamID,
                     subDomain,
+                    currentApplicationState.candidateDetails
                 );
 
                 prevWorkflowId = workflow.id;
@@ -106,8 +103,8 @@ export async function POST(request: NextRequest) {
                 await initializeStuckStageChecks(
                     workflow,
                     null,
-                    applicationDetails,
                     1,
+                    applicationDetails,
                 );
             }
         }

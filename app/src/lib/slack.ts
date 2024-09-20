@@ -426,34 +426,7 @@ export async function filterCandidatesDataForSlack(
             }
         });
 
-        // Replace placeholders in customMessageBody
 
-        //   if (workflow.customMessageBody != undefined || workflow.customMessageBody != "")  {
-        //   let customMessageBody = workflow.customMessageBody;
-        //   customMessageBody = customMessageBody.replace(
-        //       "{{Recruiter}}",
-        //       candidate.recruiter
-        //           ? userMapping[candidate.recruiter.id]
-        //               ? `<@${userMapping[candidate.recruiter.id]}>`
-        //               : `${candidate.recruiter.first_name} ${candidate.recruiter.last_name}`
-        //           : "Recruiter",
-        //   );
-        //   customMessageBody = customMessageBody.replace(
-        //       "{{Candidate_Name}}",
-        //       `${candidate.first_name} ${candidate.last_name}`,
-        //   );
-        //   customMessageBody = customMessageBody.replace(
-        //       "{{Coordinator}}",
-        //       candidate.coordinator
-        //           ? userMapping[candidate.coordinator.id]
-        //               ? `<@${userMapping[candidate.coordinator.id]}>`
-        //               : `${candidate.coordinator.first_name} ${candidate.coordinator.last_name}`
-        //           : "Coordinator",
-        //   );
-
-        //   result.customMessageBody = customMessageBody;
-        // }
-        // Map recipients
         workflow.recipients.forEach((recipient) => {
             if (recipient.source === "greenhouse") {
                 const role = recipient.value;

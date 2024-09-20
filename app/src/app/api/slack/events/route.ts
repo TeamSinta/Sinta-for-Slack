@@ -16,6 +16,7 @@ import {
 
 export async function handleSlackEvent(data: any) {
     // Check if the event type is "block_actions"
+    console.log("data:", data);
     if (data.type === "block_actions") {
         // Handle block actions, specifically tab switching
         const userId = data?.user?.id; // User ID for block_actions
@@ -53,7 +54,7 @@ export async function handleSlackEvent(data: any) {
         console.log("Slack Event:", data.event);
 
         const userId = data?.event?.user;
-        const teamId = data?.event?.view?.team_id;
+        const teamId = data?.team_id;
         const tab = data?.event?.tab;
         const action = data?.actions?.[0]?.action_id;
 

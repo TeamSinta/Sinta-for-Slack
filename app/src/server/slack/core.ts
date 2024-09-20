@@ -23,6 +23,7 @@ import { env } from "@/env";
 import { combineGreenhouseRolesAndSlackUsers } from "@/app/api/cron/route";
 import { and, eq } from "drizzle-orm";
 import { membersToOrganizations } from "@/server/db/schema";
+import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
 
 interface SlackChannel {
     id: string;
@@ -173,9 +174,15 @@ export async function sendSlackNotification(
     workflowRecipient: WorkflowRecipient,
     slackTeamID: string,
     subDomain: string,
+    candidateDetails: Record<string, unknown>,
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
+
+    const customMessageBody = parseCustomMessageBody(
+      workflowRecipient.customMessageBody,
+      candidateDetails // Pass candidate details here
+  );
 
     for (const recipient of allRecipients) {
         console.log("Recipient:", recipient);
@@ -245,8 +252,7 @@ export async function sendSlackNotification(
                                     type: "section",
                                     text: {
                                         type: "mrkdwn",
-                                        // text: data.customMessageBody,
-                                        text: workflowRecipient.customMessageBody,
+                                        text: customMessageBody,
                                     },
                                 },
                                 ...(workflowRecipient.messageButtons.length > 0
@@ -350,6 +356,8 @@ export async function sendSlackNotification(
     }
     console.log("Total recipients:", allRecipients.length);
 }
+
+
 
 export async function sendSlackButtonNotification(
     filteredSlackData: Record<string, unknown>[],
@@ -1128,4 +1136,24 @@ export async function postMessageToChannel(userId: string, body: any) {
     if (!response.ok) throw new Error("Failed to post message");
 
     return true;
+}
+
+function parseCustomMessageBody(customMessageBody, candidateDetails) {
+  // Replace the placeholders with corresponding candidate details safely
+  let formattedMessage = customMessageBody;
+
+  // Safely handle undefined candidate details using optional chaining (?.) and provide default values
+  formattedMessage = formattedMessage.replace(/{{first_name}}/g, candidateDetails?.first_name || "N/A");
+  formattedMessage = formattedMessage.replace(/{{last_name}}/g, candidateDetails?.last_name || "N/A");
+  formattedMessage = formattedMessage.replace(/{{role_name}}/g, candidateDetails?.title || "N/A");
+  formattedMessage = formattedMessage.replace(/{{company}}/g, candidateDetails?.company || "N/A");
+  formattedMessage = formattedMessage.replace(/{{recruiter_name}}/g, candidateDetails?.recruiter?.name || "N/A");
+  formattedMessage = formattedMessage.replace(/{{coordinator_name}}/g, candidateDetails?.coordinator?.name || "N/A");
+  formattedMessage = formattedMessage.replace(/{{Job Stage}}/g, candidateDetails?.applications?.[0]?.current_stage?.name || "N/A");
+
+  // Convert the HTML content to Slack markdown format
+  const slackFormattedMessage = convertHtmlToSlackMrkdwn(formattedMessage);
+
+  // Return the final Slack-compatible message
+  return slackFormattedMessage;
 }
