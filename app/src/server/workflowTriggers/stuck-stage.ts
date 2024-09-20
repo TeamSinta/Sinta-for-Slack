@@ -23,7 +23,7 @@ export async function initializeStuckStageChecks(
 
     // The schedules the task to be run in the next 5 days
     await scheduleTask(
-        `${process.env.NEXTAUTH_URL}api/workflows/stuck-stage`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/workflows/stuck-stage`,
         JSON.stringify({ applicationDetails, workflow }),
         scheduledDate,
         `StuckinStage-Workflow-${workflow.id}-Application-${applicationDetails.applicationId}`,
