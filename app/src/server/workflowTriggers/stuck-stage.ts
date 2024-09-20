@@ -4,8 +4,8 @@ import { scheduleTask } from "../mergent";
 export async function initializeStuckStageChecks(
     workflow: any,
     application?: any,
-    applicationDetails?: any,
     daysToBeStuck: number = 5,
+    applicationDetails?: any,
 ) {
     if (!application && !applicationDetails) {
         throw new Error("No application or application details provided");
@@ -22,7 +22,7 @@ export async function initializeStuckStageChecks(
     );
 
     // The schedules the task to be run in the next 5 days
-    scheduleTask(
+    await scheduleTask(
         `${process.env.NEXTAUTH_URL}api/workflows/stuck-stage`,
         JSON.stringify({ applicationDetails, workflow }),
         scheduledDate,

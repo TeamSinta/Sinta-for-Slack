@@ -28,7 +28,8 @@ import {
     Loader2Icon,
 } from "lucide-react";
 import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import "react-quill/dist/quill.bubble.css"; // Import the bubble theme CSS
+
 import MessageButtons, {
     type ButtonAction,
     ButtonType,
@@ -48,6 +49,7 @@ import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
 import TestResult from "./testResults";
 import { useSession } from "next-auth/react";
 import { postMessageToChannel } from "@/server/slack/core";
+import { Input } from "@/components/ui/input";
 const localStorageKey = "workflowActions";
 
 const isBrowser = typeof window !== "undefined";
@@ -119,6 +121,8 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [activeTab, setActiveTab] = useState("message");
     const [testResult, setTestResult] = useState(null);
+    const [openingText, setOpeningText] = useState("");
+
     const session = useSession();
 
     useEffect(() => {
@@ -132,6 +136,8 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 setButtons(actionData?.messageButtons);
             if (actionData?.recipients)
                 setSelectedRecipients(actionData?.recipients);
+            if (actionData?.openingText)
+                setOpeningText(actionData?.openingText); // Load opening text
         }
     }, []);
     useEffect(() => {
@@ -218,7 +224,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
         if (isSaveEnabled) {
             const actionData = {
                 recipients: selectedRecipients,
-                openingText: "Custom Opening Text", // Replace with actual field if needed
+                openingText, // Save the opening text
                 messageFields: selectedFields,
                 messageButtons: buttons,
                 messageDelivery: "Group DM", // Replace with actual field if needed
@@ -241,17 +247,22 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 {
                     color: "#384ab4",
                     blocks: [
-                        {
-                            type: "section",
-                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
-                            text: {
-                                type: "mrkdwn",
-                                text: convertHtmlToSlackMrkdwn(
-                                    customMessageBody,
-                                ),
-                            },
-                        },
+                        // Opening text block as a header
+                        ...(openingText
+                            ? [
+                                  {
+                                      type: "header",
+                                      block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
+                                      text: {
+                                          type: "plain_text", // Header must use plain_text, not mrkdwn
+                                          text: openingText, // Add openingText here
+                                          emoji: true,
+                                      },
+                                  },
+                              ]
+                            : []),
 
+                        // Message fields section (now placed first)
                         ...(selectedFields.length > 0
                             ? [
                                   {
@@ -269,6 +280,20 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 },
                             };
                         }),
+
+                        // Custom message body (now placed second)
+                        {
+                            type: "section",
+                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
+                            text: {
+                                type: "mrkdwn",
+                                text: convertHtmlToSlackMrkdwn(
+                                    customMessageBody,
+                                ),
+                            },
+                        },
+
+                        // Buttons section (if applicable)
                         ...(buttons.length > 0
                             ? [
                                   {
@@ -421,7 +446,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
 
                     {/* Message Tab */}
                     <TabsContent value="message" className="mt-4 py-1">
-                        <div className="mt-4 rounded-lg border border-gray-300 bg-white pb-6 shadow-sm">
+                        <div className="mt-4 rounded-lg border border-gray-300 bg-white pb-6 shadow-md">
                             {/* Top Bar */}
                             <div className="flex items-center justify-between rounded-t-lg bg-fuchsia-950 px-3 py-1 text-white">
                                 <div className="flex space-x-2">
@@ -450,6 +475,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                         3:53 PM
                                     </div>
                                 </div>
+
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
@@ -497,73 +523,116 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 </DropdownMenu>
                             </div>
 
-                            <div className="ml-12 px-4">
-                                <div className="resize-y overflow-auto rounded-lg border border-gray-300 bg-white p-2 shadow-sm focus:outline-none">
-                                    <ReactQuill
-                                        value={customMessageBody}
-                                        onChange={handleCustomMessageBodyChange}
-                                        modules={{
-                                            toolbar: [
-                                                ["bold", "italic", "underline"],
-                                                [{ link: "link" }],
-                                            ],
-                                        }}
-                                        formats={[
-                                            "bold",
-                                            "italic",
-                                            "underline",
-                                            "link",
-                                        ]}
-                                        className="text-md min-h-32 w-full bg-white"
-                                        style={{ height: "auto" }}
+                            <div className="space-y-6 p-6">
+                                {/* Opening Text Input */}
+                                <div>
+                                    <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                        Opening Title
+                                    </Label>
+                                    <Input
+                                        value={openingText}
+                                        onChange={(e) =>
+                                            setOpeningText(e.target.value)
+                                        }
+                                        placeholder="Enter the opening message to introduce your alert"
+                                        className="block w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500"
                                     />
                                 </div>
-                            </div>
 
-                            {selectedFields.length > 0 && (
-                                <hr className="mx-16 my-4" />
-                            )}
-
-                            <div className="ml-12 mt-2 px-4">
-                                {selectedFields.map((field) => (
-                                    <div
-                                        key={field}
-                                        className="mb-2 flex items-center"
-                                    >
-                                        <span className="text-sm font-medium text-gray-700">
-                                            {
-                                                fields.find(
-                                                    (f) => f.value === field,
-                                                )?.label
+                                {/* Custom Message Input */}
+                                <div>
+                                    <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                        Custom Message
+                                    </Label>
+                                    <div className="rounded border border-gray-300 shadow-sm">
+                                        <ReactQuill
+                                            theme="bubble" // Set the theme to bubble
+                                            value={customMessageBody}
+                                            onChange={
+                                                handleCustomMessageBodyChange
                                             }
-                                            :
-                                        </span>
-                                        <span className="ml-2 text-sm text-gray-500">
-                                            {"{{" + field + "}}"}
-                                        </span>
+                                            modules={{
+                                                toolbar: [
+                                                    [
+                                                        "bold",
+                                                        "italic",
+                                                        "underline",
+                                                    ],
+                                                    [{ link: "link" }],
+                                                ],
+                                            }}
+                                            formats={[
+                                                "bold",
+                                                "italic",
+                                                "underline",
+                                                "link",
+                                            ]}
+                                            className="text-md min-h-32 w-full bg-white focus:outline-none"
+                                            style={{
+                                                height: "auto",
+                                                borderRadius: "0.375rem",
+                                            }}
+                                        />
                                     </div>
-                                ))}
-                            </div>
-
-                            {buttons.length > 0 && (
-                                <hr className="mx-16 my-4" />
-                            )}
-
-                            {buttons.length > 0 && (
-                                <div className="ml-12 mt-2 flex flex-wrap gap-2 px-4">
-                                    {buttons.map((button, index) => (
-                                        <button
-                                            key={index}
-                                            className={`rounded-sm px-3 py-1 text-sm ${getButtonStyle(
-                                                button,
-                                            )}`}
-                                            type="button"
-                                        >
-                                            {button.label}
-                                        </button>
-                                    ))}
                                 </div>
-                            )}
+
+                                {/* Selected Fields Display */}
+                                {selectedFields.length > 0 && (
+                                    <div className="space-y-2">
+                                        <hr className="border-gray-300" />
+                                        <div>
+                                            <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                                Message Fields
+                                            </Label>
+                                            {selectedFields.map((field) => (
+                                                <div
+                                                    key={field}
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {
+                                                            fields.find(
+                                                                (f) =>
+                                                                    f.value ===
+                                                                    field,
+                                                            )?.label
+                                                        }
+                                                        :
+                                                    </span>
+                                                    <span className="text-sm text-gray-500">
+                                                        {"{{" + field + "}}"}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Buttons Section */}
+                                {buttons.length > 0 && (
+                                    <div className="space-y-4">
+                                        <hr className="border-gray-300" />
+                                        <div>
+                                            <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                                Buttons
+                                            </Label>
+                                            <div className="flex flex-wrap gap-3">
+                                                {buttons.map(
+                                                    (button, index) => (
+                                                        <button
+                                                            key={index}
+                                                            className={`rounded-lg px-4 py-2 text-sm ${getButtonStyle(button)}`}
+                                                            type="button"
+                                                        >
+                                                            {button.label}
+                                                        </button>
+                                                    ),
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="my-4">

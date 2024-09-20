@@ -47,7 +47,6 @@ export function AssignmentsChannelTable({
     greenhouseJobsDict,
 }: SlackChannelsCreatedTableProps) {
     const { data, pageCount, total } = React.use(slackChannelsCreatedPromise);
-    // console.log('DATA -')
     const columns = useMemo<ColumnDef<SlackChannelsCreatedData, unknown>[]>(
         () => getColumns(),
         [],

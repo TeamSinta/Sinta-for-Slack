@@ -166,7 +166,6 @@ function CreateHiringroomSheet() {
         ]) as any[];
 
     useEffect(() => {
-        console.log("go bucks in use effect fetch all suers");
         const fetchData = async () => {
             const greenhouseUsers = await fetchAllGreenhouseUsers();
             const greenhouseJobs = await fetchAllGreenhouseJobsFromGreenhouse();
@@ -195,20 +194,10 @@ function CreateHiringroomSheet() {
             //recruiter
             tmpConditionTypesWithOperators[1].values = recruitersList;
             tmpConditionTypesWithOperators[2].values = jobNamesList;
-            console.log(
-                "tmpConditionTypesWithOperators ",
-                tmpConditionTypesWithOperators,
-            );
-            console.log("jobNamesList ", jobNamesList);
+
             setConditionTypesWithOperators(tmpConditionTypesWithOperators);
-            console.log(
-                "conditionTypesWithOperators ",
-                conditionTypesWithOperators,
-            );
-            console.log(
-                "tmpConditionTypesWithOperators ",
-                tmpConditionTypesWithOperators,
-            );
+
+
         };
         fetchData();
     }, []);
@@ -631,7 +620,6 @@ function CreateHiringroomSheet() {
     } = useMutation({
         mutationFn: createHiringroomMutation,
         onSuccess: async (hiringroomValue) => {
-            console.log("hiringroomvalue - ", hiringroomValue);
             // handleIndividualHiringroom(hiringroomValue) // to build
 
             // call endpoint that calls handle indiviual hiring room backend
