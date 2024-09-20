@@ -22,6 +22,7 @@ export async function initializeStuckStageChecks(
     );
 
     // The schedules the task to be run in the next 5 days
+    console.log("ENV VARIABLE", process.env.NEXT_PUBLIC_API_BASE_URL);
     await scheduleTask(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/workflows/stuck-stage`,
         JSON.stringify({ applicationDetails, workflow }),
