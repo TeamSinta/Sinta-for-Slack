@@ -100,7 +100,8 @@ function isStuckInStage(application: any, stuckStageIds: string[]): boolean {
         return false; // No stage info available
     }
     const currentStageStr = String(currentStage);
-    const stuckStageIdsStr = stuckStageIds.map(String);
+    const stuckStageIdsStr = String(stuckStageIds);
+    console.log("currentStagestr ",currentStageStr,"currentStage ",stuckStageIds )
     return stuckStageIdsStr.includes(currentStageStr);
 }
 

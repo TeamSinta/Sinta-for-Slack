@@ -146,6 +146,21 @@ export function WorkflowBuilder({
             [],
         );
 
+        const combinedConditions = [
+          // Map through the main conditions and add the condition_type field
+          ...(workflowTriggers.mainCondition || []).map(
+              (condition: any) => ({
+                  ...condition,
+                  condition_type: "Main", // Add condition_type for main conditions
+              }),
+          ),
+          // Map through the conditionsData and add the condition_type field
+          ...trimmedConditions.map((condition: any) => ({
+              ...condition,
+              condition_type: "Add-on", // Add condition_type for add-on conditions
+          })),
+        ];
+
         const newDbData = {
             id: workflowId[0],
             name: workflowName,
@@ -157,10 +172,7 @@ export function WorkflowBuilder({
                 processor: workflowTriggers?.processor,
             },
             recipient: recipient,
-            conditions: [
-                ...workflowTriggers?.mainCondition,
-                ...trimmedConditions,
-            ],
+            conditions: combinedConditions,
             status: isActive ? "Active" : "Inactive",
         };
         await updateWorkflowMutate(newDbData);
