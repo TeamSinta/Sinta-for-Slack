@@ -238,132 +238,128 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
         }
     };
 
-    const handleTestConfiguration = async () => {
-        setTestResult(null);
-        setTestButtonLoading(true);
+ // Instead of mapping inside the map, we construct the entire message outside the map.
+const handleTestConfiguration = async () => {
+  setTestResult(null);
+  setTestButtonLoading(true);
 
-        const payload = {
-            attachments: [
-                {
-                    color: "#384ab4",
-                    blocks: [
-                        // Opening text block as a header
-                        ...(openingText
-                            ? [
-                                  {
-                                      type: "header",
-                                      block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
-                                      text: {
-                                          type: "plain_text", // Header must use plain_text, not mrkdwn
-                                          text: openingText, // Add openingText here
-                                          emoji: true,
-                                      },
-                                  },
-                              ]
-                            : []),
+  // Construct the message with all selected fields in one string
+  const messageBody = selectedFields
+      .map((field) => {
+          const fieldLabel = fields.find((f) => f.value === field)?.label;
+          return `*${fieldLabel}:* ${field}`; // No additional new lines, just one per field
+      })
+      .join('\n'); // Ensure each field appears on a new line
 
-                        // Message fields section (now placed first)
-                        ...(selectedFields.length > 0
-                            ? [
-                                  {
-                                      type: "divider",
-                                  },
-                              ]
-                            : []),
-                        ...selectedFields.map((field, index) => {
-                            return {
-                                type: "section",
+  const payload = {
+      attachments: [
+          {
+              color: "#384ab4",
+              blocks: [
+                  // Opening text block as a header
+                  ...(openingText
+                      ? [
+                            {
+                                type: "header",
+                                block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
                                 text: {
-                                    type: "mrkdwn",
-                                    text: `{{${fields.find((f) => f.value === field)?.label}}}`,
-                                    verbatim: false,
+                                    type: "plain_text", // Header must use plain_text, not mrkdwn
+                                    text: openingText, // Add openingText here
+                                    emoji: true,
                                 },
-                            };
-                        }),
-
-                        // Custom message body (now placed second)
-                        {
-                            type: "section",
-                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
-                            text: {
-                                type: "mrkdwn",
-                                text: convertHtmlToSlackMrkdwn(
-                                    customMessageBody,
-                                ),
                             },
-                        },
+                        ]
+                      : []),
 
-                        // Buttons section (if applicable)
-                        ...(buttons.length > 0
-                            ? [
-                                  {
-                                      type: "actions",
-                                      elements: buttons.map((item, index) => {
-                                          return {
-                                              type: "button",
-                                              ...(item.type ===
-                                                  ButtonType.UpdateButton &&
-                                                  item.updateType && {
-                                                      action_id:
-                                                          item.updateType,
-                                                      style:
-                                                          item.updateType ===
-                                                          UpdateActionType.MoveToNextStage
-                                                              ? "primary"
-                                                              : "danger",
-                                                  }),
-                                              text: {
-                                                  type: "plain_text",
-                                                  text: item.label,
-                                                  emoji: true,
-                                              },
-                                              ...(item.type ===
-                                                  ButtonType.LinkButton &&
-                                                  item.linkType ===
-                                                      LinkActionType.Dynamic && {
-                                                      action_id: item.action,
-                                                  }),
-                                              ...(item.type ===
-                                                  ButtonType.LinkButton &&
-                                                  item.linkType ===
-                                                      LinkActionType.Static && {
-                                                      url: item.action,
-                                                  }),
-                                          };
-                                      }),
-                                  },
-                              ]
-                            : []),
-                    ],
-                },
-            ],
-        };
+                  // Message fields section
+                  {
+                      type: "section",
+                      text: {
+                          type: "mrkdwn",
+                          text: messageBody, // Insert the constructed message here
+                          verbatim: false,
+                      },
+                  },
 
-        try {
-            await postMessageToChannel(session?.data?.user?.id, payload);
-            console.log("Test message sent successfully.");
-            setTestResult({
-                success: true,
-                status: 200,
-                message: `Status Code: 200`,
-                data: null,
-            });
-        } catch (error) {
-            console.error("Error occurred while sending test message:", error);
-            setTestResult({
-                success: false,
-                status: error.message.includes("HTTP error!")
-                    ? error.message
-                    : `Status: ${error.response?.status || "N/A"}`,
-                message: error.message.includes("HTTP error!")
-                    ? error.message
-                    : `Error: ${error.message}`,
-                data: null,
-            });
-        } finally {
-            setTestButtonLoading(false);
-        }
-    };
+                  {
+                      type: "section",
+                      block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
+                      text: {
+                          type: "mrkdwn",
+                          text: convertHtmlToSlackMrkdwn(customMessageBody),
+                      },
+                  },
+                  // Buttons section (if applicable)
+                  ...(buttons.length > 0
+                      ? [
+                            {
+                                type: "actions",
+                                elements: buttons.map((item, index) => {
+                                    return {
+                                        type: "button",
+                                        ...(item.type ===
+                                            ButtonType.UpdateButton &&
+                                            item.updateType && {
+                                                action_id: item.updateType,
+                                                style:
+                                                    item.updateType ===
+                                                    UpdateActionType.MoveToNextStage
+                                                        ? "primary"
+                                                        : "danger",
+                                            }),
+                                        text: {
+                                            type: "plain_text",
+                                            text: item.label,
+                                            emoji: true,
+                                        },
+                                        ...(item.type ===
+                                            ButtonType.LinkButton &&
+                                            item.linkType ===
+                                                LinkActionType.Dynamic && {
+                                                action_id: item.action,
+                                            }),
+                                        ...(item.type ===
+                                            ButtonType.LinkButton &&
+                                            item.linkType ===
+                                                LinkActionType.Static && {
+                                                url: item.action,
+                                            }),
+                                    };
+                                }),
+                            },
+                        ]
+                      : []),
+              ],
+          },
+      ],
+  };
+
+  try {
+      await postMessageToChannel(session?.data?.user?.id, payload);
+      console.log("Test message sent successfully.");
+      setTestResult({
+          success: true,
+          status: 200,
+          message: `Status Code: 200`,
+          data: null,
+      });
+  } catch (error) {
+      console.error("Error occurred while sending test message:", error);
+      setTestResult({
+          success: false,
+          status: error.message.includes("HTTP error!")
+              ? error.message
+              : `Status: ${error.response?.status || "N/A"}`,
+          message: error.message.includes("HTTP error!")
+              ? error.message
+              : `Error: ${error.message}`,
+          data: null,
+      });
+  } finally {
+      setTestButtonLoading(false);
+  }
+};
+
 
     const getButtonStyle = (button: ButtonAction) => {
         switch (button.type) {
