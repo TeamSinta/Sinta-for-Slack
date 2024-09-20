@@ -477,7 +477,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         }
     }
     async function deleteChannel(channel) {
-        console.log("delete channel -", channel);
         const response = await handleDeleteSlackChannel(channel);
         // update ui
         // do something

@@ -138,13 +138,11 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
-            console.log("response.status-", response.status);
-            console.log("response.status-", response.statusText);
+
             throw new Error("Failed to fetch users", response.statusText);
         }
 
         const data: SlackApiResponse<SlackUser> = await response.json();
-        console.log("pre return?");
         if (data.ok && data.members) {
             return data.members
                 .filter((member) => !member.deleted && member.profile.email)

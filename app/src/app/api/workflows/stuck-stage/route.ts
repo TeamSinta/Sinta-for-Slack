@@ -2,7 +2,6 @@ import { filterCandidatesDataForSlack } from "@/lib/slack";
 import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
 import {
-    filterStuckinStageDataConditions,
     getCandidateJobApplication,
 } from "@/server/greenhouse/core";
 import { sendSlackNotification } from "@/server/slack/core";
