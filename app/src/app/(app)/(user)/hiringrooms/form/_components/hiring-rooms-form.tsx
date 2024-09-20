@@ -149,20 +149,9 @@ function HiringroomFormPage() {
             //recruiter
             tmpConditionTypesWithOperators[1].values = recruitersList;
             tmpConditionTypesWithOperators[2].values = jobNamesList;
-            console.log(
-                "tmpConditionTypesWithOperators ",
-                tmpConditionTypesWithOperators,
-            );
-            console.log("jobNamesList ", jobNamesList);
+
             setConditionTypesWithOperators(tmpConditionTypesWithOperators);
-            console.log(
-                "conditionTypesWithOperators ",
-                conditionTypesWithOperators,
-            );
-            console.log(
-                "tmpConditionTypesWithOperators ",
-                tmpConditionTypesWithOperators,
-            );
+
         };
         fetchData();
     }, []);
@@ -624,7 +613,6 @@ function HiringroomFormPage() {
     const onSubmit = async () => {
         try {
             const formData = form.getValues();
-            console.log("Form Data before submission:", formData);
 
             // Combine timeBasedConditions or stuckStageConditions and additional conditions
             const allConditions =

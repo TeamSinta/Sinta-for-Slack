@@ -22,10 +22,14 @@ export async function GET() {
 
             if (token_expiry !== null) {
                 const currentTime = Math.floor(Date.now() / 1000); // current time in seconds
-                const isExpired = currentTime >= token_expiry;
+                const twoHoursInSeconds = 7200; // 2 hours in seconds
+                const isExpiringSoon =
+                    token_expiry - currentTime <= twoHoursInSeconds;
 
-                if (isExpired) {
-                    console.log(`Token expired. Attempting to refresh...`);
+                if (isExpiringSoon) {
+                    console.log(
+                        `Token is expiring soon. Attempting to refresh...`,
+                    );
                     try {
                         const newAccessToken = await refreshTokenIfNeeded(
                             slack_team_id,
@@ -45,10 +49,10 @@ export async function GET() {
                         });
                     }
                 } else {
-                    console.log(`Token is still valid.`);
+                    console.log(`Token is still valid and not expiring soon.`);
                     results.push({
-                        status: "not_expired",
-                        message: `Token is still valid.`,
+                        status: "not_expiring_soon",
+                        message: `Token is still valid and not expiring soon.`,
                     });
                 }
             } else {
