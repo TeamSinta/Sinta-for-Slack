@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -137,8 +135,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
             if (actionData?.recipients)
                 setSelectedRecipients(actionData?.recipients);
             if (actionData?.openingText)
-              setOpeningText(actionData?.openingText); // Load opening text
-
+                setOpeningText(actionData?.openingText); // Load opening text
         }
     }, []);
     useEffect(() => {
@@ -222,145 +219,149 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     };
 
     const handleSave = () => {
-      if (isSaveEnabled) {
-          const actionData = {
-              recipients: selectedRecipients,
-              openingText,  // Save the opening text
-              messageFields: selectedFields,
-              messageButtons: buttons,
-              messageDelivery: "Group DM", // Replace with actual field if needed
-              customMessageBody,
-          };
+        if (isSaveEnabled) {
+            const actionData = {
+                recipients: selectedRecipients,
+                openingText, // Save the opening text
+                messageFields: selectedFields,
+                messageButtons: buttons,
+                messageDelivery: "Group DM", // Replace with actual field if needed
+                customMessageBody,
+            };
 
-          // Save to local storage
-          saveActionData(actionData);
+            // Save to local storage
+            saveActionData(actionData);
 
-          onSaveActions(actionData); // Call the original save handler
-      }
-  };
-
-
-  const handleTestConfiguration = async () => {
-    setTestResult(null);
-    setTestButtonLoading(true);
-
-    const payload = {
-        attachments: [
-            {
-                color: "#384ab4",
-                blocks: [
-                    // Opening text block as a header
-                    ...(openingText ? [{
-                        type: "header",
-                        block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
-                        text: {
-                            type: "plain_text", // Header must use plain_text, not mrkdwn
-                            text: openingText, // Add openingText here
-                            emoji: true,
-                        },
-                    }] : []),
-
-                    // Message fields section (now placed first)
-                    ...(selectedFields.length > 0
-                        ? [
-                              {
-                                  type: "divider",
-                              },
-                          ]
-                        : []),
-                    ...selectedFields.map((field, index) => {
-                        return {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: `{{${fields.find((f) => f.value === field)?.label}}}`,
-                                verbatim: false,
-                            },
-                        };
-                    }),
-
-                    // Custom message body (now placed second)
-                    {
-                        type: "section",
-                        block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
-                        text: {
-                            type: "mrkdwn",
-                            text: convertHtmlToSlackMrkdwn(customMessageBody),
-                        },
-                    },
-
-                    // Buttons section (if applicable)
-                    ...(buttons.length > 0
-                        ? [
-                              {
-                                  type: "actions",
-                                  elements: buttons.map((item, index) => {
-                                      return {
-                                          type: "button",
-                                          ...(item.type ===
-                                              ButtonType.UpdateButton &&
-                                              item.updateType && {
-                                                  action_id: item.updateType,
-                                                  style:
-                                                      item.updateType ===
-                                                      UpdateActionType.MoveToNextStage
-                                                          ? "primary"
-                                                          : "danger",
-                                              }),
-                                          text: {
-                                              type: "plain_text",
-                                              text: item.label,
-                                              emoji: true,
-                                          },
-                                          ...(item.type ===
-                                              ButtonType.LinkButton &&
-                                              item.linkType ===
-                                                  LinkActionType.Dynamic && {
-                                                  action_id: item.action,
-                                              }),
-                                          ...(item.type ===
-                                              ButtonType.LinkButton &&
-                                              item.linkType ===
-                                                  LinkActionType.Static && {
-                                                  url: item.action,
-                                              }),
-                                      };
-                                  }),
-                              },
-                          ]
-                        : []),
-                ],
-            },
-        ],
+            onSaveActions(actionData); // Call the original save handler
+        }
     };
 
-    try {
-        await postMessageToChannel(session?.data?.user?.id, payload);
-        console.log("Test message sent successfully.");
-        setTestResult({
-            success: true,
-            status: 200,
-            message: `Status Code: 200`,
-            data: null,
-        });
-    } catch (error) {
-        console.error("Error occurred while sending test message:", error);
-        setTestResult({
-            success: false,
-            status: error.message.includes("HTTP error!")
-                ? error.message
-                : `Status: ${error.response?.status || "N/A"}`,
-            message: error.message.includes("HTTP error!")
-                ? error.message
-                : `Error: ${error.message}`,
-            data: null,
-        });
-    } finally {
-        setTestButtonLoading(false);
-    }
-};
+    const handleTestConfiguration = async () => {
+        setTestResult(null);
+        setTestButtonLoading(true);
 
+        const payload = {
+            attachments: [
+                {
+                    color: "#384ab4",
+                    blocks: [
+                        // Opening text block as a header
+                        ...(openingText
+                            ? [
+                                  {
+                                      type: "header",
+                                      block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
+                                      text: {
+                                          type: "plain_text", // Header must use plain_text, not mrkdwn
+                                          text: openingText, // Add openingText here
+                                          emoji: true,
+                                      },
+                                  },
+                              ]
+                            : []),
 
+                        // Message fields section (now placed first)
+                        ...(selectedFields.length > 0
+                            ? [
+                                  {
+                                      type: "divider",
+                                  },
+                              ]
+                            : []),
+                        ...selectedFields.map((field, index) => {
+                            return {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: `{{${fields.find((f) => f.value === field)?.label}}}`,
+                                    verbatim: false,
+                                },
+                            };
+                        }),
+
+                        // Custom message body (now placed second)
+                        {
+                            type: "section",
+                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
+                            text: {
+                                type: "mrkdwn",
+                                text: convertHtmlToSlackMrkdwn(
+                                    customMessageBody,
+                                ),
+                            },
+                        },
+
+                        // Buttons section (if applicable)
+                        ...(buttons.length > 0
+                            ? [
+                                  {
+                                      type: "actions",
+                                      elements: buttons.map((item, index) => {
+                                          return {
+                                              type: "button",
+                                              ...(item.type ===
+                                                  ButtonType.UpdateButton &&
+                                                  item.updateType && {
+                                                      action_id:
+                                                          item.updateType,
+                                                      style:
+                                                          item.updateType ===
+                                                          UpdateActionType.MoveToNextStage
+                                                              ? "primary"
+                                                              : "danger",
+                                                  }),
+                                              text: {
+                                                  type: "plain_text",
+                                                  text: item.label,
+                                                  emoji: true,
+                                              },
+                                              ...(item.type ===
+                                                  ButtonType.LinkButton &&
+                                                  item.linkType ===
+                                                      LinkActionType.Dynamic && {
+                                                      action_id: item.action,
+                                                  }),
+                                              ...(item.type ===
+                                                  ButtonType.LinkButton &&
+                                                  item.linkType ===
+                                                      LinkActionType.Static && {
+                                                      url: item.action,
+                                                  }),
+                                          };
+                                      }),
+                                  },
+                              ]
+                            : []),
+                    ],
+                },
+            ],
+        };
+
+        try {
+            await postMessageToChannel(session?.data?.user?.id, payload);
+            console.log("Test message sent successfully.");
+            setTestResult({
+                success: true,
+                status: 200,
+                message: `Status Code: 200`,
+                data: null,
+            });
+        } catch (error) {
+            console.error("Error occurred while sending test message:", error);
+            setTestResult({
+                success: false,
+                status: error.message.includes("HTTP error!")
+                    ? error.message
+                    : `Status: ${error.response?.status || "N/A"}`,
+                message: error.message.includes("HTTP error!")
+                    ? error.message
+                    : `Error: ${error.message}`,
+                data: null,
+            });
+        } finally {
+            setTestButtonLoading(false);
+        }
+    };
 
     const getButtonStyle = (button: ButtonAction) => {
         switch (button.type) {
@@ -520,84 +521,116 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 </DropdownMenu>
                             </div>
 
-                            <div className="p-6 space-y-6" >
-    {/* Opening Text Input */}
-    <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-2">Opening Title</Label>
-        <Input
-            value={openingText}
-            onChange={(e) => setOpeningText(e.target.value)}
-            placeholder="Enter the opening message to introduce your alert"
-            className="block w-full px-3 py-2 rounded shadow-sm border border-gray-300 focus:ring focus:ring-blue-500 focus:border-blue-500"
-        />
-    </div>
+                            <div className="space-y-6 p-6">
+                                {/* Opening Text Input */}
+                                <div>
+                                    <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                        Opening Title
+                                    </Label>
+                                    <Input
+                                        value={openingText}
+                                        onChange={(e) =>
+                                            setOpeningText(e.target.value)
+                                        }
+                                        placeholder="Enter the opening message to introduce your alert"
+                                        className="block w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500"
+                                    />
+                                </div>
 
-    {/* Custom Message Input */}
-    <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-2">Custom Message</Label>
-        <div className="rounded shadow-sm border border-gray-300">
+                                {/* Custom Message Input */}
+                                <div>
+                                    <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                        Custom Message
+                                    </Label>
+                                    <div className="rounded border border-gray-300 shadow-sm">
+                                        <ReactQuill
+                                            theme="bubble" // Set the theme to bubble
+                                            value={customMessageBody}
+                                            onChange={
+                                                handleCustomMessageBodyChange
+                                            }
+                                            modules={{
+                                                toolbar: [
+                                                    [
+                                                        "bold",
+                                                        "italic",
+                                                        "underline",
+                                                    ],
+                                                    [{ link: "link" }],
+                                                ],
+                                            }}
+                                            formats={[
+                                                "bold",
+                                                "italic",
+                                                "underline",
+                                                "link",
+                                            ]}
+                                            className="text-md min-h-32 w-full bg-white focus:outline-none"
+                                            style={{
+                                                height: "auto",
+                                                borderRadius: "0.375rem",
+                                            }}
+                                        />
+                                    </div>
+                                </div>
 
-        <ReactQuill
-          theme="bubble" // Set the theme to bubble
-          value={customMessageBody}
-          onChange={handleCustomMessageBodyChange}
-          modules={{
-              toolbar: [
-                  ["bold", "italic", "underline"],
-                  [{ link: "link" }],
-              ],
-          }}
-          formats={["bold", "italic", "underline", "link"]}
-          className="text-md min-h-32 w-full bg-white focus:outline-none"
-          style={{ height: "auto", borderRadius: "0.375rem" }}
-      />
-             </div>
-    </div>
+                                {/* Selected Fields Display */}
+                                {selectedFields.length > 0 && (
+                                    <div className="space-y-2">
+                                        <hr className="border-gray-300" />
+                                        <div>
+                                            <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                                Message Fields
+                                            </Label>
+                                            {selectedFields.map((field) => (
+                                                <div
+                                                    key={field}
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {
+                                                            fields.find(
+                                                                (f) =>
+                                                                    f.value ===
+                                                                    field,
+                                                            )?.label
+                                                        }
+                                                        :
+                                                    </span>
+                                                    <span className="text-sm text-gray-500">
+                                                        {"{{" + field + "}}"}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
-    {/* Selected Fields Display */}
-    {selectedFields.length > 0 && (
-        <div className="space-y-2">
-            <hr className="border-gray-300" />
-            <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">Message Fields</Label>
-                {selectedFields.map((field) => (
-                    <div key={field} className="flex items-center space-x-2">
-                        <span className="text-sm font-medium text-gray-700">
-                            {fields.find((f) => f.value === field)?.label}:
-                        </span>
-                        <span className="text-sm text-gray-500">
-                            {"{{" + field + "}}"}
-                        </span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    )}
-
-    {/* Buttons Section */}
-    {buttons.length > 0 && (
-        <div className="space-y-4">
-            <hr className="border-gray-300" />
-            <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">Buttons</Label>
-                <div className="flex flex-wrap gap-3">
-                    {buttons.map((button, index) => (
-                        <button
-                            key={index}
-                            className={`rounded-lg px-4 py-2 text-sm ${getButtonStyle(button)}`}
-                            type="button"
-                        >
-                            {button.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    )}
-</div>
-
-
-
+                                {/* Buttons Section */}
+                                {buttons.length > 0 && (
+                                    <div className="space-y-4">
+                                        <hr className="border-gray-300" />
+                                        <div>
+                                            <Label className="mb-2 block text-sm font-medium text-gray-700">
+                                                Buttons
+                                            </Label>
+                                            <div className="flex flex-wrap gap-3">
+                                                {buttons.map(
+                                                    (button, index) => (
+                                                        <button
+                                                            key={index}
+                                                            className={`rounded-lg px-4 py-2 text-sm ${getButtonStyle(button)}`}
+                                                            type="button"
+                                                        >
+                                                            {button.label}
+                                                        </button>
+                                                    ),
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="my-4">

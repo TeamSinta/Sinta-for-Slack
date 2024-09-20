@@ -15,7 +15,6 @@ export async function POST(
     try {
         // 1. Extract the Signature header from the request
         const signature = req.headers.get("Signature");
-        console.log(orgID, "orgID");
         const secretKey = await getSecretKeyForOrg(orgID);
 
         if (!secretKey) {
@@ -54,7 +53,6 @@ export async function POST(
 }
 
 async function processWebhookEvent(application: any, orgID: string) {
-    console.log("Processing webhook event:", application);
 
     const workflows = await fetchStuckInStageWorkflows(orgID);
 
@@ -68,7 +66,7 @@ async function processWebhookEvent(application: any, orgID: string) {
 
         const isStuck = isStuckInStage(application, stuckStageIds); // Pass payload here
         if (!isStuck) {
-            console.log("Candidate is this stuck in stage conditon.");
+            console.log("Candidate is does not match stuck-in-stage workflow.");
             continue;
         }
         // Step 2: Run the secondary condition check
@@ -83,7 +81,6 @@ async function processWebhookEvent(application: any, orgID: string) {
 
         if (conditionsMet) {
             const daysToBeStuck = extractDaysFromConditions(conditions);
-            console.log(daysToBeStuck)
             initializeStuckStageChecks(workflow, applicationExtracted, daysToBeStuck);
         } else {
             console.log(
@@ -127,7 +124,6 @@ function checkCandidateAgainstConditions(
         const { field, condition, value } = condtion;
         const payload = application.payload;
         // Get the candidate's data field using the utility function
-        console.log("Checking condition:", field);
         const candidateField = getFieldFromApplication(payload, field);
 
         // Handle if the field is not found

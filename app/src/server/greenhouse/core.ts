@@ -881,15 +881,15 @@ export async function getCandidateJobApplication(
 }
 
 export function getStuckInStageApplicationDetails(application: any) {
-  console.log("Application - ", application);
+    console.log("Application - ", application);
 
-  return {
-      applicationId: application?.application?.id || null,
-      lastActivity: application?.application?.last_activity_at || null,
-      stageId: application?.application?.current_stage?.id || null,
-      stageName: application?.application?.current_stage?.name || null,
-      candidateId: application?.application?.candidate?.id || null,
-      jobId: application?.application?.jobs?.[0]?.id || null,
-      jobName: application?.application?.jobs?.[0]?.name || null,
-  };
+    return {
+        applicationId: application?.application?.id || null,
+        lastActivity: application?.application?.last_activity_at || null,
+        stageId: application?.application?.current_stage?.id || null,
+        stageName: application?.application?.current_stage?.name || null,
+        candidateId: application?.application?.candidate?.id || null,
+        jobId: application?.application?.jobs?.[0]?.id || null,
+        jobName: application?.application?.jobs?.[0]?.name || null,
+    };
 }

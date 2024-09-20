@@ -147,11 +147,7 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
 
             setRecruiterCounts(initialRecruiterCounts);
             setCoordinatorCounts(initialCoordinatorCounts);
-            console.log("greenhouseUsersgreenhouseUsers- ", greenhouseUsers);
-            console.log("slackUsers- ", slackUsers);
-            console.log("greenhouseJobs- ", greenhouseJobs);
-            console.log("greenhouseUsersDict- ", greenhouseUsersDict);
-            console.log("greenhouseCandidates- ", greenhouseCandidates);
+
 
             // const greenhouseUsers = await fetchAllGreenhouseUsers()
             // console.log('slackUsers users - ',slackUsers)
@@ -160,7 +156,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
                 greenhouseUsersDict,
                 slackUsers,
             )) as any;
-            console.log("tmpUserMapping users - ", tmpUserMapping);
             setUserMapping(tmpUserMapping);
             // console.log('userMapping users - ',userMapping)
 
@@ -316,7 +311,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         });
     }, []);
     const createSlackChannelForCandidate = async (candidate) => {
-        console.log("candidate - ", candidate);
         // create slack channel
         const slackTeamId = "T04C82XCPRU";
         const recInitials = candidate.recruiter
@@ -341,10 +335,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         const jobId = candidate.applications[0].jobs[0].id;
         const curJob = jobsDict[jobId];
         const curJobHiringTeam = curJob.hiring_team;
-        console.log("greenhouseRecruiterId - ", greenhouseRecruiterId);
-        console.log("greenhouseCoordinatorId - ", greenhouseCoordinatorId);
-        console.log("slackCoordinatorId - ", slackCoordinatorId);
-        console.log("slackRecruiterId - ", slackRecruiterId);
         const hiringteamSlackIds = getSlackUsersFromHiringTeam(
             curJobHiringTeam,
             userMapping,
@@ -367,13 +357,11 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         // const slackUserIds = [].concat(hiringteamSlackIds)
         slackUserIds = slackUserIds.concat(slackUserIds);
         // const slackUserIds = [slackRecruiterId, slackCoordinatorId].concat(hiringteamSlackIds)
-        console.log("slackUserIds - ", slackUserIds);
         // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
         const slackChannelId = await createSlackChannel(
             channelName,
             slackTeamId,
         );
-        console.log("slackChannelId - ", slackChannelId);
         if (slackChannelId) {
             await inviteUsersToChannel(
                 slackChannelId,
@@ -385,7 +373,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
             const greenhouseJobId = candidate?.applications[0]?.jobs[0].id;
             const greenhouseCandidateId = candidate.id;
             // await saveSlackChannelCreatedToDB(channelId, slackUserIds, channelName, hiringroomId, hiringroom.slackChannelFormat,"",job.id)
-            console.log("pre slack channel db -");
             const slackChannelDB = await saveSlackChannelCreatedToDB(
                 slackChannelId,
                 slackUserIds,
@@ -395,7 +382,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
                 greenhouseCandidateId,
                 greenhouseJobId,
             );
-            console.log("post slack channel db -", slackChannelDB);
             // update ui
             const tmpSlackChannelsCreatedDict = slackChannelsCreatedDict;
             tmpSlackChannelsCreatedDict[candidate.id] = slackChannelDB;
@@ -406,9 +392,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
     };
 
     const handleRecruiterChange = (candidateId, newRecruiterId) => {
-        console.log("candidaters - ", candidates);
-        console.log("recruiters - ", recruiters);
-        console.log("newRecruiterId - ", newRecruiterId);
 
         const updatedCandidates = candidates.map((candidate) => {
             if (candidate.id === candidateId) {
@@ -426,9 +409,7 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         setRecruiterCounts(getRecruiterCounts(updatedCandidates));
     };
     const handleCoordinatorChange = (candidateId, newCoordinatorId) => {
-        console.log("candidaters - ", candidates);
-        console.log("coordinators - ", coordinators);
-        console.log("newCoordinatorId - ", newCoordinatorId);
+
         const updatedCandidates = candidates.map((candidate) => {
             if (candidate.id === candidateId) {
                 candidate.coordinator = coordinators.find(
@@ -490,7 +471,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
                 },
                 body: JSON.stringify(deleteObj),
             });
-            console.log("deleteResponse - ", response);
             return;
         } catch (e) {
             console.log("eee-", e);
@@ -502,22 +482,15 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         // update ui
         // do something
         const tmpAllSlackChannels = allSlackChannels;
-        console.log("tmpAllSlackChannels -", tmpAllSlackChannels);
         // const updatedChannels = tmpAllSlackChannels.filter(c => c.id !== channel.id);
         const updatedChannels = tmpAllSlackChannels.map((chan) => {
             if (channel.id == chan.id) {
-                console.log("FOUND - UNDOING THE ARCHIVE STATUS - ", chan);
-                console.log(
-                    "FOUND - UNDOING THE ARCHIVE STATUS - ",
-                    chan.is_archived,
-                );
+
                 chan.is_archived = !chan.is_archived;
             }
             return chan;
         });
-        console.log("updated -", updatedChannels);
         setAllSlackChannels(updatedChannels);
-        console.log("resposne - ", response);
     }
     async function archiveConversation(channelId) {
         const response = await fetch(

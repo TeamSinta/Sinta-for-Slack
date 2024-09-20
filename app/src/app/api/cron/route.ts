@@ -85,17 +85,13 @@ function getSlackIdsOfGreenHouseUsers(
     userMapping,
 ) {
     const slackIds = [];
-    console.log(
-        "hiring reciepieints  -",
-        hiring_room_recipient.reciepients.length,
-    );
+
     hiring_room_recipient.recipients.forEach((recipient) => {
         if (recipient.source == "greenhouse") {
             if (recipient.value.includes("ecruiter")) {
                 if (candidate.recruiter) {
                     const slackId = userMapping[candidate.recruiter.id];
                     if (slackId) {
-                        console.log("entered map");
                         slackIds.push(slackId); //recipient.slackValue = slackId;
                     }
                 }
@@ -115,7 +111,6 @@ function getSlackUsersFromRecipient(hiringroomRecipient: {
     recipients: any[];
 }) {
     const slackUsers = [];
-    console.log("hiring room recipient", hiringroomRecipient);
     hiringroomRecipient.recipients.forEach((recipient) => {
         if (recipient.source == "slack") {
             if (
@@ -132,7 +127,6 @@ function getSlackUsersFromRecipient(hiringroomRecipient: {
             }
         }
     });
-    console.log("slackUsers  - ", slackUsers);
 
     return slackUsers;
 }
@@ -159,8 +153,7 @@ function buildSlackChannelNameForJob(
 ): string {
     try {
         let channelName = slackChannelFormat;
-        console.log("candidate  -", job);
-        console.log("candidate created at -", job.created_at);
+
         // Parse the created_at date for job
         const jobCreatedAt = parseISO(job.created_at);
         const jobMonthText = format(jobCreatedAt, "MMMM"); // Full month name
@@ -194,8 +187,7 @@ function buildSlackChannelNameForCandidate(
     candidate: any,
 ): string {
     let channelName = slackChannelFormat;
-    console.log("candidate  -", candidate);
-    console.log("candidate created at -", candidate.created_at);
+
     // Parse the created_at date for candidate
     const candidateCreatedAt = parseISO(candidate.created_at);
     const candidateMonthText = format(candidateCreatedAt, "MMMM"); // Full month name

@@ -426,7 +426,6 @@ export async function filterCandidatesDataForSlack(
             }
         });
 
-
         workflow.recipients.forEach((recipient) => {
             if (recipient.source === "greenhouse") {
                 const role = recipient.value;

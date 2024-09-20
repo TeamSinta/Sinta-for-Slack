@@ -180,9 +180,9 @@ export async function sendSlackNotification(
     const allRecipients = workflowRecipient.recipients;
 
     const customMessageBody = parseCustomMessageBody(
-      workflowRecipient.customMessageBody,
-      candidateDetails // Pass candidate details here
-  );
+        workflowRecipient.customMessageBody,
+        candidateDetails, // Pass candidate details here
+    );
 
     for (const recipient of allRecipients) {
         console.log("Recipient:", recipient);
@@ -356,8 +356,6 @@ export async function sendSlackNotification(
     }
     console.log("Total recipients:", allRecipients.length);
 }
-
-
 
 export async function sendSlackButtonNotification(
     filteredSlackData: Record<string, unknown>[],
@@ -651,7 +649,6 @@ export async function getSlackUsersFromRecipient(hiringroomRecipient: {
     recipients: any[];
 }) {
     const slackUsers: any[] = [];
-    console.log("hiring room recipient", hiringroomRecipient);
     hiringroomRecipient.recipients.forEach((recipient) => {
         if (recipient.source == "slack") {
             if (
@@ -668,7 +665,6 @@ export async function getSlackUsersFromRecipient(hiringroomRecipient: {
             }
         }
     });
-    console.log("slackUsers  - ", slackUsers);
 
     return slackUsers;
 }
@@ -679,8 +675,7 @@ export async function buildSlackChannelNameForJob(
 ): string {
     try {
         let channelName = slackChannelFormat;
-        console.log("candidate  -", job);
-        console.log("candidate created at -", job.created_at);
+
         // Parse the created_at date for job
         const jobCreatedAt = parseISO(job.created_at);
         const jobMonthText = format(jobCreatedAt, "MMMM"); // Full month name
@@ -714,8 +709,6 @@ export async function buildSlackChannelNameForCandidate(
     candidate: any,
 ): string {
     let channelName = slackChannelFormat;
-    console.log("candidate  -", candidate);
-    console.log("candidate created at -", candidate.created_at);
     // Parse the created_at date for candidate
     const candidateCreatedAt = parseISO(candidate.created_at);
     const candidateMonthText = format(candidateCreatedAt, "MMMM"); // Full month name
@@ -1139,21 +1132,42 @@ export async function postMessageToChannel(userId: string, body: any) {
 }
 
 function parseCustomMessageBody(customMessageBody, candidateDetails) {
-  // Replace the placeholders with corresponding candidate details safely
-  let formattedMessage = customMessageBody;
+    // Replace the placeholders with corresponding candidate details safely
+    let formattedMessage = customMessageBody;
 
-  // Safely handle undefined candidate details using optional chaining (?.) and provide default values
-  formattedMessage = formattedMessage.replace(/{{first_name}}/g, candidateDetails?.first_name || "N/A");
-  formattedMessage = formattedMessage.replace(/{{last_name}}/g, candidateDetails?.last_name || "N/A");
-  formattedMessage = formattedMessage.replace(/{{role_name}}/g, candidateDetails?.title || "N/A");
-  formattedMessage = formattedMessage.replace(/{{company}}/g, candidateDetails?.company || "N/A");
-  formattedMessage = formattedMessage.replace(/{{recruiter_name}}/g, candidateDetails?.recruiter?.name || "N/A");
-  formattedMessage = formattedMessage.replace(/{{coordinator_name}}/g, candidateDetails?.coordinator?.name || "N/A");
-  formattedMessage = formattedMessage.replace(/{{Job Stage}}/g, candidateDetails?.applications?.[0]?.current_stage?.name || "N/A");
+    // Safely handle undefined candidate details using optional chaining (?.) and provide default values
+    formattedMessage = formattedMessage.replace(
+        /{{first_name}}/g,
+        candidateDetails?.first_name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{last_name}}/g,
+        candidateDetails?.last_name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{role_name}}/g,
+        candidateDetails?.title || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{company}}/g,
+        candidateDetails?.company || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{recruiter_name}}/g,
+        candidateDetails?.recruiter?.name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{coordinator_name}}/g,
+        candidateDetails?.coordinator?.name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Job Stage}}/g,
+        candidateDetails?.applications?.[0]?.current_stage?.name || "N/A",
+    );
 
-  // Convert the HTML content to Slack markdown format
-  const slackFormattedMessage = convertHtmlToSlackMrkdwn(formattedMessage);
+    // Convert the HTML content to Slack markdown format
+    const slackFormattedMessage = convertHtmlToSlackMrkdwn(formattedMessage);
 
-  // Return the final Slack-compatible message
-  return slackFormattedMessage;
+    // Return the final Slack-compatible message
+    return slackFormattedMessage;
 }

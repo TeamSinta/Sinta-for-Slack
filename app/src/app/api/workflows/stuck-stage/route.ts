@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
                     workflow.recipient,
                     slackTeamID,
                     subDomain,
-                    currentApplicationState.candidateDetails
+                    currentApplicationState.candidateDetails,
                 );
 
                 prevWorkflowId = workflow.id;
