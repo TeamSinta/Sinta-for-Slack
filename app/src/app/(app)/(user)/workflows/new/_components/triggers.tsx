@@ -23,11 +23,14 @@ import { motion } from "framer-motion";
 import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
 import { Separator } from "@/components/ui/separator";
 import JobsDropdown from "../../_components/job-select";
-import StagesDropdown from "../../_components/stages-dropdown";
 import { customFetchTester } from "@/utils/fetch";
 import TestResult from "./testResults";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import GenericDropdown from "../../_components/generic-dropdown";
+import GenericInput from "../../_components/generic-input";
+
+import { fetchStagesForJob } from "@/server/greenhouse/core";
 
 const localStorageKey = "workflowTriggers";
 
@@ -43,8 +46,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
     const [selectedStage, setSelectedStage] = useState(null);
-    const [selectedTrigger, setSelectedTrigger] = useState(null);
     const [days, setDays] = useState("");
+    const [selectedTriggerData, setSelectedTriggerData] = useState({});
     const [activeTab, setActiveTab] = useState("event");
     const [isTesting, setIsTesting] = useState(false);
     const [testResult, setTestResult] = useState(null);
@@ -98,6 +101,18 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
             alertType: "stuck-in-stage",
             triggers: [],
+            fields: [
+                {
+                    label: "Stage",
+                    value: "stage",
+                    fetcher: async () => await fetchStagesForJob(selectedJob),
+                },
+                {
+                    label: "Days",
+                    value: "days",
+                    fetcher: async () => await fetchStagesForJob(selectedJob),
+                },
+            ],
         },
         {
             title: "Interview Reminders",
@@ -143,7 +158,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         setSelectedEvent(selected);
         setSelectedJob(null);
         setSelectedStage(null);
-        setSelectedTrigger(null);
     };
 
     const handleJobChange = (jobId: string) => {
@@ -155,8 +169,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         setSelectedStage({ id: stageId, label: stageLabel });
     };
 
-    const handleDaysChange = (e) => {
-        setDays(e.target.value);
+    const handleDaysChange = (newValue) => {
+        setDays(newValue);
     };
 
     const handleContinue = () => {
@@ -167,10 +181,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         } else if (activeTab === "test") {
             handleSave();
         }
-    };
-
-    const handleTriggerChange = (trigger) => {
-        setSelectedTrigger(trigger);
     };
 
     const handlePollingIntervalChange = (e) => {
@@ -190,7 +200,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
             const triggerData = {
                 event: selectedEvent.title,
-                trigger: selectedStage ? selectedStage.label : selectedTrigger,
                 apiUrl: selectedEvent.apiUrl,
                 objectField: selectedEvent.objectField,
                 alertType: selectedEvent.alertType,
@@ -542,38 +551,30 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                 {selectedEvent?.title === "Stuck in Pipeline" &&
                                     selectedJob && (
                                         <>
-                                            <StagesDropdown
-                                                jobId={selectedJob}
-                                                onStageSelect={
-                                                    handleStageChange
+                                            <GenericDropdown
+                                                fetcher={async () =>
+                                                    await fetchStagesForJob(
+                                                        selectedJob,
+                                                    )
                                                 }
-                                                selectedStage={
+                                                onItemSelect={handleStageChange}
+                                                selectedItem={
                                                     selectedStage?.id ??
                                                     undefined
                                                 }
+                                                label="Stage"
                                             />
 
                                             {/* Days input after stage selection */}
                                             {selectedStage && (
-                                                <div className="mt-4">
-                                                    <label className="block text-sm font-medium text-gray-700">
-                                                        For
-                                                    </label>
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            type="number"
-                                                            value={days}
-                                                            onChange={
-                                                                handleDaysChange
-                                                            }
-                                                            className="mt-1 block rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                            placeholder="Enter number of days"
-                                                        />
-                                                        <span className="ml-2 text-sm text-black">
-                                                            Days
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                <GenericInput
+                                                    label="For"
+                                                    value={days}
+                                                    onChange={handleDaysChange}
+                                                    placeholder="Enter number of days"
+                                                    suffix="Days"
+                                                    type="number"
+                                                />
                                             )}
                                         </>
                                     )}
