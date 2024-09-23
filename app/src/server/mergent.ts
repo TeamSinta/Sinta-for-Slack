@@ -1,3 +1,4 @@
+"use server";
 import Mergent from "mergent";
 
 // set the Mergent API key

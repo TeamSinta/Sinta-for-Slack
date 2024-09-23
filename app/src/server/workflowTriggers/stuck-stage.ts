@@ -1,3 +1,4 @@
+"use server";
 import { getStuckInStageApplicationDetails } from "../greenhouse/core";
 import { scheduleTask } from "../mergent";
 

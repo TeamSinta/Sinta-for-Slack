@@ -83,7 +83,7 @@ async function processWebhookEvent(application: any, orgID: string) {
 
         if (conditionsMet) {
             const daysToBeStuck = extractDaysFromConditions(conditions);
-            initializeStuckStageChecks(workflow, applicationExtracted, daysToBeStuck);
+            await initializeStuckStageChecks(workflow, applicationExtracted, daysToBeStuck);
         } else {
             console.log(
                 `Candidate did not meet conditions for workflow "${workflow.name}".`,
