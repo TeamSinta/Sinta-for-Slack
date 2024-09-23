@@ -45,16 +45,24 @@ const getTriggerData = () => {
 const TriggersComponent = ({ onSaveTrigger }) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
-    const [selectedStage, setSelectedStage] = useState(null);
-    const [days, setDays] = useState("");
-    const [selectedTriggerData, setSelectedTriggerData] = useState({});
+
+    const [selectedEventData, setSelectedEventData] = useState({});
     const [activeTab, setActiveTab] = useState("event");
     const [isTesting, setIsTesting] = useState(false);
     const [testResult, setTestResult] = useState(null);
     const [showFullData, setShowFullData] = useState(false);
     const [pollingInterval, setPollingInterval] = useState("");
     const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
+    const handleStageChange = (stageId, stageLabel) => {
+        setSelectedEventData((prev) => ({ ...prev, stageId, stageLabel }));
+    };
 
+    const handleDaysChange = (newValue) => {
+        setSelectedEventData((prevState) => ({
+            ...prevState,
+            days: newValue,
+        }));
+    };
     const events = [
         {
             title: "Interview Scheduled",
@@ -106,11 +114,15 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     label: "Stage",
                     value: "stage",
                     fetcher: async () => await fetchStagesForJob(selectedJob),
+                    onChange: handleStageChange,
                 },
                 {
                     label: "Days",
                     value: "days",
-                    fetcher: async () => await fetchStagesForJob(selectedJob),
+                    fetcher: async () => {
+                        return selectedEventData.days;
+                    },
+                    onChange: handleDaysChange,
                 },
             ],
         },
@@ -141,13 +153,12 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             setSelectedJob(
                 (workflowData.triggerConfig?.processor as string) ?? null,
             );
-            if (workflowData.mainCondition.length > 0) {
-                setSelectedStage({
-                    id: workflowData?.mainCondition[0]?.field?.value,
-                    name: workflowData?.mainCondition[0]?.field?.label,
-                });
-                setDays(workflowData.mainCondition[0].value);
-            }
+            setSelectedEventData((prevState) => ({
+                stageId: workflowData?.mainCondition[0]?.field?.value || null,
+                stageLabel:
+                    workflowData?.mainCondition[0]?.field?.label || null,
+                days: workflowData.mainCondition[0]?.value || "",
+            }));
         } else {
             setSelectedEvent(null); // Set to null if no workflowData
         }
@@ -157,20 +168,12 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         const selected = events.find((event) => event.title === eventTitle);
         setSelectedEvent(selected);
         setSelectedJob(null);
-        setSelectedStage(null);
+        setSelectedEventData({});
     };
 
     const handleJobChange = (jobId: string) => {
         setSelectedJob(jobId);
-        setSelectedStage(null);
-    };
-
-    const handleStageChange = (stageId, stageLabel) => {
-        setSelectedStage({ id: stageId, label: stageLabel });
-    };
-
-    const handleDaysChange = (newValue) => {
-        setDays(newValue);
+        setSelectedEvent({});
     };
 
     const handleContinue = () => {
@@ -193,9 +196,9 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             if (
                 selectedEvent.title === "Stuck in Pipeline" &&
                 selectedJob &&
-                selectedStage
+                selectedEventData.stageLabel
             ) {
-                triggerDescription += ` for ${selectedJob} in ${selectedStage.label}`;
+                triggerDescription += ` for ${selectedJob} in ${selectedEventData.stageLabel}`;
             }
 
             const triggerData = {
@@ -212,14 +215,14 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 },
                 processor: selectedJob,
                 mainCondition:
-                    selectedStage && days
+                    selectedEventData.stageId && selectedEventData.days
                         ? [
                               {
                                   field: {
-                                      label: selectedStage.label,
-                                      value: selectedStage.id,
+                                      label: selectedEventData.stageLabel,
+                                      value: selectedEventData.stageId,
                                   },
-                                  value: days,
+                                  value: selectedEventData.days,
                                   condition: "greaterThan",
                               },
                           ]
@@ -285,14 +288,14 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         if (tab === "trigger") {
             if (!selectedEvent)
                 return <Clock className="text-gray-300" size={iconSize} />;
-            return selectedStage && days ? (
+            return selectedEventData.stageId && selectedEventData.days ? (
                 <CheckCircle className="text-green-500" size={iconSize} />
             ) : (
                 <AlertTriangle className="text-gray-500" size={iconSize} />
             );
         }
         if (tab === "test") {
-            if (!selectedStage)
+            if (!selectedEventData.stageId)
                 return <Clock className="text-gray-300" size={iconSize} />;
             return <Clock className="text-gray-300" size={iconSize} />;
         }
@@ -351,7 +354,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                             disabled={
                                 !selectedEvent ||
                                 (selectedEvent?.title === "Stuck in Pipeline" &&
-                                    (!selectedStage || !days))
+                                    (!selectedEventData.stageId ||
+                                        !selectedEventData.days))
                             }
                             className="flex items-center space-x-2"
                         >
@@ -559,17 +563,18 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                 }
                                                 onItemSelect={handleStageChange}
                                                 selectedItem={
-                                                    selectedStage?.id ??
-                                                    undefined
+                                                    selectedEventData.stageId
                                                 }
                                                 label="Stage"
                                             />
 
                                             {/* Days input after stage selection */}
-                                            {selectedStage && (
+                                            {selectedEventData.stageId && (
                                                 <GenericInput
                                                     label="For"
-                                                    value={days}
+                                                    value={
+                                                        selectedEventData.days
+                                                    }
                                                     onChange={handleDaysChange}
                                                     placeholder="Enter number of days"
                                                     suffix="Days"
@@ -636,7 +641,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                             (activeTab === "event" && !selectedEvent) ||
                             (activeTab === "trigger" &&
                                 selectedEvent?.title === "Stuck in Pipeline" &&
-                                (!selectedStage || !days))
+                                (!selectedEventData.stageId ||
+                                    !selectedEventData.days))
                         }
                         onClick={handleContinue}
                         className="w-full bg-blue-600 text-white"
