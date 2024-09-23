@@ -99,6 +99,13 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             alertType: "stuck-in-stage",
             triggers: [],
         },
+        {
+            title: "Interview Reminders",
+            objectField: "Interviews",
+            description:
+                "Triggered a specified time before or after an interview.",
+            apiUrl: "",
+        },
         // Add more events as needed
     ];
 
