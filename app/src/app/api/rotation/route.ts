@@ -14,7 +14,7 @@ export async function GET() {
 
         // Loop through each organization and refresh their token if needed
         for (const organization of organizations) {
-            const { slack_team_id, token_expiry, slack_refresh_token } =
+            const { slack_team_id, token_expiry, slack_refresh_token, id } =
                 organization;
 
             // Skip organizations with missing Slack team ID or refresh token
@@ -37,6 +37,7 @@ export async function GET() {
                             slack_team_id,
                             token_expiry,
                             slack_refresh_token,
+                            id
                         );
                         results.push({
                             status: "success",

@@ -46,20 +46,7 @@ import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
 import { format, parseISO } from "date-fns";
 
-// naming change? why mutation??
-// async function handleHiringRoom(hiring_room){
-//     const channelName = "gobucks";
-//     const userEmails = ["gobucks@yahoo.com","giannis@gmail.com"];
-//     await createSlackChannel(channelName, userEmails)
 
-// }
-// Define the GET handler for the route
-// async function getAllJobs(){
-//     //https://harvest.greenhouse.io/v1/candidates
-//     const jobOpeningsUrl = 'https://harvest.greenhouse.io/v1/jobs'
-//     const data = await customFetch(jobOpeningsUrl); // Fetch data using custom fetch wrapper
-
-// }
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
     const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
