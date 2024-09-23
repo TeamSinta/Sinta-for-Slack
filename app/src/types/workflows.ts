@@ -7,3 +7,15 @@ export interface WorkflowRecipient {
     messageDelivery: string;
     recipients: any[];
 }
+
+interface ConditionField {
+    label?: string;
+    value?: string;
+}
+
+export interface Condition {
+    id?: string;
+    field: string | ConditionField;
+    value: string;
+    condition: string;
+}

@@ -122,14 +122,12 @@ export const GreenhouseIntegrationCard: React.FC<
                     </div>
                 </div>
                 <div className="flex items-center">
-                    <Button
+                    <Link
+                        src="/integrations/greenhouse-config"
                         className="ml-2 rounded bg-gray-400 px-4 py-2 text-sm text-white hover:bg-gray-600"
-                        onClick={() =>
-                            router.push("/integrations/greenhouse-config")
-                        } // Redirect to config page
                     >
                         Config
-                    </Button>
+                    </Link>
                     <Button
                         className="ml-2 rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
                         onClick={() => {
