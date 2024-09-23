@@ -104,7 +104,12 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             objectField: "Interviews",
             description:
                 "Triggered a specified time before or after an interview.",
-            apiUrl: "",
+            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+            alertType: "timebased",
+            triggers: [
+                "Send a Reminder Before an Interview",
+                "Send a Reminder After an  Interview",
+            ],
         },
         // Add more events as needed
     ];
