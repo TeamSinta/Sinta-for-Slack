@@ -1,6 +1,8 @@
 import { refreshTokenIfNeeded } from "@/server/actions/slack/query";
 import { db } from "@/server/db";
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 
 export async function GET() {
     try {
