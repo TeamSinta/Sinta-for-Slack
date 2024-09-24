@@ -5,7 +5,7 @@ import {
     extractCurrentStage,
     extractDaysFromConditions,
 } from "@/utils/workflows";
-import { Condition } from "@/types/workflows";
+import { Condition, MainCondition } from "@/types/workflows";
 
 export async function handleStuckInStageWorkflows(
     application: any,
@@ -16,13 +16,17 @@ export async function handleStuckInStageWorkflows(
     for (const workflow of workflows) {
         const { conditions } = workflow as {
             id: string;
-            conditions: Condition[];
+            conditions: (Condition | MainCondition)[];
         };
 
         // Step 1: Check if the candidate is stuck in a stage
         const stuckStageIds = conditions
             .filter((c: any) => c.condition_type === "Main")
-            .map((c: any) => c.field.value); // Assuming 'value' holds the stage id for comparison
+            .map((c: any) => c.stage); // stage holds the stageId if it exists
+        const mainCondition =
+            (conditions.find(
+                (c: any) => c.condition_type === "Main",
+            ) as MainCondition) ?? ({ days: "", stage: "" } as MainCondition);
 
         const isStuck = isStuckInStage(application, stuckStageIds); // Pass payload here
         if (!isStuck) {
@@ -40,7 +44,8 @@ export async function handleStuckInStageWorkflows(
         const applicationExtracted = application.payload;
 
         if (conditionsMet) {
-            const daysToBeStuck = extractDaysFromConditions(conditions);
+            // const daysToBeStuck = extractDaysFromConditions(conditions);
+            const daysToBeStuck = parseInt(mainCondition.days ?? "0");
             await initializeStuckStageChecks(
                 workflow,
                 applicationExtracted,

@@ -19,3 +19,8 @@ export interface Condition {
     value: string;
     condition: string;
 }
+
+export interface MainCondition {
+    stage?: string;
+    days?: string;
+}
