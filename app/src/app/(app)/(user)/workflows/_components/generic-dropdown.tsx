@@ -19,6 +19,7 @@ interface GenericDropdownProps {
     onItemSelect: (id: string, label: string) => void; // Function to handle selection
     label: string; // Label for the dropdown
     selectedItem?: string; // Optionally pass the selected item
+    caption?: string;
 }
 
 const GenericDropdown: React.FC<GenericDropdownProps> = ({
@@ -26,6 +27,7 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
     onItemSelect,
     label,
     selectedItem,
+    caption,
 }) => {
     const [items, setItems] = useState<DropdownItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +35,6 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
     useEffect(() => {
         const fetchData = async () => {
             const data = await fetcher();
-            console.log("FETCHED DATA IN DROPDOWN", data);
             setItems(data);
             setIsLoading(false);
         };
@@ -43,9 +44,14 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
 
     return (
         <div className="flex-1">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {label}
-            </Label>
+            <div className="mb-2 flex flex-col">
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {label}
+                </Label>
+                <Label className="text-xs text-muted-foreground">
+                    {caption}
+                </Label>
+            </div>
             <Select
                 onValueChange={(value) => {
                     const selected = items.find(

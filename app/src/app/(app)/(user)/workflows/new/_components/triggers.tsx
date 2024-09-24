@@ -46,6 +46,11 @@ const getTriggerData = () => {
 const fetchers = {
     stage: async (jobId) => await fetchStagesForJob(jobId),
     // candidates: async () => await fetchCandidates(),
+    time: async () =>
+        await [
+            { id: "before", name: "Before" },
+            { id: "after", name: "After" },
+        ],
 };
 
 const TriggersComponent = ({ onSaveTrigger }) => {
@@ -66,12 +71,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         }));
     };
 
-    const handleDaysChange = (newValue) => {
-        setSelectedEventData((prevState) => ({
-            ...prevState,
-            days: newValue,
-        }));
-    };
     const events = [
         {
             title: "Interview Scheduled",
@@ -143,6 +142,29 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             triggers: [
                 "Send a Reminder Before an Interview",
                 "Send a Reminder After an  Interview",
+            ],
+            fields: [
+                {
+                    label: "Time",
+                    caption:
+                        "Trigger this event before or after the interview.",
+                    value: "time",
+                    type: "dropdown",
+                },
+                {
+                    label: "Days",
+                    value: "days",
+                    type: "input",
+                    suffix: "days",
+                    dataType: "number",
+                },
+                {
+                    label: "Hours",
+                    value: "hours",
+                    type: "input",
+                    suffix: "hours",
+                    dataType: "number",
+                },
             ],
         },
         // Add more events as needed and update setSelectedEventData to handle the new fields
@@ -318,8 +340,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     Set up the events and conditions that will trigger specific
                     actions.
                 </p>
-                <p>{JSON.stringify(selectedEventData)}</p>
-                <p>{JSON.stringify(selectedEvent)}</p>
 
                 <Tabs
                     value={activeTab}
@@ -571,6 +591,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     ]
                                                 }
                                                 label={field.label}
+                                                caption={field.caption}
                                             />
                                         );
                                     } else if (field.type === "input") {
