@@ -38,7 +38,7 @@ type GetPaginatedCandidatesQueryProps = z.infer<
 >;
 
 export async function getSlackChannelsCreated() {
-    const { data } = await db.transaction(async (tx) => {
+    const [data] = await db.transaction(async (tx) => {
         const data = await tx.select().from(slackChannelsCreated).execute();
 
         return { data };
@@ -139,7 +139,7 @@ export async function getSlackChannelsCreatedPromise(
     // return data;
 }
 export async function getHiringrooms() {
-    const { data } = await db.transaction(async (tx) => {
+    const [data] = await db.transaction(async (tx) => {
         const data = await tx.select().from(hiringrooms).execute();
 
         return { data };
@@ -378,4 +378,44 @@ export async function getPaginatedHiringroomsExcludingUserQuery(
     const pageCount = Math.ceil(total / input.per_page);
 
     return { data, pageCount, total };
+}
+
+
+export async function getHiringRoomById(roomId: string) {
+  const { data } = await db.transaction(async (tx) => {
+      // Use the correct way to query the `hiringrooms` table with the provided roomId
+      const roomData = await tx
+          .select()
+          .from(hiringrooms)
+          .where(eq(hiringrooms.id, roomId)) // Ensure this matches your query syntax
+          .execute();
+
+      // If the room is not found, return null or handle the case accordingly
+      if (roomData.length === 0) {
+          return { data: null };
+      }
+
+      return { data: roomData[0] }; // Assuming roomData is an array and we want the first match
+  });
+
+  return data;
+}
+
+export async function getSlackChannelsById(hiringRoomId: string) {
+  const { data } = await db.transaction(async (tx) => {
+      const slackData = await tx
+          .select()
+          .from(slackChannelsCreated)
+          .where(eq(slackChannelsCreated.hiringroomId, hiringRoomId))
+          .execute();
+
+        // If no slack channels are found, return an empty array
+        if (slackData.length === 0) {
+            return { data: [] }; // Return empty array instead of null
+        }
+
+        return { data: slackData }; // Return the entire array of slack channels
+  });
+
+  return data; // Now returns an array of matching slack channels
 }

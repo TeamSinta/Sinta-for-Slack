@@ -8,7 +8,6 @@ import { type User } from "next-auth";
 import { usersRoleEnum } from "@/server/db/schema";
 import { z } from "zod";
 import { siteUrls } from "@/config/urls";
-import { push } from "mixpanel-browser";
 import { redirect } from "next/navigation";
 
 const userRoles = z.enum(usersRoleEnum.enumValues);

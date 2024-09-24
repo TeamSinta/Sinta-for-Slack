@@ -1,5 +1,6 @@
 "use server";
 
+import { getUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { adminProcedure } from "@/server/procedures";
@@ -30,6 +31,11 @@ const panginatedUserPropsSchema = z.object({
 });
 
 type GetPaginatedUsersQueryProps = z.infer<typeof panginatedUserPropsSchema>;
+
+
+export async function getAuthUser() {
+  return await getUser();
+}
 
 export async function getPaginatedUsersQuery(
     input: GetPaginatedUsersQueryProps,

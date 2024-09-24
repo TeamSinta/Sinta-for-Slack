@@ -1,3 +1,6 @@
+'use client'; // Mark as a client-side component
+
+import { useEffect, useState } from "react";
 import { Icons } from "@/components/ui/icons";
 import { siteUrls } from "@/config/urls";
 import Link from "next/link";
@@ -5,12 +8,7 @@ import { cn } from "@/lib/utils";
 import { UserDropdown } from "@/app/(app)/_components/user-dropdown";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNav } from "@/app/(app)/_components/sidebar-nav";
-import { getUser } from "@/server/auth";
-import {
-    OrgSelectDropdown,
-    type UserOrgs,
-} from "@/app/(app)/_components/org-select-dropdown";
-import { getOrganizations } from "@/server/actions/organization/queries";
+import { OrgSelectDropdown, type UserOrgs } from "@/app/(app)/_components/org-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type SideNavProps = {
@@ -20,21 +18,38 @@ type SideNavProps = {
 };
 
 /**
- * @purpose The sidebar component contains the sidebar navigation and the user dropdown.
- * to add a new navigation item, you can add a new object to the navigation array in the @see /src/config/dashboard.ts file
- * to customize the user dropdown, you can add a new object to the navigation array in the @see /src/config/user-dropdown.ts file
- *
- * fell free to customize the sidebar component as you like
+ * Client-side Sidebar component
  */
-
-export async function Sidebar({
+export function Sidebar({
     sidebarNavIncludeIds,
     sidebarNavRemoveIds,
     showOrgSwitcher = true,
 }: SideNavProps) {
-    const user = await getUser();
+    const [user, setUser] = useState(null);
+    const [currentOrg, setCurrentOrg] = useState(null);
+    const [userOrgs, setUserOrgs] = useState<UserOrgs[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const { currentOrg, userOrgs } = await getOrganizations();
+    useEffect(() => {
+        // Fetch sidebar data from API route
+        const fetchData = async () => {
+            try {
+                const response = await fetch("/api/sidebar-data");
+                const { user, currentOrg, userOrgs } = await response.json();
+                setUser(user);
+                setCurrentOrg(currentOrg);
+                setUserOrgs(userOrgs);
+            } catch (error) {
+                console.error("Failed to fetch sidebar data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    console.log(sidebarNavIncludeIds)
 
     const myOrgs = userOrgs.filter((org) => org.ownerId === user?.id);
     const sharedOrgs = userOrgs.filter((org) => org.ownerId !== user?.id);
@@ -50,9 +65,13 @@ export async function Sidebar({
         },
     ];
 
+    if (isLoading) {
+        return <SidebarLoading showOrgSwitcher={showOrgSwitcher} />;
+    }
+
     return (
         <aside className={cn("h-full w-full")}>
-            <div className={cn(" flex h-16 items-center justify-between")}>
+            <div className={cn("flex h-16 items-center justify-between")}>
                 <Link
                     href={siteUrls.dashboard.home}
                     className={cn("z-10 transition-transform hover:scale-90")}
@@ -70,10 +89,7 @@ export async function Sidebar({
 
             {showOrgSwitcher && (
                 <div className="py-2">
-                    <OrgSelectDropdown
-                        userOrgs={urgOrgsData}
-                        currentOrg={currentOrg}
-                    />
+                    <OrgSelectDropdown userOrgs={urgOrgsData} currentOrg={currentOrg} />
                 </div>
             )}
 
@@ -91,11 +107,10 @@ export async function Sidebar({
     );
 }
 
-export function SidebarLoading({
-    showOrgSwitcher = true,
-}: {
-    showOrgSwitcher?: boolean;
-}) {
+/**
+ * Sidebar loading skeleton
+ */
+export function SidebarLoading({ showOrgSwitcher = true }: { showOrgSwitcher?: boolean }) {
     return (
         <aside className={cn("h-full w-full")}>
             <div className={cn(" flex h-16 items-center justify-between")}>
