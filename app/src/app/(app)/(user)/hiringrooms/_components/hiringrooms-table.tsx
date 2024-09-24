@@ -70,7 +70,7 @@ export function HiringroomsTable({
 
                     return (
                         <Link key={hiringroom.id} href={`/hiringrooms/form/${hiringroom.id}`}>
-                            <div className="flex justify-between items-center rounded-xl border bg-card text-card-foreground shadow dark:bg-gray-800 p-6 border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow mb-6">
+                            <div className="flex justify-between items-center rounded-xl border bg-card text-card-foreground shadow  shadow-[0_15px_25px_-15px_rgba(255,255,255,0.3)] dark:bg-black p-4 border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow mb-6">
                                 {/* Left Section: Icon and Room Info */}
                                 <div className="flex items-center space-x-4">
                                     {/* Icon with background */}

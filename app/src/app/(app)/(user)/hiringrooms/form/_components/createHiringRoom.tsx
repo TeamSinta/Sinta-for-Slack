@@ -1,20 +1,104 @@
 'use client';
 
 import { motion } from "framer-motion";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, Briefcase, Filter } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import DetailsStep from "./create-general"; // This is the details step
+import ConditionsStep from "./create-conditons";
 
-export default function CreatHiringRoom() {
-    let currentStep: string = "Details"; // Now it's a variable string, not a constant literal
+export default function CreateHiringRoom() {
+    const [currentStep, setCurrentStep] = useState("Details");
+    const [formData, setFormData] = useState({
+        name: '',
+        roomType: '',
+        conditions: [], // Adding conditions field for the new ConditionsStep
+    });
 
     const steps = [
-        { label: "Details", active: currentStep === "Details" },
-        { label: "Conditions", active: currentStep === "Conditions" },
-        { label: "Automated Actions", active: currentStep === "Content" },
-        { label: "Slack Configuration", active: currentStep === "Pricing model" },
-        { label: "Receipents", active: currentStep === "Workflow" },
-        { label: "Summary", active: currentStep === "Summary" },
+        { label: "Details", step: "Details" },
+        { label: "Conditions", step: "Conditions" },
+        { label: "Slack Configuration", step: "Slack Configuration" },
+        { label: "Automated Actions", step: "Automated Actions" },
+        { label: "Receipents", step: "Receipents" },
+        { label: "Summary", step: "Summary" },
     ];
+
+    // Handle data submission from the Details step
+    const handleDataSubmit = (data: { name: string; roomType: string; conditions: never[]; }) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            ...data,
+        }));
+        setCurrentStep("Conditions"); // Move to the Conditions step after submission
+    };
+
+    // Handle data submission from the Conditions step
+    const handleConditionsSubmit = (conditionsData: any) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            conditions: conditionsData,
+        }));
+        setCurrentStep("Automated Actions"); // Proceed to the next step (or change as needed)
+    };
+
+    const renderStepComponent = () => {
+        switch (currentStep) {
+            case "Details":
+                return <DetailsStep onDataSubmit={handleDataSubmit} />;
+            case "Conditions":
+                return <ConditionsStep onSaveConditions={handleConditionsSubmit} />;
+            // Add other steps as needed
+            case "Summary":
+                return (
+                    <div>
+                        <h2>Summary</h2>
+                        <pre>{JSON.stringify(formData, null, 2)}</pre>
+                        <button onClick={() => console.log("Final Submission", formData)}>
+                            Submit Workflow
+                        </button>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    // Dynamic Title Based on Current Step
+    const renderTitle = () => {
+        switch (currentStep) {
+            case "Details":
+                return <>
+                <div className="mb-6">
+             <div className="flex items-center">
+                 {/* <Briefcase className="mr-2 text-gray-700" size={24} /> */}
+                 <h2 className="text-xl font-semibold font-heading">Hire Room Details</h2>
+             </div>
+             <p className="mt-2 text-xs font-medium text-gray-500">Set up rules to refine your workflow based on specific conditions.</p>
+         </div>
+             </>;
+            case "Conditions":
+                return <>
+                   <div className="mb-6">
+                <div className="flex items-center">
+                    {/* <Filter className="mr-2 text-gray-700" size={24} /> */}
+                    <h2 className="text-xl font-semibold font-heading">Filter Conditions</h2>
+                </div>
+                <p className="mt-2 text-xs font-medium text-gray-500">Set up rules to refine your workflow based on specific conditions.</p>
+            </div>
+                </>;
+            case "Automated Actions":
+                return "Automated Actions";
+            case "Slack Configuration":
+                return "Slack Configuration";
+            case "Receipents":
+                return "Receipents";
+            case "Summary":
+                return "Summary";
+            default:
+                return "";
+        }
+    };
 
     return (
         <motion.div
@@ -29,22 +113,21 @@ export default function CreatHiringRoom() {
                 <div className="flex-1 flex flex-col">
                     {/* Top Toolbar with Exit Button */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-                      <Link href="/hiringrooms">
-                        <button className="text-gray-400 hover:text-gray-600">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
+                        <Link href="/hiringrooms">
+                            <button className="text-gray-400 hover:text-gray-600">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
                         </Link>
-                        <div className="text-sm font-medium text-gray-700">Add a product</div>
-
+                        <div className="text-sm font-medium text-gray-700">Add a new room</div>
                     </div>
 
                     {/* Main Content */}
                     <div className="flex flex-1 container">
                         {/* Sidebar */}
                         <motion.div
-                            className="w-1/4 bg-white p-6  border-gray-200"
+                            className="w-1/4 bg-white p-6 border-gray-200"
                             initial={{ x: -100, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.6 }}
@@ -56,9 +139,9 @@ export default function CreatHiringRoom() {
                                 {steps.map((step, index) => (
                                     <a
                                         key={index}
-                                        href="#"
-                                        className={`flex items-center space-x-3 text-sm font-medium transition-all pl-4 relative ${
-                                            step.active
+                                        onClick={() => setCurrentStep(step.step)} // Make steps clickable
+                                        className={`flex items-center space-x-3 text-sm font-medium transition-all pl-4 relative cursor-pointer ${
+                                            currentStep === step.step
                                                 ? "text-blue-500 font-semibold"
                                                 : "text-gray-400"
                                         }`}
@@ -66,7 +149,7 @@ export default function CreatHiringRoom() {
                                         {/* Vertical line with blue highlight on active step */}
                                         <div
                                             className={`absolute left-0 h-full w-[2px] transition-all ${
-                                                step.active
+                                                currentStep === step.step
                                                     ? "bg-blue-500"
                                                     : "bg-transparent"
                                             }`}
@@ -77,7 +160,7 @@ export default function CreatHiringRoom() {
                             </nav>
                         </motion.div>
 
-                        {/* Product Details */}
+                        {/* Main Content - Changing Title Based on Step */}
                         <motion.div
                             className="flex-1 p-10 bg-white"
                             initial={{ opacity: 0 }}
@@ -85,40 +168,11 @@ export default function CreatHiringRoom() {
                             transition={{ duration: 0.7 }}
                         >
                             <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-                                Product details
+                                {renderTitle()} {/* Dynamic title */}
                             </h2>
 
-                            <div className="space-y-6">
-                                {/* Form Input for Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-
-                                {/* Form Input for API Source */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        API Source
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="mt-1 block w-full p-2 border border-gray-300 rounded-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-
-                                {/* Continue Button */}
-                                <div>
-                                    <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-md hover:bg-blue-700 transition-all">
-                                        Continue
-                                        <ArrowRightIcon className="w-4 h-4 ml-2" />
-                                    </button>
-                                </div>
-                            </div>
+                            {/* Render the current step component */}
+                            {renderStepComponent()}
                         </motion.div>
                     </div>
                 </div>
@@ -133,8 +187,8 @@ export default function CreatHiringRoom() {
                     <div className="space-y-2">
                         {/* Video Help Section */}
                         <h3 className="text-sm font-semibold text-gray-900 pt-4">
-                                  Check out our help video?
-                            </h3>
+                            Check out our help video?
+                        </h3>
                         <div className="aspect-w-12 aspect-h-9 w-3/4">
                             <iframe
                                 className="w-full h-full rounded-sm shadow-md"

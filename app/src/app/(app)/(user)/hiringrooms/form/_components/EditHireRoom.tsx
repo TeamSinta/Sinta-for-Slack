@@ -54,7 +54,7 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
     </BreadcrumbItem>
     <BreadcrumbSeparator />
     <BreadcrumbItem>
-      <BreadcrumbLink href="/hiringrooms">Rooms</BreadcrumbLink>
+      <BreadcrumbLink href="/hiringrooms">Hire Rooms</BreadcrumbLink>
     </BreadcrumbItem>
     <BreadcrumbSeparator />
     <BreadcrumbItem>
