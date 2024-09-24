@@ -27,105 +27,68 @@ export function checkCandidateAgainstConditions(
             console.warn(`Field ${field} not found in application.`);
             return false;
         }
-
-        // Compare candidate field with condition's value based on the operator
-        switch (condition) {
-            case "equals":
-                if (candidateField !== value) return false;
-                break;
-            case "not_equals":
-                if (candidateField === value) return false;
-                break;
-            case "contains":
-                if (
-                    typeof candidateField === "string" &&
-                    !candidateField.includes(value)
-                )
-                    return false;
-                break;
-            case "not_contains":
-                if (
-                    typeof candidateField === "string" &&
-                    candidateField.includes(value)
-                )
-                    return false;
-                break;
-            case "exactly_matches":
-                if (
-                    typeof candidateField === "string" &&
-                    candidateField !== value
-                )
-                    return false;
-                break;
-            case "not_exactly_matches":
-                if (
-                    typeof candidateField === "string" &&
-                    candidateField === value
-                )
-                    return false;
-                break;
-            case "starts_with":
-                if (
-                    typeof candidateField === "string" &&
-                    !candidateField.startsWith(value)
-                )
-                    return false;
-                break;
-            case "not_starts_with":
-                if (
-                    typeof candidateField === "string" &&
-                    candidateField.startsWith(value)
-                )
-                    return false;
-                break;
-            case "ends_with":
-                if (
-                    typeof candidateField === "string" &&
-                    !candidateField.endsWith(value)
-                )
-                    return false;
-                break;
-            case "greater_than":
-                if (
-                    typeof candidateField === "number" &&
-                    !(candidateField > value)
-                )
-                    return false;
-                break;
-            case "less_than":
-                if (
-                    typeof candidateField === "number" &&
-                    !(candidateField < value)
-                )
-                    return false;
-                break;
-            case "after":
-                if (new Date(candidateField) <= new Date(value)) return false;
-                break;
-            case "before":
-                if (new Date(candidateField) >= new Date(value)) return false;
-                break;
-            case "is_true":
-                if (!candidateField) return false;
-                break;
-            case "is_false":
-                if (candidateField) return false;
-                break;
-            case "exists":
-                if (candidateField === undefined || candidateField === null)
-                    return false;
-                break;
-            case "does_not_exist":
-                if (candidateField !== undefined && candidateField !== null)
-                    return false;
-                break;
-            default:
-                console.warn(`Unknown operator: ${condition}`);
-                return false;
-        }
+        if (!evaluateCondition(condition, value, candidateField)) return false;
     }
     // If all conditions are met
     return true;
+}
+
+export function evaluateCondition(
+    condition: string,
+    value: any,
+    inputValue: any,
+): Boolean {
+    // Compare candidate field with condition's value based on the operator
+    switch (condition) {
+        case "equals":
+            return inputValue === value;
+        case "not_equals":
+            return inputValue !== value;
+        case "contains":
+            return typeof inputValue === "string" && inputValue.includes(value);
+        case "not_contains":
+            return (
+                typeof inputValue === "string" && !inputValue.includes(value)
+            );
+        case "exactly_matches":
+            return typeof inputValue === "string" && inputValue === value;
+
+        case "not_exactly_matches":
+            return typeof inputValue === "string" && inputValue !== value;
+        case "starts_with":
+            return (
+                typeof inputValue === "string" && inputValue.startsWith(value)
+            );
+
+        case "not_starts_with":
+            return (
+                typeof inputValue === "string" && !inputValue.startsWith(value)
+            );
+
+        case "ends_with":
+            return typeof inputValue === "string" && inputValue.endsWith(value);
+
+        case "greater_than":
+            return typeof inputValue === "number" && inputValue > value;
+
+        case "less_than":
+            return typeof inputValue === "number" && inputValue < value;
+        case "after":
+            return new Date(inputValue) > new Date(value);
+        case "before":
+            return new Date(inputValue) < new Date(value);
+        case "is_true":
+            return Boolean(inputValue);
+        case "is_false":
+            return !Boolean(inputValue);
+        case "exists":
+            return inputValue !== undefined && inputValue !== null;
+        case "does_not_exist":
+            return inputValue === undefined || inputValue === null;
+        default:
+            console.warn(`Unknown operator: ${condition}`);
+            return false;
+    }
 }
 
 export function getFieldFromApplication(application: any, field: string): any {

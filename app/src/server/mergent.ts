@@ -30,3 +30,15 @@ export async function deleteTask(taskId: string) {
         console.log("MERGENT TASK ERROR", error);
     }
 }
+
+export async function getTasks(nameQuery?: string) {
+    try {
+        const tasks = await mergent.tasks.list();
+        console.log("TASKS", tasks);
+        if (nameQuery)
+            return tasks.filter((task: any) => task.name.includes(nameQuery));
+        return tasks;
+    } catch (error) {
+        console.log("COULD NOT RETRIEVE MERGENT TASKS", error);
+    }
+}

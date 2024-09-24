@@ -44,8 +44,8 @@ import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
-import { format, parseISO } from "date-fns";
-
+import { format, formatISO, parseISO } from "date-fns";
+import { processInterviews } from "./interviewReminders";
 
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
@@ -298,7 +298,6 @@ export async function handleIndividualHiringroom(hiringroom: {
                 const slackUserIds = slackUsersIds; // + slackIdsOfGreenHouseUsers
                 // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers
 
-
                 const channelId = await createSlackChannel(
                     channelName,
                     slackTeamID,
@@ -398,6 +397,7 @@ export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
         workflowRecipient.recipients.concat(greenhouseRecipients);
     return allRecipients;
 }
+
 export async function handleWorkflows() {
     try {
         const workflows: WorkflowData[] =
@@ -407,12 +407,25 @@ export async function handleWorkflows() {
 
         let shouldReturnNull = false; // Flag to determine whether to return null
 
+        const now = new Date();
+        const workflowDataQueryParams = {
+            Interviews: { starts_after: formatISO(now) }, // We only want to see upcoming interviews
+        };
         for (const workflow of workflows) {
-            if (workflow.alertType === "time-based") {
+            if (workflow.objectField !== "Interviews") continue;
+            if (workflow.alertType === "timebased") {
                 const { apiUrl }: { apiUrl?: string } =
                     workflow.triggerConfig as { apiUrl?: string };
-
-                const data = await customFetch(apiUrl ?? ""); // Fetch data using custom fetch wrapper
+                const searchParams = new URLSearchParams();
+                for (const [key, value] of Object.entries(
+                    workflowDataQueryParams[workflow.objectField] ?? {},
+                )) {
+                    searchParams.append(key, value as string);
+                }
+                const urlWithParams = searchParams.toString()
+                    ? `${apiUrl}?${searchParams.toString()}`
+                    : apiUrl;
+                const data = await customFetch(urlWithParams ?? ""); // Fetch data using custom fetch wrapper
                 let filteredConditionsData;
 
                 switch (workflow.objectField) {
@@ -426,6 +439,11 @@ export async function handleWorkflows() {
                             workflow,
                         );
                         break;
+                    case "Interviews":
+                        filteredConditionsData = await processInterviews(
+                            data,
+                            workflow,
+                        );
                     default:
                         filteredConditionsData = filterDataWithConditions(
                             data,
@@ -516,7 +534,7 @@ export async function GET() {
         let numWorkflows = 0;
         let numHiringrooms = 0;
         numWorkflows = await handleWorkflows();
-        numHiringrooms = await handleHiringrooms();
+        // numHiringrooms = await handleHiringrooms();
         return NextResponse.json(
             {
                 message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`,

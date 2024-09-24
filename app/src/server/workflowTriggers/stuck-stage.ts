@@ -1,4 +1,5 @@
 "use server";
+import { getMergentTaskName } from "@/lib/utils";
 import { getStuckInStageApplicationDetails } from "../greenhouse/core";
 import { scheduleTask } from "../mergent";
 
@@ -28,6 +29,11 @@ export async function initializeStuckStageChecks(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/workflows/stuck-stage`,
         JSON.stringify({ applicationDetails, workflow }),
         scheduledDate,
-        `StuckinStage-Workflow-${workflow.id}-Application-${applicationDetails.applicationId}`,
+        getMergentTaskName(
+            workflow.id,
+            "Application",
+            applicationDetails.applicationId,
+            "StuckinStage-Workflow",
+        ),
     );
 }

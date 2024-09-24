@@ -193,6 +193,7 @@ export function WorkflowBuilder({
                     localStorageKeyName,
                     workflow.name || "Edit Workflow",
                 );
+                console.log("WORKFLOW", JSON.stringify(workflow, null, 2));
 
                 // Split the workflow data into the necessary parts
                 const workflowTriggers = {

@@ -211,3 +211,12 @@ export const cleanObject = (obj: object) => {
         Object.entries(obj).filter(([key, value]) => Boolean(value)),
     );
 };
+
+export const getMergentTaskName = (
+    workflowId: string,
+    objectName: string,
+    id: string,
+    eventName: string,
+) => {
+    return `${eventName}-${workflowId}-${objectName}-${id}`;
+};

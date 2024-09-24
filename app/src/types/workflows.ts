@@ -18,6 +18,7 @@ export interface Condition {
     field: string | ConditionField;
     value: string;
     condition: string;
+    condition_type: "Main" | "Add-on";
 }
 
 export interface MainCondition {
