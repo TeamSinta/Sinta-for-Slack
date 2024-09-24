@@ -218,7 +218,7 @@ export function WorkflowBuilder({
                 };
                 const workflowConditions = workflow.conditions
                     .filter((condition) => {
-                        return typeof condition.field !== "object";
+                        return condition.condition_type === "Add-on";
                     })
                     .map((item, index) => ({ ...item, id: index }));
 
