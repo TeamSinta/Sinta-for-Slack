@@ -204,3 +204,10 @@ export function verifySignature(
     }
     return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(hash));
 }
+
+// Remove all keys with falsey values
+export const cleanObject = (obj: object) => {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([key, value]) => Boolean(value)),
+    );
+};

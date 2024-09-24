@@ -147,18 +147,15 @@ export function WorkflowBuilder({
         );
 
         const combinedConditions = [
-          // Map through the main conditions and add the condition_type field
-          ...(workflowTriggers.mainCondition || []).map(
-              (condition: any) => ({
-                  ...condition,
-                  condition_type: "Main", // Add condition_type for main conditions
-              }),
-          ),
-          // Map through the conditionsData and add the condition_type field
-          ...trimmedConditions.map((condition: any) => ({
-              ...condition,
-              condition_type: "Add-on", // Add condition_type for add-on conditions
-          })),
+            {
+                ...(workflowTriggers.mainCondition ?? {}),
+                condition_type: "Main",
+            },
+            // Map through the conditionsData and add the condition_type field
+            ...trimmedConditions.map((condition: any) => ({
+                ...condition,
+                condition_type: "Add-on", // Add condition_type for add-on conditions
+            })),
         ];
 
         const newDbData = {
@@ -204,9 +201,12 @@ export function WorkflowBuilder({
                     processor: workflow?.triggerConfig?.processor,
                     apiUrl: workflow?.triggerConfig?.apiUrl,
                     alertType: workflow.alertType,
-                    mainCondition: workflow.conditions.filter((condition) => {
-                        return typeof condition.field === "object";
-                    }),
+                    mainCondition:
+                        workflow.conditions.find(
+                            (condition) =>
+                                condition?.condition_type?.toLowerCase() ===
+                                "main",
+                        ) ?? {},
                 };
                 const workflowActions = {
                     recipients: workflow.recipient?.recipients,
@@ -291,7 +291,10 @@ export function WorkflowBuilder({
                         step.description === conditionDescription,
                 );
 
-                if (!conditionExists && typeof condition.field !== "object") {
+                if (
+                    !conditionExists &&
+                    condition?.condition_type?.toLowerCase() !== "main"
+                ) {
                     newSteps.push({
                         id: index,
                         type: "Condition",
@@ -303,7 +306,7 @@ export function WorkflowBuilder({
                     });
                 } else if (
                     !mainCondition &&
-                    typeof condition.field === "object"
+                    condition?.condition_type?.toLowerCase() === "main"
                 )
                     setMainCondition(condition);
             });

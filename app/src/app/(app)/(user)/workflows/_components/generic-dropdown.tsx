@@ -33,6 +33,7 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
     useEffect(() => {
         const fetchData = async () => {
             const data = await fetcher();
+            console.log("FETCHED DATA IN DROPDOWN", data);
             setItems(data);
             setIsLoading(false);
         };
