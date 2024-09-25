@@ -23,7 +23,11 @@ import { env } from "@/env";
 import { combineGreenhouseRolesAndSlackUsers } from "@/app/api/cron/route";
 import { and, eq } from "drizzle-orm";
 import { membersToOrganizations } from "@/server/db/schema";
-import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
+import {
+    convertHtmlToSlackMrkdwn,
+    formatListToString,
+    formatToReadableDate,
+} from "@/lib/utils";
 
 interface SlackChannel {
     id: string;
@@ -172,6 +176,7 @@ export async function sendSlackNotification(
     slackTeamID: string,
     subDomain: string,
     candidateDetails: Record<string, unknown>,
+    interviewDetails?: Record<string, unknown>,
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
@@ -179,6 +184,7 @@ export async function sendSlackNotification(
     const customMessageBody = parseCustomMessageBody(
         workflowRecipient.customMessageBody,
         candidateDetails, // Pass candidate details here
+        interviewDetails,
     );
 
     for (const recipient of allRecipients) {
@@ -1128,11 +1134,19 @@ export async function postMessageToChannel(userId: string, body: any) {
     return true;
 }
 
-function parseCustomMessageBody(customMessageBody, candidateDetails) {
+function parseCustomMessageBody(
+    customMessageBody,
+    candidateDetails,
+    interviewDetails?,
+) {
     // Replace the placeholders with corresponding candidate details safely
     let formattedMessage = customMessageBody;
 
     // Safely handle undefined candidate details using optional chaining (?.) and provide default values
+    formattedMessage = formattedMessage.replace(
+        /{{Candidate_Name}}/g,
+        `{{first_name}} {{last_name}}`,
+    );
     formattedMessage = formattedMessage.replace(
         /{{first_name}}/g,
         candidateDetails?.first_name || "N/A",
@@ -1160,6 +1174,34 @@ function parseCustomMessageBody(customMessageBody, candidateDetails) {
     formattedMessage = formattedMessage.replace(
         /{{Job Stage}}/g,
         candidateDetails?.applications?.[0]?.current_stage?.name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interviewer Names}}/g,
+        formatListToString(
+            interviewDetails?.interviewers?.map(
+                (interviewer) => interviewer.name,
+            ),
+        ) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview Location}}/g,
+        interviewDetails?.location || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview Start Time}}/g,
+        formatToReadableDate(interviewDetails?.start?.date_time) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview End Time}}/g,
+        formatToReadableDate(interviewDetails?.end?.date_time) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview Title}}/g,
+        interviewDetails?.interview?.name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Video Conference URL}}/g,
+        interviewDetails?.video_conferencing_url || "N/A",
     );
 
     // Convert the HTML content to Slack markdown format

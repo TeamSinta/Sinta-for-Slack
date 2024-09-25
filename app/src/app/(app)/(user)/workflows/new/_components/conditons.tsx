@@ -34,6 +34,11 @@ const getConditionsData = () => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || [];
 };
 
+const CONDITIONS_ATTRIBUTES_LOOKUP = {
+    offer: offerAttributes.offer.attributes,
+    candidate: candidateAttributes.candidate.attributes,
+    interview: interviewAttributes.interview.attributes,
+};
 const ConditionsComponent = ({
     onSaveConditions,
     selectedElementId,
@@ -60,15 +65,10 @@ const ConditionsComponent = ({
 
             // Dynamically set the fields based on the API URL
             const objectField = parsedConfig.objectField;
-            if (objectField?.toLowerCase().includes("approvals")) {
-                // Set offer attributes if the objectField indicates Approvals
-                setFields(offerAttributes.offer.attributes);
-            } else if (objectField?.toLowerCase().includes("candidates")) {
-                // Set candidate attributes if the objectField indicates Candidates
-                setFields(candidateAttributes.candidate.attributes);
-            } else if (objectField?.toLowerCase().includes("interviews")) {
-                // Set candidate attributes if the objectField indicates Candidates
-                setFields(interviewAttributes.interview.attributes);
+            if (CONDITIONS_ATTRIBUTES_LOOKUP[objectField?.toLowerCase()]) {
+                setFields(
+                    CONDITIONS_ATTRIBUTES_LOOKUP[objectField?.toLowerCase()],
+                );
             }
         }
     }, []);

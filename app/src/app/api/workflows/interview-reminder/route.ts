@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         // Do I need to check if the interview is still scheduled?
         // If so, we have to do another API call to get the most recent interview details
 
-        await sendSlackMessage(interview.application_id, workflow);
+        await sendSlackMessage(interview, workflow);
     } catch (e) {
         console.log("ERROR", e);
         return NextResponse.json({}, { status: 500 });
@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(body, { status: 200 });
 }
 
-async function sendSlackMessage(applicationId: string, workflow: any) {
-    const application = await fetchApplicationDetails(applicationId);
+async function sendSlackMessage(interview: any, workflow: any) {
+    const application = await fetchApplicationDetails(interview.application_id);
     // console.log("APPLICATION", JSON.stringify(application, null, 2));
 
     const candidate = await fetchCandidateDetails(application.candidate_id);
@@ -61,6 +61,7 @@ async function sendSlackMessage(applicationId: string, workflow: any) {
             slackTeamID,
             subDomain,
             candidate,
+            interview,
         );
     }
 }
