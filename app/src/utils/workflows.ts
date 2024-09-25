@@ -15,12 +15,20 @@ export function checkCandidateAgainstConditions(
     application: any,
     conditions: any[],
 ): boolean {
+    return checkCondtions(application, conditions, getFieldFromApplication);
+}
+
+export function checkCondtions(
+    application: any,
+    conditions: any[],
+    getter: (application: any, field: string) => any,
+) {
     // Iterate through all conditions
     for (const condtion of conditions) {
         const { field, condition, value } = condtion;
         const payload = application.payload;
         // Get the candidate's data field using the utility function
-        const candidateField = getFieldFromApplication(payload, field);
+        const candidateField = getter(payload, field);
 
         // Handle if the field is not found
         if (candidateField === undefined) {

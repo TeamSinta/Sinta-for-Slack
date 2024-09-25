@@ -217,6 +217,31 @@ export const getMergentTaskName = (
     objectName: string,
     id: string,
     eventName: string,
-) => {
+): string => {
     return `${eventName}-${workflowId}-${objectName}-${id}`;
 };
+
+export function adjustDateTime(
+    date: Date,
+    flag: "before" | "after",
+    days: number,
+    hours: number,
+): Date {
+    const millisecondsInADay = 24 * 60 * 60 * 1000;
+    const millisecondsInAnHour = 60 * 60 * 1000;
+
+    // Calculate the total offset in milliseconds
+    const totalOffset =
+        days * millisecondsInADay + hours * millisecondsInAnHour;
+
+    // Create a new Date object adjusted by the offset
+    const adjustedDate = new Date(date);
+
+    if (flag === "before") {
+        adjustedDate.setTime(adjustedDate.getTime() - totalOffset);
+    } else if (flag === "after") {
+        adjustedDate.setTime(adjustedDate.getTime() + totalOffset);
+    }
+
+    return adjustedDate;
+}
