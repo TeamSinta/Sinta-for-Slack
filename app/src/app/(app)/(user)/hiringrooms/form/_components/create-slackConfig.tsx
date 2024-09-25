@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import SlackHiringroom from "../../_components/slack-hiringroom"; // Assuming this component exists
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import {
+    Tooltip,
+    TooltipTrigger,
+    TooltipContent,
+    TooltipProvider,
+} from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 import SlackMessageBox from "./slack-messageBox";
 
@@ -23,11 +27,11 @@ const jobTokens = [
 ];
 
 // Clean Apple-Like UI for Slack Channel Naming Component
-const SlackChannelNameFormat: React.FC<{ format: string; setFormat: (format: string) => void; selectedType: string }> = ({
-    format,
-    setFormat,
-    selectedType,
-}) => {
+const SlackChannelNameFormat: React.FC<{
+    format: string;
+    setFormat: (format: string) => void;
+    selectedType: string;
+}> = ({ format, setFormat, selectedType }) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormat(e.target.value);
     };
@@ -42,13 +46,14 @@ const SlackChannelNameFormat: React.FC<{ format: string; setFormat: (format: str
                 value={format}
                 onChange={handleChange}
                 placeholder="Enter the Slack channel format"
-                className="mt-2 mb-4 w-full border-none bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mb-4 mt-2 w-full rounded-lg border-none bg-gray-100 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <Label className="text-sm text-gray-600">Available Tokens:</Label>
             <ul className="mt-2 list-none space-y-1">
                 {tokens.map((token) => (
                     <li key={token.label} className="text-sm text-gray-700">
-                        <strong>{`{{${token.label}}}`}</strong> - {token.example}
+                        <strong>{`{{${token.label}}}`}</strong> -{" "}
+                        {token.example}
                     </li>
                 ))}
             </ul>
@@ -60,65 +65,63 @@ const SlackConfigurationStep: React.FC = () => {
     const [channelFormat, setChannelFormat] = useState("");
     const [selectedType, setSelectedType] = useState("Candidates");
 
-    const handleOpeningTextChange = (text: string) => console.log("Opening Text:", text);
-    const handleFieldsSelect = (fields: string[]) => console.log("Selected Fields:", fields);
-    const handleButtonsChange = (buttons: any[]) => console.log("Buttons:", buttons);
-    const handleRecipientsChange = (recipients: any[]) => console.log("Recipients:", recipients);
-    const handleCustomMessageBodyChange = (messageBody: string) => console.log("Custom Message Body:", messageBody);
+    const handleCustomMessageBodyChange = (messageBody: string) =>
+        console.log("Custom Message Body:", messageBody);
     const [customMessageBody, setCustomMessageBody] = useState(
-      "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
-  );
+        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
+    );
     return (
         <div className="space-y-10">
             {/* Slack Channel Name Format Section */}
             <section className="space-y-2">
-                <header className="flex justify-between items-center">
+                <header className="flex items-center justify-between">
                     <h2 className="text-2xl font-semibold"></h2>
                     <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <Info className="w-5 h-5 text-gray-400 cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Configure how Slack channels are named and notifications are handled.</p>
-                        </TooltipContent>
-                    </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Info className="h-5 w-5 cursor-pointer text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>
+                                    Configure how Slack channels are named and
+                                    notifications are handled.
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
                 </header>
 
-                <Card className="p-6 rounded-lg shadow-none bg-white">
+                <Card className="rounded-lg bg-white p-6 shadow-none">
                     <CardContent>
-
                         <SlackChannelNameFormat
                             format={channelFormat}
                             setFormat={setChannelFormat}
                             selectedType={selectedType}
                         />
-
                     </CardContent>
                 </Card>
             </section>
 
             {/* Slack Hiring Room Section */}
             <section className="space-y-4">
-                <Card className="p-6 rounded-lg shadow-none bg-white">
-                    <CardHeader>
-                        <CardTitle className="text-sm">Opening Message</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                    <SlackMessageBox
-  customMessageBody={customMessageBody}
-  onCustomMessageBodyChange={handleCustomMessageBodyChange}
-/>
+                <div className="text-sm font-medium">Opening Message</div>
 
-                    </CardContent>
-                </Card>
+                <SlackMessageBox
+                    customMessageBody={customMessageBody}
+                    onCustomMessageBodyChange={handleCustomMessageBodyChange}
+                />
             </section>
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-4 sticky bottom-0 bg-white py-4 shadow-lg">
-                <Button variant="secondary" className="py-2 px-6">Back</Button>
-                <Button variant="primary" className="py-2 px-6">Continue</Button>
+            <div className="flex items-end justify-end space-x-4">
+                <Button
+                    variant="secondary"
+                    onClick={() => console.log("Back to previous step")} // Implement back button
+                    className="rounded-md bg-gray-200 px-4 py-2 text-gray-700"
+                >
+                    Back
+                </Button>
+                <Button className="rounded-md bg-blue-600 px-4 py-2 text-white">
+                    Continue
+                </Button>
             </div>
         </div>
     );

@@ -148,7 +148,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
             setRecruiterCounts(initialRecruiterCounts);
             setCoordinatorCounts(initialCoordinatorCounts);
 
-
             // const greenhouseUsers = await fetchAllGreenhouseUsers()
             // console.log('slackUsers users - ',slackUsers)
             // console.log('greenhouse users - ',greenhouseUsers)
@@ -392,7 +391,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
     };
 
     const handleRecruiterChange = (candidateId, newRecruiterId) => {
-
         const updatedCandidates = candidates.map((candidate) => {
             if (candidate.id === candidateId) {
                 candidate.recruiter = recruiters.find(
@@ -409,7 +407,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         setRecruiterCounts(getRecruiterCounts(updatedCandidates));
     };
     const handleCoordinatorChange = (candidateId, newCoordinatorId) => {
-
         const updatedCandidates = candidates.map((candidate) => {
             if (candidate.id === candidateId) {
                 candidate.coordinator = coordinators.find(
@@ -484,7 +481,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         // const updatedChannels = tmpAllSlackChannels.filter(c => c.id !== channel.id);
         const updatedChannels = tmpAllSlackChannels.map((chan) => {
             if (channel.id == chan.id) {
-
                 chan.is_archived = !chan.is_archived;
             }
             return chan;

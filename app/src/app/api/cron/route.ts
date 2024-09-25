@@ -46,7 +46,6 @@ import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
 import { format, parseISO } from "date-fns";
 
-
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
     const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
@@ -297,7 +296,6 @@ export async function handleIndividualHiringroom(hiringroom: {
                 // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
                 const slackUserIds = slackUsersIds; // + slackIdsOfGreenHouseUsers
                 // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers
-
 
                 const channelId = await createSlackChannel(
                     channelName,

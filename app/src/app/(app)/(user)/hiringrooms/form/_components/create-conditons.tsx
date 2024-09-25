@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import {
@@ -21,10 +21,18 @@ import { Separator } from "@/components/ui/separator";
 import candidateAttributes from "../../../../../../utils/candidate-attributes.json";
 import { ConditionSelector } from "../../../workflows/new/_components/conditionsSelector";
 
-export default function ConditionsStep({ onSaveConditions }: { onSaveConditions: (conditions: any[]) => void }) {
-    const [conditions, setConditions] = useState([{ id: 0, field: "", condition: "", value: "" }]);
+export default function ConditionsStep({
+    onSaveConditions,
+}: {
+    onSaveConditions: (conditions: any[]) => void;
+}) {
+    const [conditions, setConditions] = useState([
+        { id: 0, field: "", condition: "", value: "" },
+    ]);
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
-    const [fields, setFields] = useState<{ field: string; description: string; }[]>([]); // For dynamic field setting based on trigger
+    const [fields, setFields] = useState<
+        { field: string; description: string }[]
+    >([]); // For dynamic field setting based on trigger
 
     // Set fields dynamically, for now using static fields for demonstration
     useEffect(() => {
@@ -33,18 +41,28 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
 
     // Enable/disable save button based on whether all condition fields are filled
     useEffect(() => {
-        const allFieldsFilled = conditions.every((condition) => condition.field && condition.condition && condition.value);
+        const allFieldsFilled = conditions.every(
+            (condition) =>
+                condition.field && condition.condition && condition.value,
+        );
         setIsSaveEnabled(allFieldsFilled);
     }, [conditions]);
 
     const handleConditionChange = (id: number, key: string, value: string) => {
         setConditions((prevConditions) =>
-            prevConditions.map((condition) => (condition.id === id ? { ...condition, [key]: value } : condition))
+            prevConditions.map((condition) =>
+                condition.id === id
+                    ? { ...condition, [key]: value }
+                    : condition,
+            ),
         );
     };
 
     const addCondition = () => {
-        const highestConditionId = Math.max(...conditions.map((item) => item.id), -1);
+        const highestConditionId = Math.max(
+            ...conditions.map((item) => item.id),
+            -1,
+        );
         setConditions((prevConditions) => [
             ...prevConditions,
             { id: highestConditionId + 1, field: "", condition: "", value: "" },
@@ -52,7 +70,9 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
     };
 
     const removeCondition = (id: number) => {
-        setConditions((prevConditions) => prevConditions.filter((condition) => condition.id !== id));
+        setConditions((prevConditions) =>
+            prevConditions.filter((condition) => condition.id !== id),
+        );
     };
 
     const handleSave = () => {
@@ -66,23 +86,29 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
         <div className="flex flex-col justify-between pt-2">
             {/* Title and Description */}
 
-
             {/* Conditions List */}
             <div className="space-y-4 overflow-y-auto">
                 {conditions.map((condition) => (
-                    <Card key={condition.id} className="transition-colors duration-500">
+                    <Card
+                        key={condition.id}
+                        className="transition-colors duration-500"
+                    >
                         <CardHeader>
                             <CardTitle className="flex items-center">
                                 Condition
                                 <Button
                                     variant="ghost"
-                                    onClick={() => removeCondition(condition.id)}
+                                    onClick={() =>
+                                        removeCondition(condition.id)
+                                    }
                                     className="ml-auto text-red-600 hover:bg-red-100"
                                 >
                                     <Trash2 className="mr-2" /> Remove
                                 </Button>
                             </CardTitle>
-                            <CardDescription>Define a condition to filter on.</CardDescription>
+                            <CardDescription>
+                                Define a condition to filter on.
+                            </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
@@ -90,21 +116,39 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
                                 {/* Field Selector */}
                                 <ConditionSelector
                                     attributes={fields}
-                                    onFieldSelect={(field) => handleConditionChange(condition.id, "field", field)}
+                                    onFieldSelect={(field) =>
+                                        handleConditionChange(
+                                            condition.id,
+                                            "field",
+                                            field,
+                                        )
+                                    }
                                 />
 
                                 {/* Condition Selector */}
                                 <Select
                                     value={condition.condition}
-                                    onValueChange={(value) => handleConditionChange(condition.id, "condition", value)}
+                                    onValueChange={(value) =>
+                                        handleConditionChange(
+                                            condition.id,
+                                            "condition",
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger className="mt-1 w-full rounded">
                                         <SelectValue placeholder="Choose condition..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="contains">(Text) Contains</SelectItem>
-                                        <SelectItem value="not_contains">(Text) Does not contain</SelectItem>
-                                        <SelectItem value="exactly_matches">(Text) Exactly matches</SelectItem>
+                                        <SelectItem value="contains">
+                                            (Text) Contains
+                                        </SelectItem>
+                                        <SelectItem value="not_contains">
+                                            (Text) Does not contain
+                                        </SelectItem>
+                                        <SelectItem value="exactly_matches">
+                                            (Text) Exactly matches
+                                        </SelectItem>
                                         {/* Add more items as needed */}
                                     </SelectContent>
                                 </Select>
@@ -113,7 +157,13 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
                                 <input
                                     type="text"
                                     value={condition.value}
-                                    onChange={(e) => handleConditionChange(condition.id, "value", e.target.value)}
+                                    onChange={(e) =>
+                                        handleConditionChange(
+                                            condition.id,
+                                            "value",
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Enter value"
                                     className="text-md mt-1 w-full rounded border p-1 px-2"
                                 />
@@ -124,7 +174,7 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between mt-6">
+            <div className="mt-6 flex items-center justify-between">
                 <Button
                     variant="outline"
                     onClick={addCondition}
@@ -136,15 +186,15 @@ export default function ConditionsStep({ onSaveConditions }: { onSaveConditions:
                 <div className="flex space-x-4">
                     <Button
                         variant="secondary"
-                        onClick={() => console.log('Back to previous step')} // Implement back button
-                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
+                        onClick={() => console.log("Back to previous step")} // Implement back button
+                        className="rounded-md bg-gray-200 px-4 py-2 text-gray-700"
                     >
                         Back
                     </Button>
                     <Button
                         disabled={!isSaveEnabled}
                         onClick={handleSave}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                        className="rounded-md bg-blue-600 px-4 py-2 text-white"
                     >
                         Continue
                     </Button>

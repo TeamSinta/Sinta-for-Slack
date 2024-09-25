@@ -1,4 +1,4 @@
-import { PencilIcon } from 'lucide-react'; // Import an icon for the button
+import { PencilIcon } from "lucide-react"; // Import an icon for the button
 
 type EditButtonProps = {
     onClick?: () => void;
@@ -8,9 +8,9 @@ export const EditButton: React.FC<EditButtonProps> = ({ onClick }) => {
     return (
         <button
             onClick={onClick}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
         >
-            <PencilIcon className="w-4 h-4 mr-2" />
+            <PencilIcon className="mr-2 h-4 w-4" />
             Edit
         </button>
     );

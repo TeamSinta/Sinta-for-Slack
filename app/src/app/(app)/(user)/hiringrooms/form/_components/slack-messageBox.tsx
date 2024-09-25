@@ -1,31 +1,47 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { Pencil } from "lucide-react";
 import slackLogo from "../../../../../../../public/slack-logo.png";
 import sintaLogo from "../../../../../../../public/sintalogo.png";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import MessageButtons, { type ButtonAction, ButtonType, UpdateActionType } from "../../_components/message-buttons";
+import MessageButtons, {
+    type ButtonAction,
+    ButtonType,
+    UpdateActionType,
+} from "../../_components/message-buttons";
 
 const SlackMessageBox: React.FC<{
     customMessageBody: string;
     onCustomMessageBodyChange: (message: string) => void;
     buttons: ButtonAction[];
     onButtonsChange: (buttons: ButtonAction[]) => void;
-}> = ({ customMessageBody, onCustomMessageBodyChange, buttons, onButtonsChange }) => {
+}> = ({
+    customMessageBody,
+    onCustomMessageBodyChange,
+    buttons,
+    onButtonsChange,
+}) => {
     const [isEditing, setIsEditing] = useState(false); // Toggle for editing state
     const [messageContent, setMessageContent] = useState(customMessageBody);
-    const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(buttons || []); // Initialize as an empty array if buttons are undefined
+    const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(
+        buttons || [],
+    ); // Initialize as an empty array if buttons are undefined
 
     useEffect(() => {
         setMessageContent(customMessageBody);
         setMessageButtons(buttons || []); // Ensure messageButtons is an array
     }, [customMessageBody, buttons]);
-
 
     // Handle saving after editing
     const handleSave = () => {
@@ -68,10 +84,16 @@ const SlackMessageBox: React.FC<{
         handleButtonsChange(newButtons);
     };
 
-    const updateButton = (index: number, key: keyof ButtonAction, value: string) => {
+    const updateButton = (
+        index: number,
+        key: keyof ButtonAction,
+        value: string,
+    ) => {
         const newButtons = [...messageButtons];
-        newButtons[index][key] = value;
-        handleButtonsChange(newButtons);
+        if (newButtons[index]) {
+            newButtons[index][key] = value as never;
+            handleButtonsChange(newButtons);
+        }
     };
 
     const removeButton = (index: number) => {
@@ -80,22 +102,35 @@ const SlackMessageBox: React.FC<{
     };
 
     return (
-        <div className="shadow-sm mt-4" onDoubleClick={handleDoubleClick}>
-            <div className="rounded-lg border bg-white shadow-sm">
-                <div className="flex items-center justify-between bg-fuchsia-950 p-3 rounded-t-lg">
+        <div className=" mt-4" onDoubleClick={handleDoubleClick}>
+            <div className="rounded-md border bg-white shadow-sm">
+                <div className="flex items-center justify-between rounded-t-md bg-fuchsia-950 p-3">
                     <div className="flex items-center space-x-2">
-                        <Image src={slackLogo} alt="Slack Logo" className="h-6 w-6" />
-                        <span className="text-sm font-semibold text-white">Hiring Room</span>
+                        <Image
+                            src={slackLogo}
+                            alt="Slack Logo"
+                            className="h-6 w-6"
+                        />
+                        <span className="text-sm font-semibold text-white">
+                            Hiring Room
+                        </span>
                     </div>
                     {/* Pencil Icon for Edit */}
-                    <div className="cursor-pointer" onClick={() => setIsEditing(true)}>
+                    <div
+                        className="cursor-pointer"
+                        onClick={() => setIsEditing(true)}
+                    >
                         <Pencil size={20} className="text-white" />
                     </div>
                 </div>
 
                 <div className="p-4">
                     <div className="flex items-start">
-                        <Image src={sintaLogo} alt="User Avatar" className="h-10 w-10 rounded" />
+                        <Image
+                            src={sintaLogo}
+                            alt="User Avatar"
+                            className="h-10 w-10 rounded"
+                        />
                         <div className="ml-4 flex-1">
                             <div className="flex items-center font-semibold text-gray-700">
                                 Sinta
@@ -116,16 +151,30 @@ const SlackMessageBox: React.FC<{
                                         value={messageContent}
                                         onChange={setMessageContent}
                                         modules={{
-                                            toolbar: [["bold", "italic", "underline"], [{ link: "link" }]],
+                                            toolbar: [
+                                                ["bold", "italic", "underline"],
+                                                [{ link: "link" }],
+                                            ],
                                         }}
-                                        formats={["bold", "italic", "underline", "link"]}
-                                        className="text-md w-full bg-white rounded-lg border"
+                                        formats={[
+                                            "bold",
+                                            "italic",
+                                            "underline",
+                                            "link",
+                                        ]}
+                                        className="text-md w-full rounded-lg border bg-white"
                                     />
-                                    <div className="flex space-x-2 mt-4">
-                                        <Button variant="outline" onClick={handleSave}>
+                                    <div className="mt-4 flex space-x-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleSave}
+                                        >
                                             Save
                                         </Button>
-                                        <Button variant="secondary" onClick={() => setIsEditing(false)}>
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => setIsEditing(false)}
+                                        >
                                             Cancel
                                         </Button>
                                     </div>
@@ -137,7 +186,10 @@ const SlackMessageBox: React.FC<{
                     {/* Display Action Buttons */}
                     <div className="mt-4 flex space-x-2">
                         {messageButtons.map((button, index) => (
-                            <Button key={index} className={getButtonStyle(button)}>
+                            <Button
+                                key={index}
+                                className={getButtonStyle(button)}
+                            >
                                 {button.label}
                             </Button>
                         ))}
@@ -161,14 +213,24 @@ const SlackMessageBox: React.FC<{
             {isEditing && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="mt-2">Insert Variable</Button>
+                        <Button variant="outline" className="mt-2">
+                            Insert Variable
+                        </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
                         <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={() => handleVariableSelect("{{Interviewer}}")}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleVariableSelect("{{Interviewer}}")
+                                }
+                            >
                                 Interviewer
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleVariableSelect("{{Role title}}")}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleVariableSelect("{{Role title}}")
+                                }
+                            >
                                 Role Title
                             </DropdownMenuItem>
                         </DropdownMenuGroup>

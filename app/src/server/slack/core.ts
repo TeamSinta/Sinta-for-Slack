@@ -138,7 +138,6 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
-
             throw new Error("Failed to fetch users", response.statusText);
         }
 

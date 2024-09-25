@@ -3,7 +3,6 @@ import { db } from "@/server/db";
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
-
 export async function GET() {
     try {
         console.log("Cron job started: Refreshing Slack tokens");
@@ -37,7 +36,7 @@ export async function GET() {
                             slack_team_id,
                             token_expiry,
                             slack_refresh_token,
-                            id
+                            id,
                         );
                         results.push({
                             status: "success",

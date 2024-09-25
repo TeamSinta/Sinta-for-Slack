@@ -55,7 +55,6 @@ export async function POST(
 }
 
 async function processWebhookEvent(application: any, orgID: string) {
-
     const workflows = await fetchStuckInStageWorkflows(orgID);
 
     for (const workflow of workflows) {
@@ -79,11 +78,15 @@ async function processWebhookEvent(application: any, orgID: string) {
             application,
             secondaryConditions,
         );
-        const applicationExtracted =  application.payload
+        const applicationExtracted = application.payload;
 
         if (conditionsMet) {
             const daysToBeStuck = extractDaysFromConditions(conditions);
-            initializeStuckStageChecks(workflow, applicationExtracted, daysToBeStuck);
+            initializeStuckStageChecks(
+                workflow,
+                applicationExtracted,
+                daysToBeStuck,
+            );
         } else {
             console.log(
                 `Candidate did not meet conditions for workflow "${workflow.name}".`,
@@ -101,7 +104,12 @@ function isStuckInStage(application: any, stuckStageIds: string[]): boolean {
     }
     const currentStageStr = String(currentStage);
     const stuckStageIdsStr = String(stuckStageIds);
-    console.log("currentStagestr ",currentStageStr,"currentStage ",stuckStageIds )
+    console.log(
+        "currentStagestr ",
+        currentStageStr,
+        "currentStage ",
+        stuckStageIds,
+    );
     return stuckStageIdsStr.includes(currentStageStr);
 }
 

@@ -1,7 +1,6 @@
 import CreatHiringRoom from "../_components/createHiringRoom";
 import EditHireRoom from "../_components/EditHireRoom";
 
-
 export default function FormPageRooms({
     params,
 }: {
@@ -11,12 +10,12 @@ export default function FormPageRooms({
     const roomId = params.roomId || null;
     console.log(params, "params");
     console.log(roomId, "roomId");
-    console.log('her')
+    console.log("her");
 
     return (
         <>
             {/* Check if roomId is "new" and render CreateHiringRoom */}
-            {roomId?.includes('new') ? (
+            {roomId?.includes("new") ? (
                 <CreatHiringRoom />
             ) : roomId ? (
                 // If roomId exists and it's not "new", render the edit form

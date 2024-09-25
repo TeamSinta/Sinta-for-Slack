@@ -1,4 +1,4 @@
-'use client'; // Mark as a client-side component
+"use client"; // Mark as a client-side component
 
 import { useEffect, useState } from "react";
 import { Icons } from "@/components/ui/icons";
@@ -8,7 +8,10 @@ import { cn } from "@/lib/utils";
 import { UserDropdown } from "@/app/(app)/_components/user-dropdown";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNav } from "@/app/(app)/_components/sidebar-nav";
-import { OrgSelectDropdown, type UserOrgs } from "@/app/(app)/_components/org-select-dropdown";
+import {
+    OrgSelectDropdown,
+    type UserOrgs,
+} from "@/app/(app)/_components/org-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type SideNavProps = {
@@ -49,7 +52,7 @@ export function Sidebar({
         fetchData();
     }, []);
 
-    console.log(sidebarNavIncludeIds)
+    console.log(sidebarNavIncludeIds);
 
     const myOrgs = userOrgs.filter((org) => org.ownerId === user?.id);
     const sharedOrgs = userOrgs.filter((org) => org.ownerId !== user?.id);
@@ -89,7 +92,10 @@ export function Sidebar({
 
             {showOrgSwitcher && (
                 <div className="py-2">
-                    <OrgSelectDropdown userOrgs={urgOrgsData} currentOrg={currentOrg} />
+                    <OrgSelectDropdown
+                        userOrgs={urgOrgsData}
+                        currentOrg={currentOrg}
+                    />
                 </div>
             )}
 
@@ -110,7 +116,11 @@ export function Sidebar({
 /**
  * Sidebar loading skeleton
  */
-export function SidebarLoading({ showOrgSwitcher = true }: { showOrgSwitcher?: boolean }) {
+export function SidebarLoading({
+    showOrgSwitcher = true,
+}: {
+    showOrgSwitcher?: boolean;
+}) {
     return (
         <aside className={cn("h-full w-full")}>
             <div className={cn(" flex h-16 items-center justify-between")}>

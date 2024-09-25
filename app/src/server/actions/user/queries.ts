@@ -32,9 +32,8 @@ const panginatedUserPropsSchema = z.object({
 
 type GetPaginatedUsersQueryProps = z.infer<typeof panginatedUserPropsSchema>;
 
-
 export async function getAuthUser() {
-  return await getUser();
+    return await getUser();
 }
 
 export async function getPaginatedUsersQuery(

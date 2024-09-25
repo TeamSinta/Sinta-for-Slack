@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import MessageButtons, { type ButtonAction, ButtonType, UpdateActionType } from "./message-buttons";
+import MessageButtons, {
+    type ButtonAction,
+    ButtonType,
+    UpdateActionType,
+} from "./message-buttons";
 import slackLogo from "../../../../../../public/slack-logo.png";
 import sintaLogo from "../../../../../../public/sintalogo.png";
 import Image from "next/image";
@@ -185,46 +189,64 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
         <div className="space-y-2">
             {/* Custom Message Body Input - Slack Message Style */}
             <div className="shadow-sm ">
-
                 <div className="mt-4">
                     {/* Slack Message Simulation */}
-                    <div className="rounded-lg border bg-white shadow-sm pb-6">
-                        <div className="flex items-center justify-between bg-fuchsia-950 p-3 rounded-t-lg">
+                    <div className="rounded-lg border bg-white pb-6 shadow-sm">
+                        <div className="flex items-center justify-between rounded-t-lg bg-fuchsia-950 p-3">
                             <div className="flex items-center space-x-2">
-                                <Image src={slackLogo} alt="Slack Logo" className="h-6 w-6" />
-                                <span className="text-sm font-semibold text-white">Hiring Room</span>
+                                <Image
+                                    src={slackLogo}
+                                    alt="Slack Logo"
+                                    className="h-6 w-6"
+                                />
+                                <span className="text-sm font-semibold text-white">
+                                    Hiring Room
+                                </span>
                             </div>
                         </div>
                         <div className="p-4">
                             <div className="flex items-start">
-                                <Image src={sintaLogo} alt="User Avatar" className="h-10 w-10 rounded" />
+                                <Image
+                                    src={sintaLogo}
+                                    alt="User Avatar"
+                                    className="h-10 w-10 rounded"
+                                />
                                 <div className="ml-4 flex-1">
                                     <div className="flex items-center justify-between">
-                                    <div className="ml-2 flex-1">
-                                <div className="flex items-center font-semibold text-gray-700">
-                                    Sinta
-                                    <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-500">
-                                        APP
-                                    </span>
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                    3:53 PM
-                                </div>
-                            </div>
+                                        <div className="ml-2 flex-1">
+                                            <div className="flex items-center font-semibold text-gray-700">
+                                                Sinta
+                                                <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-500">
+                                                    APP
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                3:53 PM
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="mt-2 text-gray-700">{customMessageBody}</div>
-                                    <div className=" pt-6 flex space-x-2">
-                            {buttons.map((button, index) => (
-                                <Button key={index} className={getButtonStyle(button)} onClick={() => removeButton(index)}>
-                                    {button.label}
-                                </Button>
-                            ))}
-                        </div>
+                                    <div className="mt-2 text-gray-700">
+                                        {customMessageBody}
+                                    </div>
+                                    <div className=" flex space-x-2 pt-6">
+                                        {buttons.map((button, index) => (
+                                            <Button
+                                                key={index}
+                                                className={getButtonStyle(
+                                                    button,
+                                                )}
+                                                onClick={() =>
+                                                    removeButton(index)
+                                                }
+                                            >
+                                                {button.label}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         {/* Action Buttons */}
-
                     </div>
 
                     {/* Quill Editor */}
@@ -233,10 +255,13 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                             value={customMessageBody}
                             onChange={handleCustomMessageBodyChange}
                             modules={{
-                                toolbar: [["bold", "italic", "underline"], [{ link: "link" }]],
+                                toolbar: [
+                                    ["bold", "italic", "underline"],
+                                    [{ link: "link" }],
+                                ],
                             }}
                             formats={["bold", "italic", "underline", "link"]}
-                            className="text-md w-full bg-white rounded-lg border"
+                            className="text-md w-full rounded-lg border bg-white"
                         />
                     </div>
                 </div>
@@ -245,27 +270,39 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
             {/* Variable Insertion */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="mt-2">Insert Variable</Button>
+                    <Button variant="outline" className="mt-2">
+                        Insert Variable
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
                     <DropdownMenuGroup>
                         {variableOptions.map((option) => (
-                            <DropdownMenuItem key={option.value} onClick={() => handleVariableSelect(option.value)}>
+                            <DropdownMenuItem
+                                key={option.value}
+                                onClick={() =>
+                                    handleVariableSelect(option.value)
+                                }
+                            >
                                 {option.label}
                             </DropdownMenuItem>
                         ))}
                     </DropdownMenuGroup>
                     <DropdownMenuGroup>
                         {specialVariableOptions.map((option) => (
-                            <DropdownMenuItem key={option.value} onClick={() => handleVariableSelect(option.value)}>
+                            <DropdownMenuItem
+                                key={option.value}
+                                onClick={() =>
+                                    handleVariableSelect(option.value)
+                                }
+                            >
                                 {option.label}
                             </DropdownMenuItem>
                         ))}
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
             </DropdownMenu>
-                 {/* Button Management */}
-                 <div className="my-4">
+            {/* Button Management */}
+            <div className="my-4">
                 <MessageButtons
                     buttons={buttons}
                     addButton={addButton}
@@ -284,8 +321,6 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                     loading={isLoading}
                 />
             </div>
-
-
         </div>
     );
 };

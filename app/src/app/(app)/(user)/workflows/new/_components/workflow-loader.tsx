@@ -46,7 +46,7 @@ export default function WorkflowLoader({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className=" bg-white shadow-lg  border border-gray-200 rounded-lg overflow-hidden mx-10 mt-6 mb-6">
+                    <div className=" mx-10 mb-6  mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                         <WorkflowBuilder workflowId={workflowId} edit={edit} />
                     </div>
                 </motion.div>

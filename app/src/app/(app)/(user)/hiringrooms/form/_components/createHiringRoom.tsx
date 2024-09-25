@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { motion } from "framer-motion";
 import { ArrowRightIcon, Briefcase, Filter } from "lucide-react";
@@ -11,8 +11,8 @@ import ConditionsStep from "./create-conditons";
 export default function CreateHiringRoom() {
     const [currentStep, setCurrentStep] = useState("Details");
     const [formData, setFormData] = useState({
-        name: '',
-        roomType: '',
+        name: "",
+        roomType: "",
         conditions: [], // Conditions field for the ConditionsStep
         slackConfig: {
             channelFormat: "",
@@ -33,7 +33,11 @@ export default function CreateHiringRoom() {
     ];
 
     // Handle data submission from the Details step
-    const handleDataSubmit = (data: { name: string; roomType: string; conditions: never[]; }) => {
+    const handleDataSubmit = (data: {
+        name: string;
+        roomType: string;
+        conditions: never[];
+    }) => {
         setFormData((prevData) => ({
             ...prevData,
             ...data,
@@ -67,16 +71,26 @@ export default function CreateHiringRoom() {
             case "Details":
                 return <DetailsStep onDataSubmit={handleDataSubmit} />;
             case "Conditions":
-                return <ConditionsStep onSaveConditions={handleConditionsSubmit} />;
+                return (
+                    <ConditionsStep onSaveConditions={handleConditionsSubmit} />
+                );
             case "Slack Configuration":
-                return <SlackConfigurationStep onSaveConfig={handleSlackConfigSubmit} />;
+                return (
+                    <SlackConfigurationStep
+                        onSaveConfig={handleSlackConfigSubmit}
+                    />
+                );
             // Add other steps as needed
             case "Summary":
                 return (
                     <div>
                         <h2>Summary</h2>
                         <pre>{JSON.stringify(formData, null, 2)}</pre>
-                        <button onClick={() => console.log("Final Submission", formData)}>
+                        <button
+                            onClick={() =>
+                                console.log("Final Submission", formData)
+                            }
+                        >
                             Submit Workflow
                         </button>
                     </div>
@@ -90,45 +104,96 @@ export default function CreateHiringRoom() {
     const renderTitle = () => {
         switch (currentStep) {
             case "Details":
-                return <>
-                <div className="mb-6">
-                    <div className="flex items-center">
-                        <h2 className="text-xl font-semibold font-heading">Hire Room Details</h2>
-                    </div>
-                    <p className="mt-2 text-xs font-medium text-gray-500">Provide basic information for your hire room.</p>
-                </div>
-                </>;
+                return (
+                    <>
+                        <div className="mb-6">
+                            <div className="flex items-center">
+                                <h2 className="font-heading text-xl font-semibold">
+                                    Hire Room Details
+                                </h2>
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-gray-500">
+                                Provide basic information for your hire room.
+                            </p>
+                        </div>
+                    </>
+                );
             case "Conditions":
-                return <>
-                   <div className="mb-6">
-                    <div className="flex items-center">
-                        <h2 className="text-xl font-semibold font-heading">Filter Conditions</h2>
-                    </div>
-                    <p className="mt-2 text-xs font-medium text-gray-500">Set up rules to refine your workflow based on specific conditions.</p>
-                </div>
-                </>;
+                return (
+                    <>
+                        <div className="mb-6">
+                            <div className="flex items-center">
+                                <h2 className="font-heading text-xl font-semibold">
+                                    Filter Conditions
+                                </h2>
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-gray-500">
+                                Set up rules to refine your workflow based on
+                                specific conditions.
+                            </p>
+                        </div>
+                    </>
+                );
             case "Slack Configuration":
-                return <>
-                   <div className="mb-2">
-                    <div className="flex items-center">
-                        <h2 className="text-xl font-semibold font-heading">Slack Configuration</h2>
-                    </div>
-                    <p className="mt-2 text-xs font-medium text-gray-500">Configure Slack notifications and channels.</p>
-                </div>
-                </>;
+                return (
+                    <>
+                        <div className="mb-2">
+                            <div className="flex items-center">
+                                <h2 className="font-heading text-xl font-semibold">
+                                    Slack Configuration
+                                </h2>
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-gray-500">
+                                Configure Slack notifications and channels.
+                            </p>
+                        </div>
+                    </>
+                );
             case "Automated Actions":
-                return <>
-                   <div className="mb-6">
-                    <div className="flex items-center">
-                        <h2 className="text-xl font-semibold font-heading">Automated Actions</h2>
-                    </div>
-                    <p className="mt-2 text-xs font-medium text-gray-500">Set up automated actions for your hire room.</p>
-                </div>
-                </>;
+                return (
+                    <>
+                        <div className="mb-6">
+                            <div className="flex items-center">
+                                <h2 className="font-heading text-xl font-semibold">
+                                    Automated Actions
+                                </h2>
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-gray-500">
+                                Set up automated actions for your hire room.
+                            </p>
+                        </div>
+                    </>
+                );
             case "Receipents":
-                return "Receipents";
+                return (
+                    <>
+                        <div className="mb-6">
+                            <div className="flex items-center">
+                                <h2 className="font-heading text-xl font-semibold">
+                                    Receipents
+                                </h2>
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-gray-500">
+                                Set up automated actions for your hire room.
+                            </p>
+                        </div>
+                    </>
+                );
             case "Summary":
-                return "Summary";
+                return (
+                    <>
+                        <div className="mb-6">
+                            <div className="flex items-center">
+                                <h2 className="font-heading text-xl font-semibold">
+                                    Summary
+                                </h2>
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-gray-500">
+                                Set up automated actions for your hire room.
+                            </p>
+                        </div>
+                    </>
+                );
             default:
                 return "";
         }
@@ -136,47 +201,62 @@ export default function CreateHiringRoom() {
 
     return (
         <motion.div
-            className="min-h-screen bg-gray-50 flex flex-col"
+            className="flex min-h-screen flex-col bg-gray-50"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
             {/* Main Content Box */}
-            <div className="flex flex-1 bg-white shadow-lg  border border-gray-200 rounded-lg overflow-hidden mx-10 mt-6 mb-6">
+            <div className="mx-10 mb-6 mt-6 flex  flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                 {/* Sidebar and Product Details Combined */}
-                <div className="flex-1 flex flex-col">
+                <div className="flex flex-1 flex-col">
                     {/* Top Toolbar with Exit Button */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+                    <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
                         <Link href="/hiringrooms">
                             <button className="text-gray-400 hover:text-gray-600">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                <svg
+                                    className="h-6 w-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M6 18L18 6M6 6l12 12"
+                                    ></path>
                                 </svg>
                             </button>
                         </Link>
-                        <div className="text-sm font-medium text-gray-700">Add a new room</div>
+                        <div className="text-sm font-medium text-gray-700">
+                            Add a new room
+                        </div>
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex flex-1 container">
+                    <div className="container flex flex-1">
                         {/* Sidebar */}
                         <motion.div
-                            className="w-1/4 bg-white p-6 border-gray-200"
+                            className="w-1/4 border-gray-200 bg-white p-6"
                             initial={{ x: -100, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.6 }}
                         >
-                            <nav className="space-y-6 relative">
+                            <nav className="relative space-y-6">
                                 {/* Vertical gray line */}
                                 <div className="absolute left-0 top-0 h-full w-[2px] bg-gray-300"></div>
 
                                 {steps.map((step, index) => (
                                     <a
                                         key={index}
-                                        onClick={() => setCurrentStep(step.step)} // Make steps clickable
-                                        className={`flex items-center space-x-3 text-sm font-medium transition-all pl-4 relative cursor-pointer ${
+                                        onClick={() =>
+                                            setCurrentStep(step.step)
+                                        } // Make steps clickable
+                                        className={`relative flex cursor-pointer items-center space-x-3 pl-4 text-sm font-medium transition-all ${
                                             currentStep === step.step
-                                                ? "text-blue-500 font-semibold"
+                                                ? "font-semibold text-blue-500"
                                                 : "text-gray-400"
                                         }`}
                                     >
@@ -196,12 +276,12 @@ export default function CreateHiringRoom() {
 
                         {/* Main Content - Changing Title Based on Step */}
                         <motion.div
-                            className="flex-1 p-10 bg-white"
+                            className="flex-1 bg-white p-10"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.7 }}
                         >
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                            <h2 className="mb-2 text-2xl font-semibold text-gray-900">
                                 {renderTitle()} {/* Dynamic title */}
                             </h2>
 
@@ -213,19 +293,19 @@ export default function CreateHiringRoom() {
 
                 {/* Right Panel (Help Section) */}
                 <motion.div
-                    className="w-1/4 bg-gray-50 p-6 border-l border-gray-200"
+                    className="w-1/4 border-l border-gray-200 bg-gray-50 p-6"
                     initial={{ x: 100, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.6 }}
                 >
                     <div className="space-y-2">
                         {/* Video Help Section */}
-                        <h3 className="text-sm font-semibold text-gray-900 pt-4">
+                        <h3 className="pt-4 text-sm font-semibold text-gray-900">
                             Check out our help video?
                         </h3>
                         <div className="aspect-w-12 aspect-h-9 w-3/4">
                             <iframe
-                                className="w-full h-full rounded-sm shadow-md"
+                                className="h-full w-full rounded-sm shadow-md"
                                 src="https://www.youtube.com/embed/dQw4w9WgXcQ"
                                 title="Product details help video"
                                 frameBorder="0"
@@ -236,14 +316,15 @@ export default function CreateHiringRoom() {
 
                         {/* Help Text */}
                         <div>
-                            <h3 className="text-sm font-bold text-gray-900 pt-6 pb-2">
+                            <h3 className="pb-2 pt-6 text-sm font-bold text-gray-900">
                                 What is a Product?
                             </h3>
-                            <p className="text-sm text-gray-600 py-2">
+                            <p className="py-2 text-sm text-gray-600">
                                 A product is a small version of your API that
-                                corresponds to a specific use-case. After selecting
-                                which endpoints to include in your product, you'll
-                                define its access rules and business model.
+                                corresponds to a specific use-case. After
+                                selecting which endpoints to include in your
+                                product, you'll define its access rules and
+                                business model.
                             </p>
                         </div>
                     </div>
