@@ -138,7 +138,6 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
-
             throw new Error("Failed to fetch users", response.statusText);
         }
 
@@ -327,7 +326,7 @@ export async function sendSlackNotification(
                 ],
             },
         ];
-
+        console.log("INPUT");
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
