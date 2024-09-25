@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -10,16 +8,28 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import { Pencil } from "lucide-react";
+import { Pencil, Check, X } from "lucide-react";
 import slackLogo from "../../../../../../../public/slack-logo.png";
 import sintaLogo from "../../../../../../../public/sintalogo.png";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import MessageButtons, {
-    type ButtonAction,
-    ButtonType,
-    UpdateActionType,
-} from "../../_components/message-buttons";
+import MessageButtons, { ButtonAction, ButtonType, UpdateActionType } from "../../_components/message-buttons";
+import parse from 'html-react-parser';
+
+// Define variable options
+const variableOptions = [
+    { value: "{{Interviewer}}", label: "Interviewer" },
+    { value: "{{Role title}}", label: "Role Title" },
+    { value: "{{Job Stage}}", label: "Job Stage" },
+    { value: "{{Recruiter}}", label: "Recruiter" },
+    { value: "{{Candidate_Name}}", label: "Candidate Name" },
+];
+
+const specialVariableOptions = [
+    { value: "{{All Job Stages}}", label: "All Job Stages" },
+    { value: "{{All Interviewers}}", label: "All Interviewers" },
+    { value: "{{All Competencies}}", label: "All Competencies" },
+];
 
 const SlackMessageBox: React.FC<{
     customMessageBody: string;
@@ -34,28 +44,25 @@ const SlackMessageBox: React.FC<{
 }) => {
     const [isEditing, setIsEditing] = useState(false); // Toggle for editing state
     const [messageContent, setMessageContent] = useState(customMessageBody);
-    const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(
-        buttons || [],
-    ); // Initialize as an empty array if buttons are undefined
+    const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(buttons || []);
+    const quillRef = useRef<ReactQuill>(null); // Reference for ReactQuill
 
     useEffect(() => {
         setMessageContent(customMessageBody);
         setMessageButtons(buttons || []); // Ensure messageButtons is an array
     }, [customMessageBody, buttons]);
 
-    // Handle saving after editing
     const handleSave = () => {
         onCustomMessageBodyChange(messageContent);
         onButtonsChange(messageButtons);
         setIsEditing(false); // Exit edit mode
     };
 
-    const handleVariableSelect = (variable: string) => {
-        setMessageContent((prev) => prev + variable);
-    };
-
-    const handleDoubleClick = () => {
-        setIsEditing(true); // Trigger edit mode on double-click
+    // Insert variable at cursor position
+    const insertVariableAtCursor = (variable: string) => {
+        const editor = quillRef.current?.getEditor(); // Get the editor instance
+        const cursorPosition = editor?.getSelection()?.index ?? 0; // Get cursor position
+        editor?.insertText(cursorPosition, ` ${variable} `); // Insert variable at the cursor position
     };
 
     const getButtonStyle = (button: ButtonAction) => {
@@ -76,33 +83,19 @@ const SlackMessageBox: React.FC<{
         setMessageButtons(newButtons);
     };
 
-    const addButton = () => {
-        const newButtons = [
-            ...messageButtons,
-            { label: "New Button", action: "", type: ButtonType.UpdateButton },
-        ];
-        handleButtonsChange(newButtons);
+    // Function to replace custom variables like {{Interviewer}} with blue badges
+    const replaceCustomVariables = (htmlContent: string) => {
+        const customVariablePattern = /{{(.*?)}}/g;
+        return htmlContent.replace(customVariablePattern, (match, variable) => {
+            return `<span class="inline-block mx-1 rounded border border-blue-400 bg-blue-50 px-2 py-1 text-sm font-semibold text-blue-500">${variable}</span>`;
+        });
     };
 
-    const updateButton = (
-        index: number,
-        key: keyof ButtonAction,
-        value: string,
-    ) => {
-        const newButtons = [...messageButtons];
-        if (newButtons[index]) {
-            newButtons[index][key] = value as never;
-            handleButtonsChange(newButtons);
-        }
-    };
-
-    const removeButton = (index: number) => {
-        const newButtons = messageButtons.filter((_, i) => i !== index);
-        handleButtonsChange(newButtons);
-    };
+    // Convert markdown and custom variables into displayable content
+    const displayContent = parse(replaceCustomVariables(messageContent));
 
     return (
-        <div className=" mt-4" onDoubleClick={handleDoubleClick}>
+        <div className=" mt-4">
             <div className="rounded-md border bg-white shadow-sm">
                 <div className="flex items-center justify-between rounded-t-md bg-fuchsia-950 p-3">
                     <div className="flex items-center space-x-2">
@@ -115,12 +108,28 @@ const SlackMessageBox: React.FC<{
                             Hiring Room
                         </span>
                     </div>
-                    {/* Pencil Icon for Edit */}
-                    <div
-                        className="cursor-pointer"
-                        onClick={() => setIsEditing(true)}
-                    >
-                        <Pencil size={20} className="text-white" />
+                    {/* Edit mode toggle: pencil or Save/Cancel */}
+                    <div className="flex space-x-2">
+                        {!isEditing ? (
+                            <Pencil
+                                size={20}
+                                className="cursor-pointer text-white"
+                                onClick={() => setIsEditing(true)}
+                            />
+                        ) : (
+                            <>
+                                <Check
+                                    size={20}
+                                    className="cursor-pointer text-white"
+                                    onClick={handleSave}
+                                />
+                                <X
+                                    size={20}
+                                    className="cursor-pointer text-white"
+                                    onClick={() => setIsEditing(false)}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -132,22 +141,87 @@ const SlackMessageBox: React.FC<{
                             className="h-10 w-10 rounded"
                         />
                         <div className="ml-4 flex-1">
-                            <div className="flex items-center font-semibold text-gray-700">
-                                Sinta
-                                <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-500">
-                                    APP
-                                </span>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center font-semibold text-gray-700">
+                                    Sinta
+                                    <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-500">
+                                        APP
+                                    </span>
+                                </div>
+
+                                {/* Insert Variable dropdown */}
+                                {isEditing && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline">
+                                                Insert Variable
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56">
+                                            <DropdownMenuGroup>
+                                                {variableOptions.map(
+                                                    (variable) => (
+                                                        <DropdownMenuItem
+                                                            key={variable.value}
+                                                            onClick={() =>
+                                                                insertVariableAtCursor(
+                                                                    variable.value,
+                                                                )
+                                                            }
+                                                        >
+                                                            {variable.label}
+                                                        </DropdownMenuItem>
+                                                    ),
+                                                )}
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuGroup>
+                                                <div className="mt-2 text-xs text-gray-500">
+                                                    Special Variables
+                                                </div>
+                                                {specialVariableOptions.map(
+                                                    (variable) => (
+                                                        <DropdownMenuItem
+                                                            key={variable.value}
+                                                            onClick={() =>
+                                                                insertVariableAtCursor(
+                                                                    variable.value,
+                                                                )
+                                                            }
+                                                        >
+                                                            {variable.label}
+                                                        </DropdownMenuItem>
+                                                    ),
+                                                )}
+                                            </DropdownMenuGroup>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
                             </div>
                             <div className="text-xs text-gray-500">3:53 PM</div>
 
-                            {/* Display Slack Message or Editor */}
                             {!isEditing ? (
-                                <div className="mt-2 text-gray-700">
-                                    <p>{messageContent}</p>
+                                <div className="mt-2 text-sm text-gray-700">
+                                    {displayContent}
+                                    {/* Render buttons in final display */}
+                                    <div className="mt-6 mb-2 flex space-x-2">
+                                        {messageButtons.map(
+                                            (button, index) => (
+                                                <Button
+                                                    key={index}
+                                                    className={getButtonStyle(
+                                                        button,
+                                                    )}
+                                                >
+                                                    {button.label}
+                                                </Button>
+                                            ),
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="mt-2">
                                     <ReactQuill
+                                        ref={quillRef}
                                         value={messageContent}
                                         onChange={setMessageContent}
                                         modules={{
@@ -165,78 +239,61 @@ const SlackMessageBox: React.FC<{
                                         className="text-md w-full rounded-lg border bg-white"
                                     />
                                     <div className="mt-4 flex space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            onClick={handleSave}
-                                        >
-                                            Save
-                                        </Button>
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() => setIsEditing(false)}
-                                        >
-                                            Cancel
-                                        </Button>
+                                        {messageButtons.map(
+                                            (button, index) => (
+                                                <Button
+                                                    key={index}
+                                                    className={getButtonStyle(
+                                                        button,
+                                                    )}
+                                                >
+                                                    {button.label}
+                                                </Button>
+                                            ),
+                                        )}
                                     </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Display Action Buttons */}
-                    <div className="mt-4 flex space-x-2">
-                        {messageButtons.map((button, index) => (
-                            <Button
-                                key={index}
-                                className={getButtonStyle(button)}
-                            >
-                                {button.label}
-                            </Button>
-                        ))}
-                    </div>
-
-                    {/* Edit Buttons during Edit Mode */}
                     {isEditing && (
                         <div className="mt-4">
                             <MessageButtons
                                 buttons={messageButtons}
-                                addButton={addButton}
-                                updateButton={updateButton}
-                                removeButton={removeButton}
+                                addButton={() =>
+                                    handleButtonsChange([
+                                        ...messageButtons,
+                                        {
+                                            label: "New Button",
+                                            action: "",
+                                            type: ButtonType.UpdateButton,
+                                        },
+                                    ])
+                                }
+                                updateButton={(
+                                    index: number,
+                                    key: keyof ButtonAction,
+                                    value: string,
+                                ) => {
+                                    const newButtons = [...messageButtons];
+                                    if (newButtons[index]) {
+                                        newButtons[index][key] = value as never;
+                                        handleButtonsChange(newButtons);
+                                    }
+                                }}
+                                removeButton={(index: number) =>
+                                    handleButtonsChange(
+                                        messageButtons.filter(
+                                            (_, i) => i !== index,
+                                        ),
+                                    )
+                                }
                             />
                         </div>
                     )}
                 </div>
             </div>
-
-            {/* Variable Insertion */}
-            {isEditing && (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="mt-2">
-                            Insert Variable
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    handleVariableSelect("{{Interviewer}}")
-                                }
-                            >
-                                Interviewer
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    handleVariableSelect("{{Role title}}")
-                                }
-                            >
-                                Role Title
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )}
         </div>
     );
 };
