@@ -17,6 +17,9 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
     const [hiringRoom, setHiringRoom] = useState(null);
     const [slackChannels, setSlackChannels] = useState([]);
     const [isActive, setIsActive] = useState(true);
+    const [customMessageBody, setCustomMessageBody] = useState(
+      "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
+  );
     useEffect(() => {
         async function fetchRoomData() {
             if (roomId) {
@@ -28,6 +31,8 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
         }
         fetchRoomData();
     }, [roomId]);
+
+    const handleCustomMessageBodyChange = (messageBody: string) => console.log("Custom Message Body:", messageBody);
 
     const handleStatusChange = async () => {
       // Toggle the status
@@ -209,6 +214,7 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                 <div className="bg-gray-50 p-6 text-gray-700">
                     {/* SlackHiringroom Component for Configuring Recipients */}
                     <SlackHiringroom
+                               onCustomMessageBodyChange={handleCustomMessageBodyChange}
 
                     />
                 </div>

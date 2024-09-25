@@ -5,6 +5,7 @@ import { ArrowRightIcon, Briefcase, Filter } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import DetailsStep from "./create-general"; // This is the details step
+import SlackConfigurationStep from "./create-slackConfig";
 import ConditionsStep from "./create-conditons";
 
 export default function CreateHiringRoom() {
@@ -12,7 +13,14 @@ export default function CreateHiringRoom() {
     const [formData, setFormData] = useState({
         name: '',
         roomType: '',
-        conditions: [], // Adding conditions field for the new ConditionsStep
+        conditions: [], // Conditions field for the ConditionsStep
+        slackConfig: {
+            channelFormat: "",
+            recipients: [],
+            fields: [],
+            buttons: [],
+            customMessageBody: "",
+        }, // To store Slack configuration data
     });
 
     const steps = [
@@ -39,7 +47,19 @@ export default function CreateHiringRoom() {
             ...prevData,
             conditions: conditionsData,
         }));
-        setCurrentStep("Automated Actions"); // Proceed to the next step (or change as needed)
+        setCurrentStep("Slack Configuration"); // Proceed to the next step (Slack Configuration)
+    };
+
+    // Handle Slack configuration submission
+    const handleSlackConfigSubmit = (slackConfigData: any) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            slackConfig: {
+                ...prevData.slackConfig,
+                ...slackConfigData,
+            },
+        }));
+        setCurrentStep("Automated Actions"); // Proceed to next step
     };
 
     const renderStepComponent = () => {
@@ -48,6 +68,8 @@ export default function CreateHiringRoom() {
                 return <DetailsStep onDataSubmit={handleDataSubmit} />;
             case "Conditions":
                 return <ConditionsStep onSaveConditions={handleConditionsSubmit} />;
+            case "Slack Configuration":
+                return <SlackConfigurationStep onSaveConfig={handleSlackConfigSubmit} />;
             // Add other steps as needed
             case "Summary":
                 return (
@@ -70,27 +92,39 @@ export default function CreateHiringRoom() {
             case "Details":
                 return <>
                 <div className="mb-6">
-             <div className="flex items-center">
-                 {/* <Briefcase className="mr-2 text-gray-700" size={24} /> */}
-                 <h2 className="text-xl font-semibold font-heading">Hire Room Details</h2>
-             </div>
-             <p className="mt-2 text-xs font-medium text-gray-500">Set up rules to refine your workflow based on specific conditions.</p>
-         </div>
-             </>;
+                    <div className="flex items-center">
+                        <h2 className="text-xl font-semibold font-heading">Hire Room Details</h2>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-gray-500">Provide basic information for your hire room.</p>
+                </div>
+                </>;
             case "Conditions":
                 return <>
                    <div className="mb-6">
-                <div className="flex items-center">
-                    {/* <Filter className="mr-2 text-gray-700" size={24} /> */}
-                    <h2 className="text-xl font-semibold font-heading">Filter Conditions</h2>
+                    <div className="flex items-center">
+                        <h2 className="text-xl font-semibold font-heading">Filter Conditions</h2>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-gray-500">Set up rules to refine your workflow based on specific conditions.</p>
                 </div>
-                <p className="mt-2 text-xs font-medium text-gray-500">Set up rules to refine your workflow based on specific conditions.</p>
-            </div>
+                </>;
+            case "Slack Configuration":
+                return <>
+                   <div className="mb-2">
+                    <div className="flex items-center">
+                        <h2 className="text-xl font-semibold font-heading">Slack Configuration</h2>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-gray-500">Configure Slack notifications and channels.</p>
+                </div>
                 </>;
             case "Automated Actions":
-                return "Automated Actions";
-            case "Slack Configuration":
-                return "Slack Configuration";
+                return <>
+                   <div className="mb-6">
+                    <div className="flex items-center">
+                        <h2 className="text-xl font-semibold font-heading">Automated Actions</h2>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-gray-500">Set up automated actions for your hire room.</p>
+                </div>
+                </>;
             case "Receipents":
                 return "Receipents";
             case "Summary":
@@ -167,7 +201,7 @@ export default function CreateHiringRoom() {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.7 }}
                         >
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                                 {renderTitle()} {/* Dynamic title */}
                             </h2>
 
