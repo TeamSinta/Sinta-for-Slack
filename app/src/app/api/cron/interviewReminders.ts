@@ -6,7 +6,7 @@ export async function processInterviews(data: any, workflow: WorkflowData) {
     console.log("DATA", JSON.stringify(data, null, 2));
     console.log("WORKFLOW", JSON.stringify(workflow, null, 2));
 
-    // Get a list of already scheduled tasks to ensure there is no task already running for the application
+    // Get a list of already scheduled tasks for InterviewReminderWorkflow to ensure there is no task already running for the application
     const tasks = (await getTasks("InterviewReminderWorkflow")) ?? [];
 
     const conditions = workflow.conditions.filter(
@@ -14,6 +14,9 @@ export async function processInterviews(data: any, workflow: WorkflowData) {
     );
 
     for (const interview of data) {
+        // Check if the interview object satisfies the conditions
+
+        // Check if the interview is already scheduled
         const name = getMergentTaskName(
             workflow.id,
             "Interview",

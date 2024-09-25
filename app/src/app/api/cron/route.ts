@@ -414,6 +414,7 @@ export async function handleWorkflows() {
         for (const workflow of workflows) {
             if (workflow.objectField !== "Interviews") continue;
             if (workflow.alertType === "timebased") {
+                // Add query params to the apiUrl
                 const { apiUrl }: { apiUrl?: string } =
                     workflow.triggerConfig as { apiUrl?: string };
                 const searchParams = new URLSearchParams();

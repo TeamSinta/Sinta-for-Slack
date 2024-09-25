@@ -1,0 +1,90 @@
+{
+    "interview": {
+        "attributes": [
+            {
+                "field": "id",
+                "description": "The scheduled interview's unique identifier"
+            },
+            {
+                "field": "application_id",
+                "description": "The ID of the associated application."
+            },
+            {
+                "field": "created_at",
+                "description": "Date when this offer was created."
+            },
+            {
+                "field": "start.date_time",
+                "description": "A date_time value if this interview has a precise start time, or a date value if this is an all-day event."
+            },
+            {
+                "field": "end.date_time",
+                "description": "A date_time value if this interview has a precise start time, or a date value if this is an all-day event."
+            },
+            {
+                "field": "location",
+                "description": "The location of the interview."
+            },
+            {
+                "field": "video_conferencing_url",
+                "description": "The URL used for video interviews, such as Zoom, Google Meets, or Microsoft Teams."
+            },
+            {
+                "field": "status",
+                "description": "One of: scheduled, awaiting_feedback, complete"
+            },
+            {
+                "field": "interview.id",
+                "description": ""
+            },
+            {
+                "field": "interview.name",
+                "description": ""
+            },
+            {
+                "field": "organizer.id",
+                "description": ""
+            },
+            {
+                "field": "organizer.first_name",
+                "description": ""
+            },
+            {
+                "field": "organizer.last_name",
+                "description": ""
+            },
+            {
+                "field": "organizer.name",
+                "description": ""
+            },
+            {
+                "field": "organizer.employee_id",
+                "description": ""
+            },
+            {
+                "field": "interviewers[].id",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted)."
+            },
+            {
+                "field": "interviewers[].employee_id",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted)."
+            },
+            {
+                "field": "interviewers[].name",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted)."
+            },
+            {
+                "field": "interviewers[].email",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted)."
+            },
+            {
+                "field": "interviewers[].response_status",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted)."
+            },
+            {
+                "field": "interviewers[].scorecard_id",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted)."
+            }
+        ]
+    }
+}
