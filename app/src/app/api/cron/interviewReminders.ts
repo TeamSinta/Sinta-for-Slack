@@ -24,9 +24,7 @@ const interviewReminderMainConditionSchema = z.object({
     condition_type: z.literal("Main"),
 });
 
-export async function processInterviews(data: any, workflow: WorkflowData) {
-    // console.log("DATA", JSON.stringify(data, null, 2));
-    // console.log("WORKFLOW", JSON.stringify(workflow, null, 2));
+export async function processInterviewReminders(data: any, workflow: WorkflowData) {
     let eventsScheduled = 0;
 
     // Get a list of already scheduled tasks for InterviewReminderWorkflow to ensure there is no task already running for the application
@@ -38,7 +36,6 @@ export async function processInterviews(data: any, workflow: WorkflowData) {
     const mainCondition = workflow.conditions.find(
         (condition) => condition.condition_type === "Main",
     );
-    console.log("MAIN CONDITION", mainCondition);
     const {
         time,
         days,

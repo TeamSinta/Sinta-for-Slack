@@ -34,7 +34,6 @@ export async function deleteTask(taskId: string) {
 export async function getTasks(nameQuery?: string) {
     try {
         const tasks = await mergent.tasks.list();
-        // console.log("TASKS", tasks);
         if (nameQuery)
             return tasks.filter((task: any) => task.name.includes(nameQuery));
         return tasks;

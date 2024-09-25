@@ -193,6 +193,20 @@ export async function fetchCandidateDetails(candidateId: string): Promise<any> {
     }
 }
 
+export async function fetchApplicationDetails(
+    applicationId: string,
+): Promise<any> {
+    try {
+        const response = await customFetch(
+            `https://harvest.greenhouse.io/v1/applications/${applicationId}`,
+        );
+        return response;
+    } catch (error) {
+        console.error("Error fetching application details: ", error);
+        return null;
+    }
+}
+
 export async function fetchActiveCandidates() {
     const candidates = await fetchCandidates();
     if (!candidates) {
