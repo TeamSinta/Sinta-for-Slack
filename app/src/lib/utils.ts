@@ -245,3 +245,37 @@ export function adjustDateTime(
 
     return adjustedDate;
 }
+
+export function formatListToString(items: string[]): string {
+    if (items.length === 0) {
+        return "";
+    }
+
+    if (items.length === 1) {
+        return items[0] ?? ""; // Handle possible undefined
+    }
+
+    if (items.length === 2) {
+        return `${items[0] ?? ""} and ${items[1] ?? ""}`;
+    }
+
+    // For 3 or more items, join all except the last with commas, and add 'and' before the last item
+    const lastItem = items.pop();
+    return `${items.join(", ")}, and ${lastItem ?? ""}`;
+}
+
+export function formatToReadableDate(dateString: string): string {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+        weekday: "long", // 'Monday', 'Tuesday', etc.
+        year: "numeric",
+        month: "long", // 'January', 'February', etc.
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true, // Use 12-hour time format
+    };
+
+    return new Intl.DateTimeFormat("en-US", options).format(date);
+}

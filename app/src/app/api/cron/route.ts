@@ -45,7 +45,7 @@ import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
 import { format, formatISO, parseISO } from "date-fns";
-import { processInterviews } from "./interviewReminders";
+import { processInterviewReminders } from "./interviewReminders";
 
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
@@ -441,10 +441,8 @@ export async function handleWorkflows() {
                         );
                         break;
                     case "Interviews":
-                        filteredConditionsData = await processInterviews(
-                            data,
-                            workflow,
-                        );
+                        filteredConditionsData =
+                            await processInterviewReminders(data, workflow);
                     default:
                         filteredConditionsData = filterDataWithConditions(
                             data,
