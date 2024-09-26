@@ -30,10 +30,10 @@ export async function initializeStuckStageChecks(
         JSON.stringify({ applicationDetails, workflow }),
         scheduledDate,
         getMergentTaskName(
+            "StuckinStageWorkflow",
             workflow.id,
             "Application",
             applicationDetails.applicationId,
-            "StuckinStage-Workflow",
         ),
     );
 }
