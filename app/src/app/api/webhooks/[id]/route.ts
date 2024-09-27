@@ -1,14 +1,12 @@
-// @ts-nocheck
-
 // app/api/webhooks/greenhouse/[orgId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { verifySignature } from "@/lib/utils";
 import { getSecretKeyForOrg } from "@/server/actions/greenhouse/query";
 import { handleStuckInStageWorkflows } from "./stuckInStage";
 
-const eventHandlers = {
+const eventHandlers: Record<string, any> = {
     candidate_stage_change: [handleStuckInStageWorkflows],
-    interview_deleted: [handleInterviewDeleted],
+    // interview_deleted: [handleInterviewDeleted],
 };
 
 // Webhook handler function for dynamic orgID route

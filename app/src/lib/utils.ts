@@ -213,10 +213,10 @@ export const cleanObject = (obj: object) => {
 };
 
 export const getMergentTaskName = (
+    eventName: string,
     workflowId: string,
     objectName: string,
     id: string,
-    eventName: string,
 ): string => {
     return `${eventName}-${workflowId}-${objectName}-${id}`;
 };

@@ -34,6 +34,7 @@ import { useSession } from "next-auth/react";
 import mixpanel from "mixpanel-browser";
 import { orgConfig } from "@/config/organization";
 import useGetCookie from "@/hooks/use-get-cookie";
+import Link from "next/link";
 interface GreenhouseIntegrationCardProps {
     name: string;
     imageUrl: string;
@@ -123,7 +124,7 @@ export const GreenhouseIntegrationCard: React.FC<
                 </div>
                 <div className="flex items-center">
                     <Link
-                        src="/integrations/greenhouse-config"
+                        href="/integrations/greenhouse-config"
                         className="ml-2 rounded bg-gray-400 px-4 py-2 text-sm text-white hover:bg-gray-600"
                     >
                         Config

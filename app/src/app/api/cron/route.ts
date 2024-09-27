@@ -409,10 +409,9 @@ export async function handleWorkflows() {
 
         const now = new Date();
         const workflowDataQueryParams = {
-            Interviews: { starts_after: formatISO(now) }, // We only want to see upcoming interviews
+            Interviews: { starts_after: formatISO(now), per_page: 500 }, // We only want to see upcoming interviews
         };
         for (const workflow of workflows) {
-            if (workflow.objectField !== "Interviews") continue;
             if (workflow.alertType === "timebased") {
                 // Add query params to the apiUrl
                 const { apiUrl }: { apiUrl?: string } =
@@ -455,46 +454,6 @@ export async function handleWorkflows() {
                 } else {
                     console.log("No conditions running");
                 }
-            } else if (workflow.alertType === "stuck-in-stage") {
-                const { apiUrl, processor } = workflow.triggerConfig;
-                const data = await customFetch(
-                    apiUrl,
-                    processor ? { query: processor } : {},
-                );
-                console.log("cron-job running!!");
-                // console.log("cron-job running!! - data ",data);
-                // Filter data based on the "stuck-in-stage" conditions
-                const filteredConditionsData =
-                    await filterStuckinStageDataConditions(
-                        data,
-                        workflow.conditions,
-                    );
-                const slackTeamID = await getSlackTeamIDByWorkflowID(
-                    workflow.id,
-                );
-                const subDomain = await getSubdomainByWorkflowID(workflow.id);
-
-                const filteredSlackDataWithMessage =
-                    await filterCandidatesDataForSlack(
-                        filteredConditionsData,
-                        workflow.recipient,
-                        slackTeamID,
-                    );
-                console.log(
-                    "filteredSlackDataWithMessage - ",
-                    filteredSlackDataWithMessage,
-                );
-                if (filteredSlackDataWithMessage.length > 0) {
-                    await sendSlackButtonNotification(
-                        filteredSlackDataWithMessage,
-                        workflow.recipient,
-                        slackTeamID,
-                        subDomain,
-                        filteredConditionsData,
-                    );
-                } else {
-                    console.log("No data to send to Slack");
-                }
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
             }
@@ -502,26 +461,11 @@ export async function handleWorkflows() {
 
         if (shouldReturnNull) {
             return false;
-            return NextResponse.json(
-                { message: "No workflows to process" },
-                { status: 200 },
-            );
         }
         return workflowsLength;
-        return NextResponse.json(
-            { message: "Workflows processed successfully" },
-            { status: 200 },
-        );
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
         return false;
-        return NextResponse.json(
-            {
-                error: "Failed to process workflows",
-                details: (error as Error).message,
-            },
-            { status: 500 },
-        );
     }
 }
 // Define the GET handler for the route
