@@ -409,7 +409,7 @@ export async function handleWorkflows() {
 
         const now = new Date();
         const workflowDataQueryParams = {
-            Interviews: { starts_after: formatISO(now) }, // We only want to see upcoming interviews
+            Interviews: { starts_after: formatISO(now), per_page: 500 }, // We only want to see upcoming interviews
         };
         for (const workflow of workflows) {
             if (workflow.alertType === "timebased") {
