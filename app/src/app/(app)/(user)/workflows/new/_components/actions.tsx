@@ -50,6 +50,7 @@ import TestResult from "./testResults";
 import { useSession } from "next-auth/react";
 import { postMessageToChannel } from "@/server/slack/core";
 import { Input } from "@/components/ui/input";
+import SlackFileUploader from "./slackFileUpload";
 const localStorageKey = "workflowActions";
 
 const isBrowser = typeof window !== "undefined";
@@ -124,6 +125,7 @@ const triggerSpecificVariablesOptions = {
             value: "{{Interview End Time}}",
             label: "Interview End Time",
         },
+        { value: "{{Scorecard ids}}", label: "Scorecard IDs" },
     ],
 };
 
@@ -797,6 +799,12 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     </Button>
                 </div>
             </div>
+            <SlackFileUploader
+                channel={"U07KB6J350F"}
+                token={
+                    "xoxe-1-My0xLTQ0MTYwOTk0MzE4NzgtNjk1NjcyODk2MzY3MS02OTY0NjUzNTM4NDIyLTA4MGU3NjY4NDkwNTEzNjUwNWRlNjU3YmY2M2UwOGY1NDg5MDM5OTg4MGM5MzM4YjQ5Y2M1OTg5ZWRlYTkxYzc"
+                }
+            />
         </div>
     );
 };

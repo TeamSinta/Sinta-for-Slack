@@ -1196,6 +1196,13 @@ function parseCustomMessageBody(
         formatToReadableDate(interviewDetails?.end?.date_time) || "N/A",
     );
     formattedMessage = formattedMessage.replace(
+        /{{Scorecard ids}}/g,
+        interviewDetails?.interviewers
+            ?.map((interviewer) => interviewer?.scorecard_id)
+            .filter((item) => item)
+            .join(" | ") || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
         /{{Interview Title}}/g,
         interviewDetails?.interview?.name || "N/A",
     );
