@@ -35,9 +35,9 @@ const getConditionsData = () => {
 };
 
 const CONDITIONS_ATTRIBUTES_LOOKUP = {
-    offer: offerAttributes.offer.attributes,
-    candidate: candidateAttributes.candidate.attributes,
-    interview: interviewAttributes.interview.attributes,
+    offers: offerAttributes.offer.attributes,
+    candidates: candidateAttributes.candidate.attributes,
+    interviews: interviewAttributes.interview.attributes,
 };
 const ConditionsComponent = ({
     onSaveConditions,
@@ -217,6 +217,7 @@ const ConditionsComponent = ({
                                                     field,
                                                 )
                                             } // Update the field based on user selection
+                                            selectedField={condition.field}
                                         />
                                     </div>
 
