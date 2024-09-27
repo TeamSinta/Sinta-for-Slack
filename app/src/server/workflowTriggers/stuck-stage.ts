@@ -4,8 +4,8 @@ import { scheduleTask } from "../mergent";
 export async function initializeStuckStageChecks(
     workflow: any,
     application?: any,
-    applicationDetails?: any,
     daysToBeStuck: number = 5,
+    applicationDetails?: any,
 ) {
     if (!application && !applicationDetails) {
         throw new Error("No application or application details provided");

@@ -44,7 +44,6 @@ const SlackChannelNameFormat: React.FC<SlackChannelNameFormatProps> = ({
         setFormat(e.target.value);
     };
 
-    console.log("selectedtype - ", selectedType);
     const tokens = selectedType === "Candidates" ? candidateTokens : jobTokens;
     // const tokens = selectedType === "candidate" ? candidateTokens : jobTokens;
 

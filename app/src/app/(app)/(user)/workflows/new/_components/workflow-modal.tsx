@@ -144,12 +144,21 @@ export const WorkflowPublishModal = ({
 
         if (!hasError) {
             try {
-                if (!edit) {
-                    // Combine conditionsData with triggerData.mainCondition
-                    const combinedConditions = [
-                        ...conditionsData,
-                        ...(triggerData.mainCondition || []),
-                    ];
+                // Combine conditionsData with triggerData.mainCondition
+                const combinedConditions = [
+                    // Map through the main conditions and add the condition_type field
+                    ...(triggerData.mainCondition || []).map(
+                        (condition: any) => ({
+                            ...condition,
+                            condition_type: "Main", // Add condition_type for main conditions
+                        }),
+                    ),
+                    // Map through the conditionsData and add the condition_type field
+                    ...conditionsData.map((condition: any) => ({
+                        ...condition,
+                        condition_type: "Add-on", // Add condition_type for add-on conditions
+                    })),
+                ];
 
                     await mutateAsync({
                         id: workflowId, // Include the workflowId when updating

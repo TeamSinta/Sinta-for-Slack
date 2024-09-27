@@ -6,7 +6,6 @@ import { siteUrls } from "@/config/urls";
 export async function POST(request: NextRequest) {
     console.log("in post route hiring room");
     try {
-        console.log("MADE IT TO THE POST HIRING ROOM");
         const contentType = request.headers.get("content-type");
         if (contentType?.includes("application/json")) {
             const data = await request.json();
@@ -24,7 +23,6 @@ export async function POST(request: NextRequest) {
             );
             // return handleJsonPost(data);
         } else if (contentType?.includes("application/x-www-form-urlencoded")) {
-            console.log("bucks not found app json");
             // const text = await request.text();
             // const params = new URLSearchParams(text);
             // const payloadRaw = params.get("payload");
@@ -49,7 +47,6 @@ export async function POST(request: NextRequest) {
             headers: { "Content-Type": "application/json" },
         });
     } catch (e) {
-        console.log("e- assignment- ", e);
         return new NextResponse(
             JSON.stringify({ error: "Unsupported Content Type - " + e }),
             {
@@ -76,10 +73,7 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.NEXTAUTH_URL + "api/slack";
 
     // console.log('json secret - ',json)
-    console.log("redirectUri  - ", redirectUri);
-    console.log("clientId  - ", clientId);
-    console.log("client secret - ", clientSecret);
-    console.log("code - ", code);
+
     if (!clientId || !clientSecret) {
         return new NextResponse(
             JSON.stringify({
@@ -91,10 +85,8 @@ export async function GET(req: NextRequest) {
 
     try {
         const url = `https://slack.com/api/oauth.v2.access?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-        console.log("url - ", url);
         const response = await fetch(url, { method: "POST" });
         const json = await response.json();
-        console.log("json - ", json);
         if (
             json.access_token &&
             json.refresh_token &&
@@ -112,7 +104,6 @@ export async function GET(req: NextRequest) {
                 expiresAt,
             );
             console.log("Access token updated:", updateResponse);
-            console.log(json);
             if (updateResponse === "OK") {
                 const url = `${siteUrls.teamsinta}/success/${json.team.id}`;
                 return NextResponse.redirect(url);
