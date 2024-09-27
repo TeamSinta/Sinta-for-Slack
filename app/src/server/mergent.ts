@@ -1,7 +1,7 @@
 "use server";
 import Mergent from "mergent";
 import Task from "mergent/dist/types/Task";
-
+// @ts-nocheck
 // set the Mergent API key
 const mergent = new Mergent(process.env.MERGENT_API_KEY ?? "");
 
@@ -45,15 +45,15 @@ export async function deleteTask(taskId: string) {
 //     }
 // }
 
-interface Task {
-    id: string;
-    created_at: string;
-    name: string;
-    query: string;
-    request: { body: string; headers: Record<string, string>; url: string };
-    scheduled_for?: string;
-    status: string;
-}
+// interface Task {
+//     id: string;
+//     created_at: string;
+//     name: string;
+//     query: string;
+//     request: { body: string; headers: Record<string, string>; url: string };
+//     scheduled_for?: string;
+//     status: string;
+// }
 
 export async function getTasks(nameQuery?: string): Promise<Task[]> {
     const MERGENT_TASKS_URL =
@@ -68,7 +68,7 @@ export async function getTasks(nameQuery?: string): Promise<Task[]> {
 
     try {
         while (nextUrl) {
-            const response = await fetch(nextUrl, {
+            const response: Response = await fetch(nextUrl, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${MERGENT_API_KEY}`,

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
 import { getMergentTaskName } from "@/lib/utils";
-import { scheduleTask, getTasks, cancelTask } from "@/server/mergent";
+import { scheduleTask, getTasks, deleteTask } from "@/server/mergent";
 import { checkCondtions } from "@/utils/workflows";
 import { z } from "zod";
 import { adjustDateTime } from "@/lib/utils";
@@ -50,7 +50,7 @@ export async function processInterviewReminders(
 
             // If the interviewid doesn't exist in the data array, the interview has been deleted and we need to delete the task
             if (interviewId && !upcomingScheduledInterview)
-                await cancelTask(task.id);
+                await deleteTask(task.id);
             // If the interview exists, we need to check if the start or end date has changed (the interview has been rescheduled)
             // If the date has changed, we need to reschedule the task (so delete the existing one and create a new one)
             else {
@@ -70,7 +70,7 @@ export async function processInterviewReminders(
                     interviewStart !== existingStart ||
                     interviewEnd !== existingEnd
                 )
-                    await cancelTask(task.id);
+                    await deleteTask(task.id);
             }
         }),
     );
