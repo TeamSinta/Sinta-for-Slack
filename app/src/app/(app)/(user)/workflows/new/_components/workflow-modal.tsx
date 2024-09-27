@@ -1,5 +1,5 @@
 // @ts-nocheck
-
+import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -158,21 +158,20 @@ export const WorkflowPublishModal = ({
                     })),
                 ];
 
-                    await mutateAsync({
-                        id: workflowId, // Include the workflowId when updating
-                        name: workflowName, // Use the name from local storage or fallback to event name
-                        objectField: triggerData.objectField, // Use sorted trigger data's object field
-                        alertType: triggerData.alertType, // Adjust this as needed
-                        conditions: combinedConditions, // Send combined conditions
-                        triggerConfig: {
-                            apiUrl: triggerData.apiUrl,
-                            processor: triggerData.processor,
-                        },
-                        recipient: actionData,
-                        status: "active",
-                        organizationId: "your-organization-id", // Adjust this as needed
-                    });
-                } else handleSuccessfulPublish();
+                await mutateAsync({
+                    id: workflowId, // Include the workflowId when updating
+                    name: workflowName, // Use the name from local storage or fallback to event name
+                    objectField: triggerData.objectField, // Use sorted trigger data's object field
+                    alertType: triggerData.alertType, // Adjust this as needed
+                    conditions: combinedConditions, // Send combined conditions
+                    triggerConfig: {
+                        apiUrl: triggerData.apiUrl,
+                        processor: triggerData.processor,
+                    },
+                    recipient: actionData,
+                    status: "active",
+                    organizationId: "your-organization-id", // Adjust this as needed
+                });
             } catch (error) {
                 setStepStatus((prev) => ({
                     ...prev,
