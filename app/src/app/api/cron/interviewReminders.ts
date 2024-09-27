@@ -110,7 +110,7 @@ export async function processInterviewReminders(
         // If the time is different, then we need to reschedule the task
         // Otherwise, we can skip. This task has already been scheduled
         const name = getMergentTaskName(
-            `Interview${mainCondition.time}ReminderWorkflow`,
+            `${mainCondition.time}InterviewReminderWorkflow`,
             workflow.id,
             "Interview",
             interview.id,

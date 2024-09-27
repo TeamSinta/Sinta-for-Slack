@@ -137,8 +137,12 @@ const SAMPLE_WORKFLOW = {
     ownerId: "007ad225-277e-43f2-8ae9-1c4a13f8717a",
     organizationId: "7020aa90-9e7c-4a74-ba36-05808550cf2e",
 };
+
 export async function POST(request: NextRequest) {
     // const body = await request.json();
+
     const tasks = await getTasks();
+    console.log("NEW TASKS", tasks);
+    // const data = await response.json();
     return NextResponse.json({}, { status: 200 });
 }
