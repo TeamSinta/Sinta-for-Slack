@@ -1,28 +1,26 @@
 // @ts-nocheck
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CircleCheck, Loader2Icon, CircleX } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import {
-    createWorkflowMutation,
-    updateWorkflowMutation,
-} from "@/server/actions/workflows/mutations";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 import {
     getActionData,
     getConditionsData,
     getTriggerData,
     getWorkflowName,
 } from "@/lib/utils";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import {
+    createWorkflowMutation,
+    updateWorkflowMutation,
+} from "@/server/actions/workflows/mutations";
+import { useMutation } from "@tanstack/react-query";
+import { AlertCircle, CircleCheck, CircleX, Loader2Icon } from "lucide-react";
 import mixpanel from "mixpanel-browser";
 import { useSession } from "next-auth/react";
-import { orgConfig } from "@/config/organization";
-import useGetCookie from "@/hooks/use-get-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export const WorkflowPublishModal = ({
     edit = false,
