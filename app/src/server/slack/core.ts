@@ -177,6 +177,7 @@ export async function sendSlackNotification(
     subDomain: string,
     candidateDetails: Record<string, unknown>,
     interviewDetails?: Record<string, unknown>,
+    attachmentIds?: string[],
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
@@ -331,6 +332,7 @@ export async function sendSlackNotification(
                         .flat(), // Flatten the array of arrays
                 ],
             },
+            { id: "F07P92F2NMV" },
         ];
         console.log("INPUT");
         const response = await fetch("https://slack.com/api/chat.postMessage", {

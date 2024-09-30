@@ -51,6 +51,7 @@ import { useSession } from "next-auth/react";
 import { postMessageToChannel } from "@/server/slack/core";
 import { Input } from "@/components/ui/input";
 import SlackFileUploader from "./slackFileUpload";
+import { Cross1Icon } from "@radix-ui/react-icons";
 const localStorageKey = "workflowActions";
 
 const isBrowser = typeof window !== "undefined";
@@ -154,6 +155,12 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [testResult, setTestResult] = useState(null);
     const [openingText, setOpeningText] = useState("");
     const [triggerObjectField, setTriggerObjectField] = useState(null);
+    const [uploadedFiles, setUploadedFiles] = useState<
+        {
+            name: string;
+            id: string;
+        }[]
+    >([{ name: "Tester", id: "1234" }]);
 
     const session = useSession();
 
@@ -334,6 +341,12 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 ),
                             },
                         },
+                        ...(uploadedFiles.length > 0
+                            ? uploadedFiles.map((file) => ({
+                                  type: "image",
+                                  slack_file: { id: file.id },
+                              }))
+                            : []),
                         // Buttons section (if applicable)
                         ...(buttons.length > 0
                             ? [
@@ -444,6 +457,15 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 <AlertTriangle className="text-gray-500" size={iconSize} />
             );
         }
+    };
+
+    const handleSuccessfulFileUpload = (data: string[]) => {
+        console.log("UPLOADED FILE", data);
+        setUploadedFiles((prev) => [...prev, data]);
+    };
+
+    const handleRemoveUploadedFile = (id: string) => {
+        setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
     };
 
     return (
@@ -675,6 +697,15 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                     </div>
                                 )}
 
+                                {uploadedFiles.length > 0 && (
+                                    <div>
+                                        {uploadedFiles.map((file) => (
+                                            <div
+                                                key={file.id}
+                                            >{`{{${file.name}}}`}</div>
+                                        ))}
+                                    </div>
+                                )}
                                 {/* Buttons Section */}
                                 {buttons.length > 0 && (
                                     <div className="space-y-4">
@@ -736,6 +767,33 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 )
                             }
                         />
+                        <div className="my-4">
+                            <SlackFileUploader
+                                onSuccess={(data) =>
+                                    handleSuccessfulFileUpload(data)
+                                }
+                            />
+                            {uploadedFiles.length > 0 &&
+                                uploadedFiles.map((file) => (
+                                    <div
+                                        key={file.id}
+                                        className="flex w-full flex-row items-center justify-between p-4"
+                                    >
+                                        <div className="max-w-[80%] overflow-clip">
+                                            {file.name}
+                                        </div>
+
+                                        <Cross1Icon
+                                            className="cursor-pointer hover:text-red-800"
+                                            onClick={() => {
+                                                handleRemoveUploadedFile(
+                                                    file.id,
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                        </div>
                     </TabsContent>
 
                     {/* Test & Recipients Tab */}
@@ -799,12 +857,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                     </Button>
                 </div>
             </div>
-            <SlackFileUploader
-                channel={"U07KB6J350F"}
-                token={
-                    "xoxe-1-My0xLTQ0MTYwOTk0MzE4NzgtNjk1NjcyODk2MzY3MS02OTY0NjUzNTM4NDIyLTA4MGU3NjY4NDkwNTEzNjUwNWRlNjU3YmY2M2UwOGY1NDg5MDM5OTg4MGM5MzM4YjQ5Y2M1OTg5ZWRlYTkxYzc"
-                }
-            />
         </div>
     );
 };

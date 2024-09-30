@@ -1,57 +1,58 @@
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 import { fileUploads } from "@/server/slack/fileUploads";
+import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
+import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface SlackFileUploaderProps {
-    token: string; // Slack API token
-    channel: string; // Channel ID to upload the file to
+    onSuccess?: (data: any) => void;
 }
 
 const ACCEPTABLE_MIME_TYPES = [
     "image/jpeg",
     "image/png",
     "image/gif",
-    "audio/mpeg",
-    "audio/mp4",
-    "audio/wav",
-    "video/mp4",
-    "video/quicktime",
-    "text/plain",
-    "application/pdf",
-    "application/msword",
+    // "audio/mpeg",
+    // "audio/mp4",
+    // "audio/wav",
+    // "video/mp4",
+    // "video/quicktime",
+    // "text/plain",
+    // "application/pdf",
+    // "application/msword",
 ];
 
+// Only images are acceptable in slack right now
 const ACCEPTABLE_EXTENSIONS = [
     "jpg",
     "jpeg",
     "png",
     "gif",
-    "mp3",
-    "mp4",
-    "wav",
-    "mov",
-    "txt",
-    "pdf",
-    "doc",
+    // "mp3",
+    // "mp4",
+    // "wav",
+    // "mov",
+    // "txt",
+    // "pdf",
+    // "doc",
+    // "csv",
 ];
 
-const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
-    token,
-    channel,
-}) => {
+const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({ onSuccess }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [uploading, setUploading] = useState<boolean>(false);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const orgId = useGetCookie(orgConfig.cookieName);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setError(null);
-        setSuccessMessage(null);
         const file = event.target.files?.[0];
         if (file) {
             if (isAcceptableFileType(file)) {
                 setSelectedFile(file);
             } else {
-                setError("Selected file type is not acceptable by Slack.");
+                toast.error("Selected file type is not acceptable by Slack.");
                 setSelectedFile(null);
             }
         }
@@ -61,6 +62,7 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
         const fileType = file.type;
         const fileName = file.name;
         const fileExtension = fileName.split(".").pop()?.toLowerCase();
+        console.log("file extension - ", fileExtension);
 
         if (fileType && ACCEPTABLE_MIME_TYPES.includes(fileType)) {
             return true;
@@ -69,58 +71,55 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
         if (fileExtension && ACCEPTABLE_EXTENSIONS.includes(fileExtension)) {
             return true;
         }
-
         return false;
     };
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            setError("No file selected.");
+            toast.error("No file selected.");
             return;
         }
         setUploading(true);
-        setError(null);
-        setSuccessMessage(null);
 
         const formData = new FormData();
 
-        const arrayBuffer = await selectedFile.arrayBuffer();
+        // const arrayBuffer = await selectedFile.arrayBuffer();
         formData.append(
             "file",
             new Blob([selectedFile], { type: selectedFile.type }),
         );
         formData.append("fileName", selectedFile.name);
         formData.append("size", selectedFile.size.toString());
+        formData.append("orgId", orgId ?? "");
         try {
-            const res = await fileUploads(formData);
-            return res;
+            const files = await fileUploads(formData);
 
-            // if (data.ok) {
-            //     setSuccessMessage("File uploaded successfully!");
-            //     setSelectedFile(null);
-            // } else {
-            //     setError(`Upload failed: ${data.error}`);
-            // }
-        } catch (err) {
-            setError(`An error occurred: ${err}`);
+            if (files.length > 0) {
+                toast("File uploaded successfully!");
+                setSelectedFile(null);
+            } else {
+                toast.error("File upload failed.");
+            }
+            onSuccess && onSuccess(files);
+        } catch (err: any) {
+            toast.error("An error occurred. ", err);
         } finally {
             setUploading(false);
         }
     };
 
     return (
-        <div>
-            <input type="file" onChange={handleFileChange} />
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {successMessage && (
-                <p style={{ color: "green" }}>{successMessage}</p>
-            )}
-            <button
-                onClick={handleUpload}
-                disabled={!selectedFile || uploading}
-            >
-                {uploading ? "Uploading..." : "Upload to Slack"}
-            </button>
+        <div className="flex flex-col gap-2">
+            <Label>Upload an Image</Label>
+            <div className="flex flex-row gap-2">
+                <Input type="file" onChange={handleFileChange} />
+                <Button
+                    onClick={handleUpload}
+                    disabled={!selectedFile || uploading}
+                >
+                    {uploading ? "Uploading..." : "Upload"}
+                </Button>
+            </div>
         </div>
     );
 };
