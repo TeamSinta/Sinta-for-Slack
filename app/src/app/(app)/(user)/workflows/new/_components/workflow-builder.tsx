@@ -216,6 +216,7 @@ export function WorkflowBuilder({
                     messageDelivery: workflow?.recipient.messageDelivery,
                     messageFields: workflow?.recipient.messageFields,
                     openingText: workflow?.recipient.openingText,
+                    uploadedFiles: workflow?.recipient?.uploadedFiles,
                 };
                 const workflowConditions = workflow.conditions
                     .filter((condition) => {

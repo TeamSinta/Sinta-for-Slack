@@ -82,6 +82,5 @@ export async function fileUploads(formData: FormData) {
         id: file.id,
         name: file.name,
     }));
-
     return files;
 }

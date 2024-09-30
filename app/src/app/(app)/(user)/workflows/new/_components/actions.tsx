@@ -160,12 +160,19 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
             name: string;
             id: string;
         }[]
-    >([{ name: "Tester", id: "1234" }]);
+    >([]);
+    // const [uploadedFiles, setUploadedFiles] = useState<
+    //     {
+    //         name: string;
+    //         id: string;
+    //     }[]
+    // >([{ name: "coffee.png", id: "F07PJ2EMP2A" }]);
 
     const session = useSession();
 
     useEffect(() => {
         const actionData = getActionData();
+        console.log("actionData", actionData);
         if (actionData) {
             if (actionData?.customMessageBody)
                 setCustomMessageBody(actionData?.customMessageBody);
@@ -177,6 +184,8 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 setSelectedRecipients(actionData?.recipients);
             if (actionData?.openingText)
                 setOpeningText(actionData?.openingText); // Load opening text
+            if (actionData?.uploadedFiles)
+                setUploadedFiles(actionData?.uploadedFiles);
         }
     }, []);
 
@@ -279,6 +288,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 messageButtons: buttons,
                 messageDelivery: "Group DM", // Replace with actual field if needed
                 customMessageBody,
+                uploadedFiles,
             };
 
             // Save to local storage
@@ -345,6 +355,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                             ? uploadedFiles.map((file) => ({
                                   type: "image",
                                   slack_file: { id: file.id },
+                                  alt_text: file.name,
                               }))
                             : []),
                         // Buttons section (if applicable)
@@ -392,7 +403,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 },
             ],
         };
-
         try {
             await postMessageToChannel(session?.data?.user?.id, payload);
             console.log("Test message sent successfully.");
@@ -461,7 +471,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
 
     const handleSuccessfulFileUpload = (data: string[]) => {
         console.log("UPLOADED FILE", data);
-        setUploadedFiles((prev) => [...prev, data]);
+        setUploadedFiles((prev) => [...prev, ...data]);
     };
 
     const handleRemoveUploadedFile = (id: string) => {
@@ -702,6 +712,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                         {uploadedFiles.map((file) => (
                                             <div
                                                 key={file.id}
+                                                className="text-sm"
                                             >{`{{${file.name}}}`}</div>
                                         ))}
                                     </div>
@@ -777,7 +788,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 uploadedFiles.map((file) => (
                                     <div
                                         key={file.id}
-                                        className="flex w-full flex-row items-center justify-between p-4"
+                                        className="my-4 flex w-full flex-row items-center justify-between px-4"
                                     >
                                         <div className="max-w-[80%] overflow-clip">
                                             {file.name}
