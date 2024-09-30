@@ -1,12 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRightIcon, Briefcase, Filter } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import DetailsStep from "./create-general"; // This is the details step
 import SlackConfigurationStep from "./create-slackConfig";
 import ConditionsStep from "./create-conditons";
+import TriggerActionsComponent from "./create-triggerActions";
+import Image2 from "./shoot.png"
+import Image from "next/image";
 
 export default function CreateHiringRoom() {
     const [currentStep, setCurrentStep] = useState("Details");
@@ -28,7 +30,7 @@ export default function CreateHiringRoom() {
         { label: "Conditions", step: "Conditions" },
         { label: "Slack Configuration", step: "Slack Configuration" },
         { label: "Automated Actions", step: "Automated Actions" },
-        { label: "Receipents", step: "Receipents" },
+        { label: "Recipients", step: "Recipients" },
         { label: "Summary", step: "Summary" },
     ];
 
@@ -63,7 +65,16 @@ export default function CreateHiringRoom() {
                 ...slackConfigData,
             },
         }));
-        setCurrentStep("Automated Actions"); // Proceed to next step
+        setCurrentStep("Automated Actions"); // Proceed to the Automated Actions step
+    };
+
+    // Handle automated actions data submission
+    const handleAutomatedActionsSubmit = (actionsData: any) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            automatedActions: actionsData,
+        }));
+        setCurrentStep("Recipients"); // Proceed to the next step (Recipients)
     };
 
     const renderStepComponent = () => {
@@ -78,6 +89,12 @@ export default function CreateHiringRoom() {
                 return (
                     <SlackConfigurationStep
                         onSaveConfig={handleSlackConfigSubmit}
+                    />
+                );
+            case "Automated Actions":
+                return (
+                    <TriggerActionsComponent
+                        onSaveAutomatedActions={handleAutomatedActionsSubmit}
                     />
                 );
             // Add other steps as needed
@@ -164,17 +181,17 @@ export default function CreateHiringRoom() {
                         </div>
                     </>
                 );
-            case "Receipents":
+            case "Recipients":
                 return (
                     <>
                         <div className="mb-6">
                             <div className="flex items-center">
                                 <h2 className="font-heading text-xl font-semibold">
-                                    Receipents
+                                    Recipients
                                 </h2>
                             </div>
                             <p className="mt-2 text-xs font-medium text-gray-500">
-                                Set up automated actions for your hire room.
+                                Set up recipients for your hire room.
                             </p>
                         </div>
                     </>
@@ -189,7 +206,7 @@ export default function CreateHiringRoom() {
                                 </h2>
                             </div>
                             <p className="mt-2 text-xs font-medium text-gray-500">
-                                Set up automated actions for your hire room.
+                                Review and confirm the details of your hire room.
                             </p>
                         </div>
                     </>
@@ -304,20 +321,21 @@ export default function CreateHiringRoom() {
                             Check out our help video?
                         </h3>
                         <div className="aspect-w-12 aspect-h-9 w-3/4">
-                            <iframe
+                            {/* <iframe
                                 className="h-full w-full rounded-sm shadow-md"
-                                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                                src="https://www.youtube.com/watch?v=4_Gm2RKMzdo"
                                 title="Product details help video"
                                 frameBorder="0"
                                 allowFullScreen
-                            />
+                            /> */}
+                            <Image alt="me" className="h-full w-full rounded-sm shadow-md" src={Image2}/>
                         </div>
-                        <div className="border-b border-gray-200 py-4"></div>
+                        <div className="border-b border-gray-200 py-4"> </div>
 
                         {/* Help Text */}
                         <div>
                             <h3 className="pb-2 pt-6 text-sm font-bold text-gray-900">
-                                What is a Product?
+                                What is a Hire Room?
                             </h3>
                             <p className="py-2 text-sm text-gray-600">
                                 A product is a small version of your API that

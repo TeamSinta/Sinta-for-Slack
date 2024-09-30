@@ -35,8 +35,8 @@ export function AppLayoutShell({
 
     // Determine if it's the workflow builder based on the pathname
     if (
-        pathname === "/hiringrooms/form/new" ||
-        pathname.includes("/workflows/new")
+        pathname === "/hiringrooms/form/new"
+        // || pathname.includes("/workflows/new")
     ) {
         isWorkflowBuilder = true;
     }
@@ -55,7 +55,7 @@ export function AppLayoutShell({
 
     return (
         <div
-            className={`flex items-start ${isWorkflowBuilder ? "" : "container"}`}
+            className={`flex items-start ${isWorkflowBuilder ? "" : ""}`}
         >
             {!isWorkflowBuilder && (
                 <motion.div
@@ -75,7 +75,7 @@ export function AppLayoutShell({
             )}
 
             <motion.section
-                className={`min-h-screen flex-grow ${isWorkflowBuilder ? "" : "container"}`}
+                className={`min-h-screen flex-grow ${isWorkflowBuilder ? "" : ""}`}
                 variants={contentVariants}
                 initial="hidden"
                 animate="visible"
