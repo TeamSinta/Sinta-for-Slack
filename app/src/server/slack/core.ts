@@ -168,6 +168,7 @@ interface WorkflowRecipient {
     openingText: string;
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
+    uploadedFiles: { name: string; id: string }[];
 }
 
 export async function sendSlackNotification(
@@ -177,7 +178,6 @@ export async function sendSlackNotification(
     subDomain: string,
     candidateDetails: Record<string, unknown>,
     interviewDetails?: Record<string, unknown>,
-    attachmentIds?: string[],
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
@@ -259,6 +259,15 @@ export async function sendSlackNotification(
                                         text: customMessageBody,
                                     },
                                 },
+                                ...(workflowRecipient.uploadedFiles?.length > 0
+                                    ? workflowRecipient.uploadedFiles.map(
+                                          (file) => ({
+                                              type: "image",
+                                              slack_file: { id: file.id },
+                                              alt_text: file.name,
+                                          }),
+                                      )
+                                    : []),
                                 ...(workflowRecipient.messageButtons.length > 0
                                     ? [
                                           {
@@ -334,7 +343,7 @@ export async function sendSlackNotification(
             },
             { id: "F07P92F2NMV" },
         ];
-        console.log("INPUT");
+        // console.log("INPUT");
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
@@ -349,9 +358,9 @@ export async function sendSlackNotification(
         });
 
         const data = await response.json();
-        console.log(data);
-        console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
-        console.log("Response Slack message sent:", response.status);
+        // console.log(data);
+        // console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
+        // console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(

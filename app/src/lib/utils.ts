@@ -247,6 +247,7 @@ export function adjustDateTime(
 }
 
 export function formatListToString(items: string[]): string {
+    if (!items) return "";
     if (items.length === 0) {
         return "";
     }
