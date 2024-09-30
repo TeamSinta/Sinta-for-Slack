@@ -217,6 +217,7 @@ const ConditionsComponent = ({
                                                     field,
                                                 )
                                             } // Update the field based on user selection
+                                            selectedField={condition.field}
                                         />
                                     </div>
 
