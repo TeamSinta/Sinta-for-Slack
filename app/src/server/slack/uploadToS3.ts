@@ -1,5 +1,4 @@
 "use server";
-// @ts-nocheck
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({ region: "us-east-2" });
@@ -13,11 +12,13 @@ export async function uploadItem(
     type: string,
 ) {
     const key = `${orgId}/${workflowId}/${fileName}`;
+    const arrayBuffer = await file.arrayBuffer();
+
     try {
         await s3Client.send(
             new PutObjectCommand({
                 Bucket: BUCKET_NAME,
-                Body: await file.arrayBuffer(),
+                Body: Buffer.from(arrayBuffer),
                 Key: key,
                 ContentType: type,
             }),
