@@ -1140,8 +1140,8 @@ export async function postMessageToChannel(userId: string, body: any) {
             channel: slackUserId,
         }),
     });
-    const resjson = await response.json();
-    console.log("RESPONSE", resjson);
+    // const resjson = await response.json();
+    // console.log("RESPONSE", resjson);
     if (!response.ok) throw new Error("Failed to post message");
 
     return true;
