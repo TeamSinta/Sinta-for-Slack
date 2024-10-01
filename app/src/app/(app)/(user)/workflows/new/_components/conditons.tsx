@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 import offerAttributes from "../../../../../../utils/offer-attributes.json"; // This is where your JSON file for offers is stored
 import candidateAttributes from "../../../../../../utils/candidate-attributes.json"; // This is for the candidate attributes
+import interviewAttributes from "../../../../../../utils/interview-attributes.json"; // This is for the interview attributes
 import { ConditionSelector } from "./conditionsSelector";
 
 const localStorageKey = "workflowConditions";
@@ -33,6 +34,11 @@ const getConditionsData = () => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || [];
 };
 
+const CONDITIONS_ATTRIBUTES_LOOKUP = {
+    offers: offerAttributes.offer.attributes,
+    candidates: candidateAttributes.candidate.attributes,
+    interviews: interviewAttributes.interview.attributes,
+};
 const ConditionsComponent = ({
     onSaveConditions,
     selectedElementId,
@@ -59,18 +65,10 @@ const ConditionsComponent = ({
 
             // Dynamically set the fields based on the API URL
             const objectField = parsedConfig.objectField;
-            if (
-                objectField &&
-                objectField.toLowerCase().includes("approvals")
-            ) {
-                // Set offer attributes if the objectField indicates Approvals
-                setFields(offerAttributes.offer.attributes);
-            } else if (
-                objectField &&
-                objectField.toLowerCase().includes("candidates")
-            ) {
-                // Set candidate attributes if the objectField indicates Candidates
-                setFields(candidateAttributes.candidate.attributes);
+            if (CONDITIONS_ATTRIBUTES_LOOKUP[objectField?.toLowerCase()]) {
+                setFields(
+                    CONDITIONS_ATTRIBUTES_LOOKUP[objectField?.toLowerCase()],
+                );
             }
         }
     }, []);
@@ -219,6 +217,7 @@ const ConditionsComponent = ({
                                                     field,
                                                 )
                                             } // Update the field based on user selection
+                                            selectedField={condition.field}
                                         />
                                     </div>
 

@@ -146,6 +146,18 @@ export function WorkflowBuilder({
             [],
         );
 
+        const combinedConditions = [
+            {
+                ...(workflowTriggers.mainCondition ?? {}),
+                condition_type: "Main",
+            },
+            // Map through the conditionsData and add the condition_type field
+            ...trimmedConditions.map((condition: any) => ({
+                ...condition,
+                condition_type: "Add-on", // Add condition_type for add-on conditions
+            })),
+        ];
+
         const newDbData = {
             id: workflowId[0],
             name: workflowName,
@@ -157,10 +169,7 @@ export function WorkflowBuilder({
                 processor: workflowTriggers?.processor,
             },
             recipient: recipient,
-            conditions: [
-                ...workflowTriggers?.mainCondition,
-                ...trimmedConditions,
-            ],
+            conditions: combinedConditions,
             status: isActive ? "Active" : "Inactive",
         };
         await updateWorkflowMutate(newDbData);
@@ -184,6 +193,7 @@ export function WorkflowBuilder({
                     localStorageKeyName,
                     workflow.name || "Edit Workflow",
                 );
+                console.log("WORKFLOW", JSON.stringify(workflow, null, 2));
 
                 // Split the workflow data into the necessary parts
                 const workflowTriggers = {
@@ -192,9 +202,12 @@ export function WorkflowBuilder({
                     processor: workflow?.triggerConfig?.processor,
                     apiUrl: workflow?.triggerConfig?.apiUrl,
                     alertType: workflow.alertType,
-                    mainCondition: workflow.conditions.filter((condition) => {
-                        return typeof condition.field === "object";
-                    }),
+                    mainCondition:
+                        workflow.conditions.find(
+                            (condition) =>
+                                condition?.condition_type?.toLowerCase() ===
+                                "main",
+                        ) ?? {},
                 };
                 const workflowActions = {
                     recipients: workflow.recipient?.recipients,
@@ -206,7 +219,7 @@ export function WorkflowBuilder({
                 };
                 const workflowConditions = workflow.conditions
                     .filter((condition) => {
-                        return typeof condition.field !== "object";
+                        return condition.condition_type === "Add-on";
                     })
                     .map((item, index) => ({ ...item, id: index }));
 
@@ -279,7 +292,10 @@ export function WorkflowBuilder({
                         step.description === conditionDescription,
                 );
 
-                if (!conditionExists && typeof condition.field !== "object") {
+                if (
+                    !conditionExists &&
+                    condition?.condition_type?.toLowerCase() !== "main"
+                ) {
                     newSteps.push({
                         id: index,
                         type: "Condition",
@@ -291,7 +307,7 @@ export function WorkflowBuilder({
                     });
                 } else if (
                     !mainCondition &&
-                    typeof condition.field === "object"
+                    condition?.condition_type?.toLowerCase() === "main"
                 )
                     setMainCondition(condition);
             });

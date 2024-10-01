@@ -98,6 +98,35 @@ const specialVariableOptions = [
     { value: "{{All}}", label: "All (Job Stages, Interviewers, Competencies)" },
 ];
 
+const triggerSpecificVariablesOptions = {
+    Interviews: [
+        {
+            value: "{{Interviewer Names}}",
+            label: "Interviewer Names",
+        },
+        {
+            value: "{{Interview Location}}",
+            label: "Interview Location",
+        },
+        {
+            value: "{{Video Conference URL}}",
+            label: "Video Conference URL",
+        },
+        {
+            value: "{{Interview Title}}",
+            label: "Interview Title",
+        },
+        {
+            value: "{{Interview Start Time}}",
+            label: "Interview Start Time",
+        },
+        {
+            value: "{{Interview End Time}}",
+            label: "Interview End Time",
+        },
+    ],
+};
+
 type Option = {
     value: string;
     label: string;
@@ -122,6 +151,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [activeTab, setActiveTab] = useState("message");
     const [testResult, setTestResult] = useState(null);
     const [openingText, setOpeningText] = useState("");
+    const [triggerObjectField, setTriggerObjectField] = useState(null);
 
     const session = useSession();
 
@@ -140,6 +170,17 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 setOpeningText(actionData?.openingText); // Load opening text
         }
     }, []);
+
+    // Add some optional variables depending on the trigger
+    useEffect(() => {
+        const localTriggerConfig = localStorage.getItem("workflowTriggers");
+        if (localTriggerConfig) {
+            const parsedConfig = JSON.parse(localTriggerConfig);
+            const objectField = parsedConfig.objectField;
+            setTriggerObjectField(objectField);
+        }
+    }, []);
+
     useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
@@ -238,9 +279,18 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
         }
     };
 
+    // Instead of mapping inside the map, we construct the entire message outside the map.
     const handleTestConfiguration = async () => {
         setTestResult(null);
         setTestButtonLoading(true);
+
+        // Construct the message with all selected fields in one string
+        const messageBody = selectedFields
+            .map((field) => {
+                const fieldLabel = fields.find((f) => f.value === field)?.label;
+                return `*${fieldLabel}:* ${field}`; // No additional new lines, just one per field
+            })
+            .join("\n"); // Ensure each field appears on a new line
 
         const payload = {
             attachments: [
@@ -262,26 +312,16 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                               ]
                             : []),
 
-                        // Message fields section (now placed first)
-                        ...(selectedFields.length > 0
-                            ? [
-                                  {
-                                      type: "divider",
-                                  },
-                              ]
-                            : []),
-                        ...selectedFields.map((field, index) => {
-                            return {
-                                type: "section",
-                                text: {
-                                    type: "mrkdwn",
-                                    text: `{{${fields.find((f) => f.value === field)?.label}}}`,
-                                    verbatim: false,
-                                },
-                            };
-                        }),
+                        // Message fields section
+                        {
+                            type: "section",
+                            text: {
+                                type: "mrkdwn",
+                                text: messageBody, // Insert the constructed message here
+                                verbatim: false,
+                            },
+                        },
 
-                        // Custom message body (now placed second)
                         {
                             type: "section",
                             block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
@@ -292,7 +332,6 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 ),
                             },
                         },
-
                         // Buttons section (if applicable)
                         ...(buttons.length > 0
                             ? [
@@ -500,6 +539,32 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                                 </DropdownMenuItem>
                                             ))}
                                         </DropdownMenuGroup>
+                                        {triggerSpecificVariablesOptions[
+                                            triggerObjectField
+                                        ]?.length > 0 && (
+                                            <>
+                                                <DropdownMenuLabel className="mt-2 text-xs font-semibold text-gray-500">
+                                                    "{triggerObjectField}"{" "}
+                                                    Variables
+                                                </DropdownMenuLabel>
+                                                <DropdownMenuGroup>
+                                                    {triggerSpecificVariablesOptions[
+                                                        triggerObjectField
+                                                    ].map((option) => (
+                                                        <DropdownMenuItem
+                                                            key={option.value}
+                                                            onClick={() =>
+                                                                handleVariableSelect(
+                                                                    option.value,
+                                                                )
+                                                            }
+                                                        >
+                                                            {option.label}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuGroup>
+                                            </>
+                                        )}
                                         <DropdownMenuLabel className="mt-2 text-xs font-semibold text-gray-500">
                                             Special Variables
                                         </DropdownMenuLabel>

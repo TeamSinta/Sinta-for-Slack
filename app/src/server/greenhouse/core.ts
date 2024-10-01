@@ -152,6 +152,7 @@ interface Stage {
 }
 
 export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
+    console.log("JOB ID - ", jobId);
     try {
         const stages = (await customFetch(
             `https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`,
@@ -188,6 +189,20 @@ export async function fetchCandidateDetails(candidateId: string): Promise<any> {
         return response;
     } catch (error) {
         console.error("Error fetching candidate details: ", error);
+        return null;
+    }
+}
+
+export async function fetchApplicationDetails(
+    applicationId: string,
+): Promise<any> {
+    try {
+        const response = await customFetch(
+            `https://harvest.greenhouse.io/v1/applications/${applicationId}`,
+        );
+        return response;
+    } catch (error) {
+        console.error("Error fetching application details: ", error);
         return null;
     }
 }

@@ -1,5 +1,6 @@
 import { getOrganizations } from "@/server/actions/organization/queries";
 import { fetchStuckInStageWorkflows } from "@/server/actions/workflows/queries";
+import { getTasks } from "@/server/mergent";
 import { initializeStuckStageChecks } from "@/server/workflowTriggers/stuck-stage";
 import { NextRequest, NextResponse } from "next/server";
 // https://5bc1e5fa5023dc7a.ngrok.app/api/slack
@@ -136,13 +137,12 @@ const SAMPLE_WORKFLOW = {
     ownerId: "007ad225-277e-43f2-8ae9-1c4a13f8717a",
     organizationId: "7020aa90-9e7c-4a74-ba36-05808550cf2e",
 };
+
 export async function POST(request: NextRequest) {
-    const body = await request.json();
-    await initializeStuckStageChecks(
-        SAMPLE_WORKFLOW,
-        SAMPLE_STUCK_APPLICATION,
-        body.daysToBeStuck,
-        null,
-    );
+    // const body = await request.json();
+
+    const tasks = await getTasks();
+    console.log("NEW TASKS", tasks);
+    // const data = await response.json();
     return NextResponse.json({}, { status: 200 });
 }

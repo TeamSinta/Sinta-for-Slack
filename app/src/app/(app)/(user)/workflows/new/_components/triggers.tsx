@@ -1,6 +1,6 @@
 //@ts-nocheck
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Select,
     SelectContent,
@@ -23,11 +23,15 @@ import { motion } from "framer-motion";
 import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
 import { Separator } from "@/components/ui/separator";
 import JobsDropdown from "../../_components/job-select";
-import StagesDropdown from "../../_components/stages-dropdown";
 import { customFetchTester } from "@/utils/fetch";
 import TestResult from "./testResults";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import GenericDropdown from "../../_components/generic-dropdown";
+import GenericInput from "../../_components/generic-input";
+
+import { fetchStagesForJob } from "@/server/greenhouse/core";
+import { cleanObject } from "@/lib/utils";
 
 const localStorageKey = "workflowTriggers";
 
@@ -39,18 +43,33 @@ const getTriggerData = () => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || {};
 };
 
+const fetchers = {
+    stage: async (jobId) => await fetchStagesForJob(jobId),
+    // candidates: async () => await fetchCandidates(),
+    time: async () =>
+        await [
+            { id: "before", name: "Before" },
+            { id: "after", name: "After" },
+        ],
+};
+
 const TriggersComponent = ({ onSaveTrigger }) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
-    const [selectedStage, setSelectedStage] = useState(null);
-    const [selectedTrigger, setSelectedTrigger] = useState(null);
-    const [days, setDays] = useState("");
+
+    const [selectedEventData, setSelectedEventData] = useState({});
     const [activeTab, setActiveTab] = useState("event");
     const [isTesting, setIsTesting] = useState(false);
     const [testResult, setTestResult] = useState(null);
     const [showFullData, setShowFullData] = useState(false);
     const [pollingInterval, setPollingInterval] = useState("");
     const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
+    const handleFieldChange = (fieldKey, value) => {
+        setSelectedEventData((prev) => ({
+            ...prev,
+            [fieldKey]: value,
+        }));
+    };
 
     const events = [
         {
@@ -98,12 +117,62 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
             alertType: "stuck-in-stage",
             triggers: [],
+            fields: [
+                {
+                    label: "Stage",
+                    value: "stage",
+                    type: "dropdown",
+                },
+                {
+                    label: "Days",
+                    value: "days",
+                    type: "input",
+                    suffix: "days",
+                    dataType: "number",
+                },
+            ],
         },
-        // Add more events as needed
+        {
+            title: "Interview Reminders",
+            objectField: "Interviews",
+            description:
+                "Triggered a specified time before or after an interview.",
+            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+            alertType: "timebased",
+            triggers: [
+                "Send a Reminder Before an Interview",
+                "Send a Reminder After an  Interview",
+            ],
+            fields: [
+                {
+                    label: "Time",
+                    caption:
+                        "Trigger this event before or after the interview.",
+                    value: "time",
+                    type: "dropdown",
+                },
+                {
+                    label: "Days",
+                    value: "days",
+                    type: "input",
+                    suffix: "days",
+                    dataType: "number",
+                },
+                {
+                    label: "Hours",
+                    value: "hours",
+                    type: "input",
+                    suffix: "hours",
+                    dataType: "number",
+                },
+            ],
+        },
+        // Add more events as needed and update setSelectedEventData to handle the new fields
     ];
 
     useEffect(() => {
         const workflowData = getTriggerData();
+        console.log(workflowData);
         if (workflowData && Object.keys(workflowData).length > 0) {
             const matchedEvent = events.find(
                 (event) =>
@@ -114,13 +183,9 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             setSelectedJob(
                 (workflowData.triggerConfig?.processor as string) ?? null,
             );
-            if (workflowData.mainCondition.length > 0) {
-                setSelectedStage({
-                    id: workflowData?.mainCondition[0]?.field?.value,
-                    name: workflowData?.mainCondition[0]?.field?.label,
-                });
-                setDays(workflowData.mainCondition[0].value);
-            }
+            setSelectedEventData((prevState) => ({
+                ...workflowData?.mainCondition,
+            }));
         } else {
             setSelectedEvent(null); // Set to null if no workflowData
         }
@@ -130,21 +195,12 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         const selected = events.find((event) => event.title === eventTitle);
         setSelectedEvent(selected);
         setSelectedJob(null);
-        setSelectedStage(null);
-        setSelectedTrigger(null);
+        setSelectedEventData({});
     };
 
     const handleJobChange = (jobId: string) => {
         setSelectedJob(jobId);
-        setSelectedStage(null);
-    };
-
-    const handleStageChange = (stageId, stageLabel) => {
-        setSelectedStage({ id: stageId, label: stageLabel });
-    };
-
-    const handleDaysChange = (e) => {
-        setDays(e.target.value);
+        setSelectedEventData({});
     };
 
     const handleContinue = () => {
@@ -157,10 +213,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         }
     };
 
-    const handleTriggerChange = (trigger) => {
-        setSelectedTrigger(trigger);
-    };
-
     const handlePollingIntervalChange = (e) => {
         setPollingInterval(e.target.value);
     };
@@ -171,14 +223,13 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             if (
                 selectedEvent.title === "Stuck in Pipeline" &&
                 selectedJob &&
-                selectedStage
+                selectedEventData.stageLabel
             ) {
-                triggerDescription += ` for ${selectedJob} in ${selectedStage.label}`;
+                triggerDescription += ` for ${selectedJob} in ${selectedEventData.stageLabel}`;
             }
 
             const triggerData = {
                 event: selectedEvent.title,
-                trigger: selectedStage ? selectedStage.label : selectedTrigger,
                 apiUrl: selectedEvent.apiUrl,
                 objectField: selectedEvent.objectField,
                 alertType: selectedEvent.alertType,
@@ -190,19 +241,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     apiUrl: selectedEvent.apiUrl,
                 },
                 processor: selectedJob,
-                mainCondition:
-                    selectedStage && days
-                        ? [
-                              {
-                                  field: {
-                                      label: selectedStage.label,
-                                      value: selectedStage.id,
-                                  },
-                                  value: days,
-                                  condition: "greaterThan",
-                              },
-                          ]
-                        : [],
+                mainCondition: cleanObject(selectedEventData),
             };
             saveTriggerData(triggerData);
             onSaveTrigger(triggerData);
@@ -264,15 +303,13 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         if (tab === "trigger") {
             if (!selectedEvent)
                 return <Clock className="text-gray-300" size={iconSize} />;
-            return selectedStage && days ? (
+            return selectedEventData.stageId && selectedEventData.days ? (
                 <CheckCircle className="text-green-500" size={iconSize} />
             ) : (
                 <AlertTriangle className="text-gray-500" size={iconSize} />
             );
         }
         if (tab === "test") {
-            if (!selectedStage)
-                return <Clock className="text-gray-300" size={iconSize} />;
             return <Clock className="text-gray-300" size={iconSize} />;
         }
     };
@@ -329,8 +366,9 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                             value="test"
                             disabled={
                                 !selectedEvent ||
-                                (selectedEvent?.title === "Stuck in Pipeline" &&
-                                    (!selectedStage || !days))
+                                selectedEvent?.fields?.some(
+                                    (field) => !selectedEventData[field.value],
+                                )
                             }
                             className="flex items-center space-x-2"
                         >
@@ -527,44 +565,87 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                 />
 
                                 {/* Additional StagesDropdown for "Stuck in Pipeline" */}
-                                {selectedEvent?.title === "Stuck in Pipeline" &&
+                                {selectedEvent?.fields?.map((field, index) => {
+                                    const fetcher = fetchers[field.value];
+                                    if (field.type === "dropdown") {
+                                        return (
+                                            <GenericDropdown
+                                                key={index}
+                                                fetcher={
+                                                    fetcher
+                                                        ? () =>
+                                                              fetcher(
+                                                                  selectedJob,
+                                                              )
+                                                        : null
+                                                }
+                                                onItemSelect={(value) =>
+                                                    handleFieldChange(
+                                                        field.value,
+                                                        value,
+                                                    )
+                                                }
+                                                selectedItem={
+                                                    selectedEventData[
+                                                        field.value
+                                                    ]
+                                                }
+                                                label={field.label}
+                                                caption={field.caption}
+                                            />
+                                        );
+                                    } else if (field.type === "input") {
+                                        return (
+                                            <GenericInput
+                                                key={index}
+                                                label={field.label}
+                                                value={
+                                                    selectedEventData[
+                                                        field.value
+                                                    ]
+                                                }
+                                                onChange={(value) =>
+                                                    handleFieldChange(
+                                                        field.value,
+                                                        value,
+                                                    )
+                                                }
+                                                placeholder={field.placeholder}
+                                                suffix={field.suffix}
+                                                type={field.dataType}
+                                            />
+                                        );
+                                    }
+                                })}
+                                {/* {selectedEvent?.title === "Stuck in Pipeline" &&
                                     selectedJob && (
                                         <>
-                                            <StagesDropdown
-                                                jobId={selectedJob}
-                                                onStageSelect={
-                                                    handleStageChange
+                                            <GenericDropdown
+                                                fetcher={async () =>
+                                                    await fetchStagesForJob(
+                                                        selectedJob,
+                                                    )
                                                 }
-                                                selectedStage={
-                                                    selectedStage?.id ??
-                                                    undefined
+                                                onItemSelect={handleStageChange}
+                                                selectedItem={
+                                                    selectedEventData.stageId
                                                 }
+                                                label="Stage"
                                             />
 
-                                            {/* Days input after stage selection */}
-                                            {selectedStage && (
-                                                <div className="mt-4">
-                                                    <label className="block text-sm font-medium text-gray-700">
-                                                        For
-                                                    </label>
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            type="number"
-                                                            value={days}
-                                                            onChange={
-                                                                handleDaysChange
-                                                            }
-                                                            className="mt-1 block rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                            placeholder="Enter number of days"
-                                                        />
-                                                        <span className="ml-2 text-sm text-black">
-                                                            Days
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                            {selectedEventData.stageId && (
+                                                <GenericInput
+                                                    label="For"
+                                                    value={
+                                                        selectedEventData.days
+                                                    }
+                                                    onChange={handleDaysChange}
+                                                    placeholder="Enter number of days"
+                                                    suffix="Days"
+                                                    type="number"
+                                                />
                                             )}
-                                        </>
-                                    )}
+                                        </>)} */}
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -622,8 +703,9 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                         disabled={
                             (activeTab === "event" && !selectedEvent) ||
                             (activeTab === "trigger" &&
-                                selectedEvent?.title === "Stuck in Pipeline" &&
-                                (!selectedStage || !days))
+                                selectedEvent?.fields?.some(
+                                    (field) => !selectedEventData[field.value],
+                                ))
                         }
                         onClick={handleContinue}
                         className="w-full bg-blue-600 text-white"

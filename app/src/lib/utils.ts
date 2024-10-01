@@ -204,3 +204,78 @@ export function verifySignature(
     }
     return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(hash));
 }
+
+// Remove all keys with falsey values
+export const cleanObject = (obj: object) => {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([key, value]) => Boolean(value)),
+    );
+};
+
+export const getMergentTaskName = (
+    eventName: string,
+    workflowId: string,
+    objectName: string,
+    id: string,
+): string => {
+    return `${eventName}-${workflowId}-${objectName}-${id}`;
+};
+
+export function adjustDateTime(
+    date: Date,
+    flag: "before" | "after",
+    days: number,
+    hours: number,
+): Date {
+    const millisecondsInADay = 24 * 60 * 60 * 1000;
+    const millisecondsInAnHour = 60 * 60 * 1000;
+
+    // Calculate the total offset in milliseconds
+    const totalOffset =
+        days * millisecondsInADay + hours * millisecondsInAnHour;
+
+    // Create a new Date object adjusted by the offset
+    const adjustedDate = new Date(date);
+
+    if (flag === "before") {
+        adjustedDate.setTime(adjustedDate.getTime() - totalOffset);
+    } else if (flag === "after") {
+        adjustedDate.setTime(adjustedDate.getTime() + totalOffset);
+    }
+
+    return adjustedDate;
+}
+
+export function formatListToString(items: string[]): string {
+    if (items.length === 0) {
+        return "";
+    }
+
+    if (items.length === 1) {
+        return items[0] ?? ""; // Handle possible undefined
+    }
+
+    if (items.length === 2) {
+        return `${items[0] ?? ""} and ${items[1] ?? ""}`;
+    }
+
+    // For 3 or more items, join all except the last with commas, and add 'and' before the last item
+    const lastItem = items.pop();
+    return `${items.join(", ")}, and ${lastItem ?? ""}`;
+}
+
+export function formatToReadableDate(dateString: string): string {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+        weekday: "long", // 'Monday', 'Tuesday', etc.
+        year: "numeric",
+        month: "long", // 'January', 'February', etc.
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true, // Use 12-hour time format
+    };
+
+    return new Intl.DateTimeFormat("en-US", options).format(date);
+}
