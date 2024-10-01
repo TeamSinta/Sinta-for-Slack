@@ -53,7 +53,7 @@ import { LinkActionType } from "../../_components/message-buttons";
 import SlackFileUploader from "./slackFileUpload";
 import TestResult from "./testResults";
 const localStorageKey = "workflowActions";
-
+const MAXIMUM_SLACK_MESSAGE_ATTACHMENTS = 10;
 const isBrowser = typeof window !== "undefined";
 
 // Safe function to save action data to localStorage
@@ -492,6 +492,10 @@ const Actions: React.FC<{
         return uploadedFiles.filter((item) => item.name === name).length > 0;
     };
 
+    const isMaximumAttachmentsCountReached = () => {
+        return uploadedFiles.length >= MAXIMUM_SLACK_MESSAGE_ATTACHMENTS;
+    };
+
     return (
         <div className="actions-sidebar flex h-full flex-col justify-between p-2">
             <div>
@@ -799,6 +803,9 @@ const Actions: React.FC<{
                                 }
                                 workflowId={workflowId}
                                 doesFileAlreadyExist={doesFileAlreadyExist}
+                                isMaximumAttachmentsCountReached={
+                                    isMaximumAttachmentsCountReached
+                                }
                             />
                             {uploadedFiles.length > 0 &&
                                 uploadedFiles.map((file) => (

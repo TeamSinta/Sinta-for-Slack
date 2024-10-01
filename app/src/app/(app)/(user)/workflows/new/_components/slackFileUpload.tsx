@@ -11,6 +11,7 @@ interface SlackFileUploaderProps {
     onSuccess?: (data: any) => void;
     workflowId?: string;
     doesFileAlreadyExist?: (newFileName: string) => boolean;
+    isMaximumAttachmentsCountReached: () => boolean;
 }
 
 const ACCEPTABLE_MIME_TYPES = [
@@ -48,6 +49,7 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
     onSuccess,
     workflowId,
     doesFileAlreadyExist,
+    isMaximumAttachmentsCountReached,
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -55,6 +57,11 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
+        if (isMaximumAttachmentsCountReached()) {
+            setSelectedFile(null);
+            toast.error(`The maximum number of attachments has been reached.`);
+            return;
+        }
         if (file) {
             if (file?.size > MAX_FILE_SIZE) {
                 setSelectedFile(null);
