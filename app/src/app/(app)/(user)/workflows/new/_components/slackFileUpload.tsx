@@ -43,6 +43,7 @@ const ACCEPTABLE_EXTENSIONS = [
     "csv",
 ];
 
+const MAX_FILE_SIZE = 5_000;
 const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
     onSuccess,
     workflowId,
@@ -55,6 +56,13 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            if (file?.size > MAX_FILE_SIZE) {
+                setSelectedFile(null);
+                toast.error(
+                    `This file exceeds the maximum file size of ${MAX_FILE_SIZE / 1000}MB`,
+                );
+                return;
+            }
             if (doesFileAlreadyExist) {
                 if (doesFileAlreadyExist(file.name)) {
                     setSelectedFile(null);

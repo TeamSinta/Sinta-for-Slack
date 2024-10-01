@@ -6,7 +6,7 @@ import { getOrganizations } from "../actions/organization/queries";
 import { uploadItem } from "./uploadToS3";
 
 const SLACK_REMOTE_ADD_URL = "https://slack.com/api/files.remote.add";
-
+const MAX_FILE_SIZE = 5_000;
 const formSchema = z.object({
     orgId: z.string(),
     workflowId: z.string(),
@@ -45,6 +45,9 @@ export async function fileUpload(formData: FormData) {
     if (!acessToken) throw new Error("Could not get access token");
 
     const { file, orgId, workflowId, fileName, type } = parsedData.data;
+    if (file.size > MAX_FILE_SIZE) {
+        throw new Error("File exceeds maximum file size.");
+    }
 
     // Upload the file to S3 and get the relevant data
     const { url, title, id } = await uploadItem(
