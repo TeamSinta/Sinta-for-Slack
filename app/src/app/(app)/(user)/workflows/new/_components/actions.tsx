@@ -173,7 +173,7 @@ const Actions: React.FC<{
 
     useEffect(() => {
         const actionData = getActionData();
-        console.log("actionData", actionData);
+        // console.log("actionData", actionData);
         if (actionData) {
             if (actionData?.customMessageBody)
                 setCustomMessageBody(actionData?.customMessageBody);
@@ -333,33 +333,42 @@ const Actions: React.FC<{
                             : []),
 
                         // Message fields section
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: messageBody, // Insert the constructed message here
-                                verbatim: false,
-                            },
-                        },
-
-                        {
-                            type: "section",
-                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
-                            text: {
-                                type: "mrkdwn",
-                                text: convertHtmlToSlackMrkdwn(
-                                    customMessageBody,
-                                ),
-                            },
-                        },
-                        ...(uploadedFiles.length > 0
-                            ? uploadedFiles.map((file) => ({
-                                  type: "image",
-                                  slack_file: { id: file.id },
-                                  alt_text: file.name,
-                              }))
+                        ...(messageBody
+                            ? [
+                                  {
+                                      type: "section",
+                                      text: {
+                                          type: "mrkdwn",
+                                          text: messageBody, // Insert the constructed message here
+                                          verbatim: false,
+                                      },
+                                  },
+                              ]
                             : []),
-                        // Buttons section (if applicable)
+
+                        ...(customMessageBody
+                            ? [
+                                  {
+                                      type: "section",
+                                      block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
+                                      text: {
+                                          type: "mrkdwn",
+                                          text: convertHtmlToSlackMrkdwn(
+                                              customMessageBody ?? "",
+                                          ),
+                                      },
+                                  },
+                              ]
+                            : []),
+                        ...(uploadedFiles.length > 0
+                            ? uploadedFiles.map((file) => {
+                                  return {
+                                      type: "file",
+                                      external_id: file.id,
+                                      source: "remote",
+                                  };
+                              })
+                            : []),
                         ...(buttons.length > 0
                             ? [
                                   {
@@ -404,6 +413,7 @@ const Actions: React.FC<{
                 },
             ],
         };
+        // console.log("payload", JSON.stringify(payload));
         try {
             await postMessageToChannel(session?.data?.user?.id, payload);
             console.log("Test message sent successfully.");
@@ -470,13 +480,16 @@ const Actions: React.FC<{
         }
     };
 
-    const handleSuccessfulFileUpload = (data: string[]) => {
-        console.log("UPLOADED FILE", data);
-        setUploadedFiles((prev) => [...prev, ...data]);
+    const handleSuccessfulFileUpload = (file: { id: string; name: string }) => {
+        setUploadedFiles((prev) => [...prev, file]);
     };
 
     const handleRemoveUploadedFile = (id: string) => {
         setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+    };
+
+    const doesFileAlreadyExist = (name: string) => {
+        return uploadedFiles.filter((item) => item.name === name).length > 0;
     };
 
     return (
@@ -785,6 +798,7 @@ const Actions: React.FC<{
                                     handleSuccessfulFileUpload(data)
                                 }
                                 workflowId={workflowId}
+                                doesFileAlreadyExist={doesFileAlreadyExist}
                             />
                             {uploadedFiles.length > 0 &&
                                 uploadedFiles.map((file) => (

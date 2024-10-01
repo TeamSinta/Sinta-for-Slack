@@ -75,7 +75,6 @@ export async function fileUpload(formData: FormData) {
     const res = await uploadToSlack.json();
     if (!res.ok) throw new Error("An unexpected error has occurred");
 
-    console.log("RES", res);
-
-    return { id: res.file.id, name: res.file.title };
+    // console.log("RES", res);
+    return { id: res.file.external_id, name: res.file.title };
 }

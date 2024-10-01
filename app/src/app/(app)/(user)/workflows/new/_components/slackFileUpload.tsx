@@ -11,6 +11,7 @@ import { uploadItem } from "@/server/slack/uploadToS3";
 interface SlackFileUploaderProps {
     onSuccess?: (data: any) => void;
     workflowId?: string;
+    doesFileAlreadyExist?: (newFileName: string) => boolean;
 }
 
 const ACCEPTABLE_MIME_TYPES = [
@@ -46,6 +47,7 @@ const ACCEPTABLE_EXTENSIONS = [
 const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
     onSuccess,
     workflowId,
+    doesFileAlreadyExist,
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -54,6 +56,13 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            if (doesFileAlreadyExist) {
+                if (doesFileAlreadyExist(file.name)) {
+                    setSelectedFile(null);
+                    toast.error("A file with the same name already exists.");
+                    return;
+                }
+            }
             if (isAcceptableFileType(file)) {
                 setSelectedFile(file);
             } else {
@@ -66,6 +75,7 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
     const isAcceptableFileType = (file: File): boolean => {
         const fileType = file.type;
         const fileName = file.name;
+
         const fileExtension = fileName.split(".").pop()?.toLowerCase();
         console.log("file extension - ", fileExtension);
 
@@ -113,7 +123,7 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
             } else {
                 toast.error("File upload failed.");
             }
-            onSuccess && onSuccess(files);
+            onSuccess && onSuccess(fileData);
         } catch (err: any) {
             toast.error("An error occurred. ", err);
         } finally {

@@ -262,9 +262,9 @@ export async function sendSlackNotification(
                                 ...(workflowRecipient.uploadedFiles?.length > 0
                                     ? workflowRecipient.uploadedFiles.map(
                                           (file) => ({
-                                              type: "image",
-                                              slack_file: { id: file.id },
-                                              alt_text: file.name,
+                                              type: "file",
+                                              external_id: file.id,
+                                              source: "remote",
                                           }),
                                       )
                                     : []),
@@ -1140,6 +1140,8 @@ export async function postMessageToChannel(userId: string, body: any) {
             channel: slackUserId,
         }),
     });
+    const resjson = await response.json();
+    console.log("RESPONSE", resjson);
     if (!response.ok) throw new Error("Failed to post message");
 
     return true;
