@@ -136,9 +136,10 @@ type Option = {
     source: "slack" | "greenhouse";
 };
 
-const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
-    onSaveActions,
-}) => {
+const Actions: React.FC<{
+    onSaveActions: (data: any) => void;
+    workflowId: string;
+}> = ({ onSaveActions, workflowId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [testButtonLoading, setTestButtonLoading] = useState(false);
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -783,6 +784,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 onSuccess={(data) =>
                                     handleSuccessfulFileUpload(data)
                                 }
+                                workflowId={workflowId}
                             />
                             {uploadedFiles.length > 0 &&
                                 uploadedFiles.map((file) => (

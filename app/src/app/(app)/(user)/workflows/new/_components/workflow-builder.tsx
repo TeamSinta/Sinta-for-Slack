@@ -928,6 +928,7 @@ export function WorkflowBuilder({
                                                   )
                                                 : null
                                         }
+                                        workflowId={workflowId}
                                     />
                                 )}
                                 {selectedElement.type === "Condition" && (

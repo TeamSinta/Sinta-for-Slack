@@ -1,28 +1,30 @@
 import { orgConfig } from "@/config/organization";
 import useGetCookie from "@/hooks/use-get-cookie";
-import { fileUploads } from "@/server/slack/fileUploads";
+import { fileUpload, fileUploads } from "@/server/slack/fileUpload";
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { uploadItem } from "@/server/slack/uploadToS3";
 
 interface SlackFileUploaderProps {
     onSuccess?: (data: any) => void;
+    workflowId?: string;
 }
 
 const ACCEPTABLE_MIME_TYPES = [
     "image/jpeg",
     "image/png",
     "image/gif",
-    // "audio/mpeg",
-    // "audio/mp4",
-    // "audio/wav",
-    // "video/mp4",
-    // "video/quicktime",
-    // "text/plain",
-    // "application/pdf",
-    // "application/msword",
+    "audio/mpeg",
+    "audio/mp4",
+    "audio/wav",
+    "video/mp4",
+    "video/quicktime",
+    "text/plain",
+    "application/pdf",
+    "application/msword",
 ];
 
 // Only images are acceptable in slack right now
@@ -31,17 +33,20 @@ const ACCEPTABLE_EXTENSIONS = [
     "jpeg",
     "png",
     "gif",
-    // "mp3",
-    // "mp4",
-    // "wav",
-    // "mov",
-    // "txt",
-    // "pdf",
-    // "doc",
-    // "csv",
+    "mp3",
+    "mp4",
+    "wav",
+    "mov",
+    "txt",
+    "pdf",
+    "doc",
+    "csv",
 ];
 
-const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({ onSuccess }) => {
+const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({
+    onSuccess,
+    workflowId,
+}) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const orgId = useGetCookie(orgConfig.cookieName);
@@ -84,17 +89,25 @@ const SlackFileUploader: React.FC<SlackFileUploaderProps> = ({ onSuccess }) => {
         const formData = new FormData();
 
         // const arrayBuffer = await selectedFile.arrayBuffer();
+        // formData.append(
+
+        //     "file",
+        //     new Blob([arrayBuffer], { type: "application/octet-stream" }),
+        // );
         formData.append(
             "file",
             new Blob([selectedFile], { type: selectedFile.type }),
         );
         formData.append("fileName", selectedFile.name);
         formData.append("size", selectedFile.size.toString());
+        formData.append("type", selectedFile.type);
         formData.append("orgId", orgId ?? "");
-        try {
-            const files = await fileUploads(formData);
+        formData.append("workflowId", workflowId ?? "");
 
-            if (files.length > 0) {
+        try {
+            const fileData = await fileUpload(formData);
+            console.log("FILE DATA", fileData);
+            if (fileData) {
                 toast("File uploaded successfully!");
                 setSelectedFile(null);
             } else {

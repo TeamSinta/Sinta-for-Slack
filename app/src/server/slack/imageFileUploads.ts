@@ -21,6 +21,7 @@ const formSchema = z.object({
     }),
 });
 
+// !!! Only images can be used with this method in Slack Block Kit Builder!!!
 // DOCS: https://api.slack.com/messaging/files
 export async function fileUploads(formData: FormData) {
     const { file, fileName, orgId, size } = formSchema.parse({
