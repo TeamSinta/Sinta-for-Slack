@@ -1,12 +1,11 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { orgConfig } from "@/config/organization";
 import useGetCookie from "@/hooks/use-get-cookie";
-import { fileUpload, fileUploads } from "@/server/slack/fileUpload";
-import { Input } from "@/components/ui/input";
+import { fileUpload } from "@/server/slack/fileUpload";
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { uploadItem } from "@/server/slack/uploadToS3";
 
 interface SlackFileUploaderProps {
     onSuccess?: (data: any) => void;

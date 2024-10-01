@@ -1,6 +1,6 @@
 "use server";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { z } from "zod";
+// @ts-nocheck
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({ region: "us-east-2" });
 const BUCKET_NAME = "sinta-test";
