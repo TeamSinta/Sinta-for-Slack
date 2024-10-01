@@ -2,7 +2,7 @@
 import { WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
 import { getMergentTaskName } from "@/lib/utils";
 import { scheduleTask, getTasks, deleteTask } from "@/server/mergent";
-import { checkCondtions } from "@/utils/workflows";
+import { checkConditions } from "@/utils/workflows";
 import { z } from "zod";
 import { adjustDateTime } from "@/lib/utils";
 const interviewReminderMainConditionSchema = z.object({
@@ -94,7 +94,7 @@ export async function processInterviewReminders(
 
     for (const interview of data) {
         // Check if the interview object satisfies the conditions
-        const satisfiesConditions = checkCondtions(
+        const satisfiesConditions = checkConditions(
             interview,
             conditions,
             getAttributeValue,

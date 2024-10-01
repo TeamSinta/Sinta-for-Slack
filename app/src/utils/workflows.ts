@@ -15,30 +15,43 @@ export function checkCandidateAgainstConditions(
     application: any,
     conditions: any[],
 ): boolean {
-    return checkCondtions(application, conditions, getFieldFromApplication);
+    return checkConditions(
+        application.payload,
+        conditions,
+        getFieldFromApplication,
+    );
 }
 
-export function checkCondtions(
+export function checkConditions(
     application: any,
     conditions: any[],
     getter: (application: any, field: string) => any,
 ) {
+    console.log("CONDITIONS", conditions);
+    console.log("APPLICATIONS", application);
+    let result = true;
     // Iterate through all conditions
-    for (const condtion of conditions) {
-        const { field, condition, value } = condtion;
-        const payload = application.payload;
+    for (const item of conditions) {
+        console.log("PROCESSING CONDITION", item);
+        const { field, condition, value } = item;
         // Get the candidate's data field using the utility function
-        const candidateField = getter(payload, field);
-
+        const candidateField = getter(application, field);
+        console.log("CANDIDATE FIELD", field);
         // Handle if the field is not found
         if (candidateField === undefined) {
             console.warn(`Field ${field} not found in application.`);
             return false;
         }
-        if (!evaluateCondition(condition, value, candidateField)) return false;
+
+        console.log(
+            "EVALUATED CONDITION",
+            evaluateCondition(condition, value, candidateField),
+        );
+        if (!evaluateCondition(condition, value, candidateField))
+            result = false;
     }
     // If all conditions are met
-    return true;
+    return result;
 }
 
 export function evaluateCondition(
