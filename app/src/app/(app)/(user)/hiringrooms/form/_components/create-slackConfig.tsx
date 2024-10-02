@@ -62,7 +62,7 @@ const SlackChannelNameFormat: React.FC<{ selectedType: "Candidates" | "Jobs"; fo
 
 const SlackConfigurationStep: React.FC = () => {
     const [channelFormat, setChannelFormat] = useState("");
-    const [selectedType] = useState("Candidates");
+    const [selectedType] = useState<"Candidates" | "Jobs">("Candidates");
 
     // State for message body and buttons
     const [customMessageBody, setCustomMessageBody] = useState(
