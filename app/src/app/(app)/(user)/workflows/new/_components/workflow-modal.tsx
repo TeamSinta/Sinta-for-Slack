@@ -169,49 +169,50 @@ export const WorkflowPublishModal = ({
         setIsRunningTest(false);
 
         if (!hasError) {
-            try {
-                // Combine conditionsData with triggerData.mainCondition
-                const combinedConditions = [
-                    // Map through the main conditions and add the condition_type field
-                    ...(triggerData.mainCondition || []).map(
-                        (condition: any) => ({
-                            ...condition,
-                            condition_type: "Main", // Add condition_type for main conditions
-                        }),
-                    ),
-                    // Map through the conditionsData and add the condition_type field
-                    ...conditionsData.map((condition: any) => ({
-                        ...condition,
-                        condition_type: "Add-on", // Add condition_type for add-on conditions
-                    })),
-                ];
+          try {
+              // Extract mainCondition and ensure it's properly structured
+              const mainCondition = triggerData?.mainCondition
+                  ? { ...triggerData.mainCondition, condition_type: "Main" }
+                  : null;
 
-                await mutateAsync({
-                    id: workflowId, // Include the workflowId when updating
-                    name: workflowName, // Use the name from local storage or fallback to event name
-                    objectField: triggerData.objectField, // Use sorted trigger data's object field
-                    alertType: triggerData.alertType, // Adjust this as needed
-                    conditions: combinedConditions, // Send combined conditions
-                    triggerConfig: {
-                        apiUrl: triggerData.apiUrl,
-                        processor: triggerData.processor,
-                    },
-                    recipient: actionData,
-                    status: "active",
-                    organizationId: "your-organization-id", // Adjust this as needed
-                });
-            } catch (error) {
-                setStepStatus((prev) => ({
-                    ...prev,
-                    [steps.length]: "error",
-                }));
-                setErrorMessage(formatErrorMessage(error.message)); // Set error message for the alert
-            }
-        } else {
-            toast.error(
-                "There was an error in one of the steps. Please check and try again.",
-            );
-        }
+              // Combine mainCondition with conditionsData
+              const combinedConditions = [
+                  // If mainCondition exists, include it
+                  ...(mainCondition ? [mainCondition] : []),
+                  // Map through the conditionsData and add the condition_type field
+                  ...conditionsData.map((condition: any) => ({
+                      ...condition,
+                      condition_type: "Add-on", // Add condition_type for add-on conditions
+                  })),
+              ];
+
+              await mutateAsync({
+                  id: workflowId, // Include the workflowId when updating
+                  name: workflowName, // Use the name from local storage or fallback to event name
+                  objectField: triggerData.objectField, // Use sorted trigger data's object field
+                  alertType: triggerData.alertType, // Adjust this as needed
+                  conditions: combinedConditions, // Send combined conditions
+                  triggerConfig: {
+                      apiUrl: triggerData.apiUrl,
+                      processor: triggerData.processor,
+                  },
+                  recipient: actionData,
+                  status: "active",
+                  organizationId: "your-organization-id", // Adjust this as needed
+              });
+          } catch (error) {
+              setStepStatus((prev) => ({
+                  ...prev,
+                  [steps.length]: "error",
+              }));
+              setErrorMessage(formatErrorMessage(error.message)); // Set error message for the alert
+          }
+      } else {
+          toast.error(
+              "There was an error in one of the steps. Please check and try again."
+          );
+      }
+
     };
 
     return (
