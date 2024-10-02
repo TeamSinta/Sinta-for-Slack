@@ -1,0 +1,266 @@
+// Extended Enum for data types
+export const DataType = {
+    TEXT: "text",
+    NUMBER: "number",
+    DATETIME: "datetime",
+    BOOLEAN: "boolean",
+    ARRAY: "array",
+    ARRAY_PROPERTY_STRING: "arrayPropertyString",
+    ARRAY_PROPERTY_NUMBER: "arrayPropertyNumber",
+    ARRAY_PROPERTY_OBJECT: "arrayPropertyObject",
+};
+
+// Conditions object with evaluators
+export const CONDITIONS_OPTIONS = {
+    equals: {
+        evaluator: (
+            inputValue: string | number | boolean | Date,
+            value: string | number | boolean | Date,
+        ) => inputValue === value,
+        dataType: [
+            DataType.TEXT,
+            DataType.NUMBER,
+            DataType.DATETIME,
+            DataType.BOOLEAN,
+        ],
+        label: "Exactly matches",
+    },
+    not_equals: {
+        evaluator: (
+            inputValue: string | number | boolean | Date,
+            value: string | number | boolean | Date,
+        ) => inputValue !== value,
+        dataType: [
+            DataType.TEXT,
+            DataType.NUMBER,
+            DataType.DATETIME,
+            DataType.BOOLEAN,
+        ],
+        label: "Does not exactly match",
+    },
+    contains: {
+        evaluator: (inputValue: string, value: string) =>
+            typeof inputValue === "string" && inputValue.includes(value),
+        dataType: [DataType.TEXT],
+        label: "Contains",
+    },
+    not_contains: {
+        evaluator: (inputValue: string, value: string) =>
+            typeof inputValue === "string" && !inputValue.includes(value),
+        dataType: [DataType.TEXT],
+        label: "Does not contain",
+    },
+    starts_with: {
+        evaluator: (inputValue: string, value: string) =>
+            typeof inputValue === "string" && inputValue.startsWith(value),
+        dataType: [DataType.TEXT],
+        label: "Starts with",
+    },
+    not_starts_with: {
+        evaluator: (inputValue: string, value: string) =>
+            typeof inputValue === "string" && !inputValue.startsWith(value),
+        dataType: [DataType.TEXT],
+        label: "Does not start with",
+    },
+    ends_with: {
+        evaluator: (inputValue: string, value: string) =>
+            typeof inputValue === "string" && inputValue.endsWith(value),
+        dataType: [DataType.TEXT],
+        label: "Ends with",
+    },
+    greater_than: {
+        evaluator: (inputValue: number, value: number) =>
+            typeof inputValue === "number" && inputValue > value,
+        dataType: [DataType.NUMBER],
+        label: "Greater than",
+    },
+    less_than: {
+        evaluator: (inputValue: number, value: number) =>
+            typeof inputValue === "number" && inputValue < value,
+        dataType: [DataType.NUMBER],
+        label: "Less than",
+    },
+    after: {
+        evaluator: (inputValue: Date, value: Date) =>
+            new Date(inputValue) > new Date(value),
+        dataType: [DataType.DATETIME],
+        label: "After",
+    },
+    before: {
+        evaluator: (inputValue: Date, value: Date) =>
+            new Date(inputValue) < new Date(value),
+        dataType: [DataType.DATETIME],
+        label: "Before",
+    },
+    is_true: {
+        evaluator: (inputValue: boolean) => Boolean(inputValue),
+        dataType: [DataType.BOOLEAN],
+        label: "is True",
+    },
+    is_false: {
+        evaluator: (inputValue: boolean) => !Boolean(inputValue),
+        dataType: [DataType.BOOLEAN],
+        label: "is False",
+    },
+    exists: {
+        evaluator: (inputValue: any) =>
+            inputValue !== undefined && inputValue !== null,
+        dataType: [
+            DataType.TEXT,
+            DataType.NUMBER,
+            DataType.DATETIME,
+            DataType.BOOLEAN,
+            DataType.ARRAY,
+        ],
+        label: "Exists",
+    },
+    does_not_exist: {
+        evaluator: (inputValue: any) =>
+            inputValue === undefined || inputValue === null,
+        dataType: [
+            DataType.TEXT,
+            DataType.NUMBER,
+            DataType.DATETIME,
+            DataType.BOOLEAN,
+            DataType.ARRAY,
+        ],
+        label: "Does not exist",
+    },
+    // Example of condition targeting an array of objects and a property within
+    all_property_equals: {
+        evaluator: (inputValue: any[], value: any, propertyKey: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.every((item) => item[propertyKey] === value),
+        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        label: "Every item equals",
+    },
+    all_properties_contain: {
+        evaluator: (inputValue: any[], value: string, propertyKey: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.every(
+                (item) =>
+                    typeof item[propertyKey] === "string" &&
+                    item[propertyKey].includes(value),
+            ),
+        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        label: "Every item contains",
+    },
+    any_property_contains: {
+        evaluator: (inputValue: any[], value: string, propertyKey: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.some(
+                (item) =>
+                    typeof item[propertyKey] === "string" &&
+                    item[propertyKey].includes(value),
+            ),
+        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        label: "Any item contains",
+    },
+
+    any_property_equals: {
+        evaluator: (inputValue: any[], value: any, propertyKey: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.some((item) => item[propertyKey] === value),
+        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        label: "Any item equals",
+    },
+    no_property_equals: {
+        evaluator: (inputValue: any[], value: any, propertyKey: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.every((item) => item[propertyKey] !== value),
+        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        label: "No item equals",
+    },
+    any_text_contains: {
+        evaluator: (inputValue: any[], value: string, propertyKey: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.some(
+                (item) =>
+                    typeof item[propertyKey] === "string" &&
+                    item[propertyKey].includes(value),
+            ),
+        dataType: [DataType.ARRAY_PROPERTY_STRING],
+        label: "Any text item contains",
+    },
+
+    array_length_equals: {
+        evaluator: (inputValue: any[], value: number) =>
+            Array.isArray(inputValue) && inputValue.length === value,
+        dataType: [DataType.ARRAY],
+        label: "Count equals",
+    },
+    array_length_greater_than: {
+        evaluator: (inputValue: any[], value: number) =>
+            Array.isArray(inputValue) && inputValue.length > value,
+        dataType: [DataType.ARRAY],
+        label: "Count greater than",
+    },
+    array_length_less_than: {
+        evaluator: (inputValue: any[], value: number) =>
+            Array.isArray(inputValue) && inputValue.length < value,
+        dataType: [DataType.ARRAY],
+        label: "Count less than",
+    },
+};
+
+/* Some more options
+property_equals_all: Checks if a particular property of all objects in the array equals a given value.
+Example: Check if all interviewers have response_status equal to "accepted".
+
+property_equals_any: Checks if any object in the array has a particular property equal to a given value.
+Example: Check if any interviewer has an employee_id equal to "1234".
+
+property_includes_all: Checks if a particular property (assumed to be a string or array) of each object includes a given value (or values).
+Example: Check if all interviewers' email includes "@company.com".
+
+property_includes_any: Checks if at least one object in the array has a particular property that includes a given value.
+Example: Check if any interviewer’s name includes the word "Manager".
+
+property_starts_with_all: Checks if a particular property of all objects starts with a specified value.
+Example: Check if all interviewers’ employee_id start with "9".
+
+property_starts_with_any: Checks if any object’s property starts with a specified value.
+Example: Check if any interviewer’s name starts with "Dr.".
+
+property_ends_with_all: Checks if a particular property of all objects ends with a specified value.
+Example: Check if all interviewers' email addresses end with ".com".
+
+property_ends_with_any: Checks if any object’s property ends with a specified value.
+Example: Check if any interviewer’s response_status ends with "pending".
+
+property_greater_than_all: Checks if a numerical property of all objects is greater than a given value.
+Example: Check if all employees' years_of_experience is greater than 5.
+
+property_less_than_any: Checks if any numerical property of objects is less than a given value.
+Example: Check if any interviewer’s age is less than 30.
+
+property_exists_in_all: Checks if a particular property exists in all objects in the array.
+Example: Check if every interviewer has a phone_number property defined.
+
+property_exists_in_any: Checks if a particular property exists in at least one object.
+Example: Check if any interviewer has a department property.
+
+property_does_not_exist_in_all: Checks if a particular property does not exist in all objects.
+Example: Check if none of the interviewers have a middle_name property.
+
+property_does_not_exist_in_any: Checks if a particular property does not exist in any of the objects.
+Example: Check if no interviewers have a nickname property.
+
+length_equals: Checks if the length of the array equals a specified value.
+Example: Check if there are exactly 5 interviewers.
+
+length_greater_than: Checks if the length of the array is greater than a specified value.
+Example: Check if there are more than 3 interviewers.
+
+length_less_than: Checks if the length of the array is less than a specified value.
+Example: Check if there are fewer than 10 candidates in the list.
+
+unique_property_values: Checks if all objects in the array have unique values for a specified property.
+Example: Check if all interviewers have unique email addresses.
+
+contains_object_with_properties: Checks if the array contains an object that matches a set of properties.
+Example: Check if there is an interviewer object with { name: "Alice", employee_id: "1234" }.
+
+none_property_matches: Checks if none of the objects in the array have a property that matches a given condition.
+Example: Check if none of the interviewers have response_status set to "rejected".
+*/

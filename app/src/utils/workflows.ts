@@ -1,3 +1,5 @@
+import { CONDITIONS_OPTIONS, DataType } from "./conditions-options";
+
 export function extractCurrentStage(application: any): string | null {
     if (
         application &&
@@ -45,9 +47,9 @@ export function checkConditions(
 
         console.log(
             "EVALUATED CONDITION",
-            evaluateCondition(condition, value, candidateField),
+            evaluateCondition(condition, value, candidateField, field),
         );
-        if (!evaluateCondition(condition, value, candidateField))
+        if (!evaluateCondition(condition, value, candidateField, field))
             result = false;
     }
     // If all conditions are met
@@ -58,58 +60,49 @@ export function evaluateCondition(
     condition: string,
     value: any,
     inputValue: any,
+    field: string,
 ): Boolean {
     // Compare candidate field with condition's value based on the operator
-    switch (condition) {
-        case "equals":
-            return inputValue === value;
-        case "not_equals":
-            return inputValue !== value;
-        case "contains":
-            return typeof inputValue === "string" && inputValue.includes(value);
-        case "not_contains":
-            return (
-                typeof inputValue === "string" && !inputValue.includes(value)
-            );
-        case "exactly_matches":
-            return typeof inputValue === "string" && inputValue === value;
-
-        case "not_exactly_matches":
-            return typeof inputValue === "string" && inputValue !== value;
-        case "starts_with":
-            return (
-                typeof inputValue === "string" && inputValue.startsWith(value)
-            );
-
-        case "not_starts_with":
-            return (
-                typeof inputValue === "string" && !inputValue.startsWith(value)
-            );
-
-        case "ends_with":
-            return typeof inputValue === "string" && inputValue.endsWith(value);
-
-        case "greater_than":
-            return typeof inputValue === "number" && inputValue > value;
-
-        case "less_than":
-            return typeof inputValue === "number" && inputValue < value;
-        case "after":
-            return new Date(inputValue) > new Date(value);
-        case "before":
-            return new Date(inputValue) < new Date(value);
-        case "is_true":
-            return Boolean(inputValue);
-        case "is_false":
-            return !Boolean(inputValue);
-        case "exists":
-            return inputValue !== undefined && inputValue !== null;
-        case "does_not_exist":
-            return inputValue === undefined || inputValue === null;
-        default:
-            console.warn(`Unknown operator: ${condition}`);
-            return false;
+    const conditionObject = CONDITIONS_OPTIONS[condition];
+    if (!conditionObject) {
+        console.warn(`Unknown operator: ${condition}`);
+        return false;
     }
+
+    // Validate the data type (optional)
+    const isValidType = conditionObject.dataType.some((type: string) => {
+        if (type === DataType.TEXT) return typeof inputValue === "string";
+        if (type === DataType.NUMBER) return typeof inputValue === "number";
+        if (type === DataType.DATETIME)
+            return !isNaN(new Date(inputValue).getTime());
+        if (type === DataType.BOOLEAN) return typeof inputValue === "boolean";
+        if (type === DataType.ARRAY) return Array.isArray(inputValue);
+        if (type === DataType.ARRAY_PROPERTY_STRING)
+            return (
+                Array.isArray(inputValue) &&
+                inputValue.every((item) => typeof item === "string")
+            );
+        if (type === DataType.ARRAY_PROPERTY_NUMBER)
+            return (
+                Array.isArray(inputValue) &&
+                inputValue.every((item) => typeof item === "number")
+            );
+        if (type === DataType.ARRAY_PROPERTY_OBJECT)
+            return Array.isArray(inputValue);
+    });
+
+    if (!isValidType) {
+        console.warn(`Invalid data type for condition: ${condition}`);
+        return false;
+    }
+
+    let propertyKey = null;
+    if (conditionObject.targetType === "arrayObjectProperty") {
+        propertyKey = field.split(".").pop();
+    }
+    return conditionObject.targetType === "arrayObjectProperty"
+        ? conditionObject.evaluator(inputValue, value, propertyKey)
+        : conditionObject.evaluator(inputValue, value);
 }
 
 export function getFieldFromApplication(application: any, field: string): any {
