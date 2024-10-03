@@ -305,9 +305,12 @@ export const CONDITIONS_OPTIONS: Record<
         label: "Any number less than",
     },
     array_length_equals: {
-        evaluator: ((inputValue: ArrayOfObjects, value: number) =>
-            Array.isArray(inputValue) &&
-            inputValue.length === value) as Evaluator<ArrayOfObjects, number>,
+        evaluator: ((inputValue: ArrayOfObjects, value: number) => {
+            if (typeof value === "string") {
+                value = parseInt(value);
+            }
+            return Array.isArray(inputValue) && inputValue.length === value;
+        }) as Evaluator<ArrayOfObjects, number>,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
             DataType.ARRAY_OF_STRINGS,
@@ -316,9 +319,12 @@ export const CONDITIONS_OPTIONS: Record<
         label: "Count equals",
     },
     array_length_greater_than: {
-        evaluator: ((inputValue: ArrayOfObjects, value: number) =>
-            Array.isArray(inputValue) &&
-            inputValue.length > value) as Evaluator<ArrayOfObjects, number>,
+        evaluator: ((inputValue: ArrayOfObjects, value: number) => {
+            if (typeof value === "string") {
+                value = parseInt(value);
+            }
+            return Array.isArray(inputValue) && inputValue.length > value;
+        }) as Evaluator<ArrayOfObjects, number>,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
             DataType.ARRAY_OF_STRINGS,
@@ -327,9 +333,12 @@ export const CONDITIONS_OPTIONS: Record<
         label: "Count greater than",
     },
     array_length_less_than: {
-        evaluator: ((inputValue: ArrayOfObjects, value: number) =>
-            Array.isArray(inputValue) &&
-            inputValue.length < value) as Evaluator<ArrayOfObjects, number>,
+        evaluator: ((inputValue: ArrayOfObjects, value: number) => {
+            if (typeof value === "string") {
+                value = parseInt(value);
+            }
+            return Array.isArray(inputValue) && inputValue.length < value;
+        }) as Evaluator<ArrayOfObjects, number>,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
             DataType.ARRAY_OF_STRINGS,
