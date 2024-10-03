@@ -1,13 +1,38 @@
-// Extended Enum for data types
+import offerAttributes from "./offer-attributes.json"; // This is where your JSON file for offers is stored
+import candidateAttributes from "./candidate-attributes.json"; // This is for the candidate attributes
+import interviewAttributes from "./interview-attributes.json"; // This is for the interview attributes
+
+// Extended Enum for Conditions data types
 export const DataType = {
     TEXT: "string",
     NUMBER: "number",
     DATETIME: "date",
     BOOLEAN: "boolean",
-    ARRAY: "array",
-    ARRAY_OF_STRINGS: "arrayOfStrings",
-    ARRAY_OF_NUMBERS: "arrayOfNumbers",
-    ARRAY_OF_OBJECTS: "arrayOfObjects",
+    ARRAY_OF_STRINGS: "arrayOfStrings", // Like ["hello", "world"]
+    ARRAY_OF_NUMBERS: "arrayOfNumbers", // Like [1, 2, 3]
+    ARRAY_OF_OBJECTS: "arrayOfObjects", // Like [{name: "John", age: 30}, {name: "Jane", age: 25}]
+};
+
+export const CONDITIONS_ATTRIBUTES_LOOKUP = {
+    offers: offerAttributes.offer.attributes,
+    candidates: candidateAttributes.candidate.attributes,
+    interviews: interviewAttributes.interview.attributes,
+};
+
+export const getConditionFieldDataType = (
+    field: string,
+    objectField: string,
+) => {
+    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField.toLowerCase()];
+    if (!fields) {
+        return null;
+    }
+    const item = fields.find((item) => item.field === field);
+
+    if (item) {
+        return item.dataType ?? null;
+    }
+    return null;
 };
 
 // Conditions object with evaluators
@@ -110,7 +135,9 @@ export const CONDITIONS_OPTIONS = {
             DataType.NUMBER,
             DataType.DATETIME,
             DataType.BOOLEAN,
-            DataType.ARRAY,
+            DataType.ARRAY_OF_NUMBERS,
+            DataType.ARRAY_OF_STRINGS,
+            DataType.ARRAY_OF_OBJECTS,
         ],
         label: "Exists",
     },
@@ -122,7 +149,9 @@ export const CONDITIONS_OPTIONS = {
             DataType.NUMBER,
             DataType.DATETIME,
             DataType.BOOLEAN,
-            DataType.ARRAY,
+            DataType.ARRAY_OF_NUMBERS,
+            DataType.ARRAY_OF_STRINGS,
+            DataType.ARRAY_OF_OBJECTS,
         ],
         label: "Does not exist",
     },
@@ -185,23 +214,62 @@ export const CONDITIONS_OPTIONS = {
         dataType: [DataType.ARRAY_OF_STRINGS],
         label: "Any text item contains",
     },
-
+    all_numbers_greater_than: {
+        evaluator: (inputValue: number[], value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.every((item) => item > value),
+        dataType: [DataType.ARRAY_OF_NUMBERS],
+        label: "All numbers greater than",
+    },
+    any_number_greater_than: {
+        evaluator: (inputValue: number[], value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.some((item) => item > value),
+        dataType: [DataType.ARRAY_OF_NUMBERS],
+        label: "Any number greater than",
+    },
+    all_numbers_less_than: {
+        evaluator: (inputValue: number[], value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.every((item) => item < value),
+        dataType: [DataType.ARRAY_OF_NUMBERS],
+        label: "All numbers less than",
+    },
+    any_number_less_than: {
+        evaluator: (inputValue: number[], value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.some((item) => item < value),
+        dataType: [DataType.ARRAY_OF_NUMBERS],
+        label: "Any number less than",
+    },
     array_length_equals: {
         evaluator: (inputValue: any[], value: number) =>
             Array.isArray(inputValue) && inputValue.length === value,
-        dataType: [DataType.ARRAY],
+        dataType: [
+            DataType.ARRAY_OF_NUMBERS,
+            DataType.ARRAY_OF_STRINGS,
+            DataType.ARRAY_OF_OBJECTS,
+        ],
         label: "Count equals",
     },
     array_length_greater_than: {
         evaluator: (inputValue: any[], value: number) =>
             Array.isArray(inputValue) && inputValue.length > value,
-        dataType: [DataType.ARRAY],
+        dataType: [
+            DataType.ARRAY_OF_NUMBERS,
+            DataType.ARRAY_OF_STRINGS,
+            DataType.ARRAY_OF_OBJECTS,
+        ],
         label: "Count greater than",
     },
     array_length_less_than: {
         evaluator: (inputValue: any[], value: number) =>
             Array.isArray(inputValue) && inputValue.length < value,
-        dataType: [DataType.ARRAY],
+        dataType: [
+            DataType.ARRAY_OF_NUMBERS,
+            DataType.ARRAY_OF_STRINGS,
+            DataType.ARRAY_OF_OBJECTS,
+        ],
         label: "Count less than",
     },
 };

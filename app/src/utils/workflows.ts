@@ -68,7 +68,7 @@ export function evaluateCondition(
         console.warn(`Unknown operator: ${condition}`);
         return false;
     }
-
+    
     // Validate the data type (optional)
     const isValidType = conditionOption.dataType.some((type: string) => {
         if (type === DataType.TEXT) return typeof inputValue === "string";
