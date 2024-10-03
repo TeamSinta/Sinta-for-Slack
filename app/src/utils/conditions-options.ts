@@ -1,6 +1,7 @@
 import offerAttributes from "./offer-attributes.json"; // This is where your JSON file for offers is stored
 import candidateAttributes from "./candidate-attributes.json"; // This is for the candidate attributes
 import interviewAttributes from "./interview-attributes.json"; // This is for the interview attributes
+import { Condition } from "@/app/(app)/(user)/workflows/_components/columns";
 
 // Extended Enum for Conditions data types
 export const DataType = {
@@ -31,6 +32,13 @@ export type ConditionInputValue =
     | ArrayOfNumbers
     | ArrayOfObjects;
 
+// Extend the evaluator type with generics
+type Evaluator<T, U> = (
+    inputValue: T,
+    value: U,
+    propertyKey?: string,
+) => boolean;
+
 export const CONDITIONS_ATTRIBUTES_LOOKUP = {
     offers: offerAttributes.offer.attributes,
     candidates: candidateAttributes.candidate.attributes,
@@ -41,7 +49,7 @@ export const getConditionFieldDataType = (
     field: string,
     objectField: "offers" | "candidates" | "interviews",
 ) => {
-    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField.toLowerCase()];
+    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField];
     if (!fields) {
         return null;
     }
@@ -54,10 +62,13 @@ export const getConditionFieldDataType = (
 };
 
 // Conditions object with evaluators
-export const CONDITIONS_OPTIONS = {
+export const CONDITIONS_OPTIONS: Record<
+    string,
+    { evaluator: Evaluator<any, any>; dataType: string[]; label: string }
+> = {
     equals: {
-        evaluator: (inputValue: Primitive, value: Primitive) =>
-            inputValue === value,
+        evaluator: ((inputValue: Primitive, value: Primitive) =>
+            inputValue === value) as Evaluator<Primitive, Primitive>,
         dataType: [
             DataType.TEXT,
             DataType.NUMBER,
@@ -67,8 +78,8 @@ export const CONDITIONS_OPTIONS = {
         label: "Exactly matches",
     },
     not_equals: {
-        evaluator: (inputValue: Primitive, value: Primitive) =>
-            inputValue !== value,
+        evaluator: ((inputValue: Primitive, value: Primitive) =>
+            inputValue !== value) as Evaluator<Primitive, Primitive>,
         dataType: [
             DataType.TEXT,
             DataType.NUMBER,
@@ -78,72 +89,93 @@ export const CONDITIONS_OPTIONS = {
         label: "Does not exactly match",
     },
     contains: {
-        evaluator: (inputValue: string, value: string) =>
-            typeof inputValue === "string" && inputValue.includes(value),
+        evaluator: ((inputValue: string, value: string) =>
+            typeof inputValue === "string" &&
+            inputValue.includes(value)) as Evaluator<string, string>,
         dataType: [DataType.TEXT],
         label: "Contains",
     },
     not_contains: {
-        evaluator: (inputValue: string, value: string) =>
-            typeof inputValue === "string" && !inputValue.includes(value),
+        evaluator: ((inputValue: string, value: string) =>
+            typeof inputValue === "string" &&
+            !inputValue.includes(value)) as Evaluator<string, string>,
         dataType: [DataType.TEXT],
         label: "Does not contain",
     },
     starts_with: {
-        evaluator: (inputValue: string, value: string) =>
-            typeof inputValue === "string" && inputValue.startsWith(value),
+        evaluator: ((inputValue: string, value: string) =>
+            typeof inputValue === "string" &&
+            inputValue.startsWith(value)) as Evaluator<string, string>,
         dataType: [DataType.TEXT],
         label: "Starts with",
     },
     not_starts_with: {
-        evaluator: (inputValue: string, value: string) =>
-            typeof inputValue === "string" && !inputValue.startsWith(value),
+        evaluator: ((inputValue: string, value: string) =>
+            typeof inputValue === "string" &&
+            !inputValue.startsWith(value)) as Evaluator<string, string>,
         dataType: [DataType.TEXT],
         label: "Does not start with",
     },
     ends_with: {
-        evaluator: (inputValue: string, value: string) =>
-            typeof inputValue === "string" && inputValue.endsWith(value),
+        evaluator: ((inputValue: string, value: string) =>
+            typeof inputValue === "string" &&
+            inputValue.endsWith(value)) as Evaluator<string, string>,
         dataType: [DataType.TEXT],
         label: "Ends with",
     },
     greater_than: {
-        evaluator: (inputValue: number, value: number) =>
-            typeof inputValue === "number" && inputValue > value,
+        evaluator: ((inputValue: number, value: number) =>
+            typeof inputValue === "number" && inputValue > value) as Evaluator<
+            number,
+            number
+        >,
         dataType: [DataType.NUMBER],
         label: "Greater than",
     },
     less_than: {
-        evaluator: (inputValue: number, value: number) =>
-            typeof inputValue === "number" && inputValue < value,
+        evaluator: ((inputValue: number, value: number) =>
+            typeof inputValue === "number" && inputValue < value) as Evaluator<
+            number,
+            number
+        >,
         dataType: [DataType.NUMBER],
         label: "Less than",
     },
     after: {
-        evaluator: (inputValue: Date, value: Date) =>
-            new Date(inputValue) > new Date(value),
+        evaluator: ((inputValue: Date, value: Date) =>
+            new Date(inputValue) > new Date(value)) as Evaluator<Date, Date>,
         dataType: [DataType.DATETIME],
         label: "After",
     },
     before: {
-        evaluator: (inputValue: Date, value: Date) =>
-            new Date(inputValue) < new Date(value),
+        evaluator: ((inputValue: Date, value: Date) =>
+            new Date(inputValue) < new Date(value)) as Evaluator<Date, Date>,
         dataType: [DataType.DATETIME],
         label: "Before",
     },
     is_true: {
-        evaluator: (inputValue: boolean) => Boolean(inputValue),
+        evaluator: ((inputValue: boolean) => Boolean(inputValue)) as Evaluator<
+            boolean,
+            boolean
+        >,
         dataType: [DataType.BOOLEAN],
         label: "is True",
     },
     is_false: {
-        evaluator: (inputValue: boolean) => !Boolean(inputValue),
+        evaluator: ((inputValue: boolean) => !Boolean(inputValue)) as Evaluator<
+            boolean,
+            boolean
+        >,
+
         dataType: [DataType.BOOLEAN],
         label: "is False",
     },
     exists: {
-        evaluator: (inputValue: ConditionInputValue) =>
-            inputValue !== undefined && inputValue !== null,
+        evaluator: ((inputValue: ConditionInputValue) =>
+            inputValue !== undefined && inputValue !== null) as Evaluator<
+            ConditionInputValue,
+            ConditionInputValue
+        >,
         dataType: [
             DataType.TEXT,
             DataType.NUMBER,
@@ -156,8 +188,11 @@ export const CONDITIONS_OPTIONS = {
         label: "Exists",
     },
     does_not_exist: {
-        evaluator: (inputValue: ConditionInputValue) =>
-            inputValue === undefined || inputValue === null,
+        evaluator: ((inputValue: ConditionInputValue) =>
+            inputValue === undefined || inputValue === null) as Evaluator<
+            ConditionInputValue,
+            ConditionInputValue
+        >,
         dataType: [
             DataType.TEXT,
             DataType.NUMBER,
@@ -171,83 +206,108 @@ export const CONDITIONS_OPTIONS = {
     },
     // Example of condition targeting an array of objects and a property within
     all_property_equals: {
-        evaluator: (
+        evaluator: ((
             inputValue: ArrayOfObjects,
             value: Primitive,
             propertyKey: string,
         ) =>
             Array.isArray(inputValue) &&
-            inputValue.every((item) => item[propertyKey] === value),
+            inputValue.every(
+                (item) => item[propertyKey] === value,
+            )) as Evaluator<ArrayOfObjects, Primitive>,
         dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Every item equals",
     },
     any_property_equals: {
-        evaluator: (
+        evaluator: ((
             inputValue: ArrayOfObjects,
             value: Primitive,
             propertyKey: string,
         ) =>
             Array.isArray(inputValue) &&
-            inputValue.some((item) => item[propertyKey] === value),
+            inputValue.some(
+                (item) => item[propertyKey] === value,
+            )) as Evaluator<ArrayOfObjects, Primitive>,
         dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Any item equals",
     },
     no_property_equals: {
-        evaluator: (
+        evaluator: ((
             inputValue: ArrayOfObjects,
             value: Primitive,
             propertyKey: string,
         ) =>
             Array.isArray(inputValue) &&
-            inputValue.every((item) => item[propertyKey] !== value),
+            inputValue.every(
+                (item) => item[propertyKey] !== value,
+            )) as Evaluator<ArrayOfObjects, Primitive>,
         dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "No item equals",
     },
     all_text_contains: {
-        evaluator: (inputValue: ArrayOfStrings, value: string) =>
+        evaluator: ((inputValue: ArrayOfStrings, value: string) =>
             Array.isArray(inputValue) &&
-            inputValue.every((item) => item.includes(value)),
+            inputValue.every((item) => item.includes(value))) as Evaluator<
+            ArrayOfStrings,
+            string
+        >,
         dataType: [DataType.ARRAY_OF_STRINGS],
         label: "All text items contain",
     },
     any_text_contains: {
-        evaluator: (inputValue: ArrayOfStrings, value: string) =>
+        evaluator: ((inputValue: ArrayOfStrings, value: string) =>
             Array.isArray(inputValue) &&
-            inputValue.some((item) => item.includes(value)),
+            inputValue.some((item) => item.includes(value))) as Evaluator<
+            ArrayOfStrings,
+            string
+        >,
         dataType: [DataType.ARRAY_OF_STRINGS],
         label: "Any text item contains",
     },
     all_numbers_greater_than: {
-        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
+        evaluator: ((inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
-            inputValue.every((item) => item > value),
+            inputValue.every((item) => item > value)) as Evaluator<
+            ArrayOfNumbers,
+            number
+        >,
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "All numbers greater than",
     },
     any_number_greater_than: {
-        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
+        evaluator: ((inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
-            inputValue.some((item) => item > value),
+            inputValue.some((item) => item > value)) as Evaluator<
+            ArrayOfNumbers,
+            number
+        >,
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "Any number greater than",
     },
     all_numbers_less_than: {
-        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
+        evaluator: ((inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
-            inputValue.every((item) => item < value),
+            inputValue.every((item) => item < value)) as Evaluator<
+            ArrayOfNumbers,
+            number
+        >,
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "All numbers less than",
     },
     any_number_less_than: {
-        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
+        evaluator: ((inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
-            inputValue.some((item) => item < value),
+            inputValue.some((item) => item < value)) as Evaluator<
+            ArrayOfNumbers,
+            number
+        >,
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "Any number less than",
     },
     array_length_equals: {
-        evaluator: (inputValue: ArrayOfObjects, value: number) =>
-            Array.isArray(inputValue) && inputValue.length === value,
+        evaluator: ((inputValue: ArrayOfObjects, value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.length === value) as Evaluator<ArrayOfObjects, number>,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
             DataType.ARRAY_OF_STRINGS,
@@ -256,8 +316,9 @@ export const CONDITIONS_OPTIONS = {
         label: "Count equals",
     },
     array_length_greater_than: {
-        evaluator: (inputValue: ArrayOfObjects, value: number) =>
-            Array.isArray(inputValue) && inputValue.length > value,
+        evaluator: ((inputValue: ArrayOfObjects, value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.length > value) as Evaluator<ArrayOfObjects, number>,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
             DataType.ARRAY_OF_STRINGS,
@@ -266,8 +327,9 @@ export const CONDITIONS_OPTIONS = {
         label: "Count greater than",
     },
     array_length_less_than: {
-        evaluator: (inputValue: ArrayOfObjects, value: number) =>
-            Array.isArray(inputValue) && inputValue.length < value,
+        evaluator: ((inputValue: ArrayOfObjects, value: number) =>
+            Array.isArray(inputValue) &&
+            inputValue.length < value) as Evaluator<ArrayOfObjects, number>,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
             DataType.ARRAY_OF_STRINGS,

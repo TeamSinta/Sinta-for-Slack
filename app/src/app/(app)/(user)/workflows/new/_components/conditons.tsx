@@ -154,7 +154,7 @@ const ConditionsComponent = ({
             const parsedIntsConditions = conditions.map((condition) => {
                 const type = getConditionFieldDataType(
                     condition.field,
-                    objectField,
+                    objectField.toLowerCase(),
                 );
                 if (type === DataType.ARRAY_OF_NUMBERS) {
                     return {
@@ -263,7 +263,7 @@ const ConditionsComponent = ({
                                                                     condition.field,
                                                                     objectField.toLowerCase(),
                                                                 );
-                                                        
+
                                                             return CONDITIONS_OPTIONS[
                                                                 conditionOption
                                                             ].dataType?.includes(

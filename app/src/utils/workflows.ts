@@ -70,7 +70,7 @@ export function evaluateCondition(
     value: any,
     inputValue: any,
     field: string,
-): Boolean {
+): boolean {
     // Compare candidate field with condition's value based on the operator
     const conditionOption = CONDITIONS_OPTIONS[condition];
     if (!conditionOption) {
@@ -84,7 +84,7 @@ export function evaluateCondition(
         if (type === DataType.NUMBER) return typeof inputValue === "number";
         if (type === DataType.DATETIME)
             return !isNaN(new Date(inputValue).getTime());
-        if (type === DataType.BOOLEAN) return typeof inputValue === "boolean";
+        if (type === DataType.BOOLEAN) return true;
         if (type === DataType.ARRAY_OF_STRINGS)
             return (
                 Array.isArray(inputValue) &&
@@ -104,13 +104,11 @@ export function evaluateCondition(
         return false;
     }
 
-    let propertyKey = null;
+    let propertyKey;
     if (conditionOption.dataType.includes(DataType.ARRAY_OF_OBJECTS)) {
         propertyKey = field.split(".").pop();
     }
-    return conditionOption.dataType.includes(DataType.ARRAY_OF_OBJECTS)
-        ? conditionOption.evaluator(inputValue, value, propertyKey)
-        : conditionOption.evaluator(inputValue, value, null);
+    return conditionOption.evaluator(inputValue, value, propertyKey);
 }
 
 export function getFieldFromApplication(application: any, field: string): any {
