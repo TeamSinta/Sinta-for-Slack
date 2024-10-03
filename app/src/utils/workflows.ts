@@ -30,12 +30,12 @@ export function checkConditions(
     conditions: any[],
     getter: (application: any, field: string) => any,
 ) {
-    console.log("CONDITIONS", conditions);
-    console.log("APPLICATIONS", application);
+    // console.log("CONDITIONS", conditions);
+    // console.log("APPLICATIONS", application);
     let result = true;
     // Iterate through all conditions
     for (const item of conditions) {
-        console.log("PROCESSING CONDITION", item);
+        // console.log("PROCESSING CONDITION", item);
         const {
             field,
             condition,
@@ -47,17 +47,12 @@ export function checkConditions(
         } = item;
         // Get the candidate's data field using the utility function
         const candidateField = getter(application, field);
-        console.log("CANDIDATE FIELD", field, candidateField);
+        // console.log("CANDIDATE FIELD", field, candidateField);
         // Handle if the field is not found
         if (candidateField === undefined) {
             console.warn(`Field ${field} not found in application.`);
             return false;
         }
-
-        console.log(
-            "EVALUATED CONDITION",
-            evaluateCondition(condition, value, candidateField, field),
-        );
         if (!evaluateCondition(condition, value, candidateField, field))
             result = false;
     }
