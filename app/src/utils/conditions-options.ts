@@ -1,13 +1,13 @@
 // Extended Enum for data types
 export const DataType = {
-    TEXT: "text",
+    TEXT: "string",
     NUMBER: "number",
-    DATETIME: "datetime",
+    DATETIME: "date",
     BOOLEAN: "boolean",
     ARRAY: "array",
-    ARRAY_PROPERTY_STRING: "arrayPropertyString",
-    ARRAY_PROPERTY_NUMBER: "arrayPropertyNumber",
-    ARRAY_PROPERTY_OBJECT: "arrayPropertyObject",
+    ARRAY_OF_STRINGS: "arrayOfStrings",
+    ARRAY_OF_NUMBERS: "arrayOfNumbers",
+    ARRAY_OF_OBJECTS: "arrayOfObjects",
 };
 
 // Conditions object with evaluators
@@ -131,7 +131,7 @@ export const CONDITIONS_OPTIONS = {
         evaluator: (inputValue: any[], value: any, propertyKey: string) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item[propertyKey] === value),
-        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Every item equals",
     },
     all_properties_contain: {
@@ -142,7 +142,7 @@ export const CONDITIONS_OPTIONS = {
                     typeof item[propertyKey] === "string" &&
                     item[propertyKey].includes(value),
             ),
-        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Every item contains",
     },
     any_property_contains: {
@@ -153,7 +153,7 @@ export const CONDITIONS_OPTIONS = {
                     typeof item[propertyKey] === "string" &&
                     item[propertyKey].includes(value),
             ),
-        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Any item contains",
     },
 
@@ -161,25 +161,28 @@ export const CONDITIONS_OPTIONS = {
         evaluator: (inputValue: any[], value: any, propertyKey: string) =>
             Array.isArray(inputValue) &&
             inputValue.some((item) => item[propertyKey] === value),
-        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Any item equals",
     },
     no_property_equals: {
         evaluator: (inputValue: any[], value: any, propertyKey: string) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item[propertyKey] !== value),
-        dataType: [DataType.ARRAY_PROPERTY_OBJECT],
+        dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "No item equals",
     },
-    any_text_contains: {
-        evaluator: (inputValue: any[], value: string, propertyKey: string) =>
+    all_text_contains: {
+        evaluator: (inputValue: string[], value: string) =>
             Array.isArray(inputValue) &&
-            inputValue.some(
-                (item) =>
-                    typeof item[propertyKey] === "string" &&
-                    item[propertyKey].includes(value),
-            ),
-        dataType: [DataType.ARRAY_PROPERTY_STRING],
+            inputValue.every((item) => item.includes(value)),
+        dataType: [DataType.ARRAY_OF_STRINGS],
+        label: "All text items contain",
+    },
+    any_text_contains: {
+        evaluator: (inputValue: string[], value: string) =>
+            Array.isArray(inputValue) &&
+            inputValue.some((item) => item.includes(value)),
+        dataType: [DataType.ARRAY_OF_STRINGS],
         label: "Any text item contains",
     },
 

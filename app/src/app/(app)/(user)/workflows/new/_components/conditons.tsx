@@ -23,6 +23,7 @@ import offerAttributes from "../../../../../../utils/offer-attributes.json"; // 
 import candidateAttributes from "../../../../../../utils/candidate-attributes.json"; // This is for the candidate attributes
 import interviewAttributes from "../../../../../../utils/interview-attributes.json"; // This is for the interview attributes
 import { ConditionSelector } from "./conditionsSelector";
+import { CONDITIONS_OPTIONS } from "@/utils/conditions-options";
 
 const localStorageKey = "workflowConditions";
 
@@ -166,6 +167,14 @@ const ConditionsComponent = ({
         handleConditionChange(id, "field", field); // Update field in the condition
     };
 
+    const getConditionFieldDataType = (field) => {
+        const item = fields.find((item) => item.field === field);
+
+        if (item) {
+            return item.dataType ?? null;
+        }
+        return null;
+    };
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
             <div>
@@ -237,7 +246,29 @@ const ConditionsComponent = ({
                                                 <SelectValue placeholder="Choose condition..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="contains">
+                                                {Object.keys(CONDITIONS_OPTIONS)
+                                                    .filter((conditionOption) =>
+                                                        CONDITIONS_OPTIONS[
+                                                            conditionOption
+                                                        ].dataType?.includes(
+                                                            getConditionFieldDataType(
+                                                                condition.field,
+                                                            ),
+                                                        ),
+                                                    )
+                                                    .map((item) => (
+                                                        <SelectItem
+                                                            key={item}
+                                                            value={item}
+                                                        >
+                                                            {
+                                                                CONDITIONS_OPTIONS[
+                                                                    item
+                                                                ].label
+                                                            }
+                                                        </SelectItem>
+                                                    ))}
+                                                {/* <SelectItem value="contains">
                                                     (Text) Contains
                                                 </SelectItem>
                                                 <SelectItem value="not_contains">
@@ -275,7 +306,7 @@ const ConditionsComponent = ({
                                                 </SelectItem>
                                                 <SelectItem value="equals">
                                                     (Date/Time) Equals
-                                                </SelectItem>
+                                                </SelectItem> */}
                                             </SelectContent>
                                         </Select>
                                     </div>

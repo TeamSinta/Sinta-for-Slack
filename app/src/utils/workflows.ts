@@ -38,7 +38,7 @@ export function checkConditions(
         const { field, condition, value } = item;
         // Get the candidate's data field using the utility function
         const candidateField = getter(application, field);
-        console.log("CANDIDATE FIELD", field);
+        console.log("CANDIDATE FIELD", field, candidateField);
         // Handle if the field is not found
         if (candidateField === undefined) {
             console.warn(`Field ${field} not found in application.`);
@@ -63,31 +63,31 @@ export function evaluateCondition(
     field: string,
 ): Boolean {
     // Compare candidate field with condition's value based on the operator
-    const conditionObject = CONDITIONS_OPTIONS[condition];
-    if (!conditionObject) {
+    const conditionOption = CONDITIONS_OPTIONS[condition];
+    if (!conditionOption) {
         console.warn(`Unknown operator: ${condition}`);
         return false;
     }
 
     // Validate the data type (optional)
-    const isValidType = conditionObject.dataType.some((type: string) => {
+    const isValidType = conditionOption.dataType.some((type: string) => {
         if (type === DataType.TEXT) return typeof inputValue === "string";
         if (type === DataType.NUMBER) return typeof inputValue === "number";
         if (type === DataType.DATETIME)
             return !isNaN(new Date(inputValue).getTime());
         if (type === DataType.BOOLEAN) return typeof inputValue === "boolean";
         if (type === DataType.ARRAY) return Array.isArray(inputValue);
-        if (type === DataType.ARRAY_PROPERTY_STRING)
+        if (type === DataType.ARRAY_OF_STRINGS)
             return (
                 Array.isArray(inputValue) &&
                 inputValue.every((item) => typeof item === "string")
             );
-        if (type === DataType.ARRAY_PROPERTY_NUMBER)
+        if (type === DataType.ARRAY_OF_NUMBERS)
             return (
                 Array.isArray(inputValue) &&
                 inputValue.every((item) => typeof item === "number")
             );
-        if (type === DataType.ARRAY_PROPERTY_OBJECT)
+        if (type === DataType.ARRAY_OF_OBJECTS)
             return Array.isArray(inputValue);
     });
 
@@ -97,12 +97,12 @@ export function evaluateCondition(
     }
 
     let propertyKey = null;
-    if (conditionObject.targetType === "arrayObjectProperty") {
+    if (conditionOption.dataType.includes(DataType.ARRAY_OF_OBJECTS)) {
         propertyKey = field.split(".").pop();
     }
-    return conditionObject.targetType === "arrayObjectProperty"
-        ? conditionObject.evaluator(inputValue, value, propertyKey)
-        : conditionObject.evaluator(inputValue, value);
+    return conditionOption.dataType.includes(DataType.ARRAY_OF_OBJECTS)
+        ? conditionOption.evaluator(inputValue, value, propertyKey)
+        : conditionOption.evaluator(inputValue, value);
 }
 
 export function getFieldFromApplication(application: any, field: string): any {
