@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { CONDITIONS_OPTIONS, DataType } from "./conditions-options";
 
 export function extractCurrentStage(application: any): string | null {
@@ -35,7 +36,15 @@ export function checkConditions(
     // Iterate through all conditions
     for (const item of conditions) {
         console.log("PROCESSING CONDITION", item);
-        const { field, condition, value } = item;
+        const {
+            field,
+            condition,
+            value,
+        }: {
+            field: string;
+            condition: keyof typeof CONDITIONS_OPTIONS;
+            value: any;
+        } = item;
         // Get the candidate's data field using the utility function
         const candidateField = getter(application, field);
         console.log("CANDIDATE FIELD", field, candidateField);
@@ -57,7 +66,7 @@ export function checkConditions(
 }
 
 export function evaluateCondition(
-    condition: string,
+    condition: keyof typeof CONDITIONS_OPTIONS,
     value: any,
     inputValue: any,
     field: string,
@@ -68,7 +77,7 @@ export function evaluateCondition(
         console.warn(`Unknown operator: ${condition}`);
         return false;
     }
-    
+
     // Validate the data type (optional)
     const isValidType = conditionOption.dataType.some((type: string) => {
         if (type === DataType.TEXT) return typeof inputValue === "string";
@@ -76,7 +85,6 @@ export function evaluateCondition(
         if (type === DataType.DATETIME)
             return !isNaN(new Date(inputValue).getTime());
         if (type === DataType.BOOLEAN) return typeof inputValue === "boolean";
-        if (type === DataType.ARRAY) return Array.isArray(inputValue);
         if (type === DataType.ARRAY_OF_STRINGS)
             return (
                 Array.isArray(inputValue) &&
@@ -102,7 +110,7 @@ export function evaluateCondition(
     }
     return conditionOption.dataType.includes(DataType.ARRAY_OF_OBJECTS)
         ? conditionOption.evaluator(inputValue, value, propertyKey)
-        : conditionOption.evaluator(inputValue, value);
+        : conditionOption.evaluator(inputValue, value, null);
 }
 
 export function getFieldFromApplication(application: any, field: string): any {

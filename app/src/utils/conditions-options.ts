@@ -13,6 +13,24 @@ export const DataType = {
     ARRAY_OF_OBJECTS: "arrayOfObjects", // Like [{name: "John", age: 30}, {name: "Jane", age: 25}]
 };
 
+// Type definitions for the possible values
+export type Primitive = string | number | boolean | Date;
+
+// Array types
+export type ArrayOfStrings = string[];
+export type ArrayOfNumbers = number[];
+export type ArrayOfObjects = Record<
+    string,
+    Primitive | ArrayOfStrings | ArrayOfNumbers
+>[];
+
+// Define a union  type for `inputValue` and `value`
+export type ConditionInputValue =
+    | Primitive
+    | ArrayOfStrings
+    | ArrayOfNumbers
+    | ArrayOfObjects;
+
 export const CONDITIONS_ATTRIBUTES_LOOKUP = {
     offers: offerAttributes.offer.attributes,
     candidates: candidateAttributes.candidate.attributes,
@@ -21,9 +39,9 @@ export const CONDITIONS_ATTRIBUTES_LOOKUP = {
 
 export const getConditionFieldDataType = (
     field: string,
-    objectField: string,
+    objectField: "offers" | "candidates" | "interviews",
 ) => {
-    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField.toLowerCase()];
+    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField];
     if (!fields) {
         return null;
     }
@@ -38,10 +56,8 @@ export const getConditionFieldDataType = (
 // Conditions object with evaluators
 export const CONDITIONS_OPTIONS = {
     equals: {
-        evaluator: (
-            inputValue: string | number | boolean | Date,
-            value: string | number | boolean | Date,
-        ) => inputValue === value,
+        evaluator: (inputValue: Primitive, value: Primitive) =>
+            inputValue === value,
         dataType: [
             DataType.TEXT,
             DataType.NUMBER,
@@ -51,10 +67,8 @@ export const CONDITIONS_OPTIONS = {
         label: "Exactly matches",
     },
     not_equals: {
-        evaluator: (
-            inputValue: string | number | boolean | Date,
-            value: string | number | boolean | Date,
-        ) => inputValue !== value,
+        evaluator: (inputValue: Primitive, value: Primitive) =>
+            inputValue !== value,
         dataType: [
             DataType.TEXT,
             DataType.NUMBER,
@@ -128,7 +142,7 @@ export const CONDITIONS_OPTIONS = {
         label: "is False",
     },
     exists: {
-        evaluator: (inputValue: any) =>
+        evaluator: (inputValue: ConditionInputValue) =>
             inputValue !== undefined && inputValue !== null,
         dataType: [
             DataType.TEXT,
@@ -142,7 +156,7 @@ export const CONDITIONS_OPTIONS = {
         label: "Exists",
     },
     does_not_exist: {
-        evaluator: (inputValue: any) =>
+        evaluator: (inputValue: ConditionInputValue) =>
             inputValue === undefined || inputValue === null,
         dataType: [
             DataType.TEXT,
@@ -157,93 +171,82 @@ export const CONDITIONS_OPTIONS = {
     },
     // Example of condition targeting an array of objects and a property within
     all_property_equals: {
-        evaluator: (inputValue: any[], value: any, propertyKey: string) =>
+        evaluator: (
+            inputValue: ArrayOfObjects,
+            value: Primitive,
+            propertyKey: string,
+        ) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item[propertyKey] === value),
         dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Every item equals",
     },
-    all_properties_contain: {
-        evaluator: (inputValue: any[], value: string, propertyKey: string) =>
-            Array.isArray(inputValue) &&
-            inputValue.every(
-                (item) =>
-                    typeof item[propertyKey] === "string" &&
-                    item[propertyKey].includes(value),
-            ),
-        dataType: [DataType.ARRAY_OF_OBJECTS],
-        label: "Every item contains",
-    },
-    any_property_contains: {
-        evaluator: (inputValue: any[], value: string, propertyKey: string) =>
-            Array.isArray(inputValue) &&
-            inputValue.some(
-                (item) =>
-                    typeof item[propertyKey] === "string" &&
-                    item[propertyKey].includes(value),
-            ),
-        dataType: [DataType.ARRAY_OF_OBJECTS],
-        label: "Any item contains",
-    },
-
     any_property_equals: {
-        evaluator: (inputValue: any[], value: any, propertyKey: string) =>
+        evaluator: (
+            inputValue: ArrayOfObjects,
+            value: Primitive,
+            propertyKey: string,
+        ) =>
             Array.isArray(inputValue) &&
             inputValue.some((item) => item[propertyKey] === value),
         dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "Any item equals",
     },
     no_property_equals: {
-        evaluator: (inputValue: any[], value: any, propertyKey: string) =>
+        evaluator: (
+            inputValue: ArrayOfObjects,
+            value: Primitive,
+            propertyKey: string,
+        ) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item[propertyKey] !== value),
         dataType: [DataType.ARRAY_OF_OBJECTS],
         label: "No item equals",
     },
     all_text_contains: {
-        evaluator: (inputValue: string[], value: string) =>
+        evaluator: (inputValue: ArrayOfStrings, value: string) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item.includes(value)),
         dataType: [DataType.ARRAY_OF_STRINGS],
         label: "All text items contain",
     },
     any_text_contains: {
-        evaluator: (inputValue: string[], value: string) =>
+        evaluator: (inputValue: ArrayOfStrings, value: string) =>
             Array.isArray(inputValue) &&
             inputValue.some((item) => item.includes(value)),
         dataType: [DataType.ARRAY_OF_STRINGS],
         label: "Any text item contains",
     },
     all_numbers_greater_than: {
-        evaluator: (inputValue: number[], value: number) =>
+        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item > value),
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "All numbers greater than",
     },
     any_number_greater_than: {
-        evaluator: (inputValue: number[], value: number) =>
+        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
             inputValue.some((item) => item > value),
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "Any number greater than",
     },
     all_numbers_less_than: {
-        evaluator: (inputValue: number[], value: number) =>
+        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
             inputValue.every((item) => item < value),
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "All numbers less than",
     },
     any_number_less_than: {
-        evaluator: (inputValue: number[], value: number) =>
+        evaluator: (inputValue: ArrayOfNumbers, value: number) =>
             Array.isArray(inputValue) &&
             inputValue.some((item) => item < value),
         dataType: [DataType.ARRAY_OF_NUMBERS],
         label: "Any number less than",
     },
     array_length_equals: {
-        evaluator: (inputValue: any[], value: number) =>
+        evaluator: (inputValue: ArrayOfObjects, value: number) =>
             Array.isArray(inputValue) && inputValue.length === value,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
@@ -253,7 +256,7 @@ export const CONDITIONS_OPTIONS = {
         label: "Count equals",
     },
     array_length_greater_than: {
-        evaluator: (inputValue: any[], value: number) =>
+        evaluator: (inputValue: ArrayOfObjects, value: number) =>
             Array.isArray(inputValue) && inputValue.length > value,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
@@ -263,7 +266,7 @@ export const CONDITIONS_OPTIONS = {
         label: "Count greater than",
     },
     array_length_less_than: {
-        evaluator: (inputValue: any[], value: number) =>
+        evaluator: (inputValue: ArrayOfObjects, value: number) =>
             Array.isArray(inputValue) && inputValue.length < value,
         dataType: [
             DataType.ARRAY_OF_NUMBERS,
