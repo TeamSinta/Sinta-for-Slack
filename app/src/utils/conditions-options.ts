@@ -41,7 +41,7 @@ export const getConditionFieldDataType = (
     field: string,
     objectField: "offers" | "candidates" | "interviews",
 ) => {
-    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField];
+    const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField.toLowerCase()];
     if (!fields) {
         return null;
     }

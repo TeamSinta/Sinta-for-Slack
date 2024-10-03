@@ -256,15 +256,20 @@ const ConditionsComponent = ({
                                             <SelectContent>
                                                 {Object.keys(CONDITIONS_OPTIONS)
                                                     // Only show conditions that are applicable to the field
-                                                    .filter((conditionOption) =>
-                                                        CONDITIONS_OPTIONS[
-                                                            conditionOption
-                                                        ].dataType?.includes(
-                                                            getConditionFieldDataType(
-                                                                condition.field,
-                                                                objectField,
-                                                            ),
-                                                        ),
+                                                    .filter(
+                                                        (conditionOption) => {
+                                                            const dataType =
+                                                                getConditionFieldDataType(
+                                                                    condition.field,
+                                                                    objectField.toLowerCase(),
+                                                                );
+                                                        
+                                                            return CONDITIONS_OPTIONS[
+                                                                conditionOption
+                                                            ].dataType?.includes(
+                                                                dataType,
+                                                            );
+                                                        },
                                                     )
                                                     // Sort the conditions by specificity
                                                     .sort(
