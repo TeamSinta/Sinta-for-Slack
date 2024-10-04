@@ -98,6 +98,14 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             ],
         },
         {
+            title: "Job Created",
+            description: "Triggered when a job is created.",
+            apiUrl: "https://harvest.greenhouse.io/v1/jobs",
+            objectField: "Jobs",
+            alertType: "Create/Update",
+            triggers: ["Notify Recruiter via Slack"],
+        },
+        {
             title: "Candidates",
             description: "Triggered for working with Candidates Object",
             objectField: "Candidates",
