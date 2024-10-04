@@ -83,7 +83,8 @@ export async function getChannels(): Promise<
         }
     } catch (error) {
         console.error("Error fetching channels:", error);
-        return [];
+        // return [];
+        throw new Error(error ?? "Error fetching channels");
     }
 }
 

@@ -17,44 +17,29 @@
                 "dataType": "number"
             },
             {
-                "field": "created_at",
-                "description": "Date when this offer was created.",
-                "dataType": "date"
-            },
-            {
-                "field": "resolved_at",
-                "description": "Date when this offer was resolved (e.g., when it was accepted, rejected).",
-                "dataType": "date"
-            },
-            {
-                "field": "sent_at",
+                "field": "sent_on",
                 "description": "Date when this offer was sent to the candidate.",
                 "dataType": "date"
             },
             {
-                "field": "starts_at",
+                "field": "start_date",
                 "description": "Date when the candidate starts. This is the date entered in the Start Date field on the candidate's Offer Details.",
                 "dataType": "date"
             },
             {
-                "field": "status",
-                "description": "One of: unresolved, accepted, rejected, deprecated.",
+                "field": "notes",
+                "description": "Notes field",
                 "dataType": "string"
             },
             {
-                "field": "custom_fields",
-                "description": "Contains a hash of the custom fields configured for this resource.",
-                "dataType": "object"
+                "field": "job_id",
+                "description": "The job ID associated with this offer.",
+                "dataType": "number"
             },
             {
-                "field": "keyed_custom_fields",
-                "description": "Contains the same information as custom_fields but includes more detailed data with an immutable key.",
-                "dataType": "object"
-            },
-            {
-                "field": "opening",
-                "description": "The Job Opening associated with the offer. Null if none.",
-                "dataType": "object"
+                "field": "offer_status",
+                "description": "The status of the offer. One of Created, Accepted, Rejected, or Deprecated.",
+                "dataType": "string"
             }
         ]
     }
