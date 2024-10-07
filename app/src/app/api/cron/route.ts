@@ -51,6 +51,7 @@ async function getAllCandidates() {
     const candidateUrl = "https://harvest.greenhouse.io/v1/candidates";
     const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
 }
+
 function getSlackUserIds(
     hiringroom: { recipient: any[] },
     candidates: any,
@@ -211,7 +212,6 @@ export async function handleIndividualHiringroom(hiringroom: {
     recipient: { recipients: any[] };
 }) {
     const hiringroomId = hiringroom.id;
-    // return
     const allJobs = await fetchJobsFromGreenhouse();
     const allCandidates = await fetchCandidates();
     const greenhouseUsers = await fetchGreenhouseUsers();
