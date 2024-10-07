@@ -2,41 +2,34 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
-import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
-import { FancyBox } from "@/components/ui/fancy.box";
-import { getActiveUsers, getChannels } from "@/server/slack/core";
-import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import slacklogo from "../../../../../../../public/slack-logo.png";
-import sintalogo from "../../../../../../../public/sintalogo.png";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuTrigger,
     DropdownMenuLabel,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
+import { FancyBox } from "@/components/ui/fancy.box";
+import { Label } from "@/components/ui/label";
+import { getMockGreenhouseData } from "@/server/greenhouse/core";
+import { getActiveUsers, getChannels } from "@/server/slack/core";
 import {
-    HelpCircleIcon,
-    CheckCircle,
     AlertTriangle,
+    CheckCircle,
     Clock,
+    HelpCircleIcon,
     Loader2Icon,
 } from "lucide-react";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css"; // Import the bubble theme CSS
+import sintalogo from "../../../../../../../public/sintalogo.png";
+import slacklogo from "../../../../../../../public/slack-logo.png";
 
-import MessageButtons, {
-    type ButtonAction,
-    ButtonType,
-    UpdateActionType,
-} from "../../../hiringrooms/_components/message-buttons";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Card,
     CardContent,
@@ -44,14 +37,23 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { LinkActionType } from "../../_components/message-buttons";
-import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
-import TestResult from "./testResults";
-import { useSession } from "next-auth/react";
-import { postMessageToChannel } from "@/server/slack/core";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
+import { postMessageToChannel } from "@/server/slack/core";
+import { Cross1Icon } from "@radix-ui/react-icons";
+import { useSession } from "next-auth/react";
+import MessageButtons, {
+    type ButtonAction,
+    ButtonType,
+    UpdateActionType,
+} from "../../../hiringrooms/_components/message-buttons";
+import { LinkActionType } from "../../_components/message-buttons";
+import SlackFileUploader from "./slackFileUpload";
+import TestResult from "./testResults";
 const localStorageKey = "workflowActions";
-
+const MAXIMUM_SLACK_MESSAGE_ATTACHMENTS = 10;
 const isBrowser = typeof window !== "undefined";
 
 // Safe function to save action data to localStorage
@@ -124,6 +126,7 @@ const triggerSpecificVariablesOptions = {
             value: "{{Interview End Time}}",
             label: "Interview End Time",
         },
+        { value: "{{Scorecard ids}}", label: "Scorecard IDs" },
     ],
 };
 
@@ -133,9 +136,10 @@ type Option = {
     source: "slack" | "greenhouse";
 };
 
-const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
-    onSaveActions,
-}) => {
+const Actions: React.FC<{
+    onSaveActions: (data: any) => void;
+    workflowId: string;
+}> = ({ onSaveActions, workflowId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [testButtonLoading, setTestButtonLoading] = useState(false);
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -152,11 +156,24 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [testResult, setTestResult] = useState(null);
     const [openingText, setOpeningText] = useState("");
     const [triggerObjectField, setTriggerObjectField] = useState(null);
+    const [uploadedFiles, setUploadedFiles] = useState<
+        {
+            name: string;
+            id: string;
+        }[]
+    >([]);
+    // const [uploadedFiles, setUploadedFiles] = useState<
+    //     {
+    //         name: string;
+    //         id: string;
+    //     }[]
+    // >([{ name: "coffee.png", id: "F07PJ2EMP2A" }]);
 
     const session = useSession();
 
     useEffect(() => {
         const actionData = getActionData();
+        // console.log("actionData", actionData);
         if (actionData) {
             if (actionData?.customMessageBody)
                 setCustomMessageBody(actionData?.customMessageBody);
@@ -168,6 +185,8 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 setSelectedRecipients(actionData?.recipients);
             if (actionData?.openingText)
                 setOpeningText(actionData?.openingText); // Load opening text
+            if (actionData?.uploadedFiles)
+                setUploadedFiles(actionData?.uploadedFiles);
         }
     }, []);
 
@@ -270,6 +289,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 messageButtons: buttons,
                 messageDelivery: "Group DM", // Replace with actual field if needed
                 customMessageBody,
+                uploadedFiles,
             };
 
             // Save to local storage
@@ -313,26 +333,42 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                             : []),
 
                         // Message fields section
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: messageBody, // Insert the constructed message here
-                                verbatim: false,
-                            },
-                        },
+                        ...(messageBody
+                            ? [
+                                  {
+                                      type: "section",
+                                      text: {
+                                          type: "mrkdwn",
+                                          text: messageBody, // Insert the constructed message here
+                                          verbatim: false,
+                                      },
+                                  },
+                              ]
+                            : []),
 
-                        {
-                            type: "section",
-                            block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
-                            text: {
-                                type: "mrkdwn",
-                                text: convertHtmlToSlackMrkdwn(
-                                    customMessageBody,
-                                ),
-                            },
-                        },
-                        // Buttons section (if applicable)
+                        ...(customMessageBody
+                            ? [
+                                  {
+                                      type: "section",
+                                      block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
+                                      text: {
+                                          type: "mrkdwn",
+                                          text: convertHtmlToSlackMrkdwn(
+                                              customMessageBody ?? "",
+                                          ),
+                                      },
+                                  },
+                              ]
+                            : []),
+                        ...(uploadedFiles.length > 0
+                            ? uploadedFiles.map((file) => {
+                                  return {
+                                      type: "file",
+                                      external_id: file.id,
+                                      source: "remote",
+                                  };
+                              })
+                            : []),
                         ...(buttons.length > 0
                             ? [
                                   {
@@ -377,7 +413,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 },
             ],
         };
-
+        // console.log("payload", JSON.stringify(payload));
         try {
             await postMessageToChannel(session?.data?.user?.id, payload);
             console.log("Test message sent successfully.");
@@ -442,6 +478,22 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 <AlertTriangle className="text-gray-500" size={iconSize} />
             );
         }
+    };
+
+    const handleSuccessfulFileUpload = (file: { id: string; name: string }) => {
+        setUploadedFiles((prev) => [...prev, file]);
+    };
+
+    const handleRemoveUploadedFile = (id: string) => {
+        setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+    };
+
+    const doesFileAlreadyExist = (name: string) => {
+        return uploadedFiles.filter((item) => item.name === name).length > 0;
+    };
+
+    const isMaximumAttachmentsCountReached = () => {
+        return uploadedFiles.length >= MAXIMUM_SLACK_MESSAGE_ATTACHMENTS;
     };
 
     return (
@@ -673,6 +725,16 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                     </div>
                                 )}
 
+                                {uploadedFiles.length > 0 && (
+                                    <div>
+                                        {uploadedFiles.map((file) => (
+                                            <div
+                                                key={file.id}
+                                                className="text-sm"
+                                            >{`{{${file.name}}}`}</div>
+                                        ))}
+                                    </div>
+                                )}
                                 {/* Buttons Section */}
                                 {buttons.length > 0 && (
                                     <div className="space-y-4">
@@ -734,6 +796,38 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                                 )
                             }
                         />
+                        <div className="my-4">
+                            <SlackFileUploader
+                                onSuccess={(data) =>
+                                    handleSuccessfulFileUpload(data)
+                                }
+                                workflowId={workflowId}
+                                doesFileAlreadyExist={doesFileAlreadyExist}
+                                isMaximumAttachmentsCountReached={
+                                    isMaximumAttachmentsCountReached
+                                }
+                            />
+                            {uploadedFiles.length > 0 &&
+                                uploadedFiles.map((file) => (
+                                    <div
+                                        key={file.id}
+                                        className="my-4 flex w-full flex-row items-center justify-between px-4"
+                                    >
+                                        <div className="max-w-[80%] overflow-clip">
+                                            {file.name}
+                                        </div>
+
+                                        <Cross1Icon
+                                            className="cursor-pointer hover:text-red-800"
+                                            onClick={() => {
+                                                handleRemoveUploadedFile(
+                                                    file.id,
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                        </div>
                     </TabsContent>
 
                     {/* Test & Recipients Tab */}
