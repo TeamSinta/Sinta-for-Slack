@@ -98,7 +98,7 @@ const specialVariableOptions = [
     { value: "{{All}}", label: "All (Job Stages, Interviewers, Competencies)" },
 ];
 
-type Option = {
+export type Option = {
     value: string;
     label: string;
     source: "slack" | "greenhouse";
@@ -112,7 +112,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<ButtonAction[]>([]);
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
-    const [options, setOptions] = useState<{ value: string; label: string }[]>(
+    const [options, setOptions] = useState<{ value: string; label: string, }[]>(
         [],
     );
     const [customMessageBody, setCustomMessageBody] = useState(

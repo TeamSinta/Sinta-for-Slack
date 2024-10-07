@@ -9,73 +9,138 @@ import ConditionsStep from "./create-conditons";
 import TriggerActionsComponent from "./create-triggerActions";
 import Image2 from "./shoot.png"
 import Image from "next/image";
+import { RecipientsStep } from "./create-receipients";
+import SummaryStep from "./view-summary";
+import { Condition } from "../../_components/new-hiringroomForm";
+
+
+interface FormValues {
+    name: string;
+    objectField: string;
+    alertType: string;
+    recipient: {
+        openingText: string;
+        messageFields: string[]; // Define the correct type for message fields
+        messageButtons: {
+            label: string;
+            type: string;
+            action: string;
+        }[]; // Define the correct structure for message buttons
+        messageDelivery: string;
+        recipients: {
+            label: string;
+            value: string;
+            source: string;
+        }[]; // Define the structure for recipients
+        customMessageBody: string;
+    };
+    conditions: Condition[]; // Ensure conditions is of type Condition[]
+    organizationId: string;
+    slackChannelFormat: string;
+    triggerConfig: {
+        apiUrl: string;
+        processor: string;
+    };
+}
+
+
 
 export default function CreateHiringRoom() {
     const [currentStep, setCurrentStep] = useState("Details");
-    const [formData, setFormData] = useState({
-        name: "",
-        roomType: "",
-        conditions: [], // Conditions field for the ConditionsStep
-        slackConfig: {
-            channelFormat: "",
-            recipients: [],
-            fields: [],
-            buttons: [],
-            customMessageBody: "",
-        }, // To store Slack configuration data
-    });
+    const [formData, setFormData] = useState<FormValues>({
+      name: "",
+      objectField: "",
+      alertType: "timebased",
+      recipient: {
+          openingText: "",
+          messageFields: [],
+          messageButtons: [],
+          messageDelivery: "",
+          recipients: [],
+          customMessageBody: "",
+      }, // Set default recipient config
+      conditions: [], // Empty conditions array
+      organizationId: "",
+      slackChannelFormat: "", // Set default slack channel format
+      triggerConfig: {
+          apiUrl: "",
+          processor: "",
+      },
+  });
 
     const steps = [
         { label: "Details", step: "Details" },
         { label: "Conditions", step: "Conditions" },
         { label: "Slack Configuration", step: "Slack Configuration" },
-        { label: "Automated Actions", step: "Automated Actions" },
         { label: "Recipients", step: "Recipients" },
+        { label: "Automated Actions", step: "Automated Actions" },
         { label: "Summary", step: "Summary" },
     ];
 
-    // Handle data submission from the Details step
-    const handleDataSubmit = (data: {
-        name: string;
-        roomType: string;
-        conditions: never[];
-    }) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            ...data,
-        }));
-        setCurrentStep("Conditions"); // Move to the Conditions step after submission
-    };
+    const handleDataSubmit = (data: FormValues) => {
+      setFormData((prevData) => ({
+          ...prevData,
+          ...data,
+          triggerConfig: {
+              apiUrl: data.triggerConfig.apiUrl,
+              processor: data.triggerConfig.processor,
+          },
+      }));
+      setCurrentStep("Conditions"); // Move to the Conditions step after submission
+  };
 
-    // Handle data submission from the Conditions step
-    const handleConditionsSubmit = (conditionsData: any) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            conditions: conditionsData,
-        }));
-        setCurrentStep("Slack Configuration"); // Proceed to the next step (Slack Configuration)
-    };
+  // Handle data submission from the Conditions step
+  const handleConditionsSubmit = (conditionsData: Condition[]) => {
+      setFormData((prevData) => ({
+          ...prevData,
+          conditions: conditionsData,
+      }));
+      setCurrentStep("Slack Configuration"); // Proceed to the next step (Slack Configuration)
+  };
 
-    // Handle Slack configuration submission
-    const handleSlackConfigSubmit = (slackConfigData: any) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            slackConfig: {
-                ...prevData.slackConfig,
-                ...slackConfigData,
-            },
-        }));
-        setCurrentStep("Automated Actions"); // Proceed to the Automated Actions step
-    };
+  // Handle Slack configuration submission
+  const handleSlackConfigSubmit = (slackConfigData: {
+    channelFormat: string;
+    fields: any[];
+    buttons: any[];
+    customMessageBody: string;
+}) => {
+    setFormData((prevData) => ({
+        ...prevData,
+        slackChannelFormat: slackConfigData.channelFormat, // Only slackChannelFormat stays here
+        recipient: {
+            ...prevData.recipient, // Update the recipient object with Slack config data
+            fields: slackConfigData.fields,
+            messageButtons: slackConfigData.buttons,
+            customMessageBody: slackConfigData.customMessageBody,
+        },
+    }));
+    setCurrentStep("Recipients"); // Proceed to the Automated Actions step
+};
 
-    // Handle automated actions data submission
-    const handleAutomatedActionsSubmit = (actionsData: any) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            automatedActions: actionsData,
-        }));
-        setCurrentStep("Recipients"); // Proceed to the next step (Recipients)
-    };
+
+  // Handle automated actions data submission
+  const handleAutomatedActionsSubmit = (actionsData: any) => {
+      setFormData((prevData) => ({
+          ...prevData,
+          automatedActions: actionsData,
+      }));
+      setCurrentStep("Summary"); // Proceed to the next step (Recipients)
+  };
+
+  // Handle recipients submission
+  const handleRecipientsSubmit = (recipientsData: any) => {
+    setFormData((prevData) => ({
+        ...prevData,
+        recipient: {
+            ...prevData.recipient,
+            recipients: recipientsData, // Only save recipients here
+        },
+    }));
+    setCurrentStep("Automated Actions"); // Proceed to the Summary step
+};
+
+
 
     const renderStepComponent = () => {
         switch (currentStep) {
@@ -97,21 +162,15 @@ export default function CreateHiringRoom() {
                         onSaveAutomatedActions={handleAutomatedActionsSubmit}
                     />
                 );
+                case "Recipients":
+                  return (
+                      <RecipientsStep onSaveRecipients={handleRecipientsSubmit} />
+                  );
+              // Summary...
             // Add other steps as needed
             case "Summary":
-                return (
-                    <div>
-                        <h2>Summary</h2>
-                        <pre>{JSON.stringify(formData, null, 2)}</pre>
-                        <button
-                            onClick={() =>
-                                console.log("Final Submission", formData)
-                            }
-                        >
-                            Submit Workflow
-                        </button>
-                    </div>
-                );
+              case "Summary":
+                return (<SummaryStep formData={formData} />);
             default:
                 return null;
         }
@@ -191,7 +250,7 @@ export default function CreateHiringRoom() {
                                 </h2>
                             </div>
                             <p className="mt-2 text-xs font-medium text-gray-500">
-                                Set up recipients for your hire room.
+                                Set up who will be invited to your hire room.
                             </p>
                         </div>
                     </>

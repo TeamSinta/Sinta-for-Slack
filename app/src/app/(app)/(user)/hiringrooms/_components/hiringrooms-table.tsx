@@ -6,7 +6,6 @@ import {
     getSlackChannelsCreatedPromise,
     type getPaginatedHiringroomsQuery,
 } from "@/server/actions/hiringrooms/queries";
-import { Badge } from "@/components/ui/badge";
 import {
     LucideIcon,
     Users,
@@ -29,11 +28,11 @@ import {
 const iconMap: Record<string, { icon: LucideIcon; color: string }> = {
     Jobs: {
         icon: Briefcase,
-        color: "text-purple-600 bg-purple-100 dark:bg-purple-900 dark:text-purple-300",
+        color: "text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300",
     },
     candidates: {
         icon: Users,
-        color: "text-orange-600 bg-orange-100 dark:bg-orange-900 dark:text-orange-300",
+        color: "text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300",
     },
     reports: {
         icon: FileText,
