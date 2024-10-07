@@ -85,10 +85,10 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             ],
         },
         {
-            title: "Offer Request Created ",
+            title: "Offer Created",
             description:
-                "Triggered when an approval request is sent for a job offer for a candidate.",
-            objectField: "Approvals",
+                "Triggered when a job offer is created for a candidate.",
+            objectField: "Offers",
             apiUrl: "https://harvest.greenhouse.io/v1/approvals",
             alertType: "Create/Update",
             triggers: [
