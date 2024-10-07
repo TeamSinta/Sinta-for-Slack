@@ -19,11 +19,13 @@ import {
 import { Trash2, PlusCircle, FilterIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
-import offerAttributes from "../../../../../../utils/offer-attributes.json"; // This is where your JSON file for offers is stored
-import candidateAttributes from "../../../../../../utils/candidate-attributes.json"; // This is for the candidate attributes
-import interviewAttributes from "../../../../../../utils/interview-attributes.json"; // This is for the interview attributes
 import { ConditionSelector } from "./conditionsSelector";
-
+import {
+    CONDITIONS_OPTIONS,
+    CONDITIONS_ATTRIBUTES_LOOKUP,
+    getConditionFieldDataType,
+    DataType,
+} from "@/utils/conditions-options";
 const localStorageKey = "workflowConditions";
 
 const saveConditionsData = (newConditions) => {
@@ -34,11 +36,6 @@ const getConditionsData = () => {
     return JSON.parse(localStorage.getItem(localStorageKey)) || [];
 };
 
-const CONDITIONS_ATTRIBUTES_LOOKUP = {
-    offers: offerAttributes.offer.attributes,
-    candidates: candidateAttributes.candidate.attributes,
-    interviews: interviewAttributes.interview.attributes,
-};
 const ConditionsComponent = ({
     onSaveConditions,
     selectedElementId,
@@ -55,16 +52,16 @@ const ConditionsComponent = ({
         useState(null);
     const [triggerConfig, setTriggerConfig] = useState(null); // Hold the trigger config
     const [fields, setFields] = useState([]); // Dynamically load fields based on API URL
-
+    const [objectField, setObjectField] = useState("");
     // Fetching triggerConfig from localStorage
     useEffect(() => {
         const localTriggerConfig = localStorage.getItem("workflowTriggers");
         if (localTriggerConfig) {
             const parsedConfig = JSON.parse(localTriggerConfig);
             setTriggerConfig(parsedConfig);
-
             // Dynamically set the fields based on the API URL
             const objectField = parsedConfig.objectField;
+            setObjectField(objectField);
             if (CONDITIONS_ATTRIBUTES_LOOKUP[objectField?.toLowerCase()]) {
                 setFields(
                     CONDITIONS_ATTRIBUTES_LOOKUP[objectField?.toLowerCase()],
@@ -153,7 +150,27 @@ const ConditionsComponent = ({
 
     const handleSave = () => {
         if (isSaveEnabled) {
-            const updatedConditions = [...conditions];
+            // Save numerical conditions as integers
+            const parsedIntsConditions = conditions.map((condition) => {
+                const type = getConditionFieldDataType(
+                    condition.field,
+                    objectField.toLowerCase(),
+                );
+                if (type === DataType.ARRAY_OF_NUMBERS) {
+                    return {
+                        ...condition,
+                        value: parseInt(condition.value),
+                    };
+                }
+                if (type === DataType.NUMBER) {
+                    return {
+                        ...condition,
+                        value: parseInt(condition.value),
+                    };
+                }
+                return condition;
+            });
+            const updatedConditions = [...parsedIntsConditions];
             saveConditionsData(updatedConditions);
             onSaveConditions(updatedConditions);
 
@@ -237,7 +254,46 @@ const ConditionsComponent = ({
                                                 <SelectValue placeholder="Choose condition..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="contains">
+                                                {Object.keys(CONDITIONS_OPTIONS)
+                                                    // Only show conditions that are applicable to the field
+                                                    .filter(
+                                                        (conditionOption) => {
+                                                            const dataType =
+                                                                getConditionFieldDataType(
+                                                                    condition.field,
+                                                                    objectField.toLowerCase(),
+                                                                );
+
+                                                            return CONDITIONS_OPTIONS[
+                                                                conditionOption
+                                                            ].dataType?.includes(
+                                                                dataType,
+                                                            );
+                                                        },
+                                                    )
+                                                    // Sort the conditions by specificity
+                                                    .sort(
+                                                        (a, b) =>
+                                                            CONDITIONS_OPTIONS[
+                                                                a
+                                                            ].dataType.length -
+                                                            CONDITIONS_OPTIONS[
+                                                                b
+                                                            ].dataType.length,
+                                                    )
+                                                    .map((item) => (
+                                                        <SelectItem
+                                                            key={item}
+                                                            value={item}
+                                                        >
+                                                            {
+                                                                CONDITIONS_OPTIONS[
+                                                                    item
+                                                                ].label
+                                                            }
+                                                        </SelectItem>
+                                                    ))}
+                                                {/* <SelectItem value="contains">
                                                     (Text) Contains
                                                 </SelectItem>
                                                 <SelectItem value="not_contains">
@@ -275,7 +331,7 @@ const ConditionsComponent = ({
                                                 </SelectItem>
                                                 <SelectItem value="equals">
                                                     (Date/Time) Equals
-                                                </SelectItem>
+                                                </SelectItem> */}
                                             </SelectContent>
                                         </Select>
                                     </div>

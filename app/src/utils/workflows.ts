@@ -1,3 +1,6 @@
+//@ts-nocheck
+import { CONDITIONS_OPTIONS, DataType } from "./conditions-options";
+
 export function extractCurrentStage(application: any): string | null {
     if (
         application &&
@@ -15,88 +18,92 @@ export function checkCandidateAgainstConditions(
     application: any,
     conditions: any[],
 ): boolean {
-    return checkCondtions(application, conditions, getFieldFromApplication);
+    return checkConditions(
+        application.payload,
+        conditions,
+        getFieldFromApplication,
+    );
 }
 
-export function checkCondtions(
+export function checkConditions(
     application: any,
     conditions: any[],
     getter: (application: any, field: string) => any,
 ) {
+    // console.log("CONDITIONS", conditions);
+    // console.log("APPLICATIONS", application);
+    let result = true;
     // Iterate through all conditions
-    for (const condtion of conditions) {
-        const { field, condition, value } = condtion;
-        const payload = application.payload;
+    for (const item of conditions) {
+        // console.log("PROCESSING CONDITION", item);
+        const {
+            field,
+            condition,
+            value,
+        }: {
+            field: string;
+            condition: keyof typeof CONDITIONS_OPTIONS;
+            value: any;
+        } = item;
         // Get the candidate's data field using the utility function
-        const candidateField = getter(payload, field);
-
+        const candidateField = getter(application, field);
+        // console.log("CANDIDATE FIELD", field, candidateField);
         // Handle if the field is not found
         if (candidateField === undefined) {
             console.warn(`Field ${field} not found in application.`);
             return false;
         }
-        if (!evaluateCondition(condition, value, candidateField)) return false;
+        if (!evaluateCondition(condition, value, candidateField, field))
+            result = false;
     }
     // If all conditions are met
-    return true;
+    return result;
 }
 
 export function evaluateCondition(
-    condition: string,
+    condition: keyof typeof CONDITIONS_OPTIONS,
     value: any,
     inputValue: any,
-): Boolean {
+    field: string,
+): boolean {
     // Compare candidate field with condition's value based on the operator
-    switch (condition) {
-        case "equals":
-            return inputValue === value;
-        case "not_equals":
-            return inputValue !== value;
-        case "contains":
-            return typeof inputValue === "string" && inputValue.includes(value);
-        case "not_contains":
-            return (
-                typeof inputValue === "string" && !inputValue.includes(value)
-            );
-        case "exactly_matches":
-            return typeof inputValue === "string" && inputValue === value;
-
-        case "not_exactly_matches":
-            return typeof inputValue === "string" && inputValue !== value;
-        case "starts_with":
-            return (
-                typeof inputValue === "string" && inputValue.startsWith(value)
-            );
-
-        case "not_starts_with":
-            return (
-                typeof inputValue === "string" && !inputValue.startsWith(value)
-            );
-
-        case "ends_with":
-            return typeof inputValue === "string" && inputValue.endsWith(value);
-
-        case "greater_than":
-            return typeof inputValue === "number" && inputValue > value;
-
-        case "less_than":
-            return typeof inputValue === "number" && inputValue < value;
-        case "after":
-            return new Date(inputValue) > new Date(value);
-        case "before":
-            return new Date(inputValue) < new Date(value);
-        case "is_true":
-            return Boolean(inputValue);
-        case "is_false":
-            return !Boolean(inputValue);
-        case "exists":
-            return inputValue !== undefined && inputValue !== null;
-        case "does_not_exist":
-            return inputValue === undefined || inputValue === null;
-        default:
-            console.warn(`Unknown operator: ${condition}`);
-            return false;
+    const conditionOption = CONDITIONS_OPTIONS[condition];
+    if (!conditionOption) {
+        console.warn(`Unknown operator: ${condition}`);
+        return false;
     }
+
+    // Validate the data type (optional)
+    const isValidType = conditionOption.dataType.some((type: string) => {
+        if (type === DataType.TEXT) return typeof inputValue === "string";
+        if (type === DataType.NUMBER) return typeof inputValue === "number";
+        if (type === DataType.DATETIME)
+            return !isNaN(new Date(inputValue).getTime());
+        if (type === DataType.BOOLEAN) return true;
+        if (type === DataType.ARRAY_OF_STRINGS)
+            return (
+                Array.isArray(inputValue) &&
+                inputValue.every((item) => typeof item === "string")
+            );
+        if (type === DataType.ARRAY_OF_NUMBERS)
+            return (
+                Array.isArray(inputValue) &&
+                inputValue.every((item) => typeof item === "number")
+            );
+        if (type === DataType.ARRAY_OF_OBJECTS)
+            return Array.isArray(inputValue);
+    });
+
+    if (!isValidType) {
+        console.warn(`Invalid data type for condition: ${condition}`);
+        return false;
+    }
+
+    let propertyKey;
+    if (conditionOption.dataType.includes(DataType.ARRAY_OF_OBJECTS)) {
+        propertyKey = field.split(".").pop();
+    }
+    return conditionOption.evaluator(inputValue, value, propertyKey);
 }
 
 export function getFieldFromApplication(application: any, field: string): any {

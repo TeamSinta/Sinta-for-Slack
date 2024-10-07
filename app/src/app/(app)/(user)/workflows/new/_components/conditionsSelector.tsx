@@ -134,6 +134,9 @@ export function ConditionSelector({
                                                 <div className="text-sm text-muted-foreground">
                                                     {attribute.description}
                                                 </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    ({attribute.dataType})
+                                                </div>
                                             </div>
                                         </HoverCardContent>
                                     </HoverCard>

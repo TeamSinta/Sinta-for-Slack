@@ -145,12 +145,14 @@ export const WorkflowPublishModal = ({
                 // Combine conditionsData with triggerData.mainCondition
                 const combinedConditions = [
                     // Map through the main conditions and add the condition_type field
-                    ...(triggerData.mainCondition || []).map(
-                        (condition: any) => ({
-                            ...condition,
-                            condition_type: "Main", // Add condition_type for main conditions
-                        }),
-                    ),
+                    ...(triggerData?.mainCondition
+                        ? [
+                              {
+                                  ...triggerData.mainCondition,
+                                  condition_type: "Main",
+                              },
+                          ]
+                        : []),
                     // Map through the conditionsData and add the condition_type field
                     ...conditionsData.map((condition: any) => ({
                         ...condition,

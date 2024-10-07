@@ -3,111 +3,143 @@
         "attributes": [
             {
                 "field": "id",
-                "description": "Application ID"
+                "description": "Application ID",
+                "dataType": "number"
             },
             {
                 "field": "prospect",
-                "description": "If true, this is a prospect application, meaning the person is a prospect and has not applied for a job."
+                "description": "If true, this is a prospect application, meaning the person is a prospect and has not applied for a job.",
+                "dataType": "boolean"
             },
             {
                 "field": "status",
-                "description": "One of: active, rejected, hired, converted."
+                "description": "One of: active, rejected, hired, converted.",
+                "dataType": "string"
             },
             {
                 "field": "jobs",
-                "description": "An array containing the jobs that the candidate applied for."
+                "description": "An array containing the jobs that the candidate applied for.",
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "job_post_id",
-                "description": "The ID of the job post through which the candidate applied."
+                "description": "The ID of the job post through which the candidate applied.",
+                "dataType": "number"
             },
             {
                 "field": "candidate_id",
-                "description": "The ID of the candidate applying for this job."
+                "description": "The ID of the candidate applying for this job.",
+                "dataType": "number"
             },
             {
                 "field": "current_stage",
-                "description": "The current stage this application is in."
+                "description": "The current stage this application is in.",
+                "dataType": "object"
             },
             {
                 "field": "credited_to.id",
-                "description": "The ID of the user credited for this application."
+                "description": "The ID of the user credited for this application.",
+                "dataType": "number"
             },
             {
                 "field": "location",
-                "description": "The contents of the location question on a job post."
+                "description": "The contents of the location question on a job post.",
+                "dataType": "object"
             },
             {
                 "field": "answers",
-                "description": "The answers provided to questions in the job post for this application."
+                "description": "The answers provided to questions in the job post for this application.",
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "custom_fields",
-                "description": "Contains a hash of custom fields configured for this resource."
+                "description": "Contains a hash of custom fields configured for this resource.",
+                "dataType": "object"
             },
             {
                 "field": "keyed_custom_fields",
-                "description": "Contains more detailed information about custom fields with immutable keys."
+                "description": "Contains more detailed information about custom fields with immutable keys.",
+                "dataType": "object"
             },
             {
                 "field": "prospective_department",
-                "description": "The department that this prospect application is being considered for."
+                "description": "The department that this prospect application is being considered for.",
+                "dataType": "string"
             },
             {
                 "field": "prospective_office",
-                "description": "The office associated with this prospect application."
+                "description": "The office associated with this prospect application.",
+                "dataType": "string"
             },
             {
                 "field": "company",
-                "description": "The company at which the candidate currently works."
+                "description": "The company at which the candidate currently works.",
+                "dataType": "string"
             },
             {
                 "field": "title",
-                "description": "The candidate's current title."
+                "description": "The candidate's current title.",
+                "dataType": "string"
             },
             {
                 "field": "is_private",
-                "description": "Whether the candidate is private or not. One of: ['true', 'false']."
+                "description": "Whether the candidate is private or not. One of: ['true', 'false'].",
+                "dataType": "boolean"
             },
             {
                 "field": "application_ids",
-                "description": "An array of application IDs associated with this candidate."
+                "description": "An array of application IDs associated with this candidate.",
+                "dataType": "arrayOfNumbers"
             },
             {
                 "field": "phone_numbers[].type",
-                "description": "One of: ['home', 'work', 'mobile', 'skype', 'other']."
+                "description": "One of: ['home', 'work', 'mobile', 'skype', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "addresses[].type",
-                "description": "One of: ['home', 'work', 'other']."
+                "description": "One of: ['home', 'work', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "email_addresses[].type",
-                "description": "One of: ['personal', 'work', 'other']."
+                "description": "One of: ['personal', 'work', 'other'].",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "website_addresses[].value",
+                "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "website_addresses[].type",
-                "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other']."
+                "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "recruiter",
-                "description": "The recruiter responsible for this candidate."
+                "description": "The recruiter responsible for this candidate.",
+                "dataType": "object"
             },
             {
                 "field": "coordinator",
-                "description": "The coordinator responsible for this candidate."
+                "description": "The coordinator responsible for this candidate.",
+                "dataType": "object"
             },
             {
                 "field": "attachments[].type",
-                "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other']."
+                "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "attachments[].url",
-                "description": "URL to attachment. URLs expire in 7 days."
+                "description": "URL to attachment. URLs expire in 7 days.",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "linked_user_ids",
-                "description": "If the candidate is an internal applicant, returns the Greenhouse user ID of the candidate."
+                "description": "If the candidate is an internal applicant, returns the Greenhouse user ID of the candidate.",
+                "dataType": "arrayOfNumbers"
             }
         ]
     }

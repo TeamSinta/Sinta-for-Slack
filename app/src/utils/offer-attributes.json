@@ -3,47 +3,58 @@
         "attributes": [
             {
                 "field": "id",
-                "description": "The offer's unique identifier"
+                "description": "The offer's unique identifier",
+                "dataType": "number"
             },
             {
                 "field": "version",
-                "description": "The version number of this offer. When an existing offer is updated, a new one is typically created with an incremented version."
+                "description": "The version number of this offer. When an existing offer is updated, a new one is typically created with an incremented version.",
+                "dataType": "number"
             },
             {
                 "field": "application_id",
-                "description": "The ID of the associated application."
+                "description": "The ID of the associated application.",
+                "dataType": "number"
             },
             {
                 "field": "created_at",
-                "description": "Date when this offer was created."
+                "description": "Date when this offer was created.",
+                "dataType": "date"
             },
             {
                 "field": "resolved_at",
-                "description": "Date when this offer was resolved (e.g., when it was accepted, rejected)."
+                "description": "Date when this offer was resolved (e.g., when it was accepted, rejected).",
+                "dataType": "date"
             },
             {
                 "field": "sent_at",
-                "description": "Date when this offer was sent to the candidate."
+                "description": "Date when this offer was sent to the candidate.",
+                "dataType": "date"
             },
             {
                 "field": "starts_at",
-                "description": "Date when the candidate starts. This is the date entered in the Start Date field on the candidate's Offer Details."
+                "description": "Date when the candidate starts. This is the date entered in the Start Date field on the candidate's Offer Details.",
+                "dataType": "date"
             },
             {
                 "field": "status",
-                "description": "One of: unresolved, accepted, rejected, deprecated."
+                "description": "One of: unresolved, accepted, rejected, deprecated.",
+                "dataType": "string"
             },
             {
                 "field": "custom_fields",
-                "description": "Contains a hash of the custom fields configured for this resource."
+                "description": "Contains a hash of the custom fields configured for this resource.",
+                "dataType": "object"
             },
             {
                 "field": "keyed_custom_fields",
-                "description": "Contains the same information as custom_fields but includes more detailed data with an immutable key."
+                "description": "Contains the same information as custom_fields but includes more detailed data with an immutable key.",
+                "dataType": "object"
             },
             {
                 "field": "opening",
-                "description": "The Job Opening associated with the offer. Null if none."
+                "description": "The Job Opening associated with the offer. Null if none.",
+                "dataType": "object"
             }
         ]
     }

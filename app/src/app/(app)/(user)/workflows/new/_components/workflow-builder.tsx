@@ -420,7 +420,7 @@ export function WorkflowBuilder({
         );
         localStorage.setItem(
             localStorageKeyConditions,
-            JSON.stringify([...conditions, newConditionStep]),
+            JSON.stringify([...(conditions ?? []), newConditionStep]),
         );
         moveActionStepToEnd();
         setSelectValue(undefined);
