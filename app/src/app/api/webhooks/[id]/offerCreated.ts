@@ -1,12 +1,27 @@
-import { fetchStuckInStageWorkflows } from "@/server/actions/workflows/queries";
+import { filterCandidatesDataForSlack } from "@/lib/slack";
+import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
+import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
+import {
+    fetchStuckInStageWorkflows,
+    fetchWorkflowsByObjectFieldAndAlertType,
+} from "@/server/actions/workflows/queries";
+import {
+    fetchApplicationDetails,
+    fetchCandidateDetails,
+    fetchCandidates,
+} from "@/server/greenhouse/core";
+import { sendSlackNotification } from "@/server/slack/core";
 import { Condition, MainCondition } from "@/types/workflows";
 import { checkConditions } from "@/utils/workflows";
 
 export async function handleOfferCreated(data: any, orgID: string) {
-    const workflows = await fetchStuckInStageWorkflows(orgID);
+    const workflows = await fetchWorkflowsByObjectFieldAndAlertType(
+        orgID,
+        "Offers",
+        "Create/Update",
+    );
     console.log("data", data);
-
-    const payload = data.payload;
+    const offerData = data.payload.offer;
 
     for (const workflow of workflows) {
         const { conditions } = workflow as {
@@ -20,13 +35,37 @@ export async function handleOfferCreated(data: any, orgID: string) {
         );
 
         const conditionsMet = checkConditions(
-            payload,
+            offerData,
             secondaryConditions,
             getAttributeValue,
         );
 
         if (conditionsMet) {
-            const application = await 
+            const applicationId = offerData.application_id;
+            const application = await fetchApplicationDetails(applicationId);
+
+            const slackTeamID = await getSlackTeamIDByWorkflowID(workflow.id);
+            const subDomain = await getSubdomainByWorkflowID(workflow.id);
+            const candidateDetails = await fetchCandidateDetails(
+                application.candidate_id,
+            );
+
+            const filteredSlackDataWithMessage =
+                await filterCandidatesDataForSlack(
+                    [candidateDetails],
+                    workflow.recipient,
+                    slackTeamID,
+                );
+
+            if (filteredSlackDataWithMessage.length > 0) {
+                await sendSlackNotification(
+                    filteredSlackDataWithMessage,
+                    workflow.recipient,
+                    slackTeamID,
+                    subDomain,
+                    candidateDetails,
+                );
+            }
         } else {
             console.log(
                 `Created offer did not meet conditions for workflow "${workflow.name}".`,
