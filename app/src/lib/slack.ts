@@ -63,6 +63,7 @@ interface WorkflowRecipient {
     }>;
     messageDelivery: string;
     customMessageBody: string;
+    attachments?: { name: string; id: string }[];
 }
 
 export async function log(message: string) {

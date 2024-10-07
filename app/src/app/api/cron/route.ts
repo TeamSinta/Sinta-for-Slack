@@ -367,7 +367,6 @@ export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
             greenhouseRoles.push(rec.value);
         }
     });
-    console.log();
 
     if (hasGreenhouse) {
         const candidates = filteredConditionsData;
@@ -449,7 +448,7 @@ export async function handleWorkflows() {
                         );
                         break;
                 }
-                if (filteredConditionsData.length === 0) {
+                if (filteredConditionsData?.length === 0) {
                     shouldReturnNull = true; // Set flag to true
                 } else {
                     console.log("No conditions running");

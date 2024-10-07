@@ -168,6 +168,7 @@ interface WorkflowRecipient {
     openingText: string;
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
+    uploadedFiles: { name: string; id: string }[];
 }
 
 export async function sendSlackNotification(
@@ -258,6 +259,15 @@ export async function sendSlackNotification(
                                         text: customMessageBody,
                                     },
                                 },
+                                ...(workflowRecipient.uploadedFiles?.length > 0
+                                    ? workflowRecipient.uploadedFiles.map(
+                                          (file) => ({
+                                              type: "file",
+                                              external_id: file.id,
+                                              source: "remote",
+                                          }),
+                                      )
+                                    : []),
                                 ...(workflowRecipient.messageButtons.length > 0
                                     ? [
                                           {
@@ -331,8 +341,9 @@ export async function sendSlackNotification(
                         .flat(), // Flatten the array of arrays
                 ],
             },
+            { id: "F07P92F2NMV" },
         ];
-        console.log("INPUT");
+        // console.log("INPUT");
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
@@ -347,9 +358,9 @@ export async function sendSlackNotification(
         });
 
         const data = await response.json();
-        console.log(data);
-        console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
-        console.log("Response Slack message sent:", response.status);
+        // console.log(data);
+        // console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
+        // console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
@@ -1129,6 +1140,8 @@ export async function postMessageToChannel(userId: string, body: any) {
             channel: slackUserId,
         }),
     });
+    // const resjson = await response.json();
+    // console.log("RESPONSE", resjson);
     if (!response.ok) throw new Error("Failed to post message");
 
     return true;
@@ -1194,6 +1207,13 @@ function parseCustomMessageBody(
     formattedMessage = formattedMessage.replace(
         /{{Interview End Time}}/g,
         formatToReadableDate(interviewDetails?.end?.date_time) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Scorecard ids}}/g,
+        interviewDetails?.interviewers
+            ?.map((interviewer) => interviewer?.scorecard_id)
+            .filter((item) => item)
+            .join(" | ") || "N/A",
     );
     formattedMessage = formattedMessage.replace(
         /{{Interview Title}}/g,
