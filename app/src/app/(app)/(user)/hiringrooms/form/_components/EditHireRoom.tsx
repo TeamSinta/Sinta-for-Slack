@@ -30,7 +30,7 @@ import {
 import { format } from "date-fns";
 import SlackChannelNameFormat from "../../_components/SlackChannelNameFormat";
 import SlackHiringroom from "../../_components/slack-hiringroom";
-
+import parse from "html-react-parser";
 export default function EditHireRoom({ roomId }: { roomId: string }) {
     const [hiringRoom, setHiringRoom] = useState(null);
     const [slackChannels, setSlackChannels] = useState([]);
@@ -45,13 +45,16 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                 setHiringRoom(roomData);
                 const slackData = await getSlackChannelsById(roomId);
                 setSlackChannels(slackData);
+                setCustomMessageBody(roomData.recipient.customMessageBody);
             }
         }
         fetchRoomData();
     }, [roomId]);
 
-    const handleCustomMessageBodyChange = (messageBody: string) =>
+    const handleCustomMessageBodyChange = (messageBody: string) => {
         console.log("Custom Message Body:", messageBody);
+        setCustomMessageBody(messageBody);
+    };
 
     const handleStatusChange = async () => {
         // Toggle the status
@@ -223,21 +226,11 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                     />
                 </div>
                 <div className="bg-gray-50 p-6 text-gray-700">
-                    <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
-                        {hiringRoom.recipient.customMessageBody}
-                    </p>
-                </div>
-            </div>
-
-            {/* Slack Channel Format Section */}
-            <div className="mb-6 rounded-sm border border-gray-200">
-                <div className="flex items-center justify-between p-6">
-                    <h2 className="font-heading text-lg font-semibold">
-                        Slack Channel Format
-                    </h2>
-                    <EditButton
-                        onClick={() =>
-                            console.log("Edit Channel Format Clicked")
+                    {/* SlackHiringroom Component for Configuring Recipients */}
+                    <SlackHiringroom
+                        customMessageBody={customMessageBody}
+                        onCustomMessageBodyChange={
+                            handleCustomMessageBodyChange
                         }
                     />
                 </div>
@@ -248,26 +241,6 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                     </p>
                     {/* Slack Channel Format Component */}
                     <SlackChannelNameFormat />
-                </div>
-            </div>
-
-            {/* Recipient Section */}
-            <div className="mb-6 rounded-sm border border-gray-200">
-                <div className="flex items-center justify-between p-6">
-                    <h2 className="font-heading text-lg font-semibold">
-                        Slack Recipients
-                    </h2>
-                    <EditButton
-                        onClick={() => console.log("Edit Recipients Clicked")}
-                    />
-                </div>
-                <div className="bg-gray-50 p-6 text-gray-700">
-                    {/* SlackHiringroom Component for Configuring Recipients */}
-                    <SlackHiringroom
-                        onCustomMessageBodyChange={
-                            handleCustomMessageBodyChange
-                        }
-                    />
                 </div>
             </div>
 
