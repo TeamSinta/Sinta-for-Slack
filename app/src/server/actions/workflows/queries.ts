@@ -45,6 +45,19 @@ export async function getWorkflows() {
 }
 
 export async function fetchStuckInStageWorkflows(orgID: string) {
+    const data = await fetchWorkflowsByObjectFieldAndAlertType(
+        orgID,
+        "Candidates",
+        "stuck-in-stage",
+    );
+    return data;
+}
+
+export async function fetchWorkflowsByObjectFieldAndAlertType(
+    orgID: string,
+    objectField: string,
+    alertType: string,
+) {
     const { data } = await db.transaction(async (tx) => {
         const data = await tx
             .select()
@@ -52,7 +65,8 @@ export async function fetchStuckInStageWorkflows(orgID: string) {
             .where(
                 and(
                     eq(workflows.organizationId, orgID), // Condition 1: Match orgID
-                    eq(workflows.alertType, "stuck-in-stage"), // Condition 2: Match alertType
+                    eq(workflows.alertType, alertType), // Condition 2: Match alertType
+                    eq(workflows.objectField, objectField),
                 ),
             )
             .execute();
@@ -62,6 +76,7 @@ export async function fetchStuckInStageWorkflows(orgID: string) {
 
     return data;
 }
+
 export async function getPaginatedWorkflowsQuery(
     input: GetPaginatedWorkflowsQueryProps,
 ) {
