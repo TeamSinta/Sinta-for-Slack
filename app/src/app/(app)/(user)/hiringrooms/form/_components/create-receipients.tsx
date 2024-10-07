@@ -13,8 +13,24 @@ interface Option {
     source: SourceType; // Must be of type SourceType
 }
 
-export const RecipientsStep = ({ onSaveRecipients, onBack }: any) => {
-    const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
+interface RecipientsStepProps {
+    onSaveRecipients: (recipients: Option[]) => void;
+    onBack: () => void;
+    initialRecipients?: { value: string; label: string; source: string }[]; // Initial data may come in as `string` type for `source`
+}
+
+export const RecipientsStep: React.FC<RecipientsStepProps> = ({
+    onSaveRecipients,
+    onBack,
+    initialRecipients = [], // Default to an empty array if no initial data is passed
+}) => {
+    // Map initial recipients to ensure `source` is typed as `SourceType`
+    const mappedRecipients: Option[] = initialRecipients.map(recipient => ({
+        ...recipient,
+        source: recipient.source as SourceType, // Assert that `source` is of type SourceType
+    }));
+
+    const [selectedRecipients, setSelectedRecipients] = useState<Option[]>(mappedRecipients);
     const [options, setOptions] = useState<Option[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -80,7 +96,6 @@ export const RecipientsStep = ({ onSaveRecipients, onBack }: any) => {
     // Handle submit
     const handleSubmit = () => {
         onSaveRecipients(selectedRecipients);
-        console.log(selectedRecipients)// Pass selected recipients to the parent component
     };
 
     return (

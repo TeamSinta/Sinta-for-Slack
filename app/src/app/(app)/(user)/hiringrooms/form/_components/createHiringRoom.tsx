@@ -145,16 +145,22 @@ export default function CreateHiringRoom() {
     const renderStepComponent = () => {
         switch (currentStep) {
             case "Details":
-                return <DetailsStep onDataSubmit={handleDataSubmit} />;
+                return <DetailsStep onDataSubmit={handleDataSubmit} initialData={formData} />;
             case "Conditions":
                 return (
-                    <ConditionsStep onSaveConditions={handleConditionsSubmit} />
+                  <ConditionsStep onSaveConditions={handleConditionsSubmit} initialConditions={formData.conditions} />
                 );
             case "Slack Configuration":
                 return (
-                    <SlackConfigurationStep
-                        onSaveConfig={handleSlackConfigSubmit}
-                    />
+                  <SlackConfigurationStep
+                  onSaveConfig={handleSlackConfigSubmit}
+                  initialData={{
+                      channelFormat: formData.slackChannelFormat,
+                      fields: formData.recipient.messageFields,
+                      buttons: formData.recipient.messageButtons,
+                      customMessageBody: formData.recipient.customMessageBody,
+                  }}
+              />
                 );
             case "Automated Actions":
                 return (
@@ -164,7 +170,12 @@ export default function CreateHiringRoom() {
                 );
                 case "Recipients":
                   return (
-                      <RecipientsStep onSaveRecipients={handleRecipientsSubmit} />
+                    <RecipientsStep
+          onSaveRecipients={handleRecipientsSubmit}
+          onBack={() => setCurrentStep("Slack Configuration")}
+          initialRecipients={formData.recipient.recipients} // Pass the previously selected recipients
+      />
+
                   );
               // Summary...
             // Add other steps as needed

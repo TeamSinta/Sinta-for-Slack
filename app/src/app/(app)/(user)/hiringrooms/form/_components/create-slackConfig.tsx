@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SlackMessageBox from "./slack-messageBox";
@@ -23,47 +23,71 @@ const formatSlackChannelName = (name: string): string => {
         .replace(/[^a-zA-Z0-9-_]/g, ""); // Remove invalid characters
 };
 
-const SlackChannelNameFormat: React.FC<{ selectedType: "Candidates" | "Jobs"; format: string; setFormat: (format: string) => void }> = ({ selectedType, format, setFormat }) => {
+const SlackChannelNameFormat: React.FC<{
+  selectedType: "Candidates" | "Jobs";
+  format: string;
+  setFormat: (format: string) => void;
+}> = ({ selectedType, format, setFormat }) => {
 
-    const handleTokensChange = (format: string) => {
-        let finalFormat = replaceTokensWithExamples(format);
-        finalFormat += format.replace(/{{.*?}}/g, ""); // Ensure custom variables are kept
-        finalFormat = formatSlackChannelName(finalFormat);
-        setFormat(finalFormat);
-    };
+  useEffect(() => {
+      setFormat(format); // Ensure format is updated when initial data changes
+  }, [format]);
 
-    return (
-        <div className="w-full ">
-            <TokenSelect selectedType={selectedType} onTokensChange={handleTokensChange} />
-            {format && (
-                <div className="mt-6">
-                    <label className="block mb-2 text-sm font-medium text-gray-700">Generated Slack Channel Name:</label>
-                    <div className="p-4 rounded-lg shadow-md bg-gray-100 border border-gray-300">
-                        <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold text-blue-600">
-                                #{format}
-                            </span>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                            This is your Slack channel name preview.
-                        </p>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+  const handleTokensChange = (format: string) => {
+      let finalFormat = replaceTokensWithExamples(format);
+      finalFormat += format.replace(/{{.*?}}/g, ""); // Ensure custom variables are kept
+      finalFormat = formatSlackChannelName(finalFormat);
+      setFormat(finalFormat);
+  };
+
+  return (
+      <div className="w-full ">
+          <TokenSelect selectedType={selectedType} onTokensChange={handleTokensChange} />
+          {format && (
+              <div className="mt-6">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Generated Slack Channel Name:</label>
+                  <div className="p-4 rounded-lg shadow-md bg-gray-100 border border-gray-300">
+                      <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-blue-600">
+                              #{format}
+                          </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                          This is your Slack channel name preview.
+                      </p>
+                  </div>
+              </div>
+          )}
+      </div>
+  );
 };
 
-const SlackConfigurationStep: React.FC<{ onSaveConfig: (slackConfigData: any) => void }> = ({ onSaveConfig }) => {
-    const [channelFormat, setChannelFormat] = useState("");
-    const [selectedType] = useState<"Candidates" | "Jobs">("Candidates");
 
+interface SlackConfigData {
+  channelFormat: string;
+  fields: any[]; // Add this to the definition
+  buttons: any[];
+  customMessageBody: string;
+}
+
+
+interface SlackConfigurationStepProps {
+    onSaveConfig: (slackConfigData: SlackConfigData) => void;
+    initialData?: SlackConfigData; // Optional initial data for pre-filling
+}
+
+const SlackConfigurationStep: React.FC<SlackConfigurationStepProps> = ({ onSaveConfig, initialData }) => {
+    const [channelFormat, setChannelFormat] = useState(initialData?.channelFormat || "");
+    const [selectedType] = useState<"Candidates" | "Jobs">("Candidates");
+    const [fields, setFields] = useState<any[]>(initialData?.fields || []);
     const [customMessageBody, setCustomMessageBody] = useState(
-        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks."
+        initialData?.customMessageBody || "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks."
     );
-    const [buttons, setButtons] = useState<ButtonAction[]>([
-        { label: "Acknowledge", action: "", type: ButtonType.AcknowledgeButton },
-    ]);
+    const [buttons, setButtons] = useState<ButtonAction[]>(
+        initialData?.buttons || [
+            { label: "Acknowledge", action: "", type: ButtonType.AcknowledgeButton },
+        ]
+    );
 
     const handleCustomMessageBodyChange = (messageBody: string) => setCustomMessageBody(messageBody);
     const handleButtonsChange = (updatedButtons: ButtonAction[]) => setButtons(updatedButtons);
@@ -74,6 +98,8 @@ const SlackConfigurationStep: React.FC<{ onSaveConfig: (slackConfigData: any) =>
             channelFormat,
             customMessageBody,
             buttons,
+            fields, // Make sure to pass fields
+
         };
         onSaveConfig(slackConfigData); // Pass data to the parent component
     };
