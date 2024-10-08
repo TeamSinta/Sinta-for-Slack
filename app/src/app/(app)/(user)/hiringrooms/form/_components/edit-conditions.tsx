@@ -8,21 +8,15 @@ import ConditionsCard from "./ConditionsCard";
 
 export default function EditConditions({
     onSaveConditions,
-    initialConditions, // Pass in existing conditions to pre-fill form
+    conditions,
+    setConditions,
     isEditing = true,
-    setIsEditing,
 }: {
     onSaveConditions: (conditions: any[]) => void;
-    initialConditions: any[]; // Pre-fill with existing conditions
+    conditions;
     isEditing?: boolean;
-    setIsEditing?: (isEditing: boolean) => void;
+    setConditions: (conditions: any[]) => void;
 }) {
-    const [conditions, setConditions] = useState(
-        initialConditions.length > 0
-            ? initialConditions
-            : [{ id: 0, field: "", condition: "", value: "" }],
-    );
-    const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [fields, setFields] = useState<
         { field: string; description: string }[]
     >([]); // For dynamic field setting based on trigger
@@ -31,15 +25,6 @@ export default function EditConditions({
     useEffect(() => {
         setFields(candidateAttributes.candidate.attributes); // Change this as needed
     }, []);
-
-    // Enable/disable save button based on whether all condition fields are filled
-    useEffect(() => {
-        const allFieldsFilled = conditions.every(
-            (condition) =>
-                condition.field && condition.condition && condition.value,
-        );
-        setIsSaveEnabled(allFieldsFilled);
-    }, [conditions]);
 
     const handleConditionChange = (id: number, key: string, value: string) => {
         setConditions((prevConditions) =>
@@ -66,12 +51,6 @@ export default function EditConditions({
         setConditions((prevConditions) =>
             prevConditions.filter((condition) => condition.id !== id),
         );
-    };
-
-    const handleSave = () => {
-        if (isSaveEnabled) {
-            onSaveConditions([...conditions]); // Pass the conditions to the parent component
-        }
     };
 
     return (

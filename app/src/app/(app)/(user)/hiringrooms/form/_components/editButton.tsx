@@ -4,16 +4,18 @@ type EditButtonProps = {
     onClick?: () => void;
     isEditing: boolean;
     onCancel?: () => void;
+    disabled?: boolean;
 };
 
 export const EditButton: React.FC<EditButtonProps> = ({
     onClick,
     isEditing,
     onCancel,
+    disabled = false,
 }) => {
     return (
         <div className="flex flex-row gap-2">
-            {isEditing && (
+            {onCancel && isEditing && (
                 <button
                     onClick={onCancel}
                     className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
@@ -23,7 +25,8 @@ export const EditButton: React.FC<EditButtonProps> = ({
             )}
             <button
                 onClick={onClick}
-                className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
+                className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 disabled:opacity-30"
+                disabled={disabled}
             >
                 {isEditing ? (
                     <CheckCircle2Icon className="mr-2 h-4 w-4" />

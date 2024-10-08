@@ -87,7 +87,7 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
 //     // other fields as necessary
 // });
 
-type UpdateHiringroomProps = z.infer<typeof hiringroomSelectSchema>;
+type UpdateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
 
 export async function updateHiringroomMutation(props: UpdateHiringroomProps) {
     // await adminProcedure();
@@ -101,6 +101,8 @@ export async function updateHiringroomMutation(props: UpdateHiringroomProps) {
             cause: hiringroomParse.error.errors,
         });
     }
+
+    console.log("HIRING ROOM PARSE", hiringroomParse.data);
 
     return await db
         .update(hiringrooms)

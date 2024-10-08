@@ -44,7 +44,9 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
         "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
     );
     const [tempRoomName, setTempRoomName] = useState<string | null>(null);
-    const [isEditingConditions, setIsEditingConditions] = useState(false);
+    const [tempConditions, setTempConditions] = useState<
+        { id: number; field: string; condition: string; value: string }[] | null
+    >(null);
     const {
         mutateAsync,
         isPending: isMutatePending,
@@ -101,7 +103,7 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
         await mutateAsync(data);
     };
 
-    async function handleDoneEditingName() {
+    async function handleEditingName() {
         if (tempRoomName !== null) {
             setHiringRoom({ ...hiringRoom, name: tempRoomName });
             await handleSaveHiringRoomChanges({
@@ -111,6 +113,22 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
             setTempRoomName(null);
         } else {
             setTempRoomName(hiringRoom.name);
+        }
+    }
+
+    async function handleEditingConditions() {
+        if (tempConditions !== null) {
+            setHiringRoom({
+                ...hiringRoom,
+                conditions: tempConditions,
+            });
+            await handleSaveHiringRoomChanges({
+                ...hiringRoom,
+                conditions: tempConditions,
+            });
+            setTempConditions(null);
+        } else {
+            setTempConditions(hiringRoom.conditions);
         }
     }
 
@@ -197,7 +215,7 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                     </h2>
                     <EditButton
                         onCancel={() => setTempRoomName(null)}
-                        onClick={handleDoneEditingName}
+                        onClick={handleEditingName}
                         isEditing={tempRoomName !== null}
                     />
                 </div>
@@ -233,10 +251,18 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                         Conditions
                     </h2>
                     <EditButton
-                        onClick={() =>
-                            setIsEditingConditions(!isEditingConditions)
+                        onClick={handleEditingConditions}
+                        isEditing={tempConditions !== null}
+                        onCancel={() => setTempConditions(null)}
+                        disabled={
+                            tempConditions !== null &&
+                            !tempConditions.every(
+                                (condition) =>
+                                    condition.field &&
+                                    condition.condition &&
+                                    condition.value,
+                            )
                         }
-                        isEditing={isEditingConditions}
                     />
                 </div>
 
@@ -255,9 +281,9 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                     <div className="w-full pb-8">
                         <ConditionsStep
                             onSaveConditions={() => {}}
-                            initialConditions={hiringRoom.conditions}
-                            isEditing={isEditingConditions}
-                            setIsEditing={setIsEditingConditions}
+                            conditions={tempConditions ?? hiringRoom.conditions}
+                            setConditions={setTempConditions}
+                            isEditing={tempConditions !== null}
                         />
                     </div>
                 ) : (
