@@ -58,11 +58,8 @@
         "@vercel/analytics": "^1.2.2",
         "add": "^2.0.6",
         "autoprefixer": "^10.4.17",
-<<<<<<< HEAD
-=======
         "aws-sdk": "^2.1691.0",
 
->>>>>>> development
         "badge": "^0.0.0",
         "button": "^1.1.1",
         "calendar": "^0.1.1",
