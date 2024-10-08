@@ -6,8 +6,28 @@ import { createHiringroomMutation } from "@/server/actions/hiringrooms/mutations
 import { toast } from "sonner";
 import { siteUrls } from "@/config/urls";
 import { useRouter } from "next/navigation";
-import SlackMessageBox from "./slack-messageBox"; // Import the updated view-only SlackMessageBox
 import ViewSlackMessageBox from "./view-slack-messagebox";
+import { Badge } from "@/components/ui/badge";
+import slackLogo from "../../../../../../../public/slack-logo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
+import Image, { StaticImageData } from "next/image";
+
+type SourceType = "slack" | "greenhouse";
+
+interface Recipient {
+  label: string;
+  value: string;
+  source: SourceType;
+}
+
+const logoMap: Record<SourceType, StaticImageData> = {
+  slack: slackLogo,
+  greenhouse: greenhouseLogo,
+};
+
+const badgeStyle = (variable: string, color: string = "blue") => {
+  return `<span class="inline-block mx-1 rounded border border-${color}-400 bg-${color}-50 px-2 py-1 text-sm font-semibold text-${color}-500">${variable}</span>`;
+};
 
 const SummaryStep = ({ formData }: { formData: any }) => {
   const router = useRouter();
@@ -42,8 +62,57 @@ const SummaryStep = ({ formData }: { formData: any }) => {
           <h3 className="font-heading text-lg font-semibold">Hiring Room Details</h3>
         </div>
         <div className="bg-gray-50 p-6 text-sm text-gray-700 rounded-lg">
-          <p className="font-medium">Name: {formData.name}</p>
-          <p className="pt-2 font-medium">Room Type: {formData.objectField}</p>
+          {/* Name */}
+          <p className="font-medium flex gap-2">
+            Name:
+            <h3 className="font-heading text-md font-bold"> {formData.name}</h3>
+          </p>
+          {/* Room Type */}
+          <p className="pt-2 font-medium">
+            Room Type:{" "}
+            <span
+              dangerouslySetInnerHTML={{
+                __html: badgeStyle(formData.objectField),
+              }}
+            />
+          </p>
+          {/* Event Type */}
+          <p className="pt-2 font-medium">
+            Event Type:{" "}
+            <span
+              dangerouslySetInnerHTML={{
+                __html: badgeStyle(formData.alertType),
+              }}
+            />
+          </p>
+          {/* Conditions */}
+          {formData.conditions.length > 0 ? (
+            <div className="mt-4">
+              <h4 className="font-medium">Conditions:</h4>
+              <ul className="list-disc list-inside mt-2">
+                {formData.conditions.map((condition: any, index: number) => (
+                  <li key={index} className="flex items-center">
+                    <Badge  variant="secondary" className="flex items-center bg-white hover:bg-white-200 border-blue-300 text-blue-600 space-x-2 py-2 shadow rounded ">
+                    <Image
+                      src={greenhouseLogo}
+                      alt="greenhouse-logo"
+                      className="mr-2 h-4 w-4"
+                    />
+                    {condition.field}
+                    </Badge>
+                    <span className="mx-1 font-medium">{condition.condition}</span>
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: badgeStyle(condition.value),
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p>No conditions specified.</p>
+          )}
         </div>
       </Card>
 
@@ -86,13 +155,24 @@ const SummaryStep = ({ formData }: { formData: any }) => {
         </div>
         <div className="bg-gray-50 p-6 text-sm text-gray-700 rounded-lg">
           {formData.recipient.recipients.length > 0 ? (
-            <ul>
-              {formData.recipient.recipients.map((recipient: any, index: number) => (
-                <li key={index}>
-                  {recipient.label} ({recipient.value})
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-wrap gap-2">
+              {formData.recipient.recipients.map(
+                (recipient: Recipient, index: number) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="flex bg-white items-center space-x-2 py-2 shadow rounded-md"
+                  >
+                    <Image
+                      src={logoMap[recipient.source]} // Dynamically load the correct logo based on source
+                      alt={`${recipient.source}-logo`}
+                      className="mr-1 h-4 w-4"
+                    />
+                    {recipient.label}
+                  </Badge>
+                )
+              )}
+            </div>
           ) : (
             <p>No recipients specified.</p>
           )}

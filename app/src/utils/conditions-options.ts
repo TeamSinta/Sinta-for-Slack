@@ -1,7 +1,7 @@
 import offerAttributes from "./offer-attributes.json"; // This is where your JSON file for offers is stored
 import candidateAttributes from "./candidate-attributes.json"; // This is for the candidate attributes
 import interviewAttributes from "./interview-attributes.json"; // This is for the interview attributes
-import { Condition } from "@/app/(app)/(user)/workflows/_components/columns";
+import jobsAttributes from "./job-attributes.json"; // This is for the interview attributes
 
 // Extended Enum for Conditions data types
 export const DataType = {
@@ -43,11 +43,12 @@ export const CONDITIONS_ATTRIBUTES_LOOKUP = {
     offers: offerAttributes.offer.attributes,
     candidates: candidateAttributes.candidate.attributes,
     interviews: interviewAttributes.interview.attributes,
+    jobs: jobsAttributes.job.attributes,
 };
 
 export const getConditionFieldDataType = (
     field: string,
-    objectField: "offers" | "candidates" | "interviews",
+    objectField: "offers" | "candidates" | "interviews" | "jobs",
 ) => {
     const fields = CONDITIONS_ATTRIBUTES_LOOKUP[objectField];
     if (!fields) {

@@ -15,7 +15,7 @@ import {
 
 // Form validation schema using zod
 const FormSchema = z.object({
-    objectField: z.enum(["jobs", "candidates"], {
+    objectField: z.enum(["Jobs", "Candidates"], {
         required_error: "You need to select a room type.",
     }),
     name: z.string().nonempty("Name is required"),
@@ -122,20 +122,20 @@ export default function DetailsStep({
                             {/* Job Room Card */}
                             <div
                                 className={`flex cursor-pointer items-center rounded-md border-2 p-8 transition-all ${
-                                    selectedRoomType === "jobs"
+                                    selectedRoomType === "Jobs"
                                         ? "border-blue-500"
                                         : "border-gray-200"
                                 }`}
-                                onClick={() => handleRoomSelect("jobs")}
+                                onClick={() => handleRoomSelect("Jobs")}
                             >
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selectedRoomType === "jobs"
+                                        selectedRoomType === "Jobs"
                                             ? "border-blue-500"
                                             : "border-gray-400"
                                     } flex items-center justify-center`}
                                 >
-                                    {selectedRoomType === "jobs" && (
+                                    {selectedRoomType === "Jobs" && (
                                         <div className="h-3 w-3 rounded-full bg-blue-500" />
                                     )}
                                 </div>
@@ -154,20 +154,20 @@ export default function DetailsStep({
                             {/* Candidate Room Card */}
                             <div
                                 className={`flex cursor-pointer items-center rounded-md border-2 p-8 transition-all ${
-                                    selectedRoomType === "candidates"
+                                    selectedRoomType === "Candidates"
                                         ? "border-blue-500"
                                         : "border-gray-200"
                                 }`}
-                                onClick={() => handleRoomSelect("candidates")}
+                                onClick={() => handleRoomSelect("Candidates")}
                             >
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selectedRoomType === "candidates"
+                                        selectedRoomType === "Candidates"
                                             ? "border-blue-500"
                                             : "border-gray-400"
                                     } flex items-center justify-center`}
                                 >
-                                    {selectedRoomType === "candidates" && (
+                                    {selectedRoomType === "Candidates" && (
                                         <div className="h-3 w-3 rounded-full bg-blue-500" />
                                     )}
                                 </div>

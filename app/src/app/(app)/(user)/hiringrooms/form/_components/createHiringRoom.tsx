@@ -90,14 +90,14 @@ export default function CreateHiringRoom() {
   };
 
   // Handle data submission from the Conditions step
-  const handleConditionsSubmit = (conditionsData: Condition[]) => {
-      setFormData((prevData) => ({
-          ...prevData,
-          conditions: conditionsData,
-      }));
-      setCurrentStep("Slack Configuration"); // Proceed to the next step (Slack Configuration)
-  };
-
+  const handleConditionsSubmit = (conditionsData: Condition[], eventData: { alertType: string }) => {
+    setFormData((prevData) => ({
+        ...prevData,
+        conditions: conditionsData,
+        alertType: eventData.alertType, // Save the selected event's alert type
+    }));
+    setCurrentStep("Slack Configuration"); // Proceed to the next step
+};
   // Handle Slack configuration submission
   const handleSlackConfigSubmit = (slackConfigData: {
     channelFormat: string;
@@ -148,8 +148,12 @@ export default function CreateHiringRoom() {
                 return <DetailsStep onDataSubmit={handleDataSubmit} initialData={formData} />;
             case "Conditions":
                 return (
-                  <ConditionsStep onSaveConditions={handleConditionsSubmit} initialConditions={formData.conditions} />
-                );
+<ConditionsStep
+    onSaveConditions={handleConditionsSubmit}
+    initialConditions={formData.conditions}
+    initialEvent={{ alertType: formData.alertType }}
+    objectField={formData.objectField}
+/>            );
             case "Slack Configuration":
                 return (
                   <SlackConfigurationStep
@@ -159,6 +163,7 @@ export default function CreateHiringRoom() {
                       fields: formData.recipient.messageFields,
                       buttons: formData.recipient.messageButtons,
                       customMessageBody: formData.recipient.customMessageBody,
+                      objectField: formData.objectField,
                   }}
               />
                 );
@@ -408,11 +413,10 @@ export default function CreateHiringRoom() {
                                 What is a Hire Room?
                             </h3>
                             <p className="py-2 text-sm text-gray-600">
-                                A product is a small version of your API that
-                                corresponds to a specific use-case. After
-                                selecting which endpoints to include in your
-                                product, you'll define its access rules and
-                                business model.
+                            A Hiring Room is an automated Slack channel
+                            that centralizes discussions, updates, and
+                            debriefs for streamlined recruitment collaboration.
+                            Use our step by step builder to get started.
                             </p>
                         </div>
                     </div>

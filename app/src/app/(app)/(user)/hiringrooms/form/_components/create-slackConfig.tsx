@@ -7,14 +7,23 @@ import { ButtonAction, ButtonType } from "../../_components/message-buttons";
 
 // Function to replace tokens with real examples
 const replaceTokensWithExamples = (format: string): string => {
-    return format
-        .replace("{{CANDIDATE_NAME}}", "John Doe")
-        .replace("{{CANDIDATE_LAST_NAME}}", "Doe")
-        .replace("{{CANDIDATE_FIRST_NAME}}", "John")
-        .replace("{{CANDIDATE_CREATION_DATE}}", "2023-09-24")
-        .replace("{{JOB_NAME}}", "Software Engineer")
-        .replace("{{JOB_POST_DATE}}", "2023-09-20");
+  return format
+      .replace("{{CANDIDATE_NAME}}", "John Doe")
+      .replace("{{CANDIDATE_LAST_NAME}}", "Doe")
+      .replace("{{CANDIDATE_FIRST_NAME}}", "John")
+      .replace("{{CANDIDATE_CREATION_MONTH_TEXT}}", "March")
+      .replace("{{CANDIDATE_CREATION_MONTH_NUMBER}}", "03")
+      .replace("{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}", "Mar")
+      .replace("{{CANDIDATE_CREATION_DAY_NUMBER}}", "11")
+      .replace("{{CANDIDATE_CREATION_DATE}}", "2023-03-14")
+      .replace("{{JOB_NAME}}", "Software Engineer")
+      .replace("{{JOB_POST_DATE}}", "2023-03-14")
+      .replace("{{JOB_POST_MONTH_TEXT}}", "March")
+      .replace("{{JOB_POST_MONTH_NUMBER}}", "03")
+      .replace("{{JOB_POST_MONTH_TEXT_ABBREVIATED}}", "Mar")
+      .replace("{{JOB_POST_DAY_NUMBER}}", "11");
 };
+
 
 // Function to format the final Slack channel name without invalid characters for Slack
 const formatSlackChannelName = (name: string): string => {
@@ -68,6 +77,7 @@ interface SlackConfigData {
   fields: any[]; // Add this to the definition
   buttons: any[];
   customMessageBody: string;
+  objectField: string;
 }
 
 
@@ -78,8 +88,9 @@ interface SlackConfigurationStepProps {
 
 const SlackConfigurationStep: React.FC<SlackConfigurationStepProps> = ({ onSaveConfig, initialData }) => {
     const [channelFormat, setChannelFormat] = useState(initialData?.channelFormat || "");
-    const [selectedType] = useState<"Candidates" | "Jobs">("Candidates");
-    const [fields, setFields] = useState<any[]>(initialData?.fields || []);
+    const [selectedType] = useState<"Candidates" | "Jobs">(
+      initialData?.objectField === "Jobs" ? "Jobs" : "Candidates"
+  );    const [fields, setFields] = useState<any[]>(initialData?.fields || []);
     const [customMessageBody, setCustomMessageBody] = useState(
         initialData?.customMessageBody || "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks."
     );
@@ -88,6 +99,8 @@ const SlackConfigurationStep: React.FC<SlackConfigurationStepProps> = ({ onSaveC
             { label: "Acknowledge", action: "", type: ButtonType.AcknowledgeButton },
         ]
     );
+    console.log(selectedType)
+    console.log(initialData)
 
     const handleCustomMessageBodyChange = (messageBody: string) => setCustomMessageBody(messageBody);
     const handleButtonsChange = (updatedButtons: ButtonAction[]) => setButtons(updatedButtons);

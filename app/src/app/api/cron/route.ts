@@ -44,12 +44,8 @@ import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
-<<<<<<< HEAD
-import { format, parseISO } from "date-fns";
-=======
 import { format, formatISO, parseISO } from "date-fns";
 import { processInterviewReminders } from "./interviewReminders";
->>>>>>> development
 
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
@@ -479,8 +475,8 @@ export async function GET() {
         // Ensure numWorkflows is defined or set a default value if necessary
         let numWorkflows = 0;
         let numHiringrooms = 0;
-        numWorkflows = await handleWorkflows();
-        // numHiringrooms = await handleHiringrooms();
+        // numWorkflows = await handleWorkflows();
+        numHiringrooms = await handleHiringrooms();
         return NextResponse.json(
             {
                 message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`,

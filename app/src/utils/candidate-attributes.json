@@ -34,8 +34,8 @@
             {
                 "field": "current_stage",
                 "description": "The current stage this application is in.",
-                "dataType": "object"
-            },
+                "dataType": "arrayOfObjects"
+              },
             {
                 "field": "credited_to.id",
                 "description": "The ID of the user credited for this application.",
@@ -44,8 +44,8 @@
             {
                 "field": "location",
                 "description": "The contents of the location question on a job post.",
-                "dataType": "object"
-            },
+                "dataType": "arrayOfObjects"
+              },
             {
                 "field": "answers",
                 "description": "The answers provided to questions in the job post for this application.",
@@ -54,13 +54,13 @@
             {
                 "field": "custom_fields",
                 "description": "Contains a hash of custom fields configured for this resource.",
-                "dataType": "object"
-            },
+                "dataType": "arrayOfObjects"
+              },
             {
                 "field": "keyed_custom_fields",
                 "description": "Contains more detailed information about custom fields with immutable keys.",
-                "dataType": "object"
-            },
+                "dataType": "arrayOfObjects"
+              },
             {
                 "field": "prospective_department",
                 "description": "The department that this prospect application is being considered for.",
@@ -119,13 +119,13 @@
             {
                 "field": "recruiter",
                 "description": "The recruiter responsible for this candidate.",
-                "dataType": "object"
-            },
+                "dataType": "arrayOfObjects"
+              },
             {
                 "field": "coordinator",
                 "description": "The coordinator responsible for this candidate.",
-                "dataType": "object"
-            },
+                "dataType": "arrayOfObjects"
+              },
             {
                 "field": "attachments[].type",
                 "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other'].",

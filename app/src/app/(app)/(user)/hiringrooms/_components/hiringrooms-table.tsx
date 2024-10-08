@@ -118,31 +118,26 @@ export function HiringroomsTable({
                                     <div
                                         className={`rounded-lg p-3 ${iconColor}`}
                                     >
-                                        <IconComponent size={34} />
+                                        <IconComponent size={46} />
                                     </div>
 
                                     {/* Room Name, Created Date, and Additional Info */}
                                     <div>
-                                        <p className="pb-2 text-xs font-medium">
+                                        <p className="pb-1 mt-2 text-xs font-medium text-gray-600">
                                             {format(
                                                 new Date(hiringroom.createdAt),
                                                 "PPP",
                                             )}
                                         </p>
-                                        <div className="pb-1 text-xl font-semibold leading-tight text-gray-800 dark:text-gray-100">
+                                        <div className="pb-1 text-lg font-heading font-semibold leading-tight text-gray-800 dark:text-gray-100">
                                             <span className="text-gray-500 dark:text-gray-400"></span>
                                             {hiringroom.name}
                                         </div>
                                         {/* Display Alert Type and Conditions */}
-                                        {hiringroom.conditions.length > 0 && (
-                                            <p className="pb-2 text-xs text-muted-foreground">
-                                                {
-                                                    hiringroom.conditions[0]
-                                                        .field.label
-                                                }{" "}
-                                                -{" "}
-                                                {hiringroom.conditions[0].value}{" "}
-                                                {hiringroom.conditions[0].unit}
+                                        {hiringroom.alertType && (
+                                            <p className="pb-2 text-xs text-muted-foreground mt-1">
+                                                                                     <span className="rounded bg-blue-100 px-2  py-1 text-xs font-semibold text-blue-500 dark:bg-indigo-900 dark:text-indigo-400">
+                                              {hiringroom.alertType} </span>
                                             </p>
                                         )}
                                     </div>
