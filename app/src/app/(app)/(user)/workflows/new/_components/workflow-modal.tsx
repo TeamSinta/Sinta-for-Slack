@@ -1,38 +1,37 @@
 // @ts-nocheck
-
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { CircleCheck, Loader2Icon, CircleX } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-    createWorkflowMutation,
-    updateWorkflowMutation,
-} from "@/server/actions/workflows/mutations";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { orgConfig } from "@/config/organization";
+import useGetCookie from "@/hooks/use-get-cookie";
 import {
     getActionData,
     getConditionsData,
     getTriggerData,
     getWorkflowName,
 } from "@/lib/utils";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import {
+    createWorkflowMutation,
+    updateWorkflowMutation,
+} from "@/server/actions/workflows/mutations";
+import { useMutation } from "@tanstack/react-query";
+import { AlertCircle, CircleCheck, CircleX, Loader2Icon } from "lucide-react";
 import mixpanel from "mixpanel-browser";
 import { useSession } from "next-auth/react";
-import { orgConfig } from "@/config/organization";
-import useGetCookie from "@/hooks/use-get-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export const WorkflowPublishModal = ({
     edit = false,
     workflowId,
+    steps,
 }: {
     edit?: boolean;
     workflowId?: string;
+    steps: any;
 }) => {
-    const [steps, setSteps] = useState([]);
-    const [stepStatus, setStepStatus] = useState({});
+    const [stepStatus, setStepStatus] = useState([]);
     const [isRunningTest, setIsRunningTest] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
@@ -44,6 +43,17 @@ export const WorkflowPublishModal = ({
     const conditionsData = getConditionsData();
     const workflowName = getWorkflowName() || triggerData.event;
 
+    function handleSuccessfulPublish() {
+        clearLocalStorage();
+        setStepStatus([]);
+        setErrorMessage(""); // Clear any previous error messages
+        toast.success(
+            edit
+                ? "Workflow updated successfully"
+                : "Workflow created successfully",
+        );
+        router.push("/workflows");
+    }
     const {
         mutateAsync,
         isPending: isMutatePending,
@@ -53,15 +63,7 @@ export const WorkflowPublishModal = ({
         onSuccess: () => {
             router.refresh();
             reset();
-            clearLocalStorage();
-            setStepStatus({});
-            setErrorMessage(""); // Clear any previous error messages
-            toast.success(
-                edit
-                    ? "Workflow updated successfully"
-                    : "Workflow created successfully",
-            );
-            router.push("/workflows");
+            handleSuccessfulPublish();
         },
         onError: (error) => {
             const errorMsg = error?.message ?? "Failed to submit Workflow";
@@ -74,7 +76,9 @@ export const WorkflowPublishModal = ({
     };
 
     const validateData = () => {
-        const isTriggerValid = triggerData?.event && triggerData.description;
+        const isTriggerValid =
+            triggerData?.objectField &&
+            (triggerData?.apiUrl || triggerData?.triggerConfig?.apiUrl);
         const isActionValid =
             actionData?.recipients && actionData.customMessageBody;
         setIsButtonDisabled(!(isTriggerValid && isActionValid));
@@ -97,69 +101,37 @@ export const WorkflowPublishModal = ({
 
     const handleOpenModal = (open: boolean) => {
         trackModalEvent(open);
-        const combinedSteps = [
-            {
-                id: 1,
-                type: "Trigger",
-                ...triggerData,
-                description: triggerData.description
-                    ? `Trigger: ${triggerData.description}`
-                    : "Missing trigger data",
-            },
-            ...conditionsData.map((condition, index) => ({
-                id: index + 2,
-                type: "Condition",
-                field: condition.field,
-                condition: condition.condition,
-                value: condition.value.name || condition.value,
-                description: `${condition.field} ${condition.condition} ${condition.value.name || condition.value}`,
-            })),
-            {
-                id: conditionsData.length + 2,
-                type: "Action",
-                ...actionData,
-                description: actionData.customMessageBody
-                    ? `Alert: ${actionData.customMessageBody.substring(0, 50)}...`
-                    : "Missing action data",
-            },
-        ];
-
-        setSteps(combinedSteps);
+        setStepStatus([]);
         validateData(); // Validate data when the modal opens
-    };
-
-    const sortTriggerData = (data) => {
-        const sortedData = {
-            alertType: data.alertType,
-            apiUrl: data.apiUrl,
-            description: data.description,
-            event: data.event,
-            objectField: data.objectField,
-            processor: data.processor,
-            trigger: data.trigger,
-            mainCondition: data.mainCondition?.sort((a, b) =>
-                a.field.label.localeCompare(b.field.label),
-            ),
-        };
-        return sortedData;
     };
 
     const handlePublish = async () => {
         setIsRunningTest(true);
-        setStepStatus({});
+        setStepStatus([]);
         setErrorMessage(""); // Clear any previous error messages
 
         let hasError = false;
 
-        for (const step of steps) {
-            setStepStatus((prev) => ({ ...prev, [step.id]: "loading" }));
+        for (const step in steps) {
+            setStepStatus((prev) => [...prev, "loading"]);
             try {
                 await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay to simulate API call
-                setStepStatus((prev) => ({ ...prev, [step.id]: "success" }));
+
+                if (!(steps[step].name && steps[step].status === "valid"))
+                    throw Error("Invalid Step");
+                setStepStatus((prev) => {
+                    const res = prev;
+                    res[step] = "success";
+                    return res;
+                });
             } catch {
-                setStepStatus((prev) => ({ ...prev, [step.id]: "error" }));
+                setStepStatus((prev) => {
+                    const res = prev;
+                    res[step] = "error";
+                    return res;
+                });
                 setErrorMessage(
-                    `Error in ${step.type}. Please check and try again.`,
+                    `Error in ${steps[step].type}. Please check and try again.`,
                 );
                 hasError = true;
                 break; // Stop after the first error
@@ -239,17 +211,17 @@ export const WorkflowPublishModal = ({
                     </Alert>
                 )}
                 <div className="space-y-2">
-                    {steps.map((step) => (
+                    {steps.map((step, index: number) => (
                         <div
-                            key={step.id}
-                            className={`flex items-center justify-between rounded border bg-gray-50 p-3 ${stepStatus[step.id] === "error" ? "border-red-500" : ""}`}
+                            key={index}
+                            className={`flex items-center justify-between rounded border bg-gray-50 p-3 ${stepStatus[index] === "error" ? "border-red-500" : ""}`}
                         >
                             <div className="flex items-center space-x-2">
-                                {stepStatus[step.id] === "loading" ? (
+                                {stepStatus[index] === "loading" ? (
                                     <Loader2Icon className="animate-spin text-blue-500" />
-                                ) : stepStatus[step.id] === "success" ? (
+                                ) : stepStatus[index] === "success" ? (
                                     <CircleCheck className="text-green-500" />
-                                ) : stepStatus[step.id] === "error" ? (
+                                ) : stepStatus[index] === "error" ? (
                                     <CircleX className="text-red-500" />
                                 ) : (
                                     <CircleCheck className="text-gray-400" />

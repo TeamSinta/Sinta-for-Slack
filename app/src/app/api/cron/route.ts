@@ -44,7 +44,12 @@ import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
+<<<<<<< HEAD
 import { format, parseISO } from "date-fns";
+=======
+import { format, formatISO, parseISO } from "date-fns";
+import { processInterviewReminders } from "./interviewReminders";
+>>>>>>> development
 
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
@@ -366,7 +371,6 @@ export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
             greenhouseRoles.push(rec.value);
         }
     });
-    console.log();
 
     if (hasGreenhouse) {
         const candidates = filteredConditionsData;
@@ -396,6 +400,7 @@ export function combineGreenhouseRolesAndSlackUsers(workflowRecipient: {
         workflowRecipient.recipients.concat(greenhouseRecipients);
     return allRecipients;
 }
+
 export async function handleWorkflows() {
     try {
         const workflows: WorkflowData[] =
@@ -405,12 +410,25 @@ export async function handleWorkflows() {
 
         let shouldReturnNull = false; // Flag to determine whether to return null
 
+        const now = new Date();
+        const workflowDataQueryParams = {
+            Interviews: { starts_after: formatISO(now), per_page: 500 }, // We only want to see upcoming interviews
+        };
         for (const workflow of workflows) {
-            if (workflow.alertType === "time-based") {
+            if (workflow.alertType === "timebased") {
+                // Add query params to the apiUrl
                 const { apiUrl }: { apiUrl?: string } =
                     workflow.triggerConfig as { apiUrl?: string };
-
-                const data = await customFetch(apiUrl ?? ""); // Fetch data using custom fetch wrapper
+                const searchParams = new URLSearchParams();
+                for (const [key, value] of Object.entries(
+                    workflowDataQueryParams[workflow.objectField] ?? {},
+                )) {
+                    searchParams.append(key, value as string);
+                }
+                const urlWithParams = searchParams.toString()
+                    ? `${apiUrl}?${searchParams.toString()}`
+                    : apiUrl;
+                const data = await customFetch(urlWithParams ?? ""); // Fetch data using custom fetch wrapper
                 let filteredConditionsData;
 
                 switch (workflow.objectField) {
@@ -424,6 +442,9 @@ export async function handleWorkflows() {
                             workflow,
                         );
                         break;
+                    case "Interviews":
+                        filteredConditionsData =
+                            await processInterviewReminders(data, workflow);
                     default:
                         filteredConditionsData = filterDataWithConditions(
                             data,
@@ -431,50 +452,10 @@ export async function handleWorkflows() {
                         );
                         break;
                 }
-                if (filteredConditionsData.length === 0) {
+                if (filteredConditionsData?.length === 0) {
                     shouldReturnNull = true; // Set flag to true
                 } else {
                     console.log("No conditions running");
-                }
-            } else if (workflow.alertType === "stuck-in-stage") {
-                const { apiUrl, processor } = workflow.triggerConfig;
-                const data = await customFetch(
-                    apiUrl,
-                    processor ? { query: processor } : {},
-                );
-                console.log("cron-job running!!");
-                // console.log("cron-job running!! - data ",data);
-                // Filter data based on the "stuck-in-stage" conditions
-                const filteredConditionsData =
-                    await filterStuckinStageDataConditions(
-                        data,
-                        workflow.conditions,
-                    );
-                const slackTeamID = await getSlackTeamIDByWorkflowID(
-                    workflow.id,
-                );
-                const subDomain = await getSubdomainByWorkflowID(workflow.id);
-
-                const filteredSlackDataWithMessage =
-                    await filterCandidatesDataForSlack(
-                        filteredConditionsData,
-                        workflow.recipient,
-                        slackTeamID,
-                    );
-                console.log(
-                    "filteredSlackDataWithMessage - ",
-                    filteredSlackDataWithMessage,
-                );
-                if (filteredSlackDataWithMessage.length > 0) {
-                    await sendSlackButtonNotification(
-                        filteredSlackDataWithMessage,
-                        workflow.recipient,
-                        slackTeamID,
-                        subDomain,
-                        filteredConditionsData,
-                    );
-                } else {
-                    console.log("No data to send to Slack");
                 }
             } else if (workflow.alertType === "create-update") {
                 // Logic for "create-update" conditions
@@ -483,26 +464,11 @@ export async function handleWorkflows() {
 
         if (shouldReturnNull) {
             return false;
-            return NextResponse.json(
-                { message: "No workflows to process" },
-                { status: 200 },
-            );
         }
         return workflowsLength;
-        return NextResponse.json(
-            { message: "Workflows processed successfully" },
-            { status: 200 },
-        );
     } catch (error: unknown) {
         console.error("Failed to process workflows:", error);
         return false;
-        return NextResponse.json(
-            {
-                error: "Failed to process workflows",
-                details: (error as Error).message,
-            },
-            { status: 500 },
-        );
     }
 }
 // Define the GET handler for the route
@@ -514,7 +480,7 @@ export async function GET() {
         let numWorkflows = 0;
         let numHiringrooms = 0;
         numWorkflows = await handleWorkflows();
-        numHiringrooms = await handleHiringrooms();
+        // numHiringrooms = await handleHiringrooms();
         return NextResponse.json(
             {
                 message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`,
