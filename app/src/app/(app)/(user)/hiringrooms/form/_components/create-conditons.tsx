@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
     Select,
     SelectContent,
@@ -16,19 +16,22 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/card";
-import { Trash2, PlusCircle, Filter } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Trash2, PlusCircle } from "lucide-react";
 import candidateAttributes from "../../../../../../utils/candidate-attributes.json";
 import { ConditionSelector } from "../../../workflows/new/_components/conditionsSelector";
 
 export default function ConditionsStep({
     onSaveConditions,
+    initialConditions, // Pass in existing conditions to pre-fill form
 }: {
     onSaveConditions: (conditions: any[]) => void;
+    initialConditions: any[]; // Pre-fill with existing conditions
 }) {
-    const [conditions, setConditions] = useState([
-        { id: 0, field: "", condition: "", value: "" },
-    ]);
+    const [conditions, setConditions] = useState(
+        initialConditions.length > 0
+            ? initialConditions
+            : [{ id: 0, field: "", condition: "", value: "" }],
+    );
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
     const [fields, setFields] = useState<
         { field: string; description: string }[]
@@ -78,14 +81,11 @@ export default function ConditionsStep({
     const handleSave = () => {
         if (isSaveEnabled) {
             onSaveConditions([...conditions]); // Pass the conditions to the parent component
-            setConditions([{ id: -1, field: "", condition: "", value: "" }]); // Reset form after saving if necessary
         }
     };
 
     return (
         <div className="flex flex-col justify-between pt-2">
-            {/* Title and Description */}
-
             {/* Conditions List */}
             <div className="space-y-4 overflow-y-auto">
                 {conditions.map((condition) => (
@@ -116,6 +116,7 @@ export default function ConditionsStep({
                                 {/* Field Selector */}
                                 <ConditionSelector
                                     attributes={fields}
+                                    selectedField={condition.field} // Pre-fill selected field
                                     onFieldSelect={(field) =>
                                         handleConditionChange(
                                             condition.id,

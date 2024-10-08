@@ -1,0 +1,12 @@
+{
+    "application": {
+        "attributes": [
+            {
+                "field": "id",
+                "description": "The application's unique identifier",
+                "dataType": "number"
+            },
+            {}
+        ]
+    }
+}

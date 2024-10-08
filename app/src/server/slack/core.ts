@@ -23,7 +23,11 @@ import { env } from "@/env";
 import { combineGreenhouseRolesAndSlackUsers } from "@/app/api/cron/route";
 import { and, eq } from "drizzle-orm";
 import { membersToOrganizations } from "@/server/db/schema";
-import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
+import {
+    convertHtmlToSlackMrkdwn,
+    formatListToString,
+    formatToReadableDate,
+} from "@/lib/utils";
 
 interface SlackChannel {
     id: string;
@@ -79,7 +83,8 @@ export async function getChannels(): Promise<
         }
     } catch (error) {
         console.error("Error fetching channels:", error);
-        return [];
+        // return [];
+        throw new Error(error ?? "Error fetching channels");
     }
 }
 
@@ -164,6 +169,7 @@ interface WorkflowRecipient {
     openingText: string;
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
+    uploadedFiles: { name: string; id: string }[];
 }
 
 export async function sendSlackNotification(
@@ -172,6 +178,7 @@ export async function sendSlackNotification(
     slackTeamID: string,
     subDomain: string,
     candidateDetails: Record<string, unknown>,
+    interviewDetails?: Record<string, unknown>,
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
@@ -179,6 +186,7 @@ export async function sendSlackNotification(
     const customMessageBody = parseCustomMessageBody(
         workflowRecipient.customMessageBody,
         candidateDetails, // Pass candidate details here
+        interviewDetails,
     );
 
     for (const recipient of allRecipients) {
@@ -252,6 +260,15 @@ export async function sendSlackNotification(
                                         text: customMessageBody,
                                     },
                                 },
+                                ...(workflowRecipient.uploadedFiles?.length > 0
+                                    ? workflowRecipient.uploadedFiles.map(
+                                          (file) => ({
+                                              type: "file",
+                                              external_id: file.id,
+                                              source: "remote",
+                                          }),
+                                      )
+                                    : []),
                                 ...(workflowRecipient.messageButtons.length > 0
                                     ? [
                                           {
@@ -325,8 +342,9 @@ export async function sendSlackNotification(
                         .flat(), // Flatten the array of arrays
                 ],
             },
+            { id: "F07P92F2NMV" },
         ];
-
+        // console.log("INPUT");
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
@@ -341,9 +359,9 @@ export async function sendSlackNotification(
         });
 
         const data = await response.json();
-        console.log(data);
-        console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
-        console.log("Response Slack message sent:", response.status);
+        // console.log(data);
+        // console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
+        // console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
@@ -1123,16 +1141,26 @@ export async function postMessageToChannel(userId: string, body: any) {
             channel: slackUserId,
         }),
     });
+    // const resjson = await response.json();
+    // console.log("RESPONSE", resjson);
     if (!response.ok) throw new Error("Failed to post message");
 
     return true;
 }
 
-function parseCustomMessageBody(customMessageBody, candidateDetails) {
+function parseCustomMessageBody(
+    customMessageBody,
+    candidateDetails,
+    interviewDetails?,
+) {
     // Replace the placeholders with corresponding candidate details safely
     let formattedMessage = customMessageBody;
 
     // Safely handle undefined candidate details using optional chaining (?.) and provide default values
+    formattedMessage = formattedMessage.replace(
+        /{{Candidate_Name}}/g,
+        `{{first_name}} {{last_name}}`,
+    );
     formattedMessage = formattedMessage.replace(
         /{{first_name}}/g,
         candidateDetails?.first_name || "N/A",
@@ -1160,6 +1188,41 @@ function parseCustomMessageBody(customMessageBody, candidateDetails) {
     formattedMessage = formattedMessage.replace(
         /{{Job Stage}}/g,
         candidateDetails?.applications?.[0]?.current_stage?.name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interviewer Names}}/g,
+        formatListToString(
+            interviewDetails?.interviewers?.map(
+                (interviewer) => interviewer.name,
+            ),
+        ) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview Location}}/g,
+        interviewDetails?.location || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview Start Time}}/g,
+        formatToReadableDate(interviewDetails?.start?.date_time) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview End Time}}/g,
+        formatToReadableDate(interviewDetails?.end?.date_time) || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Scorecard ids}}/g,
+        interviewDetails?.interviewers
+            ?.map((interviewer) => interviewer?.scorecard_id)
+            .filter((item) => item)
+            .join(" | ") || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Interview Title}}/g,
+        interviewDetails?.interview?.name || "N/A",
+    );
+    formattedMessage = formattedMessage.replace(
+        /{{Video Conference URL}}/g,
+        interviewDetails?.video_conferencing_url || "N/A",
     );
 
     // Convert the HTML content to Slack markdown format

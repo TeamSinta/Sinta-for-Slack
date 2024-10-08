@@ -1,0 +1,111 @@
+{
+    "interview": {
+        "attributes": [
+            {
+                "field": "id",
+                "description": "The scheduled interview's unique identifier",
+                "dataType": "number"
+            },
+            {
+                "field": "application_id",
+                "description": "The ID of the associated application.",
+                "dataType": "number"
+            },
+            {
+                "field": "created_at",
+                "description": "Date when this offer was created.",
+                "dataType": "date"
+            },
+            {
+                "field": "start.date_time",
+                "description": "A date_time value if this interview has a precise start time, or a date value if this is an all-day event.",
+                "dataType": "date"
+            },
+            {
+                "field": "end.date_time",
+                "description": "A date_time value if this interview has a precise start time, or a date value if this is an all-day event.",
+                "dataType": "date"
+            },
+            {
+                "field": "location",
+                "description": "The location of the interview.",
+                "dataType": "string"
+            },
+            {
+                "field": "video_conferencing_url",
+                "description": "The URL used for video interviews, such as Zoom, Google Meets, or Microsoft Teams.",
+                "dataType": "string"
+            },
+            {
+                "field": "status",
+                "description": "One of: scheduled, awaiting_feedback, complete",
+                "dataType": "string"
+            },
+            {
+                "field": "interview.id",
+                "description": "",
+                "dataType": "number"
+            },
+            {
+                "field": "interview.name",
+                "description": "",
+                "dataType": "string"
+            },
+            {
+                "field": "organizer.id",
+                "description": "",
+                "dataType": "number"
+            },
+            {
+                "field": "organizer.first_name",
+                "description": "",
+                "dataType": "string"
+            },
+            {
+                "field": "organizer.last_name",
+                "description": "",
+                "dataType": "string"
+            },
+            {
+                "field": "organizer.name",
+                "description": "",
+                "dataType": "string"
+            },
+            {
+                "field": "organizer.employee_id",
+                "description": "",
+                "dataType": "string"
+            },
+            {
+                "field": "interviewers[].id",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted).",
+                "dataType": "arrayOfNumbers"
+            },
+            {
+                "field": "interviewers[].employee_id",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted).",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "interviewers[].name",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted).",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "interviewers[].email",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted).",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "interviewers[].response_status",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted).",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "interviewers[].scorecard_id",
+                "description": "Array of interviewers. Each must specify a user by user_id, email, or employee_id. Each must include a response status (one of needs_action, declined, tentative, or accepted).",
+                "dataType": "arrayOfNumbers"
+            }
+        ]
+    }
+}
