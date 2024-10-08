@@ -31,13 +31,35 @@ import { format } from "date-fns";
 import SlackChannelNameFormat from "../../_components/SlackChannelNameFormat";
 import SlackHiringroom from "../../_components/slack-hiringroom";
 import parse from "html-react-parser";
+import { Input } from "@/components/ui/input";
+import ConditionsStep from "./edit-conditions";
+import { useMutation } from "@tanstack/react-query";
+import { updateHiringroomMutation } from "@/server/actions/hiringrooms/mutations";
+import { toast } from "sonner";
 export default function EditHireRoom({ roomId }: { roomId: string }) {
-    const [hiringRoom, setHiringRoom] = useState(null);
+    const [hiringRoom, setHiringRoom] = useState<any>(null);
     const [slackChannels, setSlackChannels] = useState([]);
     const [isActive, setIsActive] = useState(true);
     const [customMessageBody, setCustomMessageBody] = useState(
         "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
     );
+    const [tempRoomName, setTempRoomName] = useState<string | null>(null);
+    const [isEditingConditions, setIsEditingConditions] = useState(false);
+    const {
+        mutateAsync,
+        isPending: isMutatePending,
+        reset,
+    } = useMutation({
+        mutationFn: updateHiringroomMutation,
+        onSuccess: () => {
+            reset();
+            toast.success("Hiring room updated successfully");
+        },
+        onError: (error) => {
+            const errorMsg = error?.message ?? "Failed to submit Hiring room";
+            toast.error(errorMsg);
+        },
+    });
     useEffect(() => {
         async function fetchRoomData() {
             if (roomId) {
@@ -66,7 +88,31 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
         // await updateWorkflowStatus(row.original.id, newStatus);
     };
 
+    const handleInputChange = (e: any) => {
+        setHiringRoom({
+            ...hiringRoom,
+            [e.target.name]: e.target.value,
+        });
+    };
+
     console.log(slackChannels, "slackChannels");
+
+    const handleSaveHiringRoomChanges = async (data: any) => {
+        await mutateAsync(data);
+    };
+
+    async function handleDoneEditingName() {
+        if (tempRoomName !== null) {
+            setHiringRoom({ ...hiringRoom, name: tempRoomName });
+            await handleSaveHiringRoomChanges({
+                ...hiringRoom,
+                name: tempRoomName,
+            });
+            setTempRoomName(null);
+        } else {
+            setTempRoomName(hiringRoom.name);
+        }
+    }
 
     if (!hiringRoom) return <div>Loading...</div>;
 
@@ -144,21 +190,36 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
             </div>
 
             {/* Details Section */}
-            <div className=" mb-6 rounded-sm border border-gray-200">
-                <div className="flex items-center  justify-between p-6">
+            <div className="mb-6 rounded-sm border border-gray-200">
+                <div className="flex items-center justify-between p-6">
                     <h2 className="font-heading text-lg font-semibold">
                         Details
                     </h2>
                     <EditButton
-                        onClick={() => console.log("Edit API Source Clicked")}
+                        onCancel={() => setTempRoomName(null)}
+                        onClick={handleDoneEditingName}
+                        isEditing={tempRoomName !== null}
                     />
                 </div>
                 <div className="space-y-1 bg-gray-50 p-6 text-sm text-gray-700">
-                    <p className="font-medium ">Name:</p>{" "}
-                    <p>{hiringRoom.name}</p>
-                    <p className="pt-2 font-medium ">Room Type:</p>{" "}
+                    <p className="font-medium">Name:</p>
+                    {tempRoomName !== null ? (
+                        <Input
+                            type="text"
+                            name="name"
+                            value={tempRoomName}
+                            onChange={(e) => {
+                                setTempRoomName(e.target.value);
+                            }}
+                            className="max-w-lg rounded-sm border bg-white pl-2"
+                        />
+                    ) : (
+                        <p>{hiringRoom.name}</p>
+                    )}
+
+                    <p className="pt-2 font-medium">Room Type:</p>
                     <p>{hiringRoom.objectField}</p>
-                    <p className="pt-2 font-medium">Created At:</p>{" "}
+                    <p className="pt-2 font-medium">Created At:</p>
                     <p>{new Date(hiringRoom.createdAt).toLocaleString()}</p>
                 </div>
             </div>
@@ -166,28 +227,39 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
             {/* Pricing Model Section */}
 
             {/* Conditions Section */}
-            <div className=" mb-6 rounded-sm border border-gray-200">
-                <div className="flex items-center   justify-between p-6">
+            <div className=" mb-6 flex w-full flex-col items-center rounded-sm border border-gray-200">
+                <div className="flex w-full items-center justify-between p-6">
                     <h2 className="font-heading text-lg  font-semibold">
                         Conditions
                     </h2>
                     <EditButton
-                        onClick={() => console.log("Edit Conditions Clicked")}
+                        onClick={() =>
+                            setIsEditingConditions(!isEditingConditions)
+                        }
+                        isEditing={isEditingConditions}
                     />
                 </div>
 
                 {hiringRoom.conditions.length > 0 ? (
-                    <ul className="mt-2 space-y-1 text-gray-700">
-                        {hiringRoom.conditions.map((condition, index) => (
-                            <div className="bg-gray-50 p-6 text-sm text-gray-700">
-                                <li key={index}>
-                                    {condition.field.label} is{" "}
-                                    {condition.condition} {condition.value}{" "}
-                                    {condition.unit}
-                                </li>
-                            </div>
-                        ))}
-                    </ul>
+                    // <ul className="mt-2 space-y-1 text-gray-700">
+                    //     {hiringRoom.conditions.map((condition, index) => (
+                    //         <div className="bg-gray-50 p-6 text-sm text-gray-700">
+                    //             <li key={index}>
+                    //                 {condition.field.label} is{" "}
+                    //                 {condition.condition} {condition.value}{" "}
+                    //                 {condition.unit}
+                    //             </li>
+                    //         </div>
+                    //     ))}
+                    // </ul>
+                    <div className="w-full pb-8">
+                        <ConditionsStep
+                            onSaveConditions={() => {}}
+                            initialConditions={hiringRoom.conditions}
+                            isEditing={isEditingConditions}
+                            setIsEditing={setIsEditingConditions}
+                        />
+                    </div>
                 ) : (
                     <div className="bg-gray-50 p-6 text-sm text-gray-700">
                         <p className="mt-2 text-gray-500">No conditions set</p>

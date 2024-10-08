@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import candidateAttributes from "../../../../../../utils/candidate-attributes.json";
 import ConditionsCard from "./ConditionsCard";
 
-export default function ConditionsStep({
+export default function EditConditions({
     onSaveConditions,
     initialConditions, // Pass in existing conditions to pre-fill form
     isEditing = true,
@@ -75,7 +75,7 @@ export default function ConditionsStep({
     };
 
     return (
-        <div className="flex w-full flex-col items-center justify-between pt-2">
+        <div className="flex w-full flex-col items-center justify-between">
             {/* Conditions List */}
             <div className="min-w-[24rem] space-y-4 overflow-y-auto">
                 {conditions.map((condition) => (
@@ -97,37 +97,21 @@ export default function ConditionsStep({
                         onValueChange={(value) =>
                             handleConditionChange(condition.id, "value", value)
                         }
+                        editable={isEditing}
                     />
                 ))}
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 flex w-full items-center justify-between">
+            {isEditing && (
                 <Button
                     variant="outline"
                     onClick={addCondition}
-                    className="flex items-center justify-center"
+                    className="mt-4 flex items-center justify-center"
                 >
                     <PlusCircle className="mr-2" /> Add Condition
                 </Button>
-
-                <div className="flex space-x-4">
-                    <Button
-                        variant="secondary"
-                        onClick={() => console.log("Back to previous step")} // Implement back button
-                        className="rounded-md bg-gray-200 px-4 py-2 text-gray-700"
-                    >
-                        Back
-                    </Button>
-                    <Button
-                        disabled={!isSaveEnabled}
-                        onClick={handleSave}
-                        className="rounded-md bg-blue-600 px-4 py-2 text-white"
-                    >
-                        Continue
-                    </Button>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

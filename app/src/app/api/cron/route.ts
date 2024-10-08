@@ -44,12 +44,8 @@ import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
-<<<<<<< HEAD
-import { format, parseISO } from "date-fns";
-=======
 import { format, formatISO, parseISO } from "date-fns";
 import { processInterviewReminders } from "./interviewReminders";
->>>>>>> development
 
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
