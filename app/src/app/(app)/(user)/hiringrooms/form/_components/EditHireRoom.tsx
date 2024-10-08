@@ -36,6 +36,8 @@ import ConditionsStep from "./edit-conditions";
 import { useMutation } from "@tanstack/react-query";
 import { updateHiringroomMutation } from "@/server/actions/hiringrooms/mutations";
 import { toast } from "sonner";
+import SlackMessageBox from "./slack-messageBox";
+import { ButtonAction } from "../../_components/message-buttons";
 export default function EditHireRoom({ roomId }: { roomId: string }) {
     const [hiringRoom, setHiringRoom] = useState<any>(null);
     const [slackChannels, setSlackChannels] = useState([]);
@@ -75,9 +77,18 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
         fetchRoomData();
     }, [roomId]);
 
-    const handleCustomMessageBodyChange = (messageBody: string) => {
-        console.log("Custom Message Body:", messageBody);
-        setCustomMessageBody(messageBody);
+    const handleSlackConfigChange = async (
+        messageBody: string,
+        buttons: ButtonAction[],
+    ) => {
+        await mutateAsync({
+            ...hiringRoom,
+            recipient: {
+                ...hiringRoom.recipient,
+                customMessageBody: messageBody,
+                messageButtons: buttons,
+            },
+        });
     };
 
     const handleStatusChange = async () => {
@@ -105,11 +116,13 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
 
     async function handleEditingName() {
         if (tempRoomName !== null) {
-            setHiringRoom({ ...hiringRoom, name: tempRoomName });
-            await handleSaveHiringRoomChanges({
-                ...hiringRoom,
-                name: tempRoomName,
-            });
+            if (tempRoomName !== hiringRoom.name) {
+                setHiringRoom({ ...hiringRoom, name: tempRoomName });
+                await handleSaveHiringRoomChanges({
+                    ...hiringRoom,
+                    name: tempRoomName,
+                });
+            }
             setTempRoomName(null);
         } else {
             setTempRoomName(hiringRoom.name);
@@ -317,19 +330,13 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                     <h2 className="font-heading text-lg font-semibold">
                         Slack Configuration
                     </h2>
-                    <EditButton
-                        onClick={() =>
-                            console.log("Edit Custom Message Clicked")
-                        }
-                    />
                 </div>
                 <div className="bg-gray-50 p-6 text-gray-700">
                     {/* SlackHiringroom Component for Configuring Recipients */}
-                    <SlackHiringroom
+                    <SlackMessageBox
                         customMessageBody={customMessageBody}
-                        onCustomMessageBodyChange={
-                            handleCustomMessageBodyChange
-                        }
+                        buttons={hiringRoom.recipient.messageButtons}
+                        onSave={handleSlackConfigChange}
                     />
                 </div>
                 <div className="bg-gray-50 p-6 text-gray-700">
