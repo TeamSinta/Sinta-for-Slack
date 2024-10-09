@@ -145,7 +145,7 @@ const Actions: React.FC<{
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [buttons, setButtons] = useState<ButtonAction[]>([]);
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
-    const [options, setOptions] = useState<{ value: string; label: string, }[]>(
+    const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
     );
     const [customMessageBody, setCustomMessageBody] = useState(

@@ -13,8 +13,12 @@ import slackLogo from "../../../../../../../public/slack-logo.png";
 import sintaLogo from "../../../../../../../public/sintalogo.png";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import MessageButtons, { ButtonAction, ButtonType, UpdateActionType } from "../../_components/message-buttons";
-import parse from 'html-react-parser';
+import MessageButtons, {
+    ButtonAction,
+    ButtonType,
+    UpdateActionType,
+} from "../../_components/message-buttons";
+import parse from "html-react-parser";
 
 // Define variable options
 const variableOptions = [
@@ -44,7 +48,9 @@ const SlackMessageBox: React.FC<{
 }) => {
     const [isEditing, setIsEditing] = useState(false); // Toggle for editing state
     const [messageContent, setMessageContent] = useState(customMessageBody);
-    const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(buttons || []);
+    const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(
+        buttons || [],
+    );
     const quillRef = useRef<ReactQuill>(null); // Reference for ReactQuill
 
     useEffect(() => {
@@ -203,19 +209,17 @@ const SlackMessageBox: React.FC<{
                                 <div className="mt-2 text-sm text-gray-700">
                                     {displayContent}
                                     {/* Render buttons in final display */}
-                                    <div className="mt-6 mb-2 flex space-x-2">
-                                        {messageButtons.map(
-                                            (button, index) => (
-                                                <Button
-                                                    key={index}
-                                                    className={getButtonStyle(
-                                                        button,
-                                                    )}
-                                                >
-                                                    {button.label}
-                                                </Button>
-                                            ),
-                                        )}
+                                    <div className="mb-2 mt-6 flex space-x-2">
+                                        {messageButtons.map((button, index) => (
+                                            <Button
+                                                key={index}
+                                                className={getButtonStyle(
+                                                    button,
+                                                )}
+                                            >
+                                                {button.label}
+                                            </Button>
+                                        ))}
                                     </div>
                                 </div>
                             ) : (
@@ -239,18 +243,16 @@ const SlackMessageBox: React.FC<{
                                         className="text-md w-full rounded-lg border bg-white"
                                     />
                                     <div className="mt-4 flex space-x-2">
-                                        {messageButtons.map(
-                                            (button, index) => (
-                                                <Button
-                                                    key={index}
-                                                    className={getButtonStyle(
-                                                        button,
-                                                    )}
-                                                >
-                                                    {button.label}
-                                                </Button>
-                                            ),
-                                        )}
+                                        {messageButtons.map((button, index) => (
+                                            <Button
+                                                key={index}
+                                                className={getButtonStyle(
+                                                    button,
+                                                )}
+                                            >
+                                                {button.label}
+                                            </Button>
+                                        ))}
                                     </div>
                                 </div>
                             )}

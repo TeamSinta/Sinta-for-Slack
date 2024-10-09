@@ -28,8 +28,6 @@ export type UserOrgs = {
     items: Org[];
 };
 
-
-
 /*
  * Client-side Sidebar component
  */
@@ -44,38 +42,46 @@ export function Sidebar({
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-      const fetchSidebarData = async () => {
-          try {
-              const user = await getAuthUser();
-              const { currentOrg, userOrgs } = await getAuthOrgs();
+        const fetchSidebarData = async () => {
+            try {
+                const user = await getAuthUser();
+                const { currentOrg, userOrgs } = await getAuthOrgs();
 
-              setUser(user);
-              setCurrentOrg(currentOrg);
+                setUser(user);
+                setCurrentOrg(currentOrg);
 
-              const mappedUserOrgs: UserOrgs[] = [
-                  {
-                      heading: "My Orgs",
-                      items: userOrgs.filter((org) => org.ownerId === user?.id),
-                  },
-                  {
-                      heading: "Shared Orgs",
-                      items: userOrgs.filter((org) => org.ownerId !== user?.id),
-                  }
-              ];
+                const mappedUserOrgs: UserOrgs[] = [
+                    {
+                        heading: "My Orgs",
+                        items: userOrgs.filter(
+                            (org) => org.ownerId === user?.id,
+                        ),
+                    },
+                    {
+                        heading: "Shared Orgs",
+                        items: userOrgs.filter(
+                            (org) => org.ownerId !== user?.id,
+                        ),
+                    },
+                ];
 
-              setUserOrgs(mappedUserOrgs);
-          } catch (error) {
-              console.error("Failed to fetch sidebar data", error);
-          } finally {
-              setIsLoading(false);
-          }
-      };
+                setUserOrgs(mappedUserOrgs);
+            } catch (error) {
+                console.error("Failed to fetch sidebar data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-      fetchSidebarData();
-  }, []);
+        fetchSidebarData();
+    }, []);
 
-    const myOrgs = userOrgs.find((orgGroup) => orgGroup.heading === "My Orgs")?.items || [];
-    const sharedOrgs = userOrgs.find((orgGroup) => orgGroup.heading === "Shared Orgs")?.items || [];
+    const myOrgs =
+        userOrgs.find((orgGroup) => orgGroup.heading === "My Orgs")?.items ||
+        [];
+    const sharedOrgs =
+        userOrgs.find((orgGroup) => orgGroup.heading === "Shared Orgs")
+            ?.items || [];
 
     const urgOrgsData: UserOrgs[] = [
         {
@@ -110,14 +116,14 @@ export function Sidebar({
                 <UserDropdown user={user} />
             </div>
 
-                  {showOrgSwitcher && currentOrg && (
-          <div className="py-2">
-              <OrgSelectDropdown
-                  userOrgs={urgOrgsData}
-                  currentOrg={currentOrg} // Only pass if not null
-              />
-          </div>
-)}
+            {showOrgSwitcher && currentOrg && (
+                <div className="py-2">
+                    <OrgSelectDropdown
+                        userOrgs={urgOrgsData}
+                        currentOrg={currentOrg} // Only pass if not null
+                    />
+                </div>
+            )}
 
             <ScrollArea style={{ height: "calc(100vh - 10.5rem)" }}>
                 <div className="h-full w-full py-2">

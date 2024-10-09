@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
 import { getActiveUsers } from "@/server/slack/core";
 import { useState, useEffect } from "react";
 
-type SourceType = 'slack' | 'greenhouse';
+type SourceType = "slack" | "greenhouse";
 
 interface Option {
     value: string;
@@ -25,12 +31,13 @@ export const RecipientsStep: React.FC<RecipientsStepProps> = ({
     initialRecipients = [], // Default to an empty array if no initial data is passed
 }) => {
     // Map initial recipients to ensure `source` is typed as `SourceType`
-    const mappedRecipients: Option[] = initialRecipients.map(recipient => ({
+    const mappedRecipients: Option[] = initialRecipients.map((recipient) => ({
         ...recipient,
         source: recipient.source as SourceType, // Assert that `source` is of type SourceType
     }));
 
-    const [selectedRecipients, setSelectedRecipients] = useState<Option[]>(mappedRecipients);
+    const [selectedRecipients, setSelectedRecipients] =
+        useState<Option[]>(mappedRecipients);
     const [options, setOptions] = useState<Option[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -39,11 +46,10 @@ export const RecipientsStep: React.FC<RecipientsStepProps> = ({
         setIsLoading(true);
         const fetchData = async () => {
             try {
-                const [usersData, greenhouseData] =
-                    await Promise.all([
-                        getActiveUsers(),
-                        getMockGreenhouseData(),
-                    ]);
+                const [usersData, greenhouseData] = await Promise.all([
+                    getActiveUsers(),
+                    getMockGreenhouseData(),
+                ]);
 
                 const combinedOptions: Option[] = [
                     ...usersData.map((user) => ({
@@ -104,7 +110,8 @@ export const RecipientsStep: React.FC<RecipientsStepProps> = ({
                 <CardHeader>
                     <CardTitle>Select Recipients</CardTitle>
                     <CardDescription>
-                        Choose your hiring team from your Slack or Greenhouse recipients.
+                        Choose your hiring team from your Slack or Greenhouse
+                        recipients.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

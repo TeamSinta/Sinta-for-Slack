@@ -27,18 +27,48 @@ import {
 
 // Define candidate, job, and offer events
 const candidateEvents = [
-    { title: "Candidate Stage Change", description: "Triggered when a candidate's stage changes.", alertType: "Candidate Stage Change", apiUrl: "/api/candidate-stage-change" },
-    { title: "Offer Created", description: "Triggered when an offer is created for a candidate.", alertType: "Offer Created", apiUrl: "/api/offer-created" },
+    {
+        title: "Candidate Stage Change",
+        description: "Triggered when a candidate's stage changes.",
+        alertType: "Candidate Stage Change",
+        apiUrl: "/api/candidate-stage-change",
+    },
+    {
+        title: "Offer Created",
+        description: "Triggered when an offer is created for a candidate.",
+        alertType: "Offer Created",
+        apiUrl: "/api/offer-created",
+    },
 ];
 
 const jobEvents = [
-    { title: "Job Approved", description: "Triggered when a job is approved.", alertType: "Job Approved", apiUrl: "/api/job-approved" },
-    { title: "Job Created", description: "Triggered when a job is created.", alertType: "Job Created", apiUrl: "/api/job-created" },
-    { title: "Job Post Approved", description: "Triggered when a job post is approved.", alertType: "Job Post Approved", apiUrl: "/api/job-post-approved" },
+    {
+        title: "Job Approved",
+        description: "Triggered when a job is approved.",
+        alertType: "Job Approved",
+        apiUrl: "/api/job-approved",
+    },
+    {
+        title: "Job Created",
+        description: "Triggered when a job is created.",
+        alertType: "Job Created",
+        apiUrl: "/api/job-created",
+    },
+    {
+        title: "Job Post Approved",
+        description: "Triggered when a job post is approved.",
+        alertType: "Job Post Approved",
+        apiUrl: "/api/job-post-approved",
+    },
 ];
 
 const offerEvents = [
-    { title: "Offer Approved", description: "Triggered when an offer is approved.", alertType: "Offer Approved", apiUrl: "/api/offer-approved" },
+    {
+        title: "Offer Approved",
+        description: "Triggered when an offer is approved.",
+        alertType: "Offer Approved",
+        apiUrl: "/api/offer-approved",
+    },
 ];
 
 export default function ConditionsStep({
@@ -54,24 +84,35 @@ export default function ConditionsStep({
 }) {
     const [selectedEvent, setSelectedEvent] = useState(
         initialEvent
-            ? candidateEvents.concat(jobEvents, offerEvents).find(e => e.alertType === initialEvent.alertType)
-            : null
+            ? candidateEvents
+                  .concat(jobEvents, offerEvents)
+                  .find((e) => e.alertType === initialEvent.alertType)
+            : null,
     );
     const [conditions, setConditions] = useState(
-        initialConditions.length > 0 ? initialConditions : []
+        initialConditions.length > 0 ? initialConditions : [],
     );
     const [isConditionSectionVisible, setIsConditionSectionVisible] = useState(
-        initialConditions.length > 0
+        initialConditions.length > 0,
     );
     const [isSaveEnabled, setIsSaveEnabled] = useState(false);
-    const [fields, setFields] = useState<{ field: string; description: string }[]>([]);
+    const [fields, setFields] = useState<
+        { field: string; description: string }[]
+    >([]);
 
     // Dynamically load events based on the objectField (Candidates, Jobs, Offer)
-    const events = objectField === "Candidates" ? candidateEvents : objectField === "Jobs" ? jobEvents : offerEvents;
+    const events =
+        objectField === "Candidates"
+            ? candidateEvents
+            : objectField === "Jobs"
+              ? jobEvents
+              : offerEvents;
 
     // Dynamically load attributes based on the selected event
     useEffect(() => {
-        const objectType = getObjectFieldTypeFromAlertType(selectedEvent?.alertType);
+        const objectType = getObjectFieldTypeFromAlertType(
+            selectedEvent?.alertType,
+        );
         if (objectType && CONDITIONS_ATTRIBUTES_LOOKUP[objectType]) {
             setFields(CONDITIONS_ATTRIBUTES_LOOKUP[objectType]);
         }
@@ -96,7 +137,8 @@ export default function ConditionsStep({
     // Enable/disable save button based on whether all condition fields are filled and event is selected
     useEffect(() => {
         const allFieldsFilled = conditions.every(
-            (condition) => condition.field && condition.condition && condition.value
+            (condition) =>
+                condition.field && condition.condition && condition.value,
         );
         setIsSaveEnabled(allFieldsFilled && selectedEvent);
     }, [conditions, selectedEvent]);
@@ -109,8 +151,10 @@ export default function ConditionsStep({
     const handleConditionChange = (id: number, key: string, value: string) => {
         setConditions((prevConditions) =>
             prevConditions.map((condition) =>
-                condition.id === id ? { ...condition, [key]: value } : condition
-            )
+                condition.id === id
+                    ? { ...condition, [key]: value }
+                    : condition,
+            ),
         );
     };
 
@@ -129,17 +173,23 @@ export default function ConditionsStep({
     };
 
     const removeCondition = (id: number) => {
-        setConditions((prevConditions) => prevConditions.filter((condition) => condition.id !== id));
+        setConditions((prevConditions) =>
+            prevConditions.filter((condition) => condition.id !== id),
+        );
     };
 
     const handleSave = () => {
         if (isSaveEnabled) {
-            onSaveConditions(conditions, { alertType: selectedEvent?.alertType });
+            onSaveConditions(conditions, {
+                alertType: selectedEvent?.alertType,
+            });
         }
     };
 
     const getConditionOptions = (field: string) => {
-        const objectFieldType = getObjectFieldTypeFromAlertType(selectedEvent?.alertType);
+        const objectFieldType = getObjectFieldTypeFromAlertType(
+            selectedEvent?.alertType,
+        );
 
         if (!objectFieldType) {
             return [];
@@ -148,7 +198,9 @@ export default function ConditionsStep({
         const dataType = getConditionFieldDataType(field, objectFieldType);
 
         return Object.keys(CONDITIONS_OPTIONS)
-            .filter((option) => CONDITIONS_OPTIONS[option].dataType.includes(dataType))
+            .filter((option) =>
+                CONDITIONS_OPTIONS[option].dataType.includes(dataType),
+            )
             .map((key) => ({
                 value: key,
                 label: CONDITIONS_OPTIONS[key].label,
@@ -162,7 +214,8 @@ export default function ConditionsStep({
                 <CardHeader>
                     <CardTitle>Select Event</CardTitle>
                     <CardDescription>
-                        Choose an event that will interact with the Greenhouse API.
+                        Choose an event that will interact with the Greenhouse
+                        API.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -172,15 +225,24 @@ export default function ConditionsStep({
                     >
                         <SelectTrigger className="w-full">
                             <SelectValue>
-                                {selectedEvent ? selectedEvent.title : "Choose an event"}
+                                {selectedEvent
+                                    ? selectedEvent.title
+                                    : "Choose an event"}
                             </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="space-y-2 rounded-sm p-2">
                             {events.map((event) => (
-                                <SelectItem key={event.title} value={event.title}>
+                                <SelectItem
+                                    key={event.title}
+                                    value={event.title}
+                                >
                                     <div className="p-2">
-                                        <p className="font-medium">{event.title}</p>
-                                        <p className="text-sm text-gray-500">{event.description}</p>
+                                        <p className="font-medium">
+                                            {event.title}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            {event.description}
+                                        </p>
                                     </div>
                                 </SelectItem>
                             ))}
@@ -207,19 +269,26 @@ export default function ConditionsStep({
             {isConditionSectionVisible && conditions.length > 0 && (
                 <div className="space-y-4 overflow-y-auto">
                     {conditions.map((condition) => (
-                        <Card key={condition.id} className="transition-colors duration-500">
+                        <Card
+                            key={condition.id}
+                            className="transition-colors duration-500"
+                        >
                             <CardHeader>
                                 <CardTitle className="flex items-center">
                                     Condition
                                     <Button
                                         variant="ghost"
-                                        onClick={() => removeCondition(condition.id)}
+                                        onClick={() =>
+                                            removeCondition(condition.id)
+                                        }
                                         className="ml-auto text-red-600 hover:bg-red-100"
                                     >
                                         <Trash2 className="mr-2" /> Remove
                                     </Button>
                                 </CardTitle>
-                                <CardDescription>Define a condition to filter on.</CardDescription>
+                                <CardDescription>
+                                    Define a condition to filter on.
+                                </CardDescription>
                             </CardHeader>
 
                             <CardContent className="space-y-4">
@@ -229,7 +298,11 @@ export default function ConditionsStep({
                                         attributes={fields}
                                         selectedField={condition.field}
                                         onFieldSelect={(field) =>
-                                            handleConditionChange(condition.id, "field", field)
+                                            handleConditionChange(
+                                                condition.id,
+                                                "field",
+                                                field,
+                                            )
                                         }
                                     />
 
@@ -237,15 +310,24 @@ export default function ConditionsStep({
                                     <Select
                                         value={condition.condition}
                                         onValueChange={(value) =>
-                                            handleConditionChange(condition.id, "condition", value)
+                                            handleConditionChange(
+                                                condition.id,
+                                                "condition",
+                                                value,
+                                            )
                                         }
                                     >
                                         <SelectTrigger className="mt-1 w-full rounded">
                                             <SelectValue placeholder="Choose condition..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {getConditionOptions(condition.field).map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
+                                            {getConditionOptions(
+                                                condition.field,
+                                            ).map((option) => (
+                                                <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
                                                     {option.label}
                                                 </SelectItem>
                                             ))}
@@ -257,7 +339,11 @@ export default function ConditionsStep({
                                         type="text"
                                         value={condition.value}
                                         onChange={(e) =>
-                                            handleConditionChange(condition.id, "value", e.target.value)
+                                            handleConditionChange(
+                                                condition.id,
+                                                "value",
+                                                e.target.value,
+                                            )
                                         }
                                         placeholder="Enter value"
                                         className="text-md mt-1 w-full rounded border p-1 px-2"
@@ -271,15 +357,27 @@ export default function ConditionsStep({
 
             {/* Add Condition and Action Buttons */}
             <div className="mt-6 flex items-center justify-between">
-                <Button variant="outline" onClick={addCondition} className="flex items-center justify-center">
+                <Button
+                    variant="outline"
+                    onClick={addCondition}
+                    className="flex items-center justify-center"
+                >
                     <PlusCircle className="mr-2" /> Add Condition
                 </Button>
 
                 <div className="flex space-x-4">
-                    <Button variant="secondary" onClick={() => console.log("Back to previous step")} className="rounded-md bg-gray-200 px-4 py-2 text-gray-700">
+                    <Button
+                        variant="secondary"
+                        onClick={() => console.log("Back to previous step")}
+                        className="rounded-md bg-gray-200 px-4 py-2 text-gray-700"
+                    >
                         Back
                     </Button>
-                    <Button disabled={!isSaveEnabled} onClick={handleSave} className="rounded-md bg-blue-600 px-4 py-2 text-white">
+                    <Button
+                        disabled={!isSaveEnabled}
+                        onClick={handleSave}
+                        className="rounded-md bg-blue-600 px-4 py-2 text-white"
+                    >
                         Continue
                     </Button>
                 </div>

@@ -66,7 +66,6 @@ export async function saveSlackChannelCreatedToDB(
     return "success";
 }
 
-
 export async function createAssignmentMutation(props: any) {
     const channelName = "";
     const slackTeamId = "";

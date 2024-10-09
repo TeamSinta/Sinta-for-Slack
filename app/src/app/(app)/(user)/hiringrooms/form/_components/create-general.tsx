@@ -57,7 +57,9 @@ export default function DetailsStep({
         },
     });
 
-    const [selectedRoomType, setSelectedRoomType] = useState<string>(initialData.objectField || "");
+    const [selectedRoomType, setSelectedRoomType] = useState<string>(
+        initialData.objectField || "",
+    );
     const { watch, formState, setValue, handleSubmit } = form;
 
     // Watch the inputs to detect changes in real-time
@@ -69,14 +71,18 @@ export default function DetailsStep({
 
     useEffect(() => {
         // Re-check the validity whenever the watched values change
-        setIsSubmitDisabled(!(watchedName && watchedObjectField && formState.isValid));
+        setIsSubmitDisabled(
+            !(watchedName && watchedObjectField && formState.isValid),
+        );
     }, [watchedName, watchedObjectField, formState.isValid]);
 
     const handleRoomSelect = (roomType: string) => {
         setSelectedRoomType(roomType);
         setValue("objectField", roomType, { shouldValidate: true });
 
-        const selectedConfig = objectFieldOptions.find(option => option.name.toLowerCase() === roomType);
+        const selectedConfig = objectFieldOptions.find(
+            (option) => option.name.toLowerCase() === roomType,
+        );
         if (selectedConfig) {
             setValue("triggerConfig", {
                 apiUrl: selectedConfig.apiUrl,
@@ -146,7 +152,8 @@ export default function DetailsStep({
                                         Job Rooms
                                     </h3>
                                     <p className="text-sm text-gray-500">
-                                        Users can view it on the catalog and subscribe.
+                                        Users can view it on the catalog and
+                                        subscribe.
                                     </p>
                                 </div>
                             </div>
@@ -178,7 +185,8 @@ export default function DetailsStep({
                                         Candidate Rooms
                                     </h3>
                                     <p className="text-sm text-gray-500">
-                                        Users cannot view it on the catalog and need an invitation to subscribe.
+                                        Users cannot view it on the catalog and
+                                        need an invitation to subscribe.
                                     </p>
                                 </div>
                             </div>
@@ -201,7 +209,9 @@ export default function DetailsStep({
                         type="submit"
                         disabled={isSubmitDisabled} // Disable if form is not valid or fields are empty
                         className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all ${
-                            isSubmitDisabled ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+                            isSubmitDisabled
+                                ? "bg-gray-400"
+                                : "bg-blue-600 hover:bg-blue-700"
                         }`}
                     >
                         Continue

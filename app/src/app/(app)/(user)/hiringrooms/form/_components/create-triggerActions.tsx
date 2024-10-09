@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-
 import React, { useEffect, useState } from "react";
 import {
     Card,
@@ -112,7 +111,7 @@ const TriggerActionsComponent: React.FC = () => {
 
     const handleConditionChange = (
         index: number,
-        field: keyof Condition ,
+        field: keyof Condition,
         value: string,
     ) => {
         const updatedConditions = [...conditions];

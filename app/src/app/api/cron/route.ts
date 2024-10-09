@@ -20,18 +20,10 @@ import {
 } from "@/server/greenhouse/core";
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
-import {
-    filterDataWithConditions,
-} from "@/server/greenhouse/core";
-import {
-  formatOpeningMessageSlackx,
-    matchUsers,
-} from "@/lib/slack";
+import { filterDataWithConditions } from "@/server/greenhouse/core";
+import { formatOpeningMessageSlackx, matchUsers } from "@/lib/slack";
 import { customFetch } from "@/utils/fetch";
-import {
-
-    getSlackTeamIDByHiringroomID,
-} from "@/server/actions/slack/query";
+import { getSlackTeamIDByHiringroomID } from "@/server/actions/slack/query";
 import {
     processCandidates,
     processScheduledInterviews,
@@ -124,7 +116,6 @@ function generateRandomSixDigitNumber() {
     return randomNumber.toString(); // Convert to string
 }
 
-
 function buildSlackChannelNameForJob(
     slackChannelFormat: string,
     job: any,
@@ -210,7 +201,6 @@ export async function handleIndividualHiringroom(hiringroom: {
     const userMapping = await matchUsers(greenhouseUsers, slackUsers);
 
     if (hiringroom.objectField == "Candidates") {
-
         allCandidates.forEach(async (candidate) => {
             const candidateFitsConditions = true; //check()
             if (candidateFitsConditions) {
@@ -259,12 +249,10 @@ export async function handleIndividualHiringroom(hiringroom: {
             }
         });
     } else if (hiringroom.objectField == "Jobs") {
-
         allJobs.forEach(async (job) => {
             const jobFitsConditions = true;
             // const jobFitsConditions = check()
             if (jobFitsConditions) {
-
                 const channelName = buildSlackChannelNameForJob(
                     hiringroom.slackChannelFormat,
                     job,
@@ -286,11 +274,10 @@ export async function handleIndividualHiringroom(hiringroom: {
                         slackUserIds,
                         slackTeamID,
                     );
-                    const { messageBlocks } =
-                        await formatOpeningMessageSlackx(
-                            hiringroom,
-                            slackTeamID,
-                        );
+                    const { messageBlocks } = await formatOpeningMessageSlackx(
+                        hiringroom,
+                        slackTeamID,
+                    );
                     await sendAndPinSlackMessage(
                         channelId,
                         slackTeamID,
@@ -305,7 +292,7 @@ export async function handleIndividualHiringroom(hiringroom: {
                         channelName,
                         hiringroomId,
                         hiringroom.slackChannelFormat,
-                        hiringroom.slackChannelFormat
+                        hiringroom.slackChannelFormat,
                     );
                 }
             }

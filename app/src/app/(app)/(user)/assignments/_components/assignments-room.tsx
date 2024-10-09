@@ -2,7 +2,12 @@
 // @ts-nocheck
 
 "use client";
-import { getEmailsfromSlack, getChannels, createSlackChannel, inviteUsersToChannel } from "@/server/slack/core";
+import {
+    getEmailsfromSlack,
+    getChannels,
+    createSlackChannel,
+    inviteUsersToChannel,
+} from "@/server/slack/core";
 
 import { AssignmentsChannelTable } from "../_components/assignmentchannels-table";
 import { matchUsers } from "@/lib/slack";
@@ -18,9 +23,7 @@ import {
     fetchAllGreenhouseUsers,
     fetchCandidates,
 } from "@/server/greenhouse/core";
-import {
-    saveSlackChannelCreatedToDB,
-} from "@/server/actions/assignments/mutations";
+import { saveSlackChannelCreatedToDB } from "@/server/actions/assignments/mutations";
 
 export function AssignmentsRoom({ assignmentsPromise }: any) {
     // export function AssignmentsRoom({ searchParams }: UsersPageProps) {

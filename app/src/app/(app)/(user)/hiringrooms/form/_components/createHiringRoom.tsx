@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -10,12 +9,11 @@ import DetailsStep from "./create-general"; // This is the details step
 import SlackConfigurationStep from "./create-slackConfig";
 import ConditionsStep from "./create-conditons";
 import TriggerActionsComponent from "./create-triggerActions";
-import Image2 from "./shoot.png"
+import Image2 from "./shoot.png";
 import Image from "next/image";
 import { RecipientsStep } from "./create-receipients";
 import SummaryStep from "./view-summary";
 import { Condition } from "../../_components/new-hiringroomForm";
-
 
 interface FormValues {
     name: string;
@@ -46,30 +44,28 @@ interface FormValues {
     };
 }
 
-
-
 export default function CreateHiringRoom() {
     const [currentStep, setCurrentStep] = useState("Details");
     const [formData, setFormData] = useState<FormValues>({
-      name: "",
-      objectField: "",
-      alertType: "timebased",
-      recipient: {
-          openingText: "",
-          messageFields: [],
-          messageButtons: [],
-          messageDelivery: "",
-          recipients: [],
-          customMessageBody: "",
-      }, // Set default recipient config
-      conditions: [], // Empty conditions array
-      organizationId: "",
-      slackChannelFormat: "", // Set default slack channel format
-      triggerConfig: {
-          apiUrl: "",
-          processor: "",
-      },
-  });
+        name: "",
+        objectField: "",
+        alertType: "timebased",
+        recipient: {
+            openingText: "",
+            messageFields: [],
+            messageButtons: [],
+            messageDelivery: "",
+            recipients: [],
+            customMessageBody: "",
+        }, // Set default recipient config
+        conditions: [], // Empty conditions array
+        organizationId: "",
+        slackChannelFormat: "", // Set default slack channel format
+        triggerConfig: {
+            apiUrl: "",
+            processor: "",
+        },
+    });
 
     const steps = [
         { label: "Details", step: "Details" },
@@ -81,94 +77,101 @@ export default function CreateHiringRoom() {
     ];
 
     const handleDataSubmit = (data: FormValues) => {
-      setFormData((prevData) => ({
-          ...prevData,
-          ...data,
-          triggerConfig: {
-              apiUrl: data.triggerConfig.apiUrl,
-              processor: data.triggerConfig.processor,
-          },
-      }));
-      setCurrentStep("Conditions"); // Move to the Conditions step after submission
-  };
+        setFormData((prevData) => ({
+            ...prevData,
+            ...data,
+            triggerConfig: {
+                apiUrl: data.triggerConfig.apiUrl,
+                processor: data.triggerConfig.processor,
+            },
+        }));
+        setCurrentStep("Conditions"); // Move to the Conditions step after submission
+    };
 
-  // Handle data submission from the Conditions step
-  const handleConditionsSubmit = (conditionsData: Condition[], eventData: { alertType: string }) => {
-    setFormData((prevData) => ({
-        ...prevData,
-        conditions: conditionsData,
-        alertType: eventData.alertType, // Save the selected event's alert type
-    }));
-    setCurrentStep("Slack Configuration"); // Proceed to the next step
-};
-  // Handle Slack configuration submission
-  const handleSlackConfigSubmit = (slackConfigData: {
-    channelFormat: string;
-    fields: any[];
-    buttons: any[];
-    customMessageBody: string;
-}) => {
-    setFormData((prevData) => ({
-        ...prevData,
-        slackChannelFormat: slackConfigData.channelFormat, // Only slackChannelFormat stays here
-        recipient: {
-            ...prevData.recipient, // Update the recipient object with Slack config data
-            fields: slackConfigData.fields,
-            messageButtons: slackConfigData.buttons,
-            customMessageBody: slackConfigData.customMessageBody,
-        },
-    }));
-    setCurrentStep("Recipients"); // Proceed to the Automated Actions step
-};
+    // Handle data submission from the Conditions step
+    const handleConditionsSubmit = (
+        conditionsData: Condition[],
+        eventData: { alertType: string },
+    ) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            conditions: conditionsData,
+            alertType: eventData.alertType, // Save the selected event's alert type
+        }));
+        setCurrentStep("Slack Configuration"); // Proceed to the next step
+    };
+    // Handle Slack configuration submission
+    const handleSlackConfigSubmit = (slackConfigData: {
+        channelFormat: string;
+        fields: any[];
+        buttons: any[];
+        customMessageBody: string;
+    }) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            slackChannelFormat: slackConfigData.channelFormat, // Only slackChannelFormat stays here
+            recipient: {
+                ...prevData.recipient, // Update the recipient object with Slack config data
+                fields: slackConfigData.fields,
+                messageButtons: slackConfigData.buttons,
+                customMessageBody: slackConfigData.customMessageBody,
+            },
+        }));
+        setCurrentStep("Recipients"); // Proceed to the Automated Actions step
+    };
 
+    // Handle automated actions data submission
+    const handleAutomatedActionsSubmit = (actionsData: any) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            automatedActions: actionsData,
+        }));
+        setCurrentStep("Summary"); // Proceed to the next step (Recipients)
+    };
 
-  // Handle automated actions data submission
-  const handleAutomatedActionsSubmit = (actionsData: any) => {
-      setFormData((prevData) => ({
-          ...prevData,
-          automatedActions: actionsData,
-      }));
-      setCurrentStep("Summary"); // Proceed to the next step (Recipients)
-  };
-
-  // Handle recipients submission
-  const handleRecipientsSubmit = (recipientsData: any) => {
-    setFormData((prevData) => ({
-        ...prevData,
-        recipient: {
-            ...prevData.recipient,
-            recipients: recipientsData, // Only save recipients here
-        },
-    }));
-    setCurrentStep("Automated Actions"); // Proceed to the Summary step
-};
-
-
+    // Handle recipients submission
+    const handleRecipientsSubmit = (recipientsData: any) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            recipient: {
+                ...prevData.recipient,
+                recipients: recipientsData, // Only save recipients here
+            },
+        }));
+        setCurrentStep("Automated Actions"); // Proceed to the Summary step
+    };
 
     const renderStepComponent = () => {
         switch (currentStep) {
             case "Details":
-                return <DetailsStep onDataSubmit={handleDataSubmit} initialData={formData} />;
+                return (
+                    <DetailsStep
+                        onDataSubmit={handleDataSubmit}
+                        initialData={formData}
+                    />
+                );
             case "Conditions":
                 return (
-<ConditionsStep
-    onSaveConditions={handleConditionsSubmit}
-    initialConditions={formData.conditions}
-    initialEvent={{ alertType: formData.alertType }}
-    objectField={formData.objectField}
-/>            );
+                    <ConditionsStep
+                        onSaveConditions={handleConditionsSubmit}
+                        initialConditions={formData.conditions}
+                        initialEvent={{ alertType: formData.alertType }}
+                        objectField={formData.objectField}
+                    />
+                );
             case "Slack Configuration":
                 return (
-                  <SlackConfigurationStep
-                  onSaveConfig={handleSlackConfigSubmit}
-                  initialData={{
-                      channelFormat: formData.slackChannelFormat,
-                      fields: formData.recipient.messageFields,
-                      buttons: formData.recipient.messageButtons,
-                      customMessageBody: formData.recipient.customMessageBody,
-                      objectField: formData.objectField,
-                  }}
-              />
+                    <SlackConfigurationStep
+                        onSaveConfig={handleSlackConfigSubmit}
+                        initialData={{
+                            channelFormat: formData.slackChannelFormat,
+                            fields: formData.recipient.messageFields,
+                            buttons: formData.recipient.messageButtons,
+                            customMessageBody:
+                                formData.recipient.customMessageBody,
+                            objectField: formData.objectField,
+                        }}
+                    />
                 );
             case "Automated Actions":
                 return (
@@ -176,20 +179,19 @@ export default function CreateHiringRoom() {
                         onSaveAutomatedActions={handleAutomatedActionsSubmit}
                     />
                 );
-                case "Recipients":
-                  return (
+            case "Recipients":
+                return (
                     <RecipientsStep
-          onSaveRecipients={handleRecipientsSubmit}
-          onBack={() => setCurrentStep("Slack Configuration")}
-          initialRecipients={formData.recipient.recipients} // Pass the previously selected recipients
-      />
-
-                  );
-              // Summary...
+                        onSaveRecipients={handleRecipientsSubmit}
+                        onBack={() => setCurrentStep("Slack Configuration")}
+                        initialRecipients={formData.recipient.recipients} // Pass the previously selected recipients
+                    />
+                );
+            // Summary...
             // Add other steps as needed
             case "Summary":
-              case "Summary":
-                return (<SummaryStep formData={formData} />);
+            case "Summary":
+                return <SummaryStep formData={formData} />;
             default:
                 return null;
         }
@@ -284,7 +286,8 @@ export default function CreateHiringRoom() {
                                 </h2>
                             </div>
                             <p className="mt-2 text-xs font-medium text-gray-500">
-                                Review and confirm the details of your hire room.
+                                Review and confirm the details of your hire
+                                room.
                             </p>
                         </div>
                     </>
@@ -406,7 +409,11 @@ export default function CreateHiringRoom() {
                                 frameBorder="0"
                                 allowFullScreen
                             /> */}
-                            <Image alt="me" className="h-full w-full rounded-sm shadow-md" src={Image2}/>
+                            <Image
+                                alt="me"
+                                className="h-full w-full rounded-sm shadow-md"
+                                src={Image2}
+                            />
                         </div>
                         <div className="border-b border-gray-200 py-4"> </div>
 
@@ -416,10 +423,10 @@ export default function CreateHiringRoom() {
                                 What is a Hire Room?
                             </h3>
                             <p className="py-2 text-sm text-gray-600">
-                            A Hiring Room is an automated Slack channel
-                            that centralizes discussions, updates, and
-                            debriefs for streamlined recruitment collaboration.
-                            Use our step by step builder to get started.
+                                A Hiring Room is an automated Slack channel that
+                                centralizes discussions, updates, and debriefs
+                                for streamlined recruitment collaboration. Use
+                                our step by step builder to get started.
                             </p>
                         </div>
                     </div>

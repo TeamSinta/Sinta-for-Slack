@@ -9,7 +9,6 @@
 
 // @ts-nocheck
 
-
 "use server";
 
 import { db } from "@/server/db";
@@ -571,11 +570,8 @@ export async function sendSlackButtonNotification(
         });
 
         console.log("response slack message sent", response.status);
-
     }
     console.log("total recipients", allRecipients.length);
-
-
 }
 
 export async function getSlackUserIds(
@@ -636,51 +632,55 @@ export async function getSlackIdsOfGreenHouseUsers(
 }
 
 export async function createSlackChannel(
-  channelName: string,
-  slackTeamId: string
+    channelName: string,
+    slackTeamId: string,
 ): Promise<string | null> {
-  const accessToken = await getAccessToken(slackTeamId);
+    const accessToken = await getAccessToken(slackTeamId);
 
-  try {
-    console.log(`Creating Slack channel: ${channelName}`);
+    try {
+        console.log(`Creating Slack channel: ${channelName}`);
 
-    const response = await fetch("https://slack.com/api/conversations.create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        name: channelName,
-      }),
-    });
+        const response = await fetch(
+            "https://slack.com/api/conversations.create",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    name: channelName,
+                }),
+            },
+        );
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (!data.ok) {
-      console.error(`Slack API error: ${data.error}`);
+        if (!data.ok) {
+            console.error(`Slack API error: ${data.error}`);
 
-      if (data.error === "name_taken") {
-        console.warn("Channel name already taken. Skipping channel creation.");
-        return null;
-      } else if (data.error === "internal_error") {
-        console.warn("Slack returned an internal error. No further action required.");
-        return null; // Gracefully exit without retrying
-      } else {
-        throw new Error(`Error creating Slack channel: ${data.error}`);
-      }
+            if (data.error === "name_taken") {
+                console.warn(
+                    "Channel name already taken. Skipping channel creation.",
+                );
+                return null;
+            } else if (data.error === "internal_error") {
+                console.warn(
+                    "Slack returned an internal error. No further action required.",
+                );
+                return null; // Gracefully exit without retrying
+            } else {
+                throw new Error(`Error creating Slack channel: ${data.error}`);
+            }
+        }
+
+        console.log("Channel created successfully:", data.channel.id);
+        return data.channel.id;
+    } catch (error) {
+        console.error("Error creating Slack channel:", error.message);
+        return null; // Return null in case of failure, to handle gracefully downstream
     }
-
-    console.log("Channel created successfully:", data.channel.id);
-    return data.channel.id;
-  } catch (error) {
-    console.error("Error creating Slack channel:", error.message);
-    return null; // Return null in case of failure, to handle gracefully downstream
-  }
 }
-
-
-
 
 export async function inviteUsersToChannel(
     channelId: any,
@@ -715,7 +715,6 @@ export async function inviteUsersToChannel(
         console.error("Error inviting users to Slack channel:", error);
     }
 }
-
 
 export async function sendAndPinSlackMessage(
     channelId: string,

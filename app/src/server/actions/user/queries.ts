@@ -38,9 +38,8 @@ export async function getAuthUser() {
 }
 
 export async function getAuthOrgs() {
-  return await getOrganizations();
+    return await getOrganizations();
 }
-
 
 export async function getPaginatedUsersQuery(
     input: GetPaginatedUsersQueryProps,

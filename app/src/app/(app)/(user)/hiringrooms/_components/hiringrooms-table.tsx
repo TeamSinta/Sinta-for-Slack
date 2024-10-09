@@ -125,21 +125,22 @@ export function HiringroomsTable({
 
                                     {/* Room Name, Created Date, and Additional Info */}
                                     <div>
-                                        <p className="pb-1 mt-2 text-xs font-medium text-gray-600">
+                                        <p className="mt-2 pb-1 text-xs font-medium text-gray-600">
                                             {format(
                                                 new Date(hiringroom.createdAt),
                                                 "PPP",
                                             )}
                                         </p>
-                                        <div className="pb-1 text-lg font-heading font-semibold leading-tight text-gray-800 dark:text-gray-100">
+                                        <div className="pb-1 font-heading text-lg font-semibold leading-tight text-gray-800 dark:text-gray-100">
                                             <span className="text-gray-500 dark:text-gray-400"></span>
                                             {hiringroom.name}
                                         </div>
                                         {/* Display Alert Type and Conditions */}
                                         {hiringroom.alertType && (
-                                            <p className="pb-2 text-xs text-muted-foreground mt-1">
-                                                                                     <span className="rounded bg-blue-100 px-2  py-1 text-xs font-semibold text-blue-500 dark:bg-indigo-900 dark:text-indigo-400">
-                                              {hiringroom.alertType} </span>
+                                            <p className="mt-1 pb-2 text-xs text-muted-foreground">
+                                                <span className="rounded bg-blue-100 px-2  py-1 text-xs font-semibold text-blue-500 dark:bg-indigo-900 dark:text-indigo-400">
+                                                    {hiringroom.alertType}{" "}
+                                                </span>
                                             </p>
                                         )}
                                     </div>

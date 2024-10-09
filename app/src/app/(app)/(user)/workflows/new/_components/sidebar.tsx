@@ -1,22 +1,39 @@
-import { ZapIcon,LinkIcon, TagIcon, WebhookIcon, TimerIcon, UploadIcon, CalendarIcon as SchedulerIcon, MoreVerticalIcon, GitBranchIcon, EditIcon, WorkflowIcon } from "lucide-react"; // Icons
+import {
+    ZapIcon,
+    LinkIcon,
+    TagIcon,
+    WebhookIcon,
+    TimerIcon,
+    UploadIcon,
+    CalendarIcon as SchedulerIcon,
+    MoreVerticalIcon,
+    GitBranchIcon,
+    EditIcon,
+    WorkflowIcon,
+} from "lucide-react"; // Icons
 
 export function Sidebar({ sidebarOpen }: { sidebarOpen: boolean }) {
     if (!sidebarOpen) return null;
 
     return (
-        <div className="w-[400px] bg-white shadow-lg p-4 absolute pb-8 top-0 my-8 right-8 overflow-y-auto rounded-lg hover:shadow-xl transition-all duration-200 ease-in-out">
+        <div className="absolute right-8 top-0 my-8 w-[400px] overflow-y-auto rounded-lg bg-white p-4 pb-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl">
             {/* Improved Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex items-center justify-between">
                 <div className="flex gap-2">
-                   <WorkflowIcon/> <h4 className="font-bold text-md">Workflows</h4>
+                    <WorkflowIcon />{" "}
+                    <h4 className="text-md font-bold">Workflows</h4>
                 </div>
-                <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                <MoreVerticalIcon className="cursor-pointer text-gray-500" />
             </div>
 
             {/* Tabs with improved design */}
-            <div className="flex gap-4 mb-4 border-b border-gray-200 pb-2">
-                <button className="text-sm font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">Objects</button>
-                <button className="text-sm font-semibold text-gray-500 pb-1">Templates</button>
+            <div className="mb-4 flex gap-4 border-b border-gray-200 pb-2">
+                <button className="border-b-2 border-blue-600 pb-1 text-sm font-semibold text-blue-600">
+                    Objects
+                </button>
+                <button className="pb-1 text-sm font-semibold text-gray-500">
+                    Templates
+                </button>
             </div>
 
             {/* Search Bar */}
@@ -24,101 +41,101 @@ export function Sidebar({ sidebarOpen }: { sidebarOpen: boolean }) {
                 <input
                     type="text"
                     placeholder="Search for objects"
-                    className="w-full p-2 border rounded-md"
+                    className="w-full rounded-md border p-2"
                 />
             </div>
 
             {/* Logic and Actions with reduced card size */}
-            <h5 className="font-semibold mb-2">Logic</h5>
-            <div className="space-y-2 mb-4">
+            <h5 className="mb-2 font-semibold">Logic</h5>
+            <div className="mb-4 space-y-2">
                 {/* Logic Cards */}
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
                     <div className="flex items-center">
-                        <div className="bg-yellow-100 p-2 rounded-md mr-2">
+                        <div className="mr-2 rounded-md bg-yellow-100 p-2">
                             <ZapIcon className="text-yellow-500" />
                         </div>
                         <div>
                             <span>If / Else</span>
                         </div>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
                     <div className="flex items-center">
-                        <div className="bg-yellow-100 p-2 rounded-md mr-2">
+                        <div className="mr-2 rounded-md bg-yellow-100 p-2">
                             <GitBranchIcon className="text-yellow-500" />
                         </div>
                         <div>
                             <span>Multi-Branch</span>
                         </div>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
             </div>
 
-            <h5 className="font-semibold mb-2">Actions</h5>
+            <h5 className="mb-2 font-semibold">Actions</h5>
             <div className="space-y-2">
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
                     <div className="flex items-center">
-                        <div className="bg-purple-100 p-2 rounded-md mr-2">
+                        <div className="mr-2 rounded-md bg-purple-100 p-2">
                             <LinkIcon className="text-purple-500" />
                         </div>
                         <div>
                             <span>Redirect to URL</span>
                         </div>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
-                    <div className="bg-purple-100 p-2 rounded-md mr-2">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
+                    <div className="mr-2 rounded-md bg-purple-100 p-2">
                         <TagIcon className="text-purple-500" />
                     </div>
                     <div>
                         <span>Tag</span>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
-                    <div className="bg-purple-100 p-2 rounded-md mr-2">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
+                    <div className="mr-2 rounded-md bg-purple-100 p-2">
                         <WebhookIcon className="text-purple-500" />
                     </div>
                     <div>
                         <span>Webhook</span>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
-                    <div className="bg-purple-100 p-2 rounded-md mr-2">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
+                    <div className="mr-2 rounded-md bg-purple-100 p-2">
                         <TimerIcon className="text-purple-500" />
                     </div>
                     <div>
                         <span>Wait</span>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
-                    <div className="bg-purple-100 p-2 rounded-md mr-2">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
+                    <div className="mr-2 rounded-md bg-purple-100 p-2">
                         <UploadIcon className="text-purple-500" />
                     </div>
                     <div>
                         <span>Send Data</span>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
             </div>
 
-            <h5 className="font-semibold mb-2 mt-4">Scheduling</h5>
+            <h5 className="mb-2 mt-4 font-semibold">Scheduling</h5>
             <div className="space-y-2">
-                <div className="flex items-center p-3 border rounded-md bg-white shadow-sm justify-between">
+                <div className="flex items-center justify-between rounded-md border bg-white p-3 shadow-sm">
                     <div className="flex items-center">
-                        <div className="bg-gray-100 p-2 rounded-md mr-2">
+                        <div className="mr-2 rounded-md bg-gray-100 p-2">
                             <SchedulerIcon className="text-gray-500" />
                         </div>
                         <div>
                             <span>Display Scheduler</span>
                         </div>
                     </div>
-                    <MoreVerticalIcon className="text-gray-500 cursor-pointer" />
+                    <MoreVerticalIcon className="cursor-pointer text-gray-500" />
                 </div>
             </div>
         </div>
