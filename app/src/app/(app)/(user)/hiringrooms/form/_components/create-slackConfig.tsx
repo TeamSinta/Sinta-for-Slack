@@ -142,9 +142,11 @@ const SlackConfigurationStep: React.FC<SlackConfigurationStepProps> = ({
                 <div className="text-sm font-medium">Opening Message</div>
                 <SlackMessageBox
                     customMessageBody={customMessageBody}
-                    onCustomMessageBodyChange={handleCustomMessageBodyChange}
                     buttons={buttons}
-                    onButtonsChange={handleButtonsChange}
+                    onSave={(message, buttons) => {
+                        handleCustomMessageBodyChange(message);
+                        handleButtonsChange(buttons);
+                    }}
                 />
             </section>
 

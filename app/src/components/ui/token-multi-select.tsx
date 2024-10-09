@@ -10,83 +10,11 @@ import {
     TooltipContent,
     TooltipProvider,
 } from "@/components/ui/tooltip";
-
-// Available tokens with real examples
-const candidateTokens = [
-    {
-        label: "CANDIDATE_NAME",
-        value: "CANDIDATE_NAME",
-        example: '"John Doe" for John Doe',
-    },
-    {
-        label: "CANDIDATE_LAST_NAME",
-        value: "CANDIDATE_LAST_NAME",
-        example: '"Doe" for John Doe',
-    },
-    {
-        label: "CANDIDATE_FIRST_NAME",
-        value: "CANDIDATE_FIRST_NAME",
-        example: '"John" for John Doe',
-    },
-    {
-        label: "CANDIDATE_CREATION_MONTH_TEXT",
-        value: "CANDIDATE_CREATION_MONTH_TEXT",
-        example: '"March" for March',
-    },
-    {
-        label: "CANDIDATE_CREATION_MONTH_NUMBER",
-        value: "CANDIDATE_CREATION_MONTH_NUMBER",
-        example: '"03" for March',
-    },
-    {
-        label: "CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED",
-        value: "CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED",
-        example: '"Mar" for March',
-    },
-    {
-        label: "CANDIDATE_CREATION_DAY_NUMBER",
-        value: "CANDIDATE_CREATION_DAY_NUMBER",
-        example: '"11" for the 11th',
-    },
-    {
-        label: "CANDIDATE_CREATION_DATE",
-        value: "CANDIDATE_CREATION_DATE",
-        example: '"2023-03-14" for March 14th, 2023',
-    },
-];
-
-const jobTokens = [
-    {
-        label: "JOB_NAME",
-        value: "JOB_NAME",
-        example: '"Software Engineer" for the job name',
-    },
-    {
-        label: "JOB_POST_DATE",
-        value: "JOB_POST_DATE",
-        example: '"2023-03-14" for the job post date',
-    },
-    {
-        label: "JOB_POST_MONTH_TEXT",
-        value: "JOB_POST_MONTH_TEXT",
-        example: '"March" for March',
-    },
-    {
-        label: "JOB_POST_MONTH_NUMBER",
-        value: "JOB_POST_MONTH_NUMBER",
-        example: '"03" for March',
-    },
-    {
-        label: "JOB_POST_MONTH_TEXT_ABBREVIATED",
-        value: "JOB_POST_MONTH_TEXT_ABBREVIATED",
-        example: '"Mar" for March',
-    },
-    {
-        label: "JOB_POST_DAY_NUMBER",
-        value: "JOB_POST_DAY_NUMBER",
-        example: '"11" for the 11th',
-    },
-];
+import {
+    candidateTokens,
+    jobTokens,
+} from "@/app/(app)/(user)/hiringrooms/data";
+import { Button } from "./button";
 
 const logos: Record<string, StaticImageData | null> = {
     slack: slackLogo,
@@ -105,14 +33,20 @@ const validChannelName = (name: string): string => {
 export function TokenSelect({
     selectedType,
     onTokensChange,
+    onSave,
+    onCancel,
+    initialInput = "",
 }: {
     selectedType: "Candidates" | "Jobs";
     onTokensChange: (tokens: string) => void;
+    onSave?: (input: string) => void;
+    onCancel?: () => void;
+    initialInput?: string;
 }) {
-    const [inputValue, setInputValue] = useState("");
-    const [content, setContent] = useState<
-        (string | { label: string; value: string })[]
-    >([]); // Array to hold both tokens and text
+    const [inputValue, setInputValue] = useState(initialInput);
+    const [content, setContent] = useState<{ label: string; value: string }[]>(
+        [],
+    ); // Array to hold both tokens and text
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -167,24 +101,56 @@ export function TokenSelect({
     return (
         <div className="w-full">
             <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
-                    Select Tokens or Add Custom Text
-                </label>
-
-                {/* Tooltip providing guidance */}
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <Info className="h-5 w-5 cursor-pointer text-gray-400" />
-                        </TooltipTrigger>
-                        <TooltipContent className="w-48">
-                            <p>
-                                Use tokens or add custom text to create valid
-                                Slack channel names.
-                            </p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <div className="flex gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                        Select Tokens or Add Custom Text
+                    </label>
+                    {/* Tooltip providing guidance */}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Info className="h-5 w-5 cursor-pointer text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent className="w-48">
+                                <p>
+                                    Use tokens or add custom text to create
+                                    valid Slack channel names.
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                <div className="flex flex-row gap-2">
+                    {onCancel && (
+                        <Button
+                            onClick={onCancel}
+                            className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 disabled:opacity-30"
+                        >
+                            Cancel
+                        </Button>
+                    )}
+                    {onSave && (
+                        <Button
+                            onClick={() =>
+                                onSave(
+                                    content
+                                        .map((item) =>
+                                            availableTokens.find(
+                                                (token) =>
+                                                    token.label === item.label,
+                                            )
+                                                ? `{{${item.value}}}`
+                                                : item.value,
+                                        )
+                                        .join(""),
+                                )
+                            }
+                            className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 disabled:opacity-30"
+                        >
+                            Save
+                        </Button>
+                    )}
+                </div>
             </div>
             {/* Input field that shows selected tokens and allows custom input */}
             <div className="relative">
@@ -225,7 +191,7 @@ export function TokenSelect({
                 {/* Dropdown for token suggestions */}
                 {dropdownVisible && filteredTokens.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-300 bg-white shadow-lg">
-                        <ul className="max-h-60 overflow-auto">
+                        <ul className="max-h-40 overflow-auto">
                             {filteredTokens.map((token) => (
                                 <li
                                     key={token.value}

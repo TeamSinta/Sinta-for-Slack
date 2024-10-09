@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import parse from "html-react-parser";
 
 const fields = [
     { value: "name", label: "Candidate Name" },
@@ -57,6 +58,7 @@ interface SlackHiringroomProps {
     onButtonsChange: (buttons: ButtonAction[]) => void;
     onRecipientsChange: (recipients: Option[]) => void;
     onCustomMessageBodyChange: (customMessageBody: string) => void;
+    customMessageBody: string;
 }
 
 type Option = {
@@ -71,6 +73,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     onButtonsChange,
     onRecipientsChange,
     onCustomMessageBodyChange,
+    customMessageBody,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [openingText, setOpeningText] = useState("");
@@ -79,9 +82,6 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     const [selectedRecipients, setSelectedRecipients] = useState<Option[]>([]);
     const [options, setOptions] = useState<{ value: string; label: string }[]>(
         [],
-    );
-    const [customMessageBody, setCustomMessageBody] = useState(
-        "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
     );
 
     const handleOpeningTextChange = (
@@ -164,12 +164,10 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
     }, []);
 
     const handleCustomMessageBodyChange = (value: string) => {
-        setCustomMessageBody(value);
         onCustomMessageBodyChange(value);
     };
 
     const handleVariableSelect = (variable: string) => {
-        setCustomMessageBody((prev) => prev + variable);
         onCustomMessageBodyChange(customMessageBody + variable);
     };
 
@@ -228,7 +226,7 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
                                         </div>
                                     </div>
                                     <div className="mt-2 text-gray-700">
-                                        {customMessageBody}
+                                        {parse(customMessageBody)}
                                     </div>
                                     <div className=" flex space-x-2 pt-6">
                                         {buttons.map((button, index) => (
@@ -314,15 +312,15 @@ const SlackHiringroom: React.FC<SlackHiringroomProps> = ({
             </div>
 
             {/* Multi-Select for Recipients */}
-            <div className="my-4">
-                <Label>Select Recipients</Label>
-                <FancyMultiSelect
-                    selectedOptions={selectedRecipients}
-                    onOptionChange={handleRecipientsChange}
-                    options={options}
-                    loading={isLoading}
-                />
-            </div>
+            {/* <div className="my-4">
+                    <Label>Select Recipients</Label>
+                    <FancyMultiSelect
+                        selectedOptions={selectedRecipients}
+                        onOptionChange={handleRecipientsChange}
+                        options={options}
+                        loading={isLoading}
+                    />
+                </div> */}
         </div>
     );
 };

@@ -37,15 +37,9 @@ const specialVariableOptions = [
 
 const SlackMessageBox: React.FC<{
     customMessageBody: string;
-    onCustomMessageBodyChange: (message: string) => void;
     buttons: ButtonAction[];
-    onButtonsChange: (buttons: ButtonAction[]) => void;
-}> = ({
-    customMessageBody,
-    onCustomMessageBodyChange,
-    buttons,
-    onButtonsChange,
-}) => {
+    onSave: (message: string, buttons: ButtonAction[]) => void;
+}> = ({ customMessageBody, buttons, onSave }) => {
     const [isEditing, setIsEditing] = useState(false); // Toggle for editing state
     const [messageContent, setMessageContent] = useState(customMessageBody);
     const [messageButtons, setMessageButtons] = useState<ButtonAction[]>(
@@ -59,8 +53,7 @@ const SlackMessageBox: React.FC<{
     }, [customMessageBody, buttons]);
 
     const handleSave = () => {
-        onCustomMessageBodyChange(messageContent);
-        onButtonsChange(messageButtons);
+        onSave(messageContent, messageButtons);
         setIsEditing(false); // Exit edit mode
     };
 
@@ -132,7 +125,11 @@ const SlackMessageBox: React.FC<{
                                 <X
                                     size={20}
                                     className="cursor-pointer text-white"
-                                    onClick={() => setIsEditing(false)}
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        setMessageContent(customMessageBody);
+                                        setMessageButtons(buttons || []);
+                                    }}
                                 />
                             </>
                         )}
