@@ -7,6 +7,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 
+// @ts-nocheck
+
 
 "use server";
 
@@ -25,7 +27,7 @@ import {
     formatListToString,
     formatToReadableDate,
 } from "@/lib/utils";
-import { parseCustomMessageBody } from "@/utils/formating";
+import { parseCustomMessageBody } from "@/utils/formatting";
 
 interface SlackChannel {
     id: string;

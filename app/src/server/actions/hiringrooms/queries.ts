@@ -68,8 +68,6 @@ type GetPaginatedSlackChannelCreatedQueryProps = z.infer<
 export async function getSlackChannelsCreatedPromise(
     input: GetPaginatedSlackChannelCreatedQueryProps,
 ) {
-    console.log("input - ", input);
-    const { currentOrg } = await getOrganizations();
 
     const offset = (input.page - 1) * input.per_page;
     const [column, order] = (input.sort?.split(".") as [

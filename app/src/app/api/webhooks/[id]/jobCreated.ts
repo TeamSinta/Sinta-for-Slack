@@ -5,6 +5,9 @@ import { saveSlackChannelCreatedToDB } from "@/server/actions/slackchannels/muta
 import { createSlackChannel, inviteUsersToChannel, sendAndPinSlackMessage } from "@/server/slack/core";
 import { buildSlackChannelNameForJob, getSlackUsersFromRecipient } from "@/utils/hiring-rooms/rooms-formatter";
 
+interface Recipient {
+  recipients: any[]; // Adjust the type of the elements inside the array as needed
+}
 export async function handleJobCreated(data: any, orgID: string) {
     // Step 1: Extract the job data from the Greenhouse payload
     const jobData = data.payload.job;
@@ -42,7 +45,7 @@ export async function handleJobCreated(data: any, orgID: string) {
 
 
             // Step 6: Get Slack users from the hiring room recipients
-            const slackUserIds = getSlackUsersFromRecipient(hiringroom.recipient);
+            const slackUserIds = getSlackUsersFromRecipient(hiringroom.recipient as Recipient);
 
             // Step 7: Create the Slack channel
             const channelId = await createSlackChannel(channelName, slackTeamID);

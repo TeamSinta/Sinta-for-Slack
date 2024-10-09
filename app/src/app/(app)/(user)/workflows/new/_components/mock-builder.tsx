@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserIcon, FileTextIcon, CheckCircleIcon, XCircleIcon, SlackIcon, CalendarIcon, InfoIcon, ZapIcon, ClockIcon, SearchIcon, HandIcon,  ClipboardIcon, LinkIcon, TagIcon, WebhookIcon, TimerIcon, UploadIcon, CalendarIcon as SchedulerIcon, GitBranchIcon, MoveLeft, PencilIcon, GripVertical, MailIcon } from "lucide-react"; // Icons

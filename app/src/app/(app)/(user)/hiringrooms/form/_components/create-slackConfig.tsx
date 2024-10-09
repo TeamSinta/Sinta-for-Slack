@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import SlackMessageBox from "./slack-messageBox";
 import { TokenSelect } from "@/components/ui/token-multi-select";
 import { ButtonAction, ButtonType } from "../../_components/message-buttons";
-import { formatSlackChannelName, replaceTokensWithExamples } from "@/utils/formating";
+import { formatSlackChannelName, replaceTokensWithExamples } from "@/utils/formatting";
 
 
 

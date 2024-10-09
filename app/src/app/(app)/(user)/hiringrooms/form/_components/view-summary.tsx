@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import slackLogo from "../../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import Image, { StaticImageData } from "next/image";
-import { formatSlackChannelName, replaceTokensWithExamples } from "@/utils/formating";
+import { formatSlackChannelName, replaceTokensWithExamples } from "@/utils/formatting";
 
 type SourceType = "slack" | "greenhouse";
 

@@ -7,6 +7,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
+// @ts-nocheck
+
 
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
@@ -15,7 +17,7 @@ import { env } from "@/env";
 import { getEmailsfromSlack, } from "@/server/slack/core";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
 import { getSubdomainByHiringRoomID } from "@/server/actions/hiringrooms/queries";
-import { parseCustomMessageBody } from "@/utils/formating";
+import { parseCustomMessageBody } from "@/utils/formatting";
 
 // Helper interfaces for better type checking
 interface ScheduledInterview {

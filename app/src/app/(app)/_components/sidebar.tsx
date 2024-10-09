@@ -1,4 +1,4 @@
-"use client"; // Mark as a client-side component
+"use client"; // This explicitly marks the component as a client-side component
 
 import { useEffect, useState } from "react";
 import { Icons } from "@/components/ui/icons";
@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 import { UserDropdown } from "@/app/(app)/_components/user-dropdown";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNav } from "@/app/(app)/_components/sidebar-nav";
-import {
-    OrgSelectDropdown,
-    type UserOrgs,
-} from "@/app/(app)/_components/org-select-dropdown";
+import { OrgSelectDropdown } from "@/app/(app)/_components/org-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAuthOrgs, getAuthUser } from "@/server/actions/user/queries";
+import { User } from "next-auth";
+import { organizations } from "@/server/db/schema";
 
 type SideNavProps = {
     sidebarNavIncludeIds?: string[];
@@ -20,7 +20,17 @@ type SideNavProps = {
     showOrgSwitcher?: boolean;
 };
 
-/**
+// This is the correct type for organization objects
+export type Org = typeof organizations.$inferSelect;
+
+export type UserOrgs = {
+    heading: string;
+    items: Org[];
+};
+
+
+
+/*
  * Client-side Sidebar component
  */
 export function Sidebar({
@@ -28,34 +38,44 @@ export function Sidebar({
     sidebarNavRemoveIds,
     showOrgSwitcher = true,
 }: SideNavProps) {
-    const [user, setUser] = useState(null);
-    const [currentOrg, setCurrentOrg] = useState(null);
-    const [userOrgs, setUserOrgs] = useState<UserOrgs[]>([]);
+    const [user, setUser] = useState<User | null>(null);
+    const [currentOrg, setCurrentOrg] = useState<Org | null>(null); // Use Org type instead of OrgSelectDropdownProps
+    const [userOrgs, setUserOrgs] = useState<UserOrgs[]>([]); // Correct type for userOrgs
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch sidebar data from API route
-        const fetchData = async () => {
-            try {
-                const response = await fetch("/api/sidebar-data");
-                const { user, currentOrg, userOrgs } = await response.json();
-                setUser(user);
-                setCurrentOrg(currentOrg);
-                setUserOrgs(userOrgs);
-            } catch (error) {
-                console.error("Failed to fetch sidebar data", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+      const fetchSidebarData = async () => {
+          try {
+              const user = await getAuthUser();
+              const { currentOrg, userOrgs } = await getAuthOrgs();
 
-        fetchData();
-    }, []);
+              setUser(user);
+              setCurrentOrg(currentOrg);
 
-    console.log(sidebarNavIncludeIds);
+              const mappedUserOrgs: UserOrgs[] = [
+                  {
+                      heading: "My Orgs",
+                      items: userOrgs.filter((org) => org.ownerId === user?.id),
+                  },
+                  {
+                      heading: "Shared Orgs",
+                      items: userOrgs.filter((org) => org.ownerId !== user?.id),
+                  }
+              ];
 
-    const myOrgs = userOrgs.filter((org) => org.ownerId === user?.id);
-    const sharedOrgs = userOrgs.filter((org) => org.ownerId !== user?.id);
+              setUserOrgs(mappedUserOrgs);
+          } catch (error) {
+              console.error("Failed to fetch sidebar data", error);
+          } finally {
+              setIsLoading(false);
+          }
+      };
+
+      fetchSidebarData();
+  }, []);
+
+    const myOrgs = userOrgs.find((orgGroup) => orgGroup.heading === "My Orgs")?.items || [];
+    const sharedOrgs = userOrgs.find((orgGroup) => orgGroup.heading === "Shared Orgs")?.items || [];
 
     const urgOrgsData: UserOrgs[] = [
         {
@@ -74,7 +94,7 @@ export function Sidebar({
 
     return (
         <aside className={cn("h-full w-full")}>
-            <div className={cn("flex h-16 items-center justify-between")}>
+            <div className={cn(" flex h-16 items-center justify-between")}>
                 <Link
                     href={siteUrls.dashboard.home}
                     className={cn("z-10 transition-transform hover:scale-90")}
@@ -90,14 +110,14 @@ export function Sidebar({
                 <UserDropdown user={user} />
             </div>
 
-            {showOrgSwitcher && (
-                <div className="py-2">
-                    <OrgSelectDropdown
-                        userOrgs={urgOrgsData}
-                        currentOrg={currentOrg}
-                    />
-                </div>
-            )}
+                  {showOrgSwitcher && currentOrg && (
+          <div className="py-2">
+              <OrgSelectDropdown
+                  userOrgs={urgOrgsData}
+                  currentOrg={currentOrg} // Only pass if not null
+              />
+          </div>
+)}
 
             <ScrollArea style={{ height: "calc(100vh - 10.5rem)" }}>
                 <div className="h-full w-full py-2">

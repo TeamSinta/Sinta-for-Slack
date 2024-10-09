@@ -8,9 +8,6 @@ export default function FormPageRooms({
 }) {
     // Determine if "new" is in the params, or it's a roomId for editing
     const roomId = params.roomId || null;
-    console.log(params, "params");
-    console.log(roomId, "roomId");
-    console.log("her");
 
     return (
         <>

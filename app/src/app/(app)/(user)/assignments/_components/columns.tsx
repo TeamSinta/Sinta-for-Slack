@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ColumnDropdown } from "./column-dropdown";
 import { format } from "date-fns";
 import slackLogo from "../../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../../public/greenhouselogo.png";
+import greenhouseLogo from "../../../../../../public/greenhouselogo.png"
 import { type StaticImageData } from "next/image";
 
 const logoMap: Record<string, StaticImageData> = {
