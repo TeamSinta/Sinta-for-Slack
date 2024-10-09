@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { hiringrooms, slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
+import { hiringrooms, organizations, slackChannelsCreated } from "@/server/db/schema"; // Assuming HiringroomStatus is the enum type for status
 import { asc, desc, eq, count, and, ilike, or, ne } from "drizzle-orm";
 import { z } from "zod";
 import { unstable_noStore as noStore } from "next/cache";
@@ -113,6 +113,31 @@ export async function getHiringrooms() {
     });
 
     return data;
+}
+
+export async function fetchHireRoomsByObjectFieldAndAlertType(
+  orgID: string,
+  objectField: string,
+  alertType: string,
+) {
+  // Perform the database transaction
+  const { data } = await db.transaction(async (tx) => {
+      const data = await tx
+          .select() // Selecting from the hiring rooms table
+          .from(hiringrooms) // Assume hiring rooms table stores the configurations
+          .where(
+              and(
+                  eq(hiringrooms.organizationId, orgID), // Condition 1: Match orgID
+                  eq(hiringrooms.alertType, alertType), // Condition 2: Match alertType (e.g., Job Created)
+                  eq(hiringrooms.objectField, objectField), // Condition 3: Match objectField (e.g., Jobs)
+              ),
+          )
+          .execute();
+
+      return { data }; // Returning the matching hiring rooms
+  });
+
+  return data; // Returning the result
 }
 export async function getPaginatedHiringroomsQuery(
     input: GetPaginatedHiringroomsQueryProps,
@@ -384,4 +409,39 @@ export async function getSlackChannelsById(hiringRoomId: string) {
     });
 
     return data; // Now returns an array of matching slack channels
+}
+
+
+export async function getSubdomainByHiringRoomID(
+  hiringRoomId: string
+): Promise<string> {
+  if (!hiringRoomId) {
+    throw new Error("No hiring room ID provided.");
+  }
+
+  // Fetch hiring room details using the provided hiring room ID
+  const hiringRoom = await db.query.hiringrooms.findFirst({
+    where: eq(hiringrooms.id, hiringRoomId),
+    columns: {
+      organizationId: true,
+    },
+  });
+
+  if (!hiringRoom) {
+    throw new Error("Hiring room not found.");
+  }
+
+  // Fetch organization's subdomain using the organization ID from the hiring room
+  const organization = await db.query.organizations.findFirst({
+    where: eq(organizations.id, hiringRoom.organizationId),
+    columns: {
+      greenhouse_subdomain: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found.");
+  }
+
+  return organization.greenhouse_subdomain!;
 }

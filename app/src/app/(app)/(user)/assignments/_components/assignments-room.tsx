@@ -2,7 +2,7 @@
 // @ts-nocheck
 
 "use client";
-import { getEmailsfromSlack, getChannels } from "@/server/slack/core";
+import { getEmailsfromSlack, getChannels, createSlackChannel, inviteUsersToChannel } from "@/server/slack/core";
 
 import { AssignmentsChannelTable } from "../_components/assignmentchannels-table";
 import { matchUsers } from "@/lib/slack";
@@ -19,8 +19,6 @@ import {
     fetchCandidates,
 } from "@/server/greenhouse/core";
 import {
-    createSlackChannel,
-    inviteUsersToChannel,
     saveSlackChannelCreatedToDB,
 } from "@/server/actions/assignments/mutations";
 

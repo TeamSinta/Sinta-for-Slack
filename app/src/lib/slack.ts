@@ -7,14 +7,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-//@ts-nocheck
 
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { env } from "@/env";
 // import { type Candidate } from "@/types/greenhouse";
-import { getEmailsfromSlack } from "@/server/slack/core";
+import { getEmailsfromSlack, } from "@/server/slack/core";
 import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
+import { getSubdomainByHiringRoomID } from "@/server/actions/hiringrooms/queries";
+import { parseCustomMessageBody } from "@/utils/formating";
 
 // Helper interfaces for better type checking
 interface ScheduledInterview {
@@ -473,112 +474,157 @@ const getPrimaryPhone = (phones: { value: string; type: string }[]): string => {
     return phone ? phone.value : "No phone number";
 };
 
-export async function formatHiringRoomDataForSlack(
-    hiringRoomData: any,
-    slackTeamID: string,
+
+export async function formatOpeningMessageSlackx(
+  hiringRoomData: any,
+  jobData: any
 ): Promise<any> {
-    const greenhouseUsers = await fetchGreenhouseUsers();
-    const slackUsers = await getEmailsfromSlack(slackTeamID);
-    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
+  const subDomain = await getSubdomainByHiringRoomID(hiringRoomData.id);
 
-    const messageFields = hiringRoomData.recipient.messageFields.map(
-        (field: string) => {
-            let fieldName: string;
-            switch (field) {
-                case "title":
-                    fieldName = "Role";
-                    break;
-                default:
-                    fieldName =
-                        field.charAt(0).toUpperCase() +
-                        field.slice(1).replace(/_/g, " ");
-                    break;
-            }
-            const fieldValue = hiringRoomData[field] ?? "Not provided";
-            return { fieldName, fieldValue };
-        },
-    );
+  // Parse and format custom message body using the job data
+  let customMessageBody = parseCustomMessageBody(
+      hiringRoomData.recipient.customMessageBody,
+      {
+          title: jobData.name,
+          department: jobData.departments?.[0]?.name,
+          location: jobData.offices?.[0]?.location,
+          employment_type: jobData.custom_fields?.employment_type?.value,
+          recruiter: jobData.hiring_team?.recruiters?.[0]?.user_id,
+          hiring_managers: jobData.hiring_team?.hiring_managers?.[0]?.user_id,
+      }
+  );
 
-    let customMessageBody = hiringRoomData.recipient.customMessageBody;
-    customMessageBody = customMessageBody.replace(/{{(.*?)}}/g, "*{{$1}}*");
+  // Check if message fields are provided in the hiring room data
+  const messageFields = hiringRoomData.recipient.messageFields?.map(
+      (field: string) => {
+          let fieldName: string;
+          let fieldValue: string;
 
-    // Group message fields into rows of 2
-    const groupedMessageFields = [];
-    for (let i = 0; i < messageFields.length; i += 2) {
-        groupedMessageFields.push(messageFields.slice(i, i + 2));
-    }
+          switch (field) {
+              case "title":
+                  fieldName = "Role";
+                  fieldValue = jobData.name || "Not provided";
+                  break;
+              case "department":
+                  fieldName = "Department";
+                  fieldValue = jobData.departments?.[0]?.name || "Not provided";
+                  break;
+              case "location":
+                  fieldName = "Location";
+                  fieldValue = jobData.offices?.[0]?.location || "Not provided";
+                  break;
+              case "employment_type":
+                  fieldName = "Employment Type";
+                  fieldValue = jobData.custom_fields?.employment_type?.value || "Not provided";
+                  break;
+              case "recruiter":
+                  fieldName = "Recruiter";
+                  fieldValue = jobData.hiring_team?.recruiters?.[0]?.user_id || "Not provided";
+                  break;
+              case "hiring_manager":
+                  fieldName = "Hiring Manager";
+                  fieldValue = jobData.hiring_team?.hiring_managers?.[0]?.user_id || "Not provided";
+                  break;
+              default:
+                  fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, " ");
+                  fieldValue = "Not provided";
+                  break;
+          }
 
-    const messageBlocks = [
-        {
-            type: "section",
-            text: {
-                type: "mrkdwn",
-                text: customMessageBody,
-            },
-        },
-        {
-            type: "divider",
-        },
-        ...groupedMessageFields.map((group) => ({
-            type: "section",
-            fields: group.map(({ fieldName, fieldValue }) => ({
-                type: "mrkdwn",
-                text: `*${fieldName}*: ${String(fieldValue)}`,
-            })),
-        })),
-        {
-            type: "context",
-            elements: [
-                {
-                    type: "mrkdwn",
-                    text: `*Last Modified:* ${new Date().toLocaleString()}`,
-                },
-            ],
-        },
-        {
-            type: "divider",
-        },
-        {
-            type: "actions",
-            elements: hiringRoomData.recipient.messageButtons.map(
-                (button: any) => {
-                    const buttonElement: any = {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: button.label || "button",
-                            emoji: true,
-                        },
-                        value: `${button.updateType ?? button.type}`, // Include type in the value
-                    };
+          return { fieldName, fieldValue };
+      }
+  );
 
-                    if (button.type === "UpdateButton") {
-                        if (button.updateType === "MoveToNextStage") {
-                            buttonElement.style = "primary";
-                            buttonElement.action_id = `move_to_next_stage`;
-                        } else if (button.updateType === "RejectCandidate") {
-                            buttonElement.style = "danger";
-                            buttonElement.action_id = `reject_candidate`;
-                        }
-                    } else if (button.linkType === "Dynamic") {
-                        const baseURL = `https://${subDomain}.greenhouse.io`;
-                        if (button.action === "candidateRecord") {
-                            buttonElement.url = `${baseURL}/people`;
-                        } else if (button.action === "jobRecord") {
-                            buttonElement.url = `${baseURL}/sdash`;
-                        }
-                        buttonElement.type = "button";
-                    } else {
-                        buttonElement.action_id =
-                            button.action ||
-                            `${button.type.toLowerCase()}_action`;
-                    }
+  // Group message fields into rows of 2
+  const groupedMessageFields = [];
+  if (messageFields && messageFields.length > 0) {
+      for (let i = 0; i < messageFields.length; i += 2) {
+          groupedMessageFields.push(messageFields.slice(i, i + 2));
+      }
+  }
 
-                    return buttonElement;
-                },
-            ),
-        },
-    ];
+  // Construct message blocks for Slack
+  const messageBlocks: any[] = [
+      {
+          type: "section",
+          text: {
+              type: "mrkdwn",
+              text: customMessageBody,
+          },
+      },
+      {
+          type: "divider",
+      },
+  ];
 
-    return { messageBlocks };
+  // Only add grouped message fields if they exist
+  if (groupedMessageFields.length > 0) {
+      messageBlocks.push(
+          ...groupedMessageFields.map((group) => ({
+              type: "section",
+              fields: group.map(({ fieldName, fieldValue }) => ({
+                  type: "mrkdwn",
+                  text: `*${fieldName}*: ${String(fieldValue)}`,
+              })),
+          }))
+      );
+  }
+
+  // Add the "Last Modified" section and action buttons
+  messageBlocks.push(
+      {
+          type: "context",
+          elements: [
+              {
+                  type: "mrkdwn",
+                  text: `*Last Modified:* ${new Date().toLocaleString()}`,
+              },
+          ],
+      },
+      {
+          type: "divider",
+      },
+      {
+          type: "actions",
+          elements: hiringRoomData.recipient.messageButtons.map(
+              (button: any) => {
+                  const buttonElement: any = {
+                      type: "button",
+                      text: {
+                          type: "plain_text",
+                          text: button.label || "button",
+                          emoji: true,
+                      },
+                      value: `${button.updateType ?? button.type}`, // Include type in the value
+                  };
+
+                  if (button.type === "UpdateButton") {
+                      if (button.updateType === "MoveToNextStage") {
+                          buttonElement.style = "primary";
+                          buttonElement.action_id = `move_to_next_stage`;
+                      } else if (button.updateType === "RejectCandidate") {
+                          buttonElement.style = "danger";
+                          buttonElement.action_id = `reject_candidate`;
+                      }
+                  } else if (button.linkType === "Dynamic") {
+                      const baseURL = `https://${subDomain}.greenhouse.io`;
+                      if (button.action === "candidateRecord") {
+                          buttonElement.url = `${baseURL}/people`;
+                      } else if (button.action === "jobRecord") {
+                          buttonElement.url = `${baseURL}/sdash`;
+                      }
+                      buttonElement.type = "button";
+                  } else {
+                      buttonElement.action_id =
+                          button.action ||
+                          `${button.type.toLowerCase()}_action`;
+                  }
+
+                  return buttonElement;
+              }
+          ),
+      }
+  );
+
+  return { messageBlocks };
 }

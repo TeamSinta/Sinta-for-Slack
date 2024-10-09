@@ -2,7 +2,7 @@ import { AppPageShell } from "@/app/(app)/_components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import homepageicon from "../../../../../public/fistbump.png";
 import slackLogo from "../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../public/greenhouselogo.png";
 import {
     CheckCircleIcon,
     ArrowUpRight,

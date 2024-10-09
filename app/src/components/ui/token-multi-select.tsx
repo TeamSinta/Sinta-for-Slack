@@ -3,8 +3,7 @@ import { BracesIcon, BrainIcon, Info, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image, { type StaticImageData } from "next/image";
 import slackLogo from "../../../public/slack-logo.png";
-import greenhouseLogo from "../../../public/greenhouseLogo.png";
-import { TokensIcon } from "@radix-ui/react-icons";
+import greenhouseLogo from "../../../public/greenhouselogo.png";
 import {
   Tooltip,
   TooltipTrigger,

@@ -19,9 +19,9 @@ import parse from 'html-react-parser';
 // Define variable options
 const variableOptions = [
     { value: "{{Interviewer}}", label: "Interviewer" },
-    { value: "{{Role title}}", label: "Role Title" },
-    { value: "{{Job Stage}}", label: "Job Stage" },
-    { value: "{{Recruiter}}", label: "Recruiter" },
+    { value: "{{role_name}}", label: "Role Title" },
+    { value: "{{job_stage}}", label: "Job Stage" },
+    { value: "{{recruiter_name}}", label: "Recruiter" },
     { value: "{{Candidate_Name}}", label: "Candidate Name" },
 ];
 

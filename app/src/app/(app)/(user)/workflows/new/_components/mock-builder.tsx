@@ -6,7 +6,7 @@ import { Sidebar } from "./sidebar";
 import WorkflowPublishModal from "./workflow-modal";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
-import greenhouseIcon from "../../../../../../../public/greenhouseLogo.png";
+import greenhouseIcon from "../../../../../../../public/greenhouselogo.png";
 import slackIcon from "../../../../../../../public/slack-logo.png";
 import apolloIcon from "../../../../../../../public/apolloio.png";
 

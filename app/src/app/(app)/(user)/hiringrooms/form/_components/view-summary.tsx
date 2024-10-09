@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import slackLogo from "../../../../../../../public/slack-logo.png";
 import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import Image, { StaticImageData } from "next/image";
+import { formatSlackChannelName, replaceTokensWithExamples } from "@/utils/formating";
 
 type SourceType = "slack" | "greenhouse";
 
@@ -28,6 +29,7 @@ const logoMap: Record<SourceType, StaticImageData> = {
 const badgeStyle = (variable: string, color: string = "blue") => {
   return `<span class="inline-block mx-1 rounded border border-${color}-400 bg-${color}-50 px-2 py-1 text-sm font-semibold text-${color}-500">${variable}</span>`;
 };
+
 
 const SummaryStep = ({ formData }: { formData: any }) => {
   const router = useRouter();
@@ -53,6 +55,9 @@ const SummaryStep = ({ formData }: { formData: any }) => {
       console.error("Error during form submission:", error);
     }
   };
+
+  // Generate the Slack channel name preview with examples and format it
+  const slackChannelPreview = formatSlackChannelName(replaceTokensWithExamples(formData.slackChannelFormat));
 
   return (
     <div className="">
@@ -92,13 +97,16 @@ const SummaryStep = ({ formData }: { formData: any }) => {
               <ul className="list-disc list-inside mt-2">
                 {formData.conditions.map((condition: any, index: number) => (
                   <li key={index} className="flex items-center">
-                    <Badge  variant="secondary" className="flex items-center bg-white hover:bg-white-200 border-blue-300 text-blue-600 space-x-2 py-2 shadow rounded ">
-                    <Image
-                      src={greenhouseLogo}
-                      alt="greenhouse-logo"
-                      className="mr-2 h-4 w-4"
-                    />
-                    {condition.field}
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center bg-white hover:bg-white-200 border-blue-300 text-blue-600 space-x-2 py-2 shadow rounded"
+                    >
+                      <Image
+                        src={greenhouseLogo}
+                        alt="greenhouse-logo"
+                        className="mr-2 h-4 w-4"
+                      />
+                      {condition.field}
                     </Badge>
                     <span className="mx-1 font-medium">{condition.condition}</span>
                     <span
@@ -130,7 +138,7 @@ const SummaryStep = ({ formData }: { formData: any }) => {
             <div className="p-4 rounded-lg shadow-md bg-gray-100 border border-gray-300">
               <div className="flex items-center justify-between">
                 <span className="text-lg font-bold text-blue-600">
-                  #{formData.slackChannelFormat}
+                  #{slackChannelPreview}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-1">

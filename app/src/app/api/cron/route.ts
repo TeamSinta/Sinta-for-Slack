@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-//@ts-nocheck
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
+// @ts-nocheck
 
 export const dynamic = "force-dynamic";
 
 import {
     createSlackChannel,
     getEmailsfromSlack,
-    saveSlackChannelCreatedToDB,
+    inviteUsersToChannel,
     sendAndPinSlackMessage,
 } from "@/server/slack/core";
 import {
@@ -21,20 +22,16 @@ import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import {
     filterDataWithConditions,
-    filterStuckinStageDataConditions,
 } from "@/server/greenhouse/core";
 import {
-    filterCandidatesDataForSlack,
-    formatHiringRoomDataForSlack,
+  formatOpeningMessageSlackx,
     matchUsers,
 } from "@/lib/slack";
-import { sendSlackButtonNotification } from "@/server/slack/core";
 import { customFetch } from "@/utils/fetch";
 import {
-    getSlackTeamIDByWorkflowID,
+
     getSlackTeamIDByHiringroomID,
 } from "@/server/actions/slack/query";
-import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
 import {
     processCandidates,
     processScheduledInterviews,
@@ -43,9 +40,9 @@ import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/colu
 import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
-import { inviteUsersToChannel } from "@/server/actions/assignments/mutations";
 import { format, formatISO, parseISO } from "date-fns";
 import { processInterviewReminders } from "./interviewReminders";
+import { saveSlackChannelCreatedToDB } from "@/server/actions/slackchannels/mutations";
 
 async function getAllCandidates() {
     //https://harvest.greenhouse.io/v1/candidates
@@ -119,22 +116,14 @@ function getSlackUsersFromRecipient(hiringroomRecipient: {
 
     return slackUsers;
 }
+
 function generateRandomSixDigitNumber() {
     const min = 100000; // Minimum 6-digit number
     const max = 999999; // Maximum 6-digit number
     const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
     return randomNumber.toString(); // Convert to string
 }
-function buildGreenHouseUsersForCandidate(
-    hiring_room_recipient,
-    cand_id,
-    job_id,
-) {
-    hiring_room_recipient.forEach((recipient) => {
-        if (recipient.source == "greenhouse") {
-        }
-    });
-}
+
 
 function buildSlackChannelNameForJob(
     slackChannelFormat: string,
@@ -219,11 +208,9 @@ export async function handleIndividualHiringroom(hiringroom: {
     const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroomId);
     const slackUsers = await getEmailsfromSlack(slackTeamID);
     const userMapping = await matchUsers(greenhouseUsers, slackUsers);
-    // create job room - name job_title + date posted + time
-    // create candidate room - name candidate_first_initial + candidate_last_name + job_title
+
     if (hiringroom.objectField == "Candidates") {
-        // hiringroom.recipient = buildHiringRoomRecipients()
-        // const slackUserIds = getSlackUserIds()
+
         allCandidates.forEach(async (candidate) => {
             const candidateFitsConditions = true; //check()
             if (candidateFitsConditions) {
@@ -272,32 +259,21 @@ export async function handleIndividualHiringroom(hiringroom: {
             }
         });
     } else if (hiringroom.objectField == "Jobs") {
-        // console.log('hiring room -',hiringroom," ------- hiring room")
 
         allJobs.forEach(async (job) => {
             const jobFitsConditions = true;
             // const jobFitsConditions = check()
             if (jobFitsConditions) {
-                // create slack channel
-                // let channelName = sanitizeChannelName(job.id + "-"+"1")
-                // let channelName = sanitizeChannelName(job.id + "-"+"1")
+
                 const channelName = buildSlackChannelNameForJob(
                     hiringroom.slackChannelFormat,
                     job,
                 );
-                // channelName=channelName.substring(0,channelName.length-2)
-                // channelName = channelName.substring(0,6)
-                // channelName = channelName.substring(0,6)
-                // generateRandomSixDigitNumber
-                // const channelName = generateRandomSixDigitNumber()
 
                 const slackUsersIds = getSlackUsersFromRecipient(
                     hiringroom.recipient,
                 );
-                // const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(hiringroom.recipient, candidate, userMapping)
                 const slackUserIds = slackUsersIds; // + slackIdsOfGreenHouseUsers
-                // const slackUserIds = slackUsersIds + slackIdsOfGreenHouseUsers
-
                 const channelId = await createSlackChannel(
                     channelName,
                     slackTeamID,
@@ -311,7 +287,7 @@ export async function handleIndividualHiringroom(hiringroom: {
                         slackTeamID,
                     );
                     const { messageBlocks } =
-                        await formatHiringRoomDataForSlack(
+                        await formatOpeningMessageSlackx(
                             hiringroom,
                             slackTeamID,
                         );
@@ -329,6 +305,7 @@ export async function handleIndividualHiringroom(hiringroom: {
                         channelName,
                         hiringroomId,
                         hiringroom.slackChannelFormat,
+                        hiringroom.slackChannelFormat
                     );
                 }
             }

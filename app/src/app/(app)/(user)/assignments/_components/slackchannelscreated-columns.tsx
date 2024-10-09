@@ -3,7 +3,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { ColumnDropdown } from "./column-dropdown";
 import slackLogo from "../../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../public/greenhouselogo.png";
 import { type StaticImageData } from "next/image";
 import { type ReactNode } from "react";
 

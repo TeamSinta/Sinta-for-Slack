@@ -25,7 +25,7 @@ import {
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
-import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import slacklogo from "../../../../../../../public/slack-logo.png";
 import filterIcon from "../../../../../../../public/filter.png";
 import Actions from "./actions";
