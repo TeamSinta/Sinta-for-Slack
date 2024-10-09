@@ -14,6 +14,7 @@ import {
     Edit,
     ToggleLeft,
     MoreHorizontal,
+    PencilIcon,
 } from "lucide-react"; // Icons from Lucide
 import slackLogo from "../../../../../../../public/slack-logo.png";
 import Image from "next/image";
@@ -27,7 +28,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import SlackChannelNameFormat from "../../_components/SlackChannelNameFormat";
 import SlackHiringroom from "../../_components/slack-hiringroom";
 import parse from "html-react-parser";
@@ -38,6 +39,7 @@ import { updateHiringroomMutation } from "@/server/actions/hiringrooms/mutations
 import { toast } from "sonner";
 import SlackMessageBox from "./slack-messageBox";
 import { ButtonAction } from "../../_components/message-buttons";
+import { TokenSelect } from "@/components/ui/token-multi-select";
 export default function EditHireRoom({ roomId }: { roomId: string }) {
     const [hiringRoom, setHiringRoom] = useState<any>(null);
     const [slackChannels, setSlackChannels] = useState([]);
@@ -45,6 +47,7 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
     const [customMessageBody, setCustomMessageBody] = useState(
         "Hi Team 👋 \n\nWelcome to the {{role_name}} Hiring Channel! This will be our hub for communication and collaboration. Let's kick things off with a few key resources and tasks.",
     );
+    const [editingNameFormat, setEditingNameFormat] = useState(false);
     const [tempRoomName, setTempRoomName] = useState<string | null>(null);
     const [tempConditions, setTempConditions] = useState<
         { id: number; field: string; condition: string; value: string }[] | null
@@ -127,6 +130,18 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
         } else {
             setTempRoomName(hiringRoom.name);
         }
+    }
+
+    async function handleEditingNameFormat(input: string) {
+        setHiringRoom({
+            ...hiringRoom,
+            slackChannelFormat: input,
+        });
+        await handleSaveHiringRoomChanges({
+            ...hiringRoom,
+            slackChannelFormat: input,
+        });
+        setEditingNameFormat(false);
     }
 
     async function handleEditingConditions() {
@@ -326,26 +341,57 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
             </div>
 
             <div className="mb-6 rounded-sm border border-gray-200">
-                <div className="flex items-center justify-between p-6">
+                <div className="flex flex-col items-start justify-between p-6">
                     <h2 className="font-heading text-lg font-semibold">
                         Slack Configuration
                     </h2>
-                </div>
-                <div className="bg-gray-50 p-6 text-gray-700">
-                    {/* SlackHiringroom Component for Configuring Recipients */}
-                    <SlackMessageBox
-                        customMessageBody={customMessageBody}
-                        buttons={hiringRoom.recipient.messageButtons}
-                        onSave={handleSlackConfigChange}
-                    />
-                </div>
-                <div className="bg-gray-50 p-6 text-gray-700">
-                    <p className="mt-1 text-sm text-gray-600">
-                        Specify the format of the Slack channel name for the
-                        hiring room.
-                    </p>
-                    {/* Slack Channel Format Component */}
-                    <SlackChannelNameFormat />
+
+                    {editingNameFormat ? (
+                        <div className="my-4 w-full text-gray-700">
+                            <p className="mt-1 text-sm text-gray-600">
+                                Specify the format of the Slack channel name for
+                                the hiring room.
+                            </p>
+                            {/* Slack Channel Format Component */}
+                            {/* <SlackChannelNameFormat /> */}
+                            <TokenSelect
+                                onTokensChange={() => {}}
+                                selectedType={hiringRoom.objectField}
+                                initialInput={
+                                    hiringRoom.slackChannelFormat ?? ""
+                                }
+                                onSave={async (input: string) => {
+                                    await handleEditingNameFormat(input);
+                                }}
+                                onCancel={() => setEditingNameFormat(false)}
+                            />
+                        </div>
+                    ) : (
+                        <div className="my-4 w-full rounded-lg border border-gray-300 bg-gray-100 p-4 shadow-md">
+                            <p className="mt-1 text-sm text-gray-500">
+                                Slack Channel Name Format:
+                            </p>
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg font-bold text-blue-600">
+                                    #{hiringRoom.slackChannelFormat}
+                                </span>
+
+                                <PencilIcon
+                                    onClick={() => setEditingNameFormat(true)}
+                                    className="cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="bg-gray-50 text-gray-700">
+                        {/* SlackHiringroom Component for Configuring Recipients */}
+                        <SlackMessageBox
+                            customMessageBody={customMessageBody}
+                            buttons={hiringRoom.recipient.messageButtons}
+                            onSave={handleSlackConfigChange}
+                        />
+                    </div>
                 </div>
             </div>
 

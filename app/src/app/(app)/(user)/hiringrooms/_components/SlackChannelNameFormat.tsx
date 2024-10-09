@@ -1,31 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const candidateTokens = [
-    { label: "CANDIDATE_NAME", example: '"John Doe" for John Doe' },
-    { label: "CANDIDATE_LAST_NAME", example: '"Doe" for John Doe' },
-    { label: "CANDIDATE_FIRST_NAME", example: '"John" for John Doe' },
-    { label: "CANDIDATE_CREATION_MONTH_TEXT", example: '"March" for March' },
-    { label: "CANDIDATE_CREATION_MONTH_NUMBER", example: '"03" for March' },
-    {
-        label: "CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED",
-        example: '"Mar" for March',
-    },
-    { label: "CANDIDATE_CREATION_DAY_NUMBER", example: '"11" for the 11th' },
-    {
-        label: "CANDIDATE_CREATION_DATE",
-        example: '"2023-03-14" for March 14th, 2023',
-    },
-];
-const jobTokens = [
-    { label: "JOB_NAME", example: '"Software Engineer" for the job name' },
-    { label: "JOB_POST_DATE", example: '"2023-03-14" for the job post date' },
-    { label: "JOB_POST_MONTH_TEXT", example: '"March" for March' },
-    { label: "JOB_POST_MONTH_NUMBER", example: '"03" for March' },
-    { label: "JOB_POST_MONTH_TEXT_ABBREVIATED", example: '"Mar" for March' },
-    { label: "JOB_POST_DAY_NUMBER", example: '"11" for the 11th' },
-];
+import { candidateTokens, jobTokens } from "../data";
 
 interface SlackChannelNameFormatProps {
     format: string;

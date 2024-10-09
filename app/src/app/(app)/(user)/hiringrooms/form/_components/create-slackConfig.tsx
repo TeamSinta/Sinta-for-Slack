@@ -4,9 +4,23 @@ import { Button } from "@/components/ui/button";
 import SlackMessageBox from "./slack-messageBox";
 import { TokenSelect } from "@/components/ui/token-multi-select";
 import { ButtonAction, ButtonType } from "../../_components/message-buttons";
-
+import { candidateTokens, jobTokens } from "../../data";
 // Function to replace tokens with real examples
 const replaceTokensWithExamples = (format: string): string => {
+    function getQuotationsText(text: string) {
+        const match = text.match(/"([^"]*)"/);
+        if (match) return match[1];
+        return "";
+    }
+
+    [...candidateTokens, ...jobTokens].forEach((token) => {
+        format = format.replace(
+            `{{${token.label}}}`,
+            getQuotationsText(token.example ?? ""),
+        );
+    });
+
+    return format;
     return format
         .replace("{{CANDIDATE_NAME}}", "John Doe")
         .replace("{{CANDIDATE_LAST_NAME}}", "Doe")
