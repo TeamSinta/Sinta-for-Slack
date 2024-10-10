@@ -7,6 +7,7 @@ import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import candidateAttributes from "../../../../../../utils/candidate-attributes.json";
 import ConditionsCard from "./ConditionsCard";
+import { CONDITIONS_ATTRIBUTES_LOOKUP } from "@/utils/conditions-options";
 
 export default function EditConditions({
     onSaveConditions,
@@ -27,7 +28,7 @@ export default function EditConditions({
 
     // Set fields dynamically, for now using static fields for demonstration
     useEffect(() => {
-        setFields(candidateAttributes.candidate.attributes); // Change this as needed
+        setFields(CONDITIONS_ATTRIBUTES_LOOKUP[objectField.toLowerCase()]); // Change this as needed
     }, []);
 
     const handleConditionChange = (id: number, key: string, value: string) => {

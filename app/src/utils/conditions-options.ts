@@ -70,23 +70,13 @@ export const CONDITIONS_OPTIONS: Record<
     equals: {
         evaluator: ((inputValue: Primitive, value: Primitive) =>
             inputValue === value) as Evaluator<Primitive, Primitive>,
-        dataType: [
-            DataType.TEXT,
-            DataType.NUMBER,
-            DataType.DATETIME,
-            DataType.BOOLEAN,
-        ],
+        dataType: [DataType.TEXT, DataType.NUMBER, DataType.DATETIME],
         label: "Exactly matches",
     },
     not_equals: {
         evaluator: ((inputValue: Primitive, value: Primitive) =>
             inputValue !== value) as Evaluator<Primitive, Primitive>,
-        dataType: [
-            DataType.TEXT,
-            DataType.NUMBER,
-            DataType.DATETIME,
-            DataType.BOOLEAN,
-        ],
+        dataType: [DataType.TEXT, DataType.NUMBER, DataType.DATETIME],
         label: "Does not exactly match",
     },
     contains: {
