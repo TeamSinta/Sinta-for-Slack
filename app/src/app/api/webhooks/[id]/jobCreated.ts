@@ -1,4 +1,4 @@
-import { formatOpeningMessageSlackx } from "@/lib/slack";
+import { formatOpeningMessageSlack } from "@/lib/slack";
 import { fetchHireRoomsByObjectFieldAndAlertType } from "@/server/actions/hiringrooms/queries";
 import { getSlackTeamIDByHiringroomID } from "@/server/actions/slack/query";
 import { saveSlackChannelCreatedToDB } from "@/server/actions/slackchannels/mutations";
@@ -79,7 +79,7 @@ export async function handleJobCreated(data: any, orgID: string) {
                 console.log(
                     `Formatting Opening Message for Slack Channel ${channelId}`,
                 );
-                const { messageBlocks } = await formatOpeningMessageSlackx(
+                const { messageBlocks } = await formatOpeningMessageSlack(
                     hiringroom,
                     jobData,
                 );

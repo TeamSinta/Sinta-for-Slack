@@ -475,7 +475,7 @@ const getPrimaryPhone = (phones: { value: string; type: string }[]): string => {
     return phone ? phone.value : "No phone number";
 };
 
-export async function formatOpeningMessageSlackx(
+export async function formatOpeningMessageSlack(
     hiringRoomData: any,
     jobData: any,
 ): Promise<any> {
@@ -581,60 +581,67 @@ export async function formatOpeningMessageSlackx(
     }
 
     // Add the "Last Modified" section and action buttons
-    messageBlocks.push(
-        {
-            type: "context",
-            elements: [
-                {
-                    type: "mrkdwn",
-                    text: `*Last Modified:* ${new Date().toLocaleString()}`,
-                },
-            ],
-        },
-        {
-            type: "divider",
-        },
-        {
-            type: "actions",
-            elements: hiringRoomData.recipient.messageButtons.map(
-                (button: any) => {
-                    const buttonElement: any = {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: button.label || "button",
-                            emoji: true,
-                        },
-                        value: `${button.updateType ?? button.type}`, // Include type in the value
-                    };
+    messageBlocks.push({
+        type: "context",
+        elements: [
+            {
+                type: "mrkdwn",
+                text: `*Last Modified:* ${new Date().toLocaleString()}`,
+            },
+        ],
+    });
+    if (
+        hiringRoomData.recipient.messageButtons &&
+        hiringRoomData.recipient.messageButtons.length > 0
+    ) {
+        messageBlocks.push(
+            {
+                type: "divider",
+            },
+            {
+                type: "actions",
+                elements: hiringRoomData.recipient.messageButtons.map(
+                    (button: any) => {
+                        const buttonElement: any = {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: button.label || "button",
+                                emoji: true,
+                            },
+                            value: `${button.updateType ?? button.type}`, // Include type in the value
+                        };
 
-                    if (button.type === "UpdateButton") {
-                        if (button.updateType === "MoveToNextStage") {
-                            buttonElement.style = "primary";
-                            buttonElement.action_id = `move_to_next_stage`;
-                        } else if (button.updateType === "RejectCandidate") {
-                            buttonElement.style = "danger";
-                            buttonElement.action_id = `reject_candidate`;
+                        if (button.type === "UpdateButton") {
+                            if (button.updateType === "MoveToNextStage") {
+                                buttonElement.style = "primary";
+                                buttonElement.action_id = `move_to_next_stage`;
+                            } else if (
+                                button.updateType === "RejectCandidate"
+                            ) {
+                                buttonElement.style = "danger";
+                                buttonElement.action_id = `reject_candidate`;
+                            }
+                        } else if (button.linkType === "Dynamic") {
+                            const baseURL = `https://${subDomain}.greenhouse.io`;
+                            if (button.action === "candidateRecord") {
+                                buttonElement.url = `${baseURL}/people`;
+                            } else if (button.action === "jobRecord") {
+                                buttonElement.url = `${baseURL}/sdash`;
+                            }
+                            buttonElement.type = "button";
+                        } else {
+                            buttonElement.action_id =
+                                button.action ||
+                                `${button.type.toLowerCase()}_action`;
                         }
-                    } else if (button.linkType === "Dynamic") {
-                        const baseURL = `https://${subDomain}.greenhouse.io`;
-                        if (button.action === "candidateRecord") {
-                            buttonElement.url = `${baseURL}/people`;
-                        } else if (button.action === "jobRecord") {
-                            buttonElement.url = `${baseURL}/sdash`;
-                        }
-                        buttonElement.type = "button";
-                    } else {
-                        buttonElement.action_id =
-                            button.action ||
-                            `${button.type.toLowerCase()}_action`;
-                    }
 
-                    return buttonElement;
-                },
-            ),
-        },
-    );
-
+                        return buttonElement;
+                    },
+                ),
+            },
+        );
+    }
+    // console.log("MESSAGE BLOCKS", JSON.stringify(messageBlocks, null, 2));
     return { messageBlocks };
 }
