@@ -15,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Trash2Icon } from "lucide-react";
+import { Trash2Icon } from "lucide-react";
 import { ConditionSelector } from "../../../workflows/new/_components/conditionsSelector";
 import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
 import { cn } from "@/lib/utils";
@@ -57,14 +57,18 @@ const ConditionsCard = ({
     >([]);
 
     useEffect(() => {
-        setAvailableConditions(getConditionOptions(condition.field));
+        setAvailableConditions(getConditionOptions(condition.field) ?? []);
     }, [condition.field]);
 
     const getConditionOptions = (field: string) => {
-        const dataType = getConditionFieldDataType(
-            field,
-            objectFieldType.toLowerCase(),
-        );
+        const dataType =
+            getConditionFieldDataType(
+                field,
+                objectFieldType.toLowerCase() as
+                    | "jobs"
+                    | "candidates"
+                    | "offers",
+            ) ?? "";
         // console.log("CONDITOINS", field, dataType, objectFieldType);
         return Object.keys(CONDITIONS_OPTIONS)
             .filter((option) =>
@@ -72,7 +76,7 @@ const ConditionsCard = ({
             )
             .map((key) => ({
                 value: key,
-                label: CONDITIONS_OPTIONS[key].label,
+                label: CONDITIONS_OPTIONS[key]!.label,
             }));
     };
 
@@ -109,7 +113,6 @@ const ConditionsCard = ({
                         <Button
                             variant="outline"
                             role="combobox"
-                            aria-expanded={open}
                             aria-label="Select a condition"
                             className="flex w-full flex-row gap-2 rounded disabled:opacity-100"
                             disabled
