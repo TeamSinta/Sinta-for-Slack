@@ -142,17 +142,15 @@ export const WorkflowPublishModal = ({
 
         if (!hasError) {
             try {
-                // Combine conditionsData with triggerData.mainCondition
+                // Extract mainCondition and ensure it's properly structured
+                const mainCondition = triggerData?.mainCondition
+                    ? { ...triggerData.mainCondition, condition_type: "Main" }
+                    : null;
+
+                // Combine mainCondition with conditionsData
                 const combinedConditions = [
-                    // Map through the main conditions and add the condition_type field
-                    ...(triggerData?.mainCondition
-                        ? [
-                              {
-                                  ...triggerData.mainCondition,
-                                  condition_type: "Main",
-                              },
-                          ]
-                        : []),
+                    // If mainCondition exists, include it
+                    ...(mainCondition ? [mainCondition] : []),
                     // Map through the conditionsData and add the condition_type field
                     ...conditionsData.map((condition: any) => ({
                         ...condition,

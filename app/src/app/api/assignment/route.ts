@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
             // const text = await request.text();
             // const params = new URLSearchParams(text);
             // const payloadRaw = params.get("payload");
-
             // if (payloadRaw) {
             //     return handleSlackInteraction(JSON.parse(payloadRaw));
             // } else {

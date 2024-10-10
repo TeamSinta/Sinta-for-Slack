@@ -81,23 +81,28 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
 /**
  * Update a hiringroom
  */
-const hiringroomUpdateSchema = hiringroomSelectSchema.pick({
-    id: true,
-    status: true,
-    // other fields as necessary
-});
+// const hiringroomUpdateSchema = hiringroomSelectSchema.pick({
+//     id: true,
+//     status: true,
+//     // other fields as necessary
+// });
 
-type UpdateHiringroomProps = z.infer<typeof hiringroomUpdateSchema>;
+type UpdateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
 
 export async function updateHiringroomMutation(props: UpdateHiringroomProps) {
-    await adminProcedure();
+    // await adminProcedure();
+    const { user } = await protectedProcedure();
+    // const { currentOrg } = await getOrganizations();
+    // const orgID = currentOrg.id;
 
-    const hiringroomParse = await hiringroomUpdateSchema.safeParseAsync(props);
+    const hiringroomParse = await hiringroomSelectSchema.safeParseAsync(props);
     if (!hiringroomParse.success) {
         throw new Error("Invalid hiringroom data", {
             cause: hiringroomParse.error.errors,
         });
     }
+
+    console.log("HIRING ROOM PARSE", hiringroomParse.data);
 
     return await db
         .update(hiringrooms)

@@ -20,7 +20,7 @@ import {
 import { CheckCircle, AlertTriangle, Clock, PlugZap } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import { Separator } from "@/components/ui/separator";
 import JobsDropdown from "../../_components/job-select";
 import { customFetchTester } from "@/utils/fetch";

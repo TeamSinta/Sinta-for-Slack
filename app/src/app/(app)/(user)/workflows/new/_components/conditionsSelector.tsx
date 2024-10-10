@@ -23,7 +23,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import greenhouselogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
 
 // Greenhouse logo component
 const GreenhouseLogo = () => (

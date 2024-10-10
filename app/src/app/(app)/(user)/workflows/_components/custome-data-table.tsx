@@ -44,7 +44,7 @@ export function CustomDataTable<TData extends { id: string }, TValue>({
                 filterableColumns={filterableColumns}
                 searchableColumns={searchableColumns}
             />
-            <div className="flex-shrink rounded-md border border-border bg-background">
+            <div className="flex-shrink rounded-md border border-border bg-background shadow">
                 <Table className="w-full text-left">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

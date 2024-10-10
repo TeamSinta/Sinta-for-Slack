@@ -34,7 +34,7 @@
             {
                 "field": "current_stage",
                 "description": "The current stage this application is in.",
-                "dataType": "object"
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "credited_to.id",
@@ -44,7 +44,7 @@
             {
                 "field": "location",
                 "description": "The contents of the location question on a job post.",
-                "dataType": "object"
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "answers",
@@ -54,12 +54,12 @@
             {
                 "field": "custom_fields",
                 "description": "Contains a hash of custom fields configured for this resource.",
-                "dataType": "object"
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "keyed_custom_fields",
                 "description": "Contains more detailed information about custom fields with immutable keys.",
-                "dataType": "object"
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "prospective_department",
@@ -119,12 +119,12 @@
             {
                 "field": "recruiter",
                 "description": "The recruiter responsible for this candidate.",
-                "dataType": "object"
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "coordinator",
                 "description": "The coordinator responsible for this candidate.",
-                "dataType": "object"
+                "dataType": "arrayOfObjects"
             },
             {
                 "field": "attachments[].type",

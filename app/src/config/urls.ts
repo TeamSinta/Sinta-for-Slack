@@ -20,7 +20,7 @@ export const siteUrls = {
     blog: "/blog",
     docs: "/docs/introduction",
     maintenance: "/maintenance",
-    teamsinta: "https://app.teamsinta.com/",
+    teamsinta: "https://5bc1e5fa5023dc7a.ngrok.app/",
     dashboard: {
         home: "/dashboard",
     },
@@ -35,7 +35,7 @@ export const siteUrls = {
     },
     hiringrooms: {
         home: "/hiringrooms",
-        form: "/hiringrooms/form",
+        newForm: "/hiringrooms/form/new",
     },
     integrations: {
         home: "/integrations",
@@ -76,5 +76,4 @@ export const publicRoutes: string[] = [
     siteUrls.blog,
     siteUrls.docs,
     siteUrls.maintenance,
-    siteUrls.hiringrooms.form,
 ];

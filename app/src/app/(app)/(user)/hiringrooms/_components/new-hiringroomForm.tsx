@@ -196,8 +196,6 @@ function CreateHiringroomSheet() {
             tmpConditionTypesWithOperators[2].values = jobNamesList;
 
             setConditionTypesWithOperators(tmpConditionTypesWithOperators);
-
-
         };
         fetchData();
     }, []);

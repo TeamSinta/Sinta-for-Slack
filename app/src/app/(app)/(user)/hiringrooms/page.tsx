@@ -86,7 +86,7 @@ export default async function Hiringrooms({ searchParams }: UsersPageProps) {
                                 <>
                                     {/* <CreateHiringroomSheet /> */}
                                     {/* <StageSelectionModal/> */}
-                                    <Link href={siteUrls.hiringrooms.form}>
+                                    <Link href={siteUrls.hiringrooms.newForm}>
                                         <Button
                                             variant="outline"
                                             className="rounded-sm bg-indigo-500 px-4 py-2 text-white shadow hover:bg-indigo-600 hover:text-white dark:bg-indigo-600 dark:hover:bg-indigo-700"

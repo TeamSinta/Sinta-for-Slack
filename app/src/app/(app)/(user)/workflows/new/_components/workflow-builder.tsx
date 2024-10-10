@@ -25,7 +25,7 @@ import {
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
-import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import slacklogo from "../../../../../../../public/slack-logo.png";
 import filterIcon from "../../../../../../../public/filter.png";
 import Actions from "./actions";
@@ -596,14 +596,14 @@ export function WorkflowBuilder({
 
     return (
         <>
-            <header className="ml-[50px] w-[112%] flex-none border-b border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <header className=" flex-none border-b border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center justify-between">
-                    <div className="flex w-[70%] items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                         <Link href="/workflows">
                             <MoveLeft className="text-gray-500 dark:text-gray-300" />
                         </Link>
                         <div
-                            className="flex w-[70%] items-center space-x-2"
+                            className="flex items-center space-x-2"
                             onDoubleClick={handleDoubleClick}
                         >
                             {isEditingName ? (
@@ -668,7 +668,7 @@ export function WorkflowBuilder({
                 </div>
             </header>
 
-            <div className="ml-[50px] flex h-[calc(100vh-64px)] w-[112%]">
+            <div className="flex h-[calc(92vh-64px)] ">
                 <div
                     className={`relative flex-grow overflow-y-auto bg-gray-50 p-6 shadow-inner dark:bg-gray-900  dark:shadow-inner ${selectedElement ? "pr-0" : "pr-8"}`}
                 >

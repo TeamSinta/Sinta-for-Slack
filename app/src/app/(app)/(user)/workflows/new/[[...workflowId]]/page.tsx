@@ -10,10 +10,8 @@ export default function NewWorkflowPage({
     const workflowId = params.workflowId || null; // workflowId is null if not provided
 
     return (
-        <div className="h-full">
-            <main className="w-full pl-8">
-                <WorkflowLoader workflowId={workflowId || ""} edit={edit} />
-            </main>
+        <div className="h-full w-full">
+            <WorkflowLoader workflowId={workflowId || ""} edit={edit} />
         </div>
     );
 }

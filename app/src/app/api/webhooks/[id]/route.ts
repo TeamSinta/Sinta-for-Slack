@@ -4,11 +4,13 @@ import { verifySignature } from "@/lib/utils";
 import { getSecretKeyForOrg } from "@/server/actions/greenhouse/query";
 import { handleStuckInStageWorkflows } from "./stuckInStage";
 import { handleOfferCreated } from "./offerCreated";
+import { handleJobCreated } from "./jobCreated";
 
 const eventHandlers: Record<string, any> = {
     candidate_stage_change: [handleStuckInStageWorkflows],
     // interview_deleted: [handleInterviewDeleted],
     offer_created: [handleOfferCreated],
+    job_created: [handleJobCreated],
 };
 
 // Webhook handler function for dynamic orgID route
