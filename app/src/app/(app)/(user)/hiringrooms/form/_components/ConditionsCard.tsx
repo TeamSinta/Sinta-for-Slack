@@ -61,8 +61,11 @@ const ConditionsCard = ({
     }, [condition.field]);
 
     const getConditionOptions = (field: string) => {
-        const dataType = getConditionFieldDataType(field, objectFieldType);
-
+        const dataType = getConditionFieldDataType(
+            field,
+            objectFieldType.toLowerCase(),
+        );
+        // console.log("CONDITOINS", field, dataType, objectFieldType);
         return Object.keys(CONDITIONS_OPTIONS)
             .filter((option) =>
                 CONDITIONS_OPTIONS[option]?.dataType.includes(dataType),
@@ -126,16 +129,14 @@ const ConditionsCard = ({
                             <SelectValue placeholder="Choose condition..." />
                         </SelectTrigger>
                         <SelectContent>
-                            {getConditionOptions(condition.field).map(
-                                (option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ),
-                            )}
+                            {availableConditions.map((option) => (
+                                <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
+                                    {option.label}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 

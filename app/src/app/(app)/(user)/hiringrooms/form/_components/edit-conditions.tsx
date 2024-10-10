@@ -58,34 +58,47 @@ export default function EditConditions({
     };
 
     return (
-        <div className="flex w-full flex-col items-center justify-between">
+        <div className="flex w-full flex-col items-start justify-between px-6">
             {/* Conditions List */}
-            <div className="min-w-[24rem] space-y-4 overflow-y-auto">
-                {conditions.map((condition, index) => (
-                    <ConditionsCard
-                        key={index}
-                        condition={condition}
-                        onRemove={() => removeCondition(condition.id)}
-                        fields={fields}
-                        onFieldSelect={(field) =>
-                            handleConditionChange(condition.id, "field", field)
-                        }
-                        onConditionSelect={(value) =>
-                            handleConditionChange(
-                                condition.id,
-                                "condition",
-                                value,
-                            )
-                        }
-                        onValueChange={(value) =>
-                            handleConditionChange(condition.id, "value", value)
-                        }
-                        editable={isEditing}
-                        objectFieldType={objectField}
-                    />
-                ))}
-            </div>
-
+            {conditions.length > 0 ? (
+                <div className="min-w-[24rem] space-y-4 overflow-y-auto">
+                    {conditions.map((condition, index) => (
+                        <ConditionsCard
+                            key={index}
+                            condition={condition}
+                            onRemove={() => removeCondition(condition.id)}
+                            fields={fields}
+                            onFieldSelect={(field) =>
+                                handleConditionChange(
+                                    condition.id,
+                                    "field",
+                                    field,
+                                )
+                            }
+                            onConditionSelect={(value) =>
+                                handleConditionChange(
+                                    condition.id,
+                                    "condition",
+                                    value,
+                                )
+                            }
+                            onValueChange={(value) =>
+                                handleConditionChange(
+                                    condition.id,
+                                    "value",
+                                    value,
+                                )
+                            }
+                            editable={isEditing}
+                            objectFieldType={objectField}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="p-6 text-sm text-gray-700">
+                    <p className="mt-2 text-gray-500">No conditions set</p>
+                </div>
+            )}
             {/* Action Buttons */}
             {isEditing && (
                 <Button

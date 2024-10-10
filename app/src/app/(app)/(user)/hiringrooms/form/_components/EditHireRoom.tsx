@@ -296,32 +296,15 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                     />
                 </div>
 
-                {hiringRoom.conditions.length > 0 ? (
-                    // <ul className="mt-2 space-y-1 text-gray-700">
-                    //     {hiringRoom.conditions.map((condition, index) => (
-                    //         <div className="bg-gray-50 p-6 text-sm text-gray-700">
-                    //             <li key={index}>
-                    //                 {condition.field.label} is{" "}
-                    //                 {condition.condition} {condition.value}{" "}
-                    //                 {condition.unit}
-                    //             </li>
-                    //         </div>
-                    //     ))}
-                    // </ul>
-                    <div className="w-full pb-8">
-                        <ConditionsStep
-                            onSaveConditions={() => {}}
-                            conditions={tempConditions ?? hiringRoom.conditions}
-                            setConditions={setTempConditions}
-                            isEditing={tempConditions !== null}
-                            objectField={hiringRoom.objectField}
-                        />
-                    </div>
-                ) : (
-                    <div className="bg-gray-50 p-6 text-sm text-gray-700">
-                        <p className="mt-2 text-gray-500">No conditions set</p>
-                    </div>
-                )}
+                <div className="w-full bg-gray-50 py-6 ">
+                    <ConditionsStep
+                        onSaveConditions={() => {}}
+                        conditions={tempConditions ?? hiringRoom.conditions}
+                        setConditions={setTempConditions}
+                        isEditing={tempConditions !== null}
+                        objectField={hiringRoom.objectField}
+                    />
+                </div>
             </div>
 
             <div className=" mb-6 rounded-sm border border-gray-200">
