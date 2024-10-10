@@ -71,6 +71,15 @@ const offerEvents = [
     },
 ];
 
+const getObjectFieldTypeFromAlertType = {
+    "Candidate Stage Change": null,
+    "Offer Created": "candidates",
+    "Job Approved": null,
+    "Job Created": null,
+    "Job Post Approved": "jobs",
+    "Offer Approved": "offers",
+};
+
 export default function ConditionsStep({
     onSaveConditions,
     initialConditions,
@@ -110,29 +119,12 @@ export default function ConditionsStep({
 
     // Dynamically load attributes based on the selected event
     useEffect(() => {
-        const objectType = getObjectFieldTypeFromAlertType(
-            selectedEvent?.alertType,
-        );
+        const objectType =
+            getObjectFieldTypeFromAlertType[selectedEvent?.alertType];
         if (objectType && CONDITIONS_ATTRIBUTES_LOOKUP[objectType]) {
             setFields(CONDITIONS_ATTRIBUTES_LOOKUP[objectType]);
         }
     }, [selectedEvent]);
-
-    const getObjectFieldTypeFromAlertType = (alertType: string) => {
-        switch (alertType) {
-            case "Candidate Stage Change":
-            case "Offer Created":
-                return "candidates";
-            case "Job Approved":
-            case "Job Created":
-            case "Job Post Approved":
-                return "jobs";
-            case "Offer Approved":
-                return "offers";
-            default:
-                return null;
-        }
-    };
 
     // Enable/disable save button based on whether all condition fields are filled and event is selected
     useEffect(() => {
@@ -187,9 +179,8 @@ export default function ConditionsStep({
     };
 
     const getConditionOptions = (field: string) => {
-        const objectFieldType = getObjectFieldTypeFromAlertType(
-            selectedEvent?.alertType,
-        );
+        const objectFieldType =
+            getObjectFieldTypeFromAlertType[selectedEvent?.alertType];
 
         if (!objectFieldType) {
             return [];

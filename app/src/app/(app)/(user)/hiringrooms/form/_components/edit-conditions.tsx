@@ -59,9 +59,9 @@ export default function EditConditions({
         <div className="flex w-full flex-col items-center justify-between">
             {/* Conditions List */}
             <div className="min-w-[24rem] space-y-4 overflow-y-auto">
-                {conditions.map((condition) => (
+                {conditions.map((condition, index) => (
                     <ConditionsCard
-                        key={condition.id}
+                        key={index}
                         condition={condition}
                         onRemove={() => removeCondition(condition.id)}
                         fields={fields}

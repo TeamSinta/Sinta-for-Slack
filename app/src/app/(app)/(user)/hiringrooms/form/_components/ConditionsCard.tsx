@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,10 +15,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import { Trash2, Trash2Icon } from "lucide-react";
 import { ConditionSelector } from "../../../workflows/new/_components/conditionsSelector";
 import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
 import { cn } from "@/lib/utils";
+import { getConditionFieldDataType } from "@/utils/conditions-options";
+import { CONDITIONS_OPTIONS } from "@/utils/conditions-options";
+const getObjectFieldTypeFromAlertType = {
+    "Candidate Stage Change": null,
+    "Offer Created": "candidates",
+    "Job Approved": null,
+    "Job Created": null,
+    "Job Post Approved": "jobs",
+    "Offer Approved": "offers",
+};
 
 // Greenhouse logo component
 const GreenhouseLogo = () => (
@@ -38,6 +46,7 @@ interface Props {
     onConditionSelect: (condition: string) => void;
     onValueChange: (value: string) => void;
     editable: boolean;
+    objectFieldType: "jobs" | "candidates" | "offers"
 }
 const ConditionsCard = ({
     condition,
@@ -47,9 +56,26 @@ const ConditionsCard = ({
     onConditionSelect,
     onValueChange,
     editable = true,
+    objectFieldType = "jobs",
 }: Props) => {
+    const getConditionOptions = (field: string) => {
+
+        const dataType = getConditionFieldDataType(field, objectFieldType);
+
+        return Object.keys(CONDITIONS_OPTIONS)
+            .filter((option) =>
+                CONDITIONS_OPTIONS[option].dataType.includes(dataType),
+            )
+            .map((key) => ({
+                value: key,
+                label: CONDITIONS_OPTIONS[key].label,
+            }));
+    };
+
+    console.log("condition", condition);
     return (
-        <Card key={condition.id} className="transition-colors duration-500">
+        <Card className="transition-colors duration-500">
+            {JSON.stringify("CONDITION", condition.condition)}
             {editable && (
                 <CardHeader>
                     <CardTitle className="flex items-center">
@@ -59,7 +85,7 @@ const ConditionsCard = ({
                             onClick={() => onRemove()}
                             className="ml-auto text-red-600 hover:bg-red-100"
                         >
-                            <Trash2 className="mr-2" /> Remove
+                            <Trash2Icon className="mr-2" /> Remove
                         </Button>
                     </CardTitle>
                     <CardDescription>
@@ -74,7 +100,7 @@ const ConditionsCard = ({
                     {editable ? (
                         <ConditionSelector
                             attributes={fields}
-                            selectedField={condition.field} // Pre-fill selected field
+                            selectedField={condition.field.value} // Pre-fill selected field
                             onFieldSelect={(value) => onFieldSelect(value)}
                         />
                     ) : (
@@ -87,7 +113,7 @@ const ConditionsCard = ({
                             disabled
                         >
                             <GreenhouseLogo />
-                            {condition.field}
+                            {condition.field.label}
                         </Button>
                     )}
 
@@ -101,16 +127,16 @@ const ConditionsCard = ({
                             <SelectValue placeholder="Choose condition..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="contains">
-                                (Text) Contains
-                            </SelectItem>
-                            <SelectItem value="not_contains">
-                                (Text) Does not contain
-                            </SelectItem>
-                            <SelectItem value="exactly_matches">
-                                (Text) Exactly matches
-                            </SelectItem>
-                            {/* Add more items as needed */}
+                            {getConditionOptions(condition.field.value).map(
+                                (option) => (
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </SelectItem>
+                                ),
+                            )}
                         </SelectContent>
                     </Select>
 
