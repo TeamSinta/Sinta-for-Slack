@@ -13,11 +13,13 @@ export default function EditConditions({
     conditions,
     setConditions,
     isEditing = true,
+    objectField = "candidates",
 }: {
     onSaveConditions: (conditions: any[]) => void;
     conditions;
     isEditing?: boolean;
     setConditions: (conditions: any[]) => void;
+    objectField: string;
 }) {
     const [fields, setFields] = useState<
         { field: string; description: string }[]
@@ -79,6 +81,7 @@ export default function EditConditions({
                             handleConditionChange(condition.id, "value", value)
                         }
                         editable={isEditing}
+                        objectFieldType={objectField}
                     />
                 ))}
             </div>

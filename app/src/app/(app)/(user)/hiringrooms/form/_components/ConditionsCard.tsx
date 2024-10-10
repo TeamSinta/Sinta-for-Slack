@@ -21,14 +21,7 @@ import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
 import { cn } from "@/lib/utils";
 import { getConditionFieldDataType } from "@/utils/conditions-options";
 import { CONDITIONS_OPTIONS } from "@/utils/conditions-options";
-const getObjectFieldTypeFromAlertType = {
-    "Candidate Stage Change": null,
-    "Offer Created": "candidates",
-    "Job Approved": null,
-    "Job Created": null,
-    "Job Post Approved": "jobs",
-    "Offer Approved": "offers",
-};
+import { useEffect, useState } from "react";
 
 // Greenhouse logo component
 const GreenhouseLogo = () => (
@@ -46,8 +39,9 @@ interface Props {
     onConditionSelect: (condition: string) => void;
     onValueChange: (value: string) => void;
     editable: boolean;
-    objectFieldType: "jobs" | "candidates" | "offers"
+    objectFieldType: "jobs" | "candidates" | "offers";
 }
+
 const ConditionsCard = ({
     condition,
     onRemove,
@@ -58,13 +52,20 @@ const ConditionsCard = ({
     editable = true,
     objectFieldType = "jobs",
 }: Props) => {
-    const getConditionOptions = (field: string) => {
+    const [availableConditions, setAvailableConditions] = useState<
+        { value: string; label: string }[]
+    >([]);
 
+    useEffect(() => {
+        setAvailableConditions(getConditionOptions(condition.field));
+    }, [condition.field]);
+
+    const getConditionOptions = (field: string) => {
         const dataType = getConditionFieldDataType(field, objectFieldType);
 
         return Object.keys(CONDITIONS_OPTIONS)
             .filter((option) =>
-                CONDITIONS_OPTIONS[option].dataType.includes(dataType),
+                CONDITIONS_OPTIONS[option]?.dataType.includes(dataType),
             )
             .map((key) => ({
                 value: key,
@@ -72,10 +73,8 @@ const ConditionsCard = ({
             }));
     };
 
-    console.log("condition", condition);
     return (
         <Card className="transition-colors duration-500">
-            {JSON.stringify("CONDITION", condition.condition)}
             {editable && (
                 <CardHeader>
                     <CardTitle className="flex items-center">
@@ -100,7 +99,7 @@ const ConditionsCard = ({
                     {editable ? (
                         <ConditionSelector
                             attributes={fields}
-                            selectedField={condition.field.value} // Pre-fill selected field
+                            selectedField={condition.field} // Pre-fill selected field
                             onFieldSelect={(value) => onFieldSelect(value)}
                         />
                     ) : (
@@ -113,7 +112,7 @@ const ConditionsCard = ({
                             disabled
                         >
                             <GreenhouseLogo />
-                            {condition.field.label}
+                            {condition.field}
                         </Button>
                     )}
 
@@ -127,7 +126,7 @@ const ConditionsCard = ({
                             <SelectValue placeholder="Choose condition..." />
                         </SelectTrigger>
                         <SelectContent>
-                            {getConditionOptions(condition.field.value).map(
+                            {getConditionOptions(condition.field).map(
                                 (option) => (
                                     <SelectItem
                                         key={option.value}

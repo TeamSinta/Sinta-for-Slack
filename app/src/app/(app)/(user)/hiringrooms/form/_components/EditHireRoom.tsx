@@ -314,6 +314,7 @@ export default function EditHireRoom({ roomId }: { roomId: string }) {
                             conditions={tempConditions ?? hiringRoom.conditions}
                             setConditions={setTempConditions}
                             isEditing={tempConditions !== null}
+                            objectField={hiringRoom.objectField}
                         />
                     </div>
                 ) : (
