@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 
-// @ts-nocheck
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +20,7 @@ import {
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import { filterDataWithConditions } from "@/server/greenhouse/core";
-import { formatOpeningMessageSlackx, matchUsers } from "@/lib/slack";
+import { formatOpeningMessageSlack, matchUsers } from "@/lib/slack";
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByHiringroomID } from "@/server/actions/slack/query";
 import {
@@ -274,7 +273,7 @@ export async function handleIndividualHiringroom(hiringroom: {
                         slackUserIds,
                         slackTeamID,
                     );
-                    const { messageBlocks } = await formatOpeningMessageSlackx(
+                    const { messageBlocks } = await formatOpeningMessageSlack(
                         hiringroom,
                         slackTeamID,
                     );
@@ -440,7 +439,7 @@ export async function GET() {
         let numWorkflows = 0;
         let numHiringrooms = 0;
         // numWorkflows = await handleWorkflows();
-        numHiringrooms = await handleHiringrooms();
+        // numHiringrooms = await handleHiringrooms();
         return NextResponse.json(
             {
                 message: `Workflows processed successfully - workflows - ${numWorkflows} - hiringrooms - ${numHiringrooms}`,
