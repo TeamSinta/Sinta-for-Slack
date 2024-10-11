@@ -10,6 +10,10 @@ import {
 import { formatOpeningMessageSlack } from "@/lib/slack";
 import { saveSlackChannelCreatedToDB } from "@/server/actions/slackchannels/mutations";
 
+interface Recipient {
+    recipients: any[]; // Adjust the type of the elements inside the array as needed
+}
+
 export function getAttributeValue(object: any, attributePath: string) {
     const keys = attributePath.split(".");
 
@@ -50,7 +54,7 @@ export async function initializeHiringRoomChannel(
     if (!hiringRoom.slackChannelFormat) {
         console.log(
             "No Slack Channel Format Found for Hiring Room",
-            hiringroom.id,
+            hiringRoom.id,
         );
         return;
     }

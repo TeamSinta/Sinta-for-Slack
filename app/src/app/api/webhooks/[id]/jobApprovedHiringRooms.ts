@@ -25,7 +25,7 @@ export async function handleJobApprovedHiringRooms(data: any, orgID: string) {
 
         const jobFitsConditions = checkConditions(
             jobData,
-            hiringroom.conditions,
+            hiringroom.conditions as any[],
             getAttributeValue,
         );
 
