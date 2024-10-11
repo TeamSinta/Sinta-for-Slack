@@ -56,7 +56,6 @@ export function checkConditions(
         if (!evaluateCondition(condition, value, candidateField, field))
             result = false;
     }
-    // If all conditions are met
     return result;
 }
 

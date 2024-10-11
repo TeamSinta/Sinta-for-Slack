@@ -740,10 +740,10 @@ export async function sendAndPinSlackMessage(
     );
 
     const postMessageResult = await postMessageResponse.json();
-    console.log(
-        "sendAndPinSlackMessage - postMessageResult - ",
-        postMessageResult,
-    );
+    // console.log(
+    //     "sendAndPinSlackMessage - postMessageResult - ",
+    //     postMessageResult,
+    // );
 
     if (postMessageResult.ok) {
         const messageTimestamp = postMessageResult.ts;
@@ -768,10 +768,10 @@ export async function sendAndPinSlackMessage(
         );
 
         const pinMessageResult = await pinMessageResponse.json();
-        console.log(
-            "sendAndPinSlackMessage - pinMessageResult - ",
-            pinMessageResult,
-        );
+        // console.log(
+        //     "sendAndPinSlackMessage - pinMessageResult - ",
+        //     pinMessageResult,
+        // );
 
         if (!pinMessageResult.ok) {
             console.error(
