@@ -45,6 +45,7 @@ export async function initializeHiringRoomChannel(
     hiringRoom: any,
     slackTeamID: string,
     jobData: any,
+    orgID: string,
 ) {
     if (!hiringRoom.slackChannelFormat) {
         console.log(

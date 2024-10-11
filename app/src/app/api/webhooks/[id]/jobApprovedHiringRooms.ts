@@ -30,7 +30,12 @@ export async function handleJobApprovedHiringRooms(data: any, orgID: string) {
         );
 
         if (jobFitsConditions) {
-            await initializeHiringRoomChannel(hiringroom, slackTeamID, jobData);
+            await initializeHiringRoomChannel(
+                hiringroom,
+                slackTeamID,
+                jobData,
+                orgID,
+            );
         } else {
             console.log(
                 `Job "${jobData.name}" did not meet conditions for hiring room "${hiringroom.id}".`,

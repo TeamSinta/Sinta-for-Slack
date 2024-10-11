@@ -7,6 +7,7 @@ import { handleOfferCreatedWorkflows } from "./offerCreatedWorkflows";
 import { handleJobCreated } from "./jobCreated";
 import { handleOfferCreatedHiringRooms } from "./offerCreatedHiringRooms";
 import { handleJobApprovedHiringRooms } from "./jobApprovedHiringRooms";
+import { handleJobPostCreatedHiringRoom } from "./jobPostCreatedHiringRoom";
 
 const eventHandlers: Record<string, any> = {
     candidate_stage_change: [handleStuckInStageWorkflows],
@@ -14,6 +15,7 @@ const eventHandlers: Record<string, any> = {
     offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
     job_created: [handleJobCreated],
     job_approved: [handleJobApprovedHiringRooms],
+    job_post_created: [handleJobPostCreatedHiringRoom],
 };
 
 // Webhook handler function for dynamic orgID route
