@@ -53,7 +53,11 @@ export function TokenSelect({
     useEffect(() => {
         const formattedString = content
             .map((item) =>
-                typeof item === "string" ? item : `{{${item.label}}}`,
+                [...candidateTokens, ...jobTokens].find(
+                    (lookupItem) => lookupItem.value === item.value,
+                )
+                    ? `{{${item.label}}}`
+                    : item.value,
             )
             .join(" ");
         onTokensChange(formattedString.trim());

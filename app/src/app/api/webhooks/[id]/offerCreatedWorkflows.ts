@@ -2,20 +2,17 @@
 import { filterCandidatesDataForSlack } from "@/lib/slack";
 import { getSubdomainByWorkflowID } from "@/server/actions/organization/queries";
 import { getSlackTeamIDByWorkflowID } from "@/server/actions/slack/query";
-import {
-    fetchStuckInStageWorkflows,
-    fetchWorkflowsByObjectFieldAndAlertType,
-} from "@/server/actions/workflows/queries";
+import { fetchWorkflowsByObjectFieldAndAlertType } from "@/server/actions/workflows/queries";
 import {
     fetchApplicationDetails,
     fetchCandidateDetails,
-    fetchCandidates,
 } from "@/server/greenhouse/core";
 import { sendSlackNotification } from "@/server/slack/core";
 import { Condition, MainCondition } from "@/types/workflows";
 import { checkConditions } from "@/utils/workflows";
+import { getAttributeValue } from "@/utils/hiring-rooms/event-processing";
 
-export async function handleOfferCreated(data: any, orgID: string) {
+export async function handleOfferCreatedWorkflows(data: any, orgID: string) {
     const workflows = await fetchWorkflowsByObjectFieldAndAlertType(
         orgID,
         "Offers",
@@ -75,35 +72,4 @@ export async function handleOfferCreated(data: any, orgID: string) {
     }
 
     console.log("Offer Created Webhook processing complete.");
-}
-
-function getAttributeValue(object: any, attributePath: string) {
-    const keys = attributePath.split(".");
-
-    let currentObject = object;
-
-    for (let key of keys) {
-        if (key.endsWith("[]")) {
-            // Handle array access
-            const arrayKey = key.slice(0, -2); // Strip "[]"
-            if (!Array.isArray(currentObject[arrayKey])) {
-                return undefined; // Return undefined if not an array
-            }
-            currentObject = currentObject[arrayKey].map((item) =>
-                getAttributeValue(
-                    item,
-                    keys.slice(keys.indexOf(key) + 1).join("."),
-                ),
-            );
-            return currentObject;
-        }
-
-        if (currentObject === undefined || currentObject === null) {
-            return undefined; // Return undefined if any part of the path is invalid
-        }
-
-        currentObject = currentObject[key];
-    }
-
-    return currentObject;
 }

@@ -3,14 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySignature } from "@/lib/utils";
 import { getSecretKeyForOrg } from "@/server/actions/greenhouse/query";
 import { handleStuckInStageWorkflows } from "./stuckInStage";
-import { handleOfferCreated } from "./offerCreated";
+import { handleOfferCreatedWorkflows } from "./offerCreatedWorkflows";
 import { handleJobCreated } from "./jobCreated";
+import { handleOfferCreatedHiringRooms } from "./offerCreatedHiringRooms";
+import { handleJobApprovedHiringRooms } from "./jobApprovedHiringRooms";
 
 const eventHandlers: Record<string, any> = {
     candidate_stage_change: [handleStuckInStageWorkflows],
     // interview_deleted: [handleInterviewDeleted],
-    offer_created: [handleOfferCreated],
+    offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
     job_created: [handleJobCreated],
+    job_approved: [handleJobApprovedHiringRooms],
 };
 
 // Webhook handler function for dynamic orgID route
@@ -46,7 +49,7 @@ export async function POST(
         // Application has
         // 6. Call the functions that depend on the webhook (e.g., filter stuck-in-stage workflows)
         const eventType = data.action; // Assuming the event type is provided in the payload
-
+        console.log("EVENT TYPE - ", eventType);
         if (eventHandlers[eventType]) {
             for (const handler of eventHandlers[eventType]) {
                 await handler(data, orgID);
