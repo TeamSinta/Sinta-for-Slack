@@ -1,20 +1,31 @@
 import { fetchHireRoomsByObjectFieldAndAlertType } from "@/server/actions/hiringrooms/queries";
 import { getSlackTeamIDByHiringroomID } from "@/server/actions/slack/query";
+import { fetchJob } from "@/server/greenhouse/core";
 import {
     getAttributeValue,
     initializeHiringRoomChannel,
 } from "@/utils/hiring-rooms/event-processing";
 import { checkConditions } from "@/utils/workflows";
 
-export async function handleJobCreated(data: any, orgID: string) {
-    // Step 1: Extract the job data from the Greenhouse payload
-    const jobData = data.payload.job;
+export async function handleJobPostCreatedHiringRoom(data: any, orgID: string) {
+    const jobPostData = data.payload;
+    const jobId = jobPostData.job_id;
+    if (!jobId) {
+        console.log("No job ID found in payload.");
+        return;
+    }
 
-    // Step 2: Fetch the relevant hiring rooms for Jobs and Job Created event
+    const jobData = await fetchJob(jobId as string);
+
+    if (!jobData || Object.keys(jobData).length === 0) {
+        console.log("Job not found.");
+        return;
+    }
+
     const hiringRooms = await fetchHireRoomsByObjectFieldAndAlertType(
         orgID,
         "Jobs",
-        "Job Created",
+        "Job Post Created",
     );
 
     if (!hiringRooms.length) {
@@ -22,11 +33,9 @@ export async function handleJobCreated(data: any, orgID: string) {
         return;
     }
 
-    // Step 3: Loop through each hiring room and process conditions
     for (const hiringroom of hiringRooms) {
         const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroom.id);
 
-        // Step 4: Check if the job data meets the conditions for the hiring room
         const jobFitsConditions = checkConditions(
             jobData,
             hiringroom.conditions as any[],
@@ -42,10 +51,8 @@ export async function handleJobCreated(data: any, orgID: string) {
             );
         } else {
             console.log(
-                `Job "${jobData.name}" did not meet conditions for hiring room "${hiringroom.id}".`,
+                `Job post "${jobData.name}" did not meet conditions for hiring room "${hiringroom.id}".`,
             );
         }
     }
-
-    console.log("Job Created Webhook processing complete.");
 }

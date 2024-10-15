@@ -6,15 +6,13 @@ import {
 } from "@/utils/hiring-rooms/event-processing";
 import { checkConditions } from "@/utils/workflows";
 
-export async function handleJobCreated(data: any, orgID: string) {
-    // Step 1: Extract the job data from the Greenhouse payload
+export async function handleJobApprovedHiringRooms(data: any, orgID: string) {
     const jobData = data.payload.job;
 
-    // Step 2: Fetch the relevant hiring rooms for Jobs and Job Created event
     const hiringRooms = await fetchHireRoomsByObjectFieldAndAlertType(
         orgID,
         "Jobs",
-        "Job Created",
+        "Job Approved",
     );
 
     if (!hiringRooms.length) {
@@ -22,11 +20,9 @@ export async function handleJobCreated(data: any, orgID: string) {
         return;
     }
 
-    // Step 3: Loop through each hiring room and process conditions
     for (const hiringroom of hiringRooms) {
         const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroom.id);
 
-        // Step 4: Check if the job data meets the conditions for the hiring room
         const jobFitsConditions = checkConditions(
             jobData,
             hiringroom.conditions as any[],
@@ -46,6 +42,4 @@ export async function handleJobCreated(data: any, orgID: string) {
             );
         }
     }
-
-    console.log("Job Created Webhook processing complete.");
 }

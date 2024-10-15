@@ -55,10 +55,10 @@ const jobEvents = [
         apiUrl: "/api/job-created",
     },
     {
-        title: "Job Post Approved",
-        description: "Triggered when a job post is approved.",
-        alertType: "Job Post Approved",
-        apiUrl: "/api/job-post-approved",
+        title: "Job Post Created",
+        description: "Triggered when a job post is created.",
+        alertType: "Job Post Created",
+        apiUrl: "/api/job-post-created",
     },
 ];
 
@@ -76,7 +76,7 @@ const getObjectFieldTypeFromAlertType = {
     "Offer Created": "candidates",
     "Job Approved": null,
     "Job Created": null,
-    "Job Post Approved": "jobs",
+    "Job Post Created": "jobs",
     "Offer Approved": "offers",
 };
 

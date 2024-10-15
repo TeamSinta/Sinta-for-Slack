@@ -102,7 +102,7 @@ export async function updateHiringroomMutation(props: UpdateHiringroomProps) {
         });
     }
 
-    console.log("HIRING ROOM PARSE", hiringroomParse.data);
+    // console.log("HIRING ROOM PARSE", hiringroomParse.data);
 
     return await db
         .update(hiringrooms)

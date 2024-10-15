@@ -62,9 +62,44 @@
                 "dataType": "arrayOfObjects"
             },
             {
+                "field": "departments[].id",
+                "description": "Array of department ids associated with the job",
+                "dataType": "arrayOfNumbers"
+            },
+            {
+                "field": "departments[].name",
+                "description": "Array of department names associated with the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "departments[].external_id",
+                "description": "Array of department external ids associated with the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
                 "field": "offices",
                 "description": "Array of offices where the job is located.",
                 "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "offices[].id",
+                "description": "Array of office ids where the job is located.",
+                "dataType": "arrayOfNumbers"
+            },
+            {
+                "field": "offices[].name",
+                "description": "Array of office names where the job is located.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "offices[].location",
+                "description": "Array of office locations where the job is located.",
+                "dataType": "arrayOfLocations"
+            },
+            {
+                "field": "offices[].external_id",
+                "description": "Array of office external ids where the job is located.",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "hiring_team.hiring_managers",
@@ -72,9 +107,19 @@
                 "dataType": "arrayOfObjects"
             },
             {
+                "field": "hiring_team.hiring_managers[].employee_id",
+                "description": "Array of hiring manager employee_ids for the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
                 "field": "hiring_team.recruiters",
                 "description": "Array of recruiters associated with the job.",
                 "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "hiring_team.recruiters[].employee_id",
+                "description": "Array of recruiter employee ids associated with the job.",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "hiring_team.coordinators",

@@ -16,6 +16,7 @@ import {
     differenceInHours,
 } from "date-fns";
 import { isValid } from "date-fns";
+import { GreenhouseJob } from "@/types/greenhouse";
 
 interface Candidate {
     id: number;
@@ -142,6 +143,18 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
         }));
     } catch (error) {
         console.error("Error fetching jobs: ", error);
+        return [];
+    }
+};
+export const fetchJob = async (jobId: string): Promise<GreenhouseJob> => {
+    console.log("JOBID", jobId);
+    try {
+        const job = (await customFetch(
+            `https://harvest.greenhouse.io/v1/jobs/${jobId}`,
+        )) as GreenhouseJob;
+        return job;
+    } catch (error) {
+        console.error("Error fetching job: ", error);
         return [];
     }
 };
