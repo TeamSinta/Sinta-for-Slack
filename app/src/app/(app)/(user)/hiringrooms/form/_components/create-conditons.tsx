@@ -72,7 +72,7 @@ const offerEvents = [
 ];
 
 const getObjectFieldTypeFromAlertType = {
-    "Candidate Stage Change": null,
+    "Candidate Stage Change": "candidates",
     "Offer Created": "candidates",
     "Job Approved": null,
     "Job Created": null,
