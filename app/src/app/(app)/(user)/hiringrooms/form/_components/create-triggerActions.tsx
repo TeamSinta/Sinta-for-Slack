@@ -262,10 +262,10 @@ const TriggerActionsComponent: React.FC<TriggerActionsComponentProps> = ({
         <>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-xl font-semibold text-gray-800">
-                        Automated Actions
+                    <CardTitle className="text-md font-semibold text-gray-800">
+                        Select an action
                     </CardTitle>
-                    <CardDescription className="mt-2 text-sm text-gray-600">
+                    <CardDescription className="mt-2 text-xs text-gray-600">
                         Set up automated actions for this hiring room based on the
                         candidate's stage.
                     </CardDescription>
