@@ -77,10 +77,11 @@ export const hiringrooms = createTable("hiringroom", {
     conditions: jsonb("conditions").notNull(), // Updated to JSONB
     triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
     recipient: jsonb("recipient").notNull(),
+    actions: jsonb("actions"),
+    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
     status: hiringroomStatusEnum("status").default("Active").notNull(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     modifiedAt: timestamp("modifiedAt", { mode: "date" }),
-    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
     ownerId: varchar("ownerId", { length: 255 })
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),

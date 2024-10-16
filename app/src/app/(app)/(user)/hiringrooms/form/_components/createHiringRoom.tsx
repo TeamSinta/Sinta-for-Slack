@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 "use client";
 
@@ -42,6 +41,20 @@ interface FormValues {
         apiUrl: string;
         processor: string;
     };
+    actions: {
+      actionType: string;
+      condition: {
+          id: string;
+          field: string | ConditionField;
+          value: string;
+          condition: string;
+          condition_type: "Main" | "Add-on";
+      };
+      modifications: {
+          recipients?: string[];
+          newName?: string;
+      };
+  }[];
 }
 
 export default function CreateHiringRoom() {
@@ -65,6 +78,7 @@ export default function CreateHiringRoom() {
             apiUrl: "",
             processor: "",
         },
+        actions: [], // Initialize actions as an empty array
     });
 
     const steps = [
@@ -124,8 +138,9 @@ export default function CreateHiringRoom() {
     const handleAutomatedActionsSubmit = (actionsData: any) => {
         setFormData((prevData) => ({
             ...prevData,
-            automatedActions: actionsData,
+            actions: actionsData,
         }));
+        console.log(formData, "formdata")
         setCurrentStep("Summary"); // Proceed to the next step (Recipients)
     };
 
@@ -177,6 +192,8 @@ export default function CreateHiringRoom() {
                 return (
                     <TriggerActionsComponent
                         onSaveAutomatedActions={handleAutomatedActionsSubmit}
+                        initialActions={formData.actions} // Pass the previously selected recipients
+
                     />
                 );
             case "Recipients":
