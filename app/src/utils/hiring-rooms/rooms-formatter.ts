@@ -24,7 +24,7 @@ export function buildSlackChannelName(
         );
         const sanitizedChannelName = sanitizeChannelName(channelName);
         return sanitizedChannelName;
-    } catch (e) {
+    } catch (e: any) {
         console.error(`Error in buildSlackChannelName for ${entityType}:`, e);
         throw new Error(
             `Error building Slack channel name for ${entityType}: ${e.message}`,
