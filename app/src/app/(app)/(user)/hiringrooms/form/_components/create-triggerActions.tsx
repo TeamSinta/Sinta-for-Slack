@@ -24,14 +24,13 @@ import { getActiveUsers, getChannels } from "@/server/slack/core";
 import { getMockGreenhouseData } from "@/server/greenhouse/core";
 import SlackChannelNameFormat from "../../_components/SlackChannelNameFormat";
 import ConditionsCard from "./ConditionsCard";
-import { CONDITIONS_ATTRIBUTES_LOOKUP } from "@/utils/conditions-options";
-import { Condition } from "../../../workflows/_components/columns";
+import { ConditionInputValue, CONDITIONS_ATTRIBUTES_LOOKUP } from "@/utils/conditions-options";
 
 // Define action options for dropdown
 const actionsOptions = [
-    { value: "add_recipients", label: "Add Additional Recipients" },
-    { value: "remove_recipients", label: "Remove Recipients" },
-    { value: "rename_channel", label: "Rename Channel" },
+    // { value: "add_recipients", label: "Add Additional Recipients" },
+    // { value: "remove_recipients", label: "Remove Recipients" },
+    // { value: "rename_channel", label: "Rename Channel" },
     { value: "auto_archive", label: "Auto-Archive Channel" },
 ];
 
@@ -60,7 +59,7 @@ const TriggerActionsComponent: React.FC<TriggerActionsComponentProps> = ({
     const [format, setFormat] = useState(
         "intw-{{CANDIDATE_NAME}}-{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}-{{CANDIDATE_CREATION_DAY_NUMBER}}",
     );
-    const [condition, setCondition] = useState<Condition>({
+    const [condition, setCondition] = useState<ConditionInputValue>({
         id: initialActions[0]?.condition?.id || 0,
         field: initialActions[0]?.condition?.field || "",
         condition: initialActions[0]?.condition?.condition || "",
@@ -237,22 +236,32 @@ const TriggerActionsComponent: React.FC<TriggerActionsComponentProps> = ({
                         />
                     </div>
                 );
-            case "auto_archive":
-                return (
-                    <div key={action} className="mt-4 space-y-4">
-                        <Label className="text-sm font-semibold">Auto-Archive Channel</Label>
-                        <ConditionsCard
-                            condition={condition}
-                            onRemove={() => handleRemoveAction()}
-                            fields={CONDITIONS_ATTRIBUTES_LOOKUP["candidates"]}
-                            onFieldSelect={(field) => handleConditionChange("field", field)}
-                            onConditionSelect={(value) => handleConditionChange("condition", value)}
-                            onValueChange={(value) => handleConditionChange("value", value)}
-                            editable={true}
-                            objectFieldType="candidates"
-                        />
-                    </div>
-                );
+                case "auto_archive":
+                  return (
+                      <div key={action} className="mt-4 space-y-4">
+                          <div className="mt-4">
+                              <Label className="text-sm font-semibold">Candidate Stage</Label>
+                              <Select
+                                  value={condition.value}
+                                  onValueChange={(value) => {
+                                      // Ensure condition data is updated properly
+                                      handleConditionChange("value", value);
+                                      handleConditionChange("field", "current_stage");
+                                      handleConditionChange("condition", "equals");
+                                      handleConditionChange("id", "1");
+                                  }}
+                              >
+                                  <SelectTrigger className="mt-2 w-full rounded-lg border-gray-300 shadow-sm">
+                                      <SelectValue placeholder="Select an Option" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="Hired">Hired</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                      </div>
+                  );
+
             default:
                 return null;
         }

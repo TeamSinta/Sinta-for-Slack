@@ -13,6 +13,7 @@ import Image from "next/image";
 import { RecipientsStep } from "./create-receipients";
 import SummaryStep from "./view-summary";
 import { Condition } from "../../_components/new-hiringroomForm";
+import { ConditionInputValue } from "@/utils/conditions-options";
 
 interface FormValues {
     name: string;
@@ -45,7 +46,7 @@ interface FormValues {
       actionType: string;
       condition: {
           id: string;
-          field: string | ConditionField;
+          field: string | ConditionInputValue;
           value: string;
           condition: string;
           condition_type: "Main" | "Add-on";
