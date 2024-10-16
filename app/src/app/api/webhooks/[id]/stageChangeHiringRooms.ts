@@ -23,13 +23,13 @@ export async function handleStageChangeHiringRooms(data: any, orgID: string) {
     for (const hiringroom of hiringRooms) {
         const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroom.id);
 
-        const jobFitsConditions = checkConditions(
+        const conditionsMet = checkConditions(
             application,
             hiringroom.conditions as any[],
             getAttributeValue,
         );
 
-        if (jobFitsConditions) {
+        if (conditionsMet) {
             await initializeHiringRoomChannel(
                 hiringroom,
                 slackTeamID,
@@ -39,7 +39,7 @@ export async function handleStageChangeHiringRooms(data: any, orgID: string) {
             );
         } else {
             console.log(
-                `Job "${data.name}" did not meet conditions for hiring room "${hiringroom.id}".`,
+                `Event "Stage Change" did not meet conditions for hiring room "${hiringroom.id}".`,
             );
         }
     }
