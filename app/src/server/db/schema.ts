@@ -64,6 +64,9 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
         .default(sql`'[]'`),
     hiringroomId: varchar("hiringroomId", { length: 255 }), // Ensure this is not commented
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" })
 });
 
 export const hiringrooms = createTable("hiringroom", {

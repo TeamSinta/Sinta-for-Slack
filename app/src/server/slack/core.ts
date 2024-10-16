@@ -999,3 +999,37 @@ export async function postMessageToChannel(userId: string, body: any) {
 
     return true;
 }
+
+
+export async function archiveSlackChannel(slackChannelID: string, slackTeamID: string) {
+  try {
+      // Ensure both slackChannelID, slackTeamID, and accessToken are provided
+      if (!slackChannelID || !slackTeamID) {
+          throw new Error("Slack channel ID, Slack team ID, or access token is missing.");
+      }
+      const accessToken = await getAccessToken(slackTeamID);
+
+      // Make the POST request to Slack's API for archiving the channel
+      const response = await fetch(`https://slack.com/api/conversations.archive`, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accessToken}`, // Bearer token for Slack authentication
+          },
+          body: JSON.stringify({
+              channel: slackChannelID, // Slack API expects the 'channel' parameter
+          }),
+      });
+
+      // Check the response to ensure successful archiving
+      const responseData = await response.json();
+      if (!responseData.ok) {
+          throw new Error(`Failed to archive Slack channel: ${responseData.error}`);
+      }
+
+      console.log(`Slack channel ${slackChannelID} archived successfully.`);
+      return;
+  } catch (e) {
+      console.error("Error archiving Slack channel:", e.message);
+  }
+}
