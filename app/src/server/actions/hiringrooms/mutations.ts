@@ -24,6 +24,7 @@ const hiringroomFormSchema = hiringroomInsertSchema.pick({
     triggerConfig: true,
     recipient: true,
     conditions: true,
+    actions: true,
 });
 
 type CreateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
@@ -56,6 +57,7 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
             ownerId: user.id,
             triggerConfig: hiringroomData.triggerConfig,
             slackChannelFormat: hiringroomData.slackChannelFormat,
+            actions: hiringroomData.actions, // Add actions to the insertion
             createdAt: new Date(),
             modifiedAt: new Date(),
         })
@@ -70,14 +72,15 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
             ownerId: hiringrooms.ownerId,
             triggerConfig: hiringrooms.triggerConfig,
             slackChannelFormat: hiringrooms.slackChannelFormat,
+            actions: hiringrooms.actions, // Return actions as well
             createdAt: hiringrooms.createdAt,
             modifiedAt: hiringrooms.modifiedAt,
-        }) // Specify the fields you need to return
-        // .returning("*") // Return all fields or specify the fields you need
+        })
         .execute();
-    // Assuming result is an array and we want the first (and only) record
+
     return result[0];
 }
+
 /**
  * Update a hiringroom
  */

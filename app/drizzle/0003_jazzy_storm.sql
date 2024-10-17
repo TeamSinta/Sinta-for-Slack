@@ -1,0 +1,1 @@
+ALTER TYPE "public"."org-member-role" RENAME TO "org_member_role";

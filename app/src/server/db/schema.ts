@@ -64,6 +64,9 @@ export const slackChannelsCreated = createTable("slack_channels_created", {
         .default(sql`'[]'`),
     hiringroomId: varchar("hiringroomId", { length: 255 }), // Ensure this is not commented
     channelFormat: varchar("channelFormat", { length: 255 }).notNull(),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
 });
 
 export const hiringrooms = createTable("hiringroom", {
@@ -77,10 +80,11 @@ export const hiringrooms = createTable("hiringroom", {
     conditions: jsonb("conditions").notNull(), // Updated to JSONB
     triggerConfig: jsonb("trigger_config").notNull(), // Added trigger_config as JSONB
     recipient: jsonb("recipient").notNull(),
+    actions: jsonb("actions"),
+    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
     status: hiringroomStatusEnum("status").default("Active").notNull(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     modifiedAt: timestamp("modifiedAt", { mode: "date" }),
-    slackChannelFormat: varchar("slackChannelFormat", { length: 255 }), // Added slackChannelFormat field
     ownerId: varchar("ownerId", { length: 255 })
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
@@ -311,10 +315,11 @@ export const organizationsRelations = relations(
     }),
 );
 
-export const membersToOrganizationsRoleEnum = pgEnum("org-member-role", [
+export const membersToOrganizationsRoleEnum = pgEnum("org_member_role", [
     "Interviewer",
     "Recruiter",
     "Hiring Manager",
+    "Admin"
 ]);
 
 export const membersToOrganizations = createTable(

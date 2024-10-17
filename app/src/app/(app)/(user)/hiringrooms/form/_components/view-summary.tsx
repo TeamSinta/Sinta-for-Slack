@@ -104,7 +104,7 @@ const SummaryStep = ({ formData }: { formData: any }) => {
                         />
                     </p>
                     {/* Conditions */}
-                    {formData.conditions.length > 0 ? (
+                    {formData.conditions && formData.conditions.length > 0 ? (
                         <div className="mt-4">
                             <h4 className="font-medium">Conditions:</h4>
                             <ul className="mt-2 list-inside list-disc">
@@ -123,15 +123,18 @@ const SummaryStep = ({ formData }: { formData: any }) => {
                                                     alt="greenhouse-logo"
                                                     className="mr-2 h-4 w-4"
                                                 />
-                                                {condition.field}
+                                                {condition.field ||
+                                                    "No field specified"}
                                             </Badge>
                                             <span className="mx-1 font-medium">
-                                                {condition.condition}
+                                                {condition.condition ||
+                                                    "No condition specified"}
                                             </span>
                                             <span
                                                 dangerouslySetInnerHTML={{
                                                     __html: badgeStyle(
-                                                        condition.value,
+                                                        condition.value ||
+                                                            "No value specified",
                                                     ),
                                                 }}
                                             />
@@ -209,6 +212,121 @@ const SummaryStep = ({ formData }: { formData: any }) => {
                         </div>
                     ) : (
                         <p>No recipients specified.</p>
+                    )}
+                </div>
+            </Card>
+
+            {/* Section 4: Automated Actions */}
+            <Card className="mb-6 border border-gray-200">
+                <div className="flex items-center justify-between p-6">
+                    <h3 className="font-heading text-lg font-semibold">
+                        Automated Actions
+                    </h3>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-6 text-sm text-gray-700">
+                    {formData.actions && formData.actions.length > 0 ? (
+                        <div className="mt-4">
+                            <h4 className="font-medium">Actions:</h4>
+                            <ul className="mt-2 list-inside list-disc">
+                                {formData.actions.map(
+                                    (action: any, index: number) => (
+                                        <li
+                                            key={index}
+                                            className="flex flex-col gap-2"
+                                        >
+                                            <div>
+                                                <span
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: badgeStyle(
+                                                            action.actionType ||
+                                                                "No action specified",
+                                                            "green",
+                                                        ),
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="mx-1 font-medium">
+                                                Conditions:
+                                            </span>
+                                            <div className="flex">
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="hover:bg-white-200 flex items-center space-x-2 rounded border-blue-300 bg-white py-2 text-blue-600 shadow"
+                                                >
+                                                    <Image
+                                                        src={greenhouseLogo}
+                                                        alt="greenhouse-logo"
+                                                        className="mr-2 h-4 w-4"
+                                                    />
+                                                    {action.condition.field ||
+                                                        "No field specified"}
+                                                </Badge>
+                                                <span className="mx-1 font-medium">
+                                                    {action.condition
+                                                        .condition ||
+                                                        "No condition specified"}
+                                                </span>
+                                                <span
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: badgeStyle(
+                                                            action.condition
+                                                                .value ||
+                                                                "No value specified",
+                                                        ),
+                                                    }}
+                                                />
+                                            </div>
+                                        </li>
+                                    ),
+                                )}
+                            </ul>
+
+                            <div className="mt-4">
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.actions.map(
+                                        (action: any, actionIndex: number) =>
+                                            action.modifications.recipients &&
+                                            action.modifications.recipients
+                                                .length > 0 ? (
+                                                action.modifications.recipients.map(
+                                                    (
+                                                        recipient: Recipient,
+                                                        index: number,
+                                                    ) => (
+                                                        <>
+                                                            <h4 className="font-medium">
+                                                                Recipients:
+                                                            </h4>
+                                                            <Badge
+                                                                key={`${actionIndex}-${index}`}
+                                                                variant="secondary"
+                                                                className="flex items-center space-x-2 rounded-md bg-white py-2 shadow"
+                                                            >
+                                                                <Image
+                                                                    src={
+                                                                        logoMap[
+                                                                            recipient
+                                                                                .source
+                                                                        ]
+                                                                    }
+                                                                    alt={`${recipient.source}-logo`}
+                                                                    className="mr-1 h-4 w-4"
+                                                                />
+                                                                {recipient.label ||
+                                                                    "No recipient specified"}
+                                                            </Badge>
+                                                        </>
+                                                    ),
+                                                )
+                                            ) : (
+                                                <></>
+                                            ),
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <p>No automated actions specified.</p>
                     )}
                 </div>
             </Card>
