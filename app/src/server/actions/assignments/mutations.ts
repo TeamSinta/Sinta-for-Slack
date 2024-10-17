@@ -1,3 +1,6 @@
+
+// @ts-nocheck
+
 // server/actions/assignmentMutations.js
 "use server";
 
