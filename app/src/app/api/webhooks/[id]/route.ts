@@ -8,7 +8,7 @@ import { handleJobCreated } from "./jobCreated";
 import { handleOfferCreatedHiringRooms } from "./offerCreatedHiringRooms";
 import { handleJobApprovedHiringRooms } from "./jobApprovedHiringRooms";
 import { handleJobPostCreatedHiringRoom } from "./jobPostCreatedHiringRoom";
-import { handleCandidateHired } from "../candidateHired";
+import { handleCandidateHired } from "./candidateHired";
 
 const eventHandlers: Record<string, any> = {
     candidate_stage_change: [handleStuckInStageWorkflows],
@@ -50,6 +50,7 @@ export async function POST(
         }
         // 5. Parse the body as JSON
         const data = JSON.parse(body);
+        console.log(data, "data")
         // Application has
         // 6. Call the functions that depend on the webhook (e.g., filter stuck-in-stage workflows)
         const eventType = data.action; // Assuming the event type is provided in the payload

@@ -6,7 +6,12 @@ import { checkAutoArchiveAction } from "@/utils/hiring-rooms/automated-actions-p
 
 export async function handleCandidateHired(data: any, orgID: string) {
     // Step 1: Extract the job data from the Greenhouse payload
-    const jobData = data.payload.job;
+    const jobData = data.payload.application?.job;
+
+    if (!jobData || !jobData.id) {
+        throw new Error("Job data or job ID is missing");
+    }
+
     const jobId = jobData.id;
 
     console.log(`Handling candidate hired for Job ID: ${jobId} in Org: ${orgID}`);
@@ -18,9 +23,7 @@ export async function handleCandidateHired(data: any, orgID: string) {
         console.log("No Slack channel found for this job and organization.");
         return;
     }
-
     const hiringRoomID = slackChannel.hiringRoomID;
-
     if (!hiringRoomID) {
       console.log(`Hiring room with ID ${hiringRoomID} not found.`);
       return;
@@ -28,7 +31,7 @@ export async function handleCandidateHired(data: any, orgID: string) {
 
     // Step 3: Fetch the hiring room data by ID
     const hiringRoom = await getHiringRoomById(hiringRoomID);
-
+    console.log(hiringRoom, "hiringRooms")
     if (!hiringRoom) {
         console.log(`Hiring room with ID ${hiringRoomID} not found.`);
         return;
@@ -36,6 +39,7 @@ export async function handleCandidateHired(data: any, orgID: string) {
 
     // Step 4: Check if auto-archive action is enabled in the hiring room's actions
     const autoArchiveEnabled = checkAutoArchiveAction(hiringRoom.actions);
+    console.log(autoArchiveEnabled, "autoArchiveEnabled")
 
     if (autoArchiveEnabled) {
         console.log(`Auto-archive is enabled for Hiring Room ID: ${hiringRoomID}, proceeding to archive channel...`);
