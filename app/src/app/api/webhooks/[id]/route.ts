@@ -9,9 +9,14 @@ import { handleOfferCreatedHiringRooms } from "./offerCreatedHiringRooms";
 import { handleJobApprovedHiringRooms } from "./jobApprovedHiringRooms";
 import { handleJobPostCreatedHiringRoom } from "./jobPostCreatedHiringRoom";
 import { handleCandidateHired } from "./candidateHired";
+import { handleStageChangeHiringRooms } from "./stageChangeHiringRooms";
+
 
 const eventHandlers: Record<string, any> = {
-    candidate_stage_change: [handleStuckInStageWorkflows],
+    candidate_stage_change: [
+        handleStuckInStageWorkflows,
+        handleStageChangeHiringRooms,
+    ],
     // interview_deleted: [handleInterviewDeleted],
     offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
     job_created: [handleJobCreated],

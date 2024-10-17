@@ -477,70 +477,46 @@ const getPrimaryPhone = (phones: { value: string; type: string }[]): string => {
 
 export async function formatOpeningMessageSlack(
     hiringRoomData: any,
-    jobData: any,
+    title?: string,
+    department?: string,
+    location?: string,
+    employment_type?: string,
+    recruiter?: string,
+    hiring_managers?: string,
 ): Promise<any> {
     const subDomain = await getSubdomainByHiringRoomID(hiringRoomData.id);
 
+    const dataLookup = {
+        title,
+        department,
+        location,
+        employment_type,
+        recruiter,
+        hiring_managers,
+    };
+    const fieldMapping: Record<string, string> = {
+        title: "Role",
+        department: "Department",
+        location: "Location",
+        employment_type: "Employment Type",
+        recruiter: "Recruiter",
+        hiring_manager: "Hiring Manager",
+    };
+
     // Parse and format custom message body using the job data
-    let customMessageBody = parseCustomMessageBody(
+    const customMessageBody = parseCustomMessageBody(
         hiringRoomData.recipient.customMessageBody,
-        {
-            title: jobData.name,
-            department: jobData.departments?.[0]?.name,
-            location: jobData.offices?.[0]?.location,
-            employment_type: jobData.custom_fields?.employment_type?.value,
-            recruiter: jobData.hiring_team?.recruiters?.[0]?.user_id,
-            hiring_managers: jobData.hiring_team?.hiring_managers?.[0]?.user_id,
-        },
+        dataLookup,
     );
 
     // Check if message fields are provided in the hiring room data
     const messageFields = hiringRoomData.recipient.messageFields?.map(
         (field: string) => {
-            let fieldName: string;
-            let fieldValue: string;
-
-            switch (field) {
-                case "title":
-                    fieldName = "Role";
-                    fieldValue = jobData.name || "Not provided";
-                    break;
-                case "department":
-                    fieldName = "Department";
-                    fieldValue =
-                        jobData.departments?.[0]?.name || "Not provided";
-                    break;
-                case "location":
-                    fieldName = "Location";
-                    fieldValue =
-                        jobData.offices?.[0]?.location || "Not provided";
-                    break;
-                case "employment_type":
-                    fieldName = "Employment Type";
-                    fieldValue =
-                        jobData.custom_fields?.employment_type?.value ||
-                        "Not provided";
-                    break;
-                case "recruiter":
-                    fieldName = "Recruiter";
-                    fieldValue =
-                        jobData.hiring_team?.recruiters?.[0]?.user_id ||
-                        "Not provided";
-                    break;
-                case "hiring_manager":
-                    fieldName = "Hiring Manager";
-                    fieldValue =
-                        jobData.hiring_team?.hiring_managers?.[0]?.user_id ||
-                        "Not provided";
-                    break;
-                default:
-                    fieldName =
-                        field.charAt(0).toUpperCase() +
-                        field.slice(1).replace(/_/g, " ");
-                    fieldValue = "Not provided";
-                    break;
-            }
-
+            const fieldName =
+                fieldMapping[field] ??
+                field.charAt(0).toUpperCase() +
+                    field.slice(1).replace(/_/g, " ");
+            const fieldValue = dataLooukup[field] ?? "Not provided";
             return { fieldName, fieldValue };
         },
     );
