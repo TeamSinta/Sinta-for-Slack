@@ -11,6 +11,7 @@ export async function saveSlackChannelCreatedToDB(
     },
     orgID: string,
     greenhouseJobId: string, // Add greenhouseJobId to the parameters
+    greenhouseCandidateId: string,
 ) {
     try {
         const insertData: any = {
@@ -21,13 +22,12 @@ export async function saveSlackChannelCreatedToDB(
             hiringroomId: hiringroom.id, // Extract hiringroom ID
             organizationId: orgID, // Save the organization ID
             createdAt: new Date(),
-            greenhouseJobId: greenhouseJobId, // Add greenhouseJobId to the data
+            ...(greenhouseJobId && { greenhouseJobId }),
+            ...(greenhouseCandidateId && { greenhouseCandidateId }),
+            ...(hiringroom.slackChannelFormat && {
+                channelFormat: hiringroom.slackChannelFormat,
+            }),
         };
-
-        // Only add channelFormat if it's not null
-        if (hiringroom.slackChannelFormat) {
-            insertData.channelFormat = hiringroom.slackChannelFormat;
-        }
 
         await db.insert(slackChannelsCreated).values(insertData);
     } catch (e) {

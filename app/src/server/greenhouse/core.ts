@@ -147,7 +147,6 @@ export const fetchJobsFromGreenhouse = async (): Promise<Job[]> => {
     }
 };
 export const fetchJob = async (jobId: string): Promise<GreenhouseJob> => {
-    console.log("JOBID", jobId);
     try {
         const job = (await customFetch(
             `https://harvest.greenhouse.io/v1/jobs/${jobId}`,
