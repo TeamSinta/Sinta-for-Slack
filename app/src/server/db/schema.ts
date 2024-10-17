@@ -315,10 +315,11 @@ export const organizationsRelations = relations(
     }),
 );
 
-export const membersToOrganizationsRoleEnum = pgEnum("org-member-role", [
+export const membersToOrganizationsRoleEnum = pgEnum("org_member_role", [
     "Interviewer",
     "Recruiter",
     "Hiring Manager",
+    "Admin"
 ]);
 
 export const membersToOrganizations = createTable(
