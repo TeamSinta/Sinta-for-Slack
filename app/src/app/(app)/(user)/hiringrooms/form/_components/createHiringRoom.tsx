@@ -1,4 +1,3 @@
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -43,19 +42,19 @@ interface FormValues {
         processor: string;
     };
     actions: {
-      actionType: string;
-      condition: {
-          id: string;
-          field: string | ConditionInputValue;
-          value: string;
-          condition: string;
-          condition_type: "Main" | "Add-on";
-      };
-      modifications: {
-          recipients?: string[];
-          newName?: string;
-      };
-  }[];
+        actionType: string;
+        condition: {
+            id: string;
+            field: string | ConditionInputValue;
+            value: string;
+            condition: string;
+            condition_type: "Main" | "Add-on";
+        };
+        modifications: {
+            recipients?: string[];
+            newName?: string;
+        };
+    }[];
 }
 
 export default function CreateHiringRoom() {
@@ -141,7 +140,7 @@ export default function CreateHiringRoom() {
             ...prevData,
             actions: actionsData,
         }));
-        console.log(formData, "formdata")
+        console.log(formData, "formdata");
         setCurrentStep("Summary"); // Proceed to the next step (Recipients)
     };
 
@@ -194,7 +193,6 @@ export default function CreateHiringRoom() {
                     <TriggerActionsComponent
                         onSaveAutomatedActions={handleAutomatedActionsSubmit}
                         initialActions={formData.actions} // Pass the previously selected recipients
-
                     />
                 );
             case "Recipients":

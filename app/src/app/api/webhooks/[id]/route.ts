@@ -17,7 +17,7 @@ const eventHandlers: Record<string, any> = {
     job_created: [handleJobCreated],
     job_approved: [handleJobApprovedHiringRooms],
     job_post_created: [handleJobPostCreatedHiringRoom],
-    hire_candidate: [handleCandidateHired]
+    hire_candidate: [handleCandidateHired],
 };
 
 // Webhook handler function for dynamic orgID route
@@ -50,7 +50,7 @@ export async function POST(
         }
         // 5. Parse the body as JSON
         const data = JSON.parse(body);
-        console.log(data, "data")
+        console.log(data, "data");
         // Application has
         // 6. Call the functions that depend on the webhook (e.g., filter stuck-in-stage workflows)
         const eventType = data.action; // Assuming the event type is provided in the payload

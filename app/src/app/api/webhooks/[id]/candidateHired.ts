@@ -14,7 +14,9 @@ export async function handleCandidateHired(data: any, orgID: string) {
 
     const jobId = jobData.id;
 
-    console.log(`Handling candidate hired for Job ID: ${jobId} in Org: ${orgID}`);
+    console.log(
+        `Handling candidate hired for Job ID: ${jobId} in Org: ${orgID}`,
+    );
 
     // Step 2: Fetch the Slack channel related to the jobId and orgID (returns only one channel)
     const slackChannel = await fetchSlackChannelsByJobIDAndOrgID(jobId, orgID);
@@ -25,35 +27,46 @@ export async function handleCandidateHired(data: any, orgID: string) {
     }
     const hiringRoomID = slackChannel.hiringRoomID;
     if (!hiringRoomID) {
-      console.log(`Hiring room with ID ${hiringRoomID} not found.`);
-      return;
-  }
+        console.log(`Hiring room with ID ${hiringRoomID} not found.`);
+        return;
+    }
 
     // Step 3: Fetch the hiring room data by ID
     const hiringRoom = await getHiringRoomById(hiringRoomID);
-    console.log(hiringRoom, "hiringRooms")
+    console.log(hiringRoom, "hiringRooms");
     if (!hiringRoom) {
         console.log(`Hiring room with ID ${hiringRoomID} not found.`);
         return;
     }
 
     // Step 4: Check if auto-archive action is enabled in the hiring room's actions
-    const autoArchiveEnabled = checkAutoArchiveAction(hiringRoom.actions as any[]);
-    console.log(autoArchiveEnabled, "autoArchiveEnabled")
+    const autoArchiveEnabled = checkAutoArchiveAction(
+        hiringRoom.actions as any[],
+    );
+    console.log(autoArchiveEnabled, "autoArchiveEnabled");
 
     if (autoArchiveEnabled) {
-        console.log(`Auto-archive is enabled for Hiring Room ID: ${hiringRoomID}, proceeding to archive channel...`);
+        console.log(
+            `Auto-archive is enabled for Hiring Room ID: ${hiringRoomID}, proceeding to archive channel...`,
+        );
         const slackTeamID = await getSlackTeamIDByHiringroomID(hiringRoom.id);
 
         // Step 5: Archive the Slack channel using its ID
         try {
             await archiveSlackChannel(slackChannel.slackChannelID, slackTeamID);
-            console.log(`Successfully archived Slack channel with ID: ${slackChannel.slackChannelID}`);
+            console.log(
+                `Successfully archived Slack channel with ID: ${slackChannel.slackChannelID}`,
+            );
         } catch (error) {
-            console.error(`Failed to archive Slack channel: ${slackChannel.slackChannelID}`, error);
+            console.error(
+                `Failed to archive Slack channel: ${slackChannel.slackChannelID}`,
+                error,
+            );
         }
     } else {
-        console.log(`Auto-archive is not enabled for Hiring Room ID: ${hiringRoomID}.`);
+        console.log(
+            `Auto-archive is not enabled for Hiring Room ID: ${hiringRoomID}.`,
+        );
     }
 
     console.log("Candidate Hired Webhook processing complete.");

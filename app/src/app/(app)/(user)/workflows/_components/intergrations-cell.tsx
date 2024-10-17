@@ -20,11 +20,11 @@ const IntegrationsCell: React.FC<IntegrationsCellProps> = ({ workflow }) => {
     ];
 
     return (
-        <div className="flex items-center justify-center space-x-2 py-3 px-2 rounded-sm shadow-sm bg-gray-100 dark:bg-gray-800">
+        <div className="flex items-center justify-center space-x-2 rounded-sm bg-gray-100 px-2 py-3 shadow-sm dark:bg-gray-800">
             {icons.map((icon, index) => (
                 <div
                     key={index}
-                    className="flex items-center justify-center rounded-md p-2 shadow bg-white dark:bg-gray-900"
+                    className="flex items-center justify-center rounded-md bg-white p-2 shadow dark:bg-gray-900"
                 >
                     <Image
                         src={icon.src}

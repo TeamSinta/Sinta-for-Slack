@@ -30,55 +30,55 @@ const hiringroomFormSchema = hiringroomInsertSchema.pick({
 type CreateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
 
 export async function createHiringroomMutation(props: CreateHiringroomProps) {
-  const { user } = await protectedProcedure();
-  const { currentOrg } = await getOrganizations();
-  const orgID = currentOrg.id;
+    const { user } = await protectedProcedure();
+    const { currentOrg } = await getOrganizations();
+    const orgID = currentOrg.id;
 
-  const hiringroomParse = hiringroomFormSchema.safeParse(props);
+    const hiringroomParse = hiringroomFormSchema.safeParse(props);
 
-  if (!hiringroomParse.success) {
-      throw new Error(
-          "Invalid hiringroom data: " +
-              JSON.stringify(hiringroomParse.error.errors),
-      );
-  }
+    if (!hiringroomParse.success) {
+        throw new Error(
+            "Invalid hiringroom data: " +
+                JSON.stringify(hiringroomParse.error.errors),
+        );
+    }
 
-  const hiringroomData = hiringroomParse.data;
+    const hiringroomData = hiringroomParse.data;
 
-  const result = await db
-      .insert(hiringrooms)
-      .values({
-          name: hiringroomData.name,
-          objectField: hiringroomData.objectField,
-          alertType: hiringroomData.alertType,
-          conditions: hiringroomData.conditions,
-          recipient: hiringroomData.recipient,
-          organizationId: orgID,
-          ownerId: user.id,
-          triggerConfig: hiringroomData.triggerConfig,
-          slackChannelFormat: hiringroomData.slackChannelFormat,
-          actions: hiringroomData.actions, // Add actions to the insertion
-          createdAt: new Date(),
-          modifiedAt: new Date(),
-      })
-      .returning({
-          id: hiringrooms.id,
-          name: hiringrooms.name,
-          objectField: hiringrooms.objectField,
-          alertType: hiringrooms.alertType,
-          conditions: hiringrooms.conditions,
-          recipient: hiringrooms.recipient,
-          organizationId: hiringrooms.organizationId,
-          ownerId: hiringrooms.ownerId,
-          triggerConfig: hiringrooms.triggerConfig,
-          slackChannelFormat: hiringrooms.slackChannelFormat,
-          actions: hiringrooms.actions, // Return actions as well
-          createdAt: hiringrooms.createdAt,
-          modifiedAt: hiringrooms.modifiedAt,
-      })
-      .execute();
+    const result = await db
+        .insert(hiringrooms)
+        .values({
+            name: hiringroomData.name,
+            objectField: hiringroomData.objectField,
+            alertType: hiringroomData.alertType,
+            conditions: hiringroomData.conditions,
+            recipient: hiringroomData.recipient,
+            organizationId: orgID,
+            ownerId: user.id,
+            triggerConfig: hiringroomData.triggerConfig,
+            slackChannelFormat: hiringroomData.slackChannelFormat,
+            actions: hiringroomData.actions, // Add actions to the insertion
+            createdAt: new Date(),
+            modifiedAt: new Date(),
+        })
+        .returning({
+            id: hiringrooms.id,
+            name: hiringrooms.name,
+            objectField: hiringrooms.objectField,
+            alertType: hiringrooms.alertType,
+            conditions: hiringrooms.conditions,
+            recipient: hiringrooms.recipient,
+            organizationId: hiringrooms.organizationId,
+            ownerId: hiringrooms.ownerId,
+            triggerConfig: hiringrooms.triggerConfig,
+            slackChannelFormat: hiringrooms.slackChannelFormat,
+            actions: hiringrooms.actions, // Return actions as well
+            createdAt: hiringrooms.createdAt,
+            modifiedAt: hiringrooms.modifiedAt,
+        })
+        .execute();
 
-  return result[0];
+    return result[0];
 }
 
 /**
