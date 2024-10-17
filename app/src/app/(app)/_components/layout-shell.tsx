@@ -1,4 +1,8 @@
+"use client";
+
 import { Sidebar, SidebarLoading } from "@/app/(app)/_components/sidebar";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion"; // Import Framer Motion for transitions
 import { Suspense } from "react";
 
 type AppLayoutProps = {
@@ -6,11 +10,11 @@ type AppLayoutProps = {
     sideNavRemoveIds?: string[];
     sideNavIncludedIds?: string[];
     showOrgSwitcher?: boolean;
-    isWorkflowBuilder?: boolean; // Add a new prop to detect if it's WorkflowBuilder
+    isWorkflowBuilder?: boolean;
 };
 
 /**
- * @purpose The app shell component contain sidebar nav info and the main content of the app
+ * @purpose The app shell component contains sidebar nav info and the main content of the app
  * to add a new component in app shell and use it in the `AppShell` component it will apply to all the app pages
  *
  * @param children the main content of the app
@@ -25,28 +29,59 @@ export function AppLayoutShell({
     sideNavIncludedIds,
     sideNavRemoveIds,
     showOrgSwitcher,
-    isWorkflowBuilder = false, // default to false
 }: AppLayoutProps) {
+    const pathname = usePathname();
+    let isWorkflowBuilder = false;
+
+    // Determine if it's the workflow builder based on the pathname
+    if (
+        pathname === "/hiringrooms/form/new" ||
+        pathname.includes("/workflows/new")
+    ) {
+        isWorkflowBuilder = true;
+    }
+
+    // Sidebar transition variants
+    const sidebarVariants = {
+        hidden: { x: -100, opacity: 0 },
+        visible: { x: 0, opacity: 1, transition: { duration: 0.5 } },
+    };
+
+    // Children content transition variants
+    const contentVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+    };
+
     return (
         <div
             className={`flex items-start ${isWorkflowBuilder ? "" : "container"}`}
         >
-            <div
-                className={`sticky left-0 top-0 h-screen flex-shrink-0 ${isWorkflowBuilder ? "w-60" : ""}`}
-            >
-                <Suspense fallback={<SidebarLoading />}>
-                    <Sidebar
-                        sidebarNavIncludeIds={sideNavIncludedIds}
-                        sidebarNavRemoveIds={sideNavRemoveIds}
-                        showOrgSwitcher={showOrgSwitcher}
-                    />
-                </Suspense>
-            </div>
-            <section
+            {!isWorkflowBuilder && (
+                <motion.div
+                    className="sticky left-0 top-0 h-screen w-60 flex-shrink-0"
+                    variants={sidebarVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    <Suspense fallback={<SidebarLoading />}>
+                        <Sidebar
+                            sidebarNavIncludeIds={sideNavIncludedIds}
+                            sidebarNavRemoveIds={sideNavRemoveIds}
+                            showOrgSwitcher={showOrgSwitcher}
+                        />
+                    </Suspense>
+                </motion.div>
+            )}
+
+            <motion.section
                 className={`min-h-screen flex-grow ${isWorkflowBuilder ? "" : "container"}`}
+                variants={contentVariants}
+                initial="hidden"
+                animate="visible"
             >
                 {children}
-            </section>
+            </motion.section>
         </div>
     );
 }

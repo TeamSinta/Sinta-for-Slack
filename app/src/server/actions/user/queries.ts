@@ -1,5 +1,6 @@
 "use server";
 
+import { getUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { adminProcedure } from "@/server/procedures";
@@ -7,6 +8,7 @@ import { eachMonthOfInterval, format, startOfMonth, subMonths } from "date-fns";
 import { asc, count, desc, gt, ilike, inArray, or } from "drizzle-orm";
 import { unstable_noStore as noStore } from "next/cache";
 import { z } from "zod";
+import { getOrganizations } from "../organization/queries";
 
 /**
  * Get paginated users
@@ -30,6 +32,14 @@ const panginatedUserPropsSchema = z.object({
 });
 
 type GetPaginatedUsersQueryProps = z.infer<typeof panginatedUserPropsSchema>;
+
+export async function getAuthUser() {
+    return await getUser();
+}
+
+export async function getAuthOrgs() {
+    return await getOrganizations();
+}
 
 export async function getPaginatedUsersQuery(
     input: GetPaginatedUsersQueryProps,

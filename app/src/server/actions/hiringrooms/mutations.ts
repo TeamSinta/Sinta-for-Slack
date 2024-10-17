@@ -24,6 +24,7 @@ const hiringroomFormSchema = hiringroomInsertSchema.pick({
     triggerConfig: true,
     recipient: true,
     conditions: true,
+    actions: true,
 });
 
 type CreateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
@@ -56,6 +57,7 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
             ownerId: user.id,
             triggerConfig: hiringroomData.triggerConfig,
             slackChannelFormat: hiringroomData.slackChannelFormat,
+            actions: hiringroomData.actions, // Add actions to the insertion
             createdAt: new Date(),
             modifiedAt: new Date(),
         })
@@ -70,34 +72,40 @@ export async function createHiringroomMutation(props: CreateHiringroomProps) {
             ownerId: hiringrooms.ownerId,
             triggerConfig: hiringrooms.triggerConfig,
             slackChannelFormat: hiringrooms.slackChannelFormat,
+            actions: hiringrooms.actions, // Return actions as well
             createdAt: hiringrooms.createdAt,
             modifiedAt: hiringrooms.modifiedAt,
-        }) // Specify the fields you need to return
-        // .returning("*") // Return all fields or specify the fields you need
+        })
         .execute();
-    // Assuming result is an array and we want the first (and only) record
+
     return result[0];
 }
+
 /**
  * Update a hiringroom
  */
-const hiringroomUpdateSchema = hiringroomSelectSchema.pick({
-    id: true,
-    status: true,
-    // other fields as necessary
-});
+// const hiringroomUpdateSchema = hiringroomSelectSchema.pick({
+//     id: true,
+//     status: true,
+//     // other fields as necessary
+// });
 
-type UpdateHiringroomProps = z.infer<typeof hiringroomUpdateSchema>;
+type UpdateHiringroomProps = z.infer<typeof hiringroomFormSchema>;
 
 export async function updateHiringroomMutation(props: UpdateHiringroomProps) {
-    await adminProcedure();
+    // await adminProcedure();
+    const { user } = await protectedProcedure();
+    // const { currentOrg } = await getOrganizations();
+    // const orgID = currentOrg.id;
 
-    const hiringroomParse = await hiringroomUpdateSchema.safeParseAsync(props);
+    const hiringroomParse = await hiringroomSelectSchema.safeParseAsync(props);
     if (!hiringroomParse.success) {
         throw new Error("Invalid hiringroom data", {
             cause: hiringroomParse.error.errors,
         });
     }
+
+    // console.log("HIRING ROOM PARSE", hiringroomParse.data);
 
     return await db
         .update(hiringrooms)

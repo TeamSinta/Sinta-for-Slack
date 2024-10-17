@@ -46,7 +46,7 @@ export default function WorkflowLoader({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="flex flex-col items-center justify-center">
+                    <div className=" mx-10 mb-6  mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                         <WorkflowBuilder workflowId={workflowId} edit={edit} />
                     </div>
                 </motion.div>

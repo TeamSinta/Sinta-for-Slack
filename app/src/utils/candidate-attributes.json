@@ -3,111 +3,134 @@
         "attributes": [
             {
                 "field": "id",
-                "description": "Application ID"
+                "description": "Application ID",
+                "dataType": "number"
             },
             {
                 "field": "prospect",
-                "description": "If true, this is a prospect application, meaning the person is a prospect and has not applied for a job."
+                "description": "If true, this is a prospect application, meaning the person is a prospect and has not applied for a job.",
+                "dataType": "boolean"
             },
             {
                 "field": "status",
-                "description": "One of: active, rejected, hired, converted."
+                "description": "One of: active, rejected, hired, converted.",
+                "dataType": "string"
             },
             {
-                "field": "jobs",
-                "description": "An array containing the jobs that the candidate applied for."
+                "field": "jobs[].id",
+                "description": "The ID of the job.",
+                "dataType": "arrayOfNumbers"
             },
             {
-                "field": "job_post_id",
-                "description": "The ID of the job post through which the candidate applied."
+                "field": "jobs[].name",
+                "description": "The title of the job.",
+                "dataType": "arrayOfStrings"
             },
             {
-                "field": "candidate_id",
-                "description": "The ID of the candidate applying for this job."
+                "field": "jobs[].job_post_id",
+                "description": "The ID of the job post through which the candidate applied.",
+                "dataType": "arrayOfNumbers"
             },
             {
-                "field": "current_stage",
-                "description": "The current stage this application is in."
+                "field": "candidate.id",
+                "description": "The ID of the candidate applying for this job.",
+                "dataType": "number"
+            },
+            {
+                "field": "current_stage.id",
+                "description": "The current stage this application is in.",
+                "dataType": "number"
+            },
+            {
+                "field": "current_stage.name",
+                "description": "The name of the current stage.",
+                "dataType": "string"
             },
             {
                 "field": "credited_to.id",
-                "description": "The ID of the user credited for this application."
-            },
-            {
-                "field": "location",
-                "description": "The contents of the location question on a job post."
-            },
-            {
-                "field": "answers",
-                "description": "The answers provided to questions in the job post for this application."
+                "description": "The ID of the user credited for this application.",
+                "dataType": "number"
             },
             {
                 "field": "custom_fields",
-                "description": "Contains a hash of custom fields configured for this resource."
+                "description": "Contains a hash of custom fields configured for this resource.",
+                "dataType": "arrayOfObjects"
             },
             {
-                "field": "keyed_custom_fields",
-                "description": "Contains more detailed information about custom fields with immutable keys."
+                "field": "candidate.company",
+                "description": "The company at which the candidate currently works.",
+                "dataType": "string"
             },
             {
-                "field": "prospective_department",
-                "description": "The department that this prospect application is being considered for."
+                "field": "candidate.title",
+                "description": "The candidate's current title.",
+                "dataType": "string"
             },
             {
-                "field": "prospective_office",
-                "description": "The office associated with this prospect application."
+                "field": "candidate.is_private",
+                "description": "Whether the candidate is private or not. One of: ['true', 'false'].",
+                "dataType": "boolean"
             },
             {
-                "field": "company",
-                "description": "The company at which the candidate currently works."
+                "field": "candidate.phone_numbers[].type",
+                "description": "One of: ['home', 'work', 'mobile', 'skype', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
-                "field": "title",
-                "description": "The candidate's current title."
+                "field": "candidate.addresses[].type",
+                "description": "One of: ['home', 'work', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
-                "field": "is_private",
-                "description": "Whether the candidate is private or not. One of: ['true', 'false']."
+                "field": "candidate.email_addresses[].type",
+                "description": "One of: ['personal', 'work', 'other'].",
+                "dataType": "arrayOfStrings"
+            },
+
+            {
+                "field": "candidate.website_addresses[].type",
+                "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
-                "field": "application_ids",
-                "description": "An array of application IDs associated with this candidate."
+                "field": "candidate.recruiter.id",
+                "description": "The recruiter responsible for this candidate.",
+                "dataType": "number"
             },
             {
-                "field": "phone_numbers[].type",
-                "description": "One of: ['home', 'work', 'mobile', 'skype', 'other']."
+                "field": "candidate.recruiter.name",
+                "description": "The name of the recruiter responsible for this candidate..",
+                "dataType": "string"
             },
             {
-                "field": "addresses[].type",
-                "description": "One of: ['home', 'work', 'other']."
+                "field": "candidate.recruiter.email",
+                "description": "The email of the recruiter responsible for this candidate.",
+                "dataType": "string"
             },
             {
-                "field": "email_addresses[].type",
-                "description": "One of: ['personal', 'work', 'other']."
+                "field": "candidate.coordinator.id",
+                "description": "The coordinator responsible for this candidate.",
+                "dataType": "number"
             },
             {
-                "field": "website_addresses[].type",
-                "description": "One of: ['personal', 'company', 'portfolio', 'blog', 'other']."
+                "field": "candidate.coordinator.name",
+                "description": "The name of the coordinator responsible for this candidate..",
+                "dataType": "string"
             },
             {
-                "field": "recruiter",
-                "description": "The recruiter responsible for this candidate."
-            },
-            {
-                "field": "coordinator",
-                "description": "The coordinator responsible for this candidate."
+                "field": "candidate.coordinator.email",
+                "description": "The email of the coordinator responsible for this candidate.",
+                "dataType": "string"
             },
             {
                 "field": "attachments[].type",
-                "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other']."
+                "description": "One of: ['resume', 'cover_letter', 'offer_packet', 'offer_letter', 'take_home_test', 'other'].",
+                "dataType": "arrayOfStrings"
             },
             {
                 "field": "attachments[].url",
-                "description": "URL to attachment. URLs expire in 7 days."
-            },
-            {
-                "field": "linked_user_ids",
-                "description": "If the candidate is an internal applicant, returns the Greenhouse user ID of the candidate."
+                "description": "URL to attachment. URLs expire in 7 days.",
+                "dataType": "arrayOfStrings"
             }
         ]
     }

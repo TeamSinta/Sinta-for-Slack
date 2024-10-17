@@ -7,7 +7,7 @@ import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
 import Image, { type StaticImageData } from "next/image";
 import slackLogo from "../../../public/slack-logo.png";
-import greenhouseLogo from "../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../public/greenhouselogo.png";
 import { Icons } from "./icons";
 
 type SourceType = "slack" | "greenhouse";

@@ -25,7 +25,7 @@ import {
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
-import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import slacklogo from "../../../../../../../public/slack-logo.png";
 import filterIcon from "../../../../../../../public/filter.png";
 import Actions from "./actions";
@@ -147,18 +147,15 @@ export function WorkflowBuilder({
         );
 
         const combinedConditions = [
-          // Map through the main conditions and add the condition_type field
-          ...(workflowTriggers.mainCondition || []).map(
-              (condition: any) => ({
-                  ...condition,
-                  condition_type: "Main", // Add condition_type for main conditions
-              }),
-          ),
-          // Map through the conditionsData and add the condition_type field
-          ...trimmedConditions.map((condition: any) => ({
-              ...condition,
-              condition_type: "Add-on", // Add condition_type for add-on conditions
-          })),
+            {
+                ...(workflowTriggers.mainCondition ?? {}),
+                condition_type: "Main",
+            },
+            // Map through the conditionsData and add the condition_type field
+            ...trimmedConditions.map((condition: any) => ({
+                ...condition,
+                condition_type: "Add-on", // Add condition_type for add-on conditions
+            })),
         ];
 
         const newDbData = {
@@ -196,6 +193,7 @@ export function WorkflowBuilder({
                     localStorageKeyName,
                     workflow.name || "Edit Workflow",
                 );
+                console.log("WORKFLOW", JSON.stringify(workflow, null, 2));
 
                 // Split the workflow data into the necessary parts
                 const workflowTriggers = {
@@ -204,9 +202,12 @@ export function WorkflowBuilder({
                     processor: workflow?.triggerConfig?.processor,
                     apiUrl: workflow?.triggerConfig?.apiUrl,
                     alertType: workflow.alertType,
-                    mainCondition: workflow.conditions.filter((condition) => {
-                        return typeof condition.field === "object";
-                    }),
+                    mainCondition:
+                        workflow.conditions.find(
+                            (condition) =>
+                                condition?.condition_type?.toLowerCase() ===
+                                "main",
+                        ) ?? {},
                 };
                 const workflowActions = {
                     recipients: workflow.recipient?.recipients,
@@ -215,10 +216,11 @@ export function WorkflowBuilder({
                     messageDelivery: workflow?.recipient.messageDelivery,
                     messageFields: workflow?.recipient.messageFields,
                     openingText: workflow?.recipient.openingText,
+                    uploadedFiles: workflow?.recipient?.uploadedFiles,
                 };
                 const workflowConditions = workflow.conditions
                     .filter((condition) => {
-                        return typeof condition.field !== "object";
+                        return condition.condition_type === "Add-on";
                     })
                     .map((item, index) => ({ ...item, id: index }));
 
@@ -291,7 +293,10 @@ export function WorkflowBuilder({
                         step.description === conditionDescription,
                 );
 
-                if (!conditionExists && typeof condition.field !== "object") {
+                if (
+                    !conditionExists &&
+                    condition?.condition_type?.toLowerCase() !== "main"
+                ) {
                     newSteps.push({
                         id: index,
                         type: "Condition",
@@ -303,7 +308,7 @@ export function WorkflowBuilder({
                     });
                 } else if (
                     !mainCondition &&
-                    typeof condition.field === "object"
+                    condition?.condition_type?.toLowerCase() === "main"
                 )
                     setMainCondition(condition);
             });
@@ -415,7 +420,7 @@ export function WorkflowBuilder({
         );
         localStorage.setItem(
             localStorageKeyConditions,
-            JSON.stringify([...conditions, newConditionStep]),
+            JSON.stringify([...(conditions ?? []), newConditionStep]),
         );
         moveActionStepToEnd();
         setSelectValue(undefined);
@@ -591,14 +596,14 @@ export function WorkflowBuilder({
 
     return (
         <>
-            <header className="ml-[50px] w-[112%] flex-none border-b border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <header className=" flex-none border-b border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center justify-between">
-                    <div className="flex w-[70%] items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                         <Link href="/workflows">
                             <MoveLeft className="text-gray-500 dark:text-gray-300" />
                         </Link>
                         <div
-                            className="flex w-[70%] items-center space-x-2"
+                            className="flex items-center space-x-2"
                             onDoubleClick={handleDoubleClick}
                         >
                             {isEditingName ? (
@@ -649,6 +654,7 @@ export function WorkflowBuilder({
                         <WorkflowPublishModal
                             edit={edit}
                             workflowId={workflowId}
+                            steps={steps}
                         />
                         <div className="flex items-center space-x-1">
                             <Switch
@@ -662,7 +668,7 @@ export function WorkflowBuilder({
                 </div>
             </header>
 
-            <div className="ml-[50px] flex h-[calc(100vh-64px)] w-[112%]">
+            <div className="flex h-[calc(92vh-64px)] ">
                 <div
                     className={`relative flex-grow overflow-y-auto bg-gray-50 p-6 shadow-inner dark:bg-gray-900  dark:shadow-inner ${selectedElement ? "pr-0" : "pr-8"}`}
                 >
@@ -923,6 +929,7 @@ export function WorkflowBuilder({
                                                   )
                                                 : null
                                         }
+                                        workflowId={workflowId}
                                     />
                                 )}
                                 {selectedElement.type === "Condition" && (

@@ -96,7 +96,7 @@ export async function refreshTokenIfNeeded(
                 teamId,
                 data.refresh_token,
                 expiresAt,
-                orgId
+                orgId,
             );
             return data.access_token;
         } else {
@@ -135,39 +135,38 @@ export async function setAccessToken(
 }
 
 export async function setAccessTokenServer(
-  accessToken: string,
-  teamId: string,
-  refreshToken: string,
-  expiration: number,
-  orgID: string
+    accessToken: string,
+    teamId: string,
+    refreshToken: string,
+    expiration: number,
+    orgID: string,
 ) {
-  // Search for the organization by orgID
-  const organization = await db
-      .select()
-      .from(organizations)
-      .where(eq(organizations.id, orgID))
-      .limit(1)
-      .execute();
+    // Search for the organization by orgID
+    const organization = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, orgID))
+        .limit(1)
+        .execute();
 
-  if (!organization || organization.length === 0) {
-      return "Organization not found";
-  }
+    if (!organization || organization.length === 0) {
+        return "Organization not found";
+    }
 
-  // Update the access token and other Slack-related data for the found organization
-  const result = await db
-      .update(organizations)
-      .set({
-          slack_team_id: teamId,
-          slack_access_token: accessToken,
-          slack_refresh_token: refreshToken,
-          token_expiry: expiration,
-      })
-      .where(eq(organizations.id, orgID))
-      .execute();
+    // Update the access token and other Slack-related data for the found organization
+    const result = await db
+        .update(organizations)
+        .set({
+            slack_team_id: teamId,
+            slack_access_token: accessToken,
+            slack_refresh_token: refreshToken,
+            token_expiry: expiration,
+        })
+        .where(eq(organizations.id, orgID))
+        .execute();
 
-  return result ? "OK" : "Failed to update access token";
+    return result ? "OK" : "Failed to update access token";
 }
-
 
 export async function addSlackUserIdToDB(slackUserId: string) {
     const { currentOrg } = await getOrganizations();

@@ -1,0 +1,151 @@
+{
+    "job": {
+        "attributes": [
+            {
+                "field": "id",
+                "description": "Job ID",
+                "dataType": "number"
+            },
+            {
+                "field": "name",
+                "description": "Job title or position name.",
+                "dataType": "string"
+            },
+            {
+                "field": "requisition_id",
+                "description": "Unique requisition ID, if applicable.",
+                "dataType": "string"
+            },
+            {
+                "field": "notes",
+                "description": "Notes or additional information about the job.",
+                "dataType": "string"
+            },
+            {
+                "field": "confidential",
+                "description": "Indicates if the job is confidential (true or false).",
+                "dataType": "boolean"
+            },
+            {
+                "field": "job_post_id",
+                "description": "ID of the associated job post.",
+                "dataType": "number"
+            },
+            {
+                "field": "status",
+                "description": "Current job status, such as open or closed.",
+                "dataType": "string"
+            },
+            {
+                "field": "created_by_id",
+                "description": "ID of the user who created the job.",
+                "dataType": "number"
+            },
+            {
+                "field": "created_at",
+                "description": "Timestamp when the job was created.",
+                "dataType": "datetime"
+            },
+            {
+                "field": "opened_at",
+                "description": "Timestamp when the job was opened.",
+                "dataType": "datetime"
+            },
+            {
+                "field": "closed_at",
+                "description": "Timestamp when the job was closed, if applicable.",
+                "dataType": "datetime"
+            },
+            {
+                "field": "departments",
+                "description": "Array of departments associated with the job.",
+                "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "departments[].id",
+                "description": "Array of department ids associated with the job",
+                "dataType": "arrayOfNumbers"
+            },
+            {
+                "field": "departments[].name",
+                "description": "Array of department names associated with the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "departments[].external_id",
+                "description": "Array of department external ids associated with the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "offices",
+                "description": "Array of offices where the job is located.",
+                "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "offices[].id",
+                "description": "Array of office ids where the job is located.",
+                "dataType": "arrayOfNumbers"
+            },
+            {
+                "field": "offices[].name",
+                "description": "Array of office names where the job is located.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "offices[].location",
+                "description": "Array of office locations where the job is located.",
+                "dataType": "arrayOfLocations"
+            },
+            {
+                "field": "offices[].external_id",
+                "description": "Array of office external ids where the job is located.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "hiring_team.hiring_managers",
+                "description": "Array of hiring managers for the job.",
+                "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "hiring_team.hiring_managers[].employee_id",
+                "description": "Array of hiring manager employee_ids for the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "hiring_team.recruiters",
+                "description": "Array of recruiters associated with the job.",
+                "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "hiring_team.recruiters[].employee_id",
+                "description": "Array of recruiter employee ids associated with the job.",
+                "dataType": "arrayOfStrings"
+            },
+            {
+                "field": "hiring_team.coordinators",
+                "description": "Array of coordinators involved in the hiring process.",
+                "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "openings",
+                "description": "Array of job openings with associated IDs.",
+                "dataType": "arrayOfObjects"
+            },
+            {
+                "field": "custom_fields.approved",
+                "description": "Boolean field indicating whether the job is approved.",
+                "dataType": "boolean"
+            },
+            {
+                "field": "custom_fields.employment_type",
+                "description": "Employment type for the job (e.g., Full-time).",
+                "dataType": "single_select"
+            },
+            {
+                "field": "custom_fields.salary_range",
+                "description": "Salary range for the job, in currency format.",
+                "dataType": "currency_range"
+            }
+        ]
+    }
+}

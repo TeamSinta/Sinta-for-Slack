@@ -1,3 +1,6 @@
+"use client"; // This explicitly marks the component as a client-side component
+
+import { useEffect, useState } from "react";
 import { Icons } from "@/components/ui/icons";
 import { siteUrls } from "@/config/urls";
 import Link from "next/link";
@@ -5,13 +8,11 @@ import { cn } from "@/lib/utils";
 import { UserDropdown } from "@/app/(app)/_components/user-dropdown";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNav } from "@/app/(app)/_components/sidebar-nav";
-import { getUser } from "@/server/auth";
-import {
-    OrgSelectDropdown,
-    type UserOrgs,
-} from "@/app/(app)/_components/org-select-dropdown";
-import { getOrganizations } from "@/server/actions/organization/queries";
+import { OrgSelectDropdown } from "@/app/(app)/_components/org-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAuthOrgs, getAuthUser } from "@/server/actions/user/queries";
+import { User } from "next-auth";
+import { organizations } from "@/server/db/schema";
 
 type SideNavProps = {
     sidebarNavIncludeIds?: string[];
@@ -19,25 +20,68 @@ type SideNavProps = {
     showOrgSwitcher?: boolean;
 };
 
-/**
- * @purpose The sidebar component contains the sidebar navigation and the user dropdown.
- * to add a new navigation item, you can add a new object to the navigation array in the @see /src/config/dashboard.ts file
- * to customize the user dropdown, you can add a new object to the navigation array in the @see /src/config/user-dropdown.ts file
- *
- * fell free to customize the sidebar component as you like
- */
+// This is the correct type for organization objects
+export type Org = typeof organizations.$inferSelect;
 
-export async function Sidebar({
+export type UserOrgs = {
+    heading: string;
+    items: Org[];
+};
+
+/*
+ * Client-side Sidebar component
+ */
+export function Sidebar({
     sidebarNavIncludeIds,
     sidebarNavRemoveIds,
     showOrgSwitcher = true,
 }: SideNavProps) {
-    const user = await getUser();
+    const [user, setUser] = useState<User | null>(null);
+    const [currentOrg, setCurrentOrg] = useState<Org | null>(null); // Use Org type instead of OrgSelectDropdownProps
+    const [userOrgs, setUserOrgs] = useState<UserOrgs[]>([]); // Correct type for userOrgs
+    const [isLoading, setIsLoading] = useState(true);
 
-    const { currentOrg, userOrgs } = await getOrganizations();
+    useEffect(() => {
+        const fetchSidebarData = async () => {
+            try {
+                const user = await getAuthUser();
+                const { currentOrg, userOrgs } = await getAuthOrgs();
 
-    const myOrgs = userOrgs.filter((org) => org.ownerId === user?.id);
-    const sharedOrgs = userOrgs.filter((org) => org.ownerId !== user?.id);
+                setUser(user);
+                setCurrentOrg(currentOrg);
+
+                const mappedUserOrgs: UserOrgs[] = [
+                    {
+                        heading: "My Orgs",
+                        items: userOrgs.filter(
+                            (org) => org.ownerId === user?.id,
+                        ),
+                    },
+                    {
+                        heading: "Shared Orgs",
+                        items: userOrgs.filter(
+                            (org) => org.ownerId !== user?.id,
+                        ),
+                    },
+                ];
+
+                setUserOrgs(mappedUserOrgs);
+            } catch (error) {
+                console.error("Failed to fetch sidebar data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSidebarData();
+    }, []);
+
+    const myOrgs =
+        userOrgs.find((orgGroup) => orgGroup.heading === "My Orgs")?.items ||
+        [];
+    const sharedOrgs =
+        userOrgs.find((orgGroup) => orgGroup.heading === "Shared Orgs")
+            ?.items || [];
 
     const urgOrgsData: UserOrgs[] = [
         {
@@ -49,6 +93,10 @@ export async function Sidebar({
             items: sharedOrgs,
         },
     ];
+
+    if (isLoading) {
+        return <SidebarLoading showOrgSwitcher={showOrgSwitcher} />;
+    }
 
     return (
         <aside className={cn("h-full w-full")}>
@@ -68,11 +116,11 @@ export async function Sidebar({
                 <UserDropdown user={user} />
             </div>
 
-            {showOrgSwitcher && (
+            {showOrgSwitcher && currentOrg && (
                 <div className="py-2">
                     <OrgSelectDropdown
                         userOrgs={urgOrgsData}
-                        currentOrg={currentOrg}
+                        currentOrg={currentOrg} // Only pass if not null
                     />
                 </div>
             )}
@@ -91,6 +139,9 @@ export async function Sidebar({
     );
 }
 
+/**
+ * Sidebar loading skeleton
+ */
 export function SidebarLoading({
     showOrgSwitcher = true,
 }: {

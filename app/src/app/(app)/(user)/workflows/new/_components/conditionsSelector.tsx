@@ -23,7 +23,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import greenhouselogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouselogo from "../../../../../../../public/greenhouselogo.png";
 
 // Greenhouse logo component
 const GreenhouseLogo = () => (
@@ -37,23 +37,24 @@ const GreenhouseLogo = () => (
 interface ConditionSelectorProps extends PopoverProps {
     attributes: any[];
     onFieldSelect: (selectedField: string) => void;
+    selectedField: string;
 }
 
 export function ConditionSelector({
     attributes,
     onFieldSelect,
+    selectedField,
     ...props
 }: ConditionSelectorProps) {
     const [open, setOpen] = React.useState(false); // Popover open state
-    const [selectedAttribute, setSelectedAttribute] = React.useState(
-        attributes[0],
-    ); // Selected attribute state
+    const [selectedAttribute, setSelectedAttribute] =
+        React.useState(selectedField); // Selected attribute state
     const [hoveredAttribute, setHoveredAttribute] = React.useState<
         string | null
     >(null); // Hovered attribute state
 
     const handleSelectAttribute = (attribute: any) => {
-        setSelectedAttribute(attribute);
+        setSelectedAttribute(attribute.field);
         onFieldSelect(attribute.field); // Pass the selected field to the parent component
         setOpen(false); // Close the popover after selection
     };
@@ -71,7 +72,7 @@ export function ConditionSelector({
                     {selectedAttribute ? (
                         <>
                             <GreenhouseLogo />
-                            {selectedAttribute.field}
+                            {selectedAttribute}
                         </>
                     ) : (
                         "Select a condition..."
@@ -109,7 +110,7 @@ export function ConditionSelector({
                                                 <AttributeItem
                                                     attribute={attribute}
                                                     isSelected={
-                                                        selectedAttribute?.field ===
+                                                        selectedAttribute ===
                                                         attribute.field
                                                     }
                                                     onSelect={() =>
@@ -132,6 +133,9 @@ export function ConditionSelector({
                                                 </h4>
                                                 <div className="text-sm text-muted-foreground">
                                                     {attribute.description}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    ({attribute.dataType})
                                                 </div>
                                             </div>
                                         </HoverCardContent>

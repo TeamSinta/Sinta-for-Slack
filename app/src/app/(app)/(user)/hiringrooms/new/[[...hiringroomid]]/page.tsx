@@ -3,7 +3,7 @@
 import React from "react";
 import Image, { StaticImageData } from "next/image";
 import slackLogo from "../../../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import { PlusCircle } from "lucide-react";
 import { StageSelectionModal } from "../components/create-new-modal";
 

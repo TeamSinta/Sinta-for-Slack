@@ -6,7 +6,7 @@ import { ColumnDropdown } from "./column-dropdown";
 import { Switch } from "@/components/ui/switch";
 import IntegrationsCell from "./intergrations-cell"; // Import the IntegrationsCell component
 import slackLogo from "../../../../../../public/slack-logo.png";
-import greenhouseLogo from "../../../../../../public/greenhouseLogo.png";
+import greenhouseLogo from "../../../../../../public/greenhouselogo.png";
 import Image, { type StaticImageData } from "next/image";
 import { format } from "date-fns";
 import { useState } from "react"; // Import useState for handling switch state

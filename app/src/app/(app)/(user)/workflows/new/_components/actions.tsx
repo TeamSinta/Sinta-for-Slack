@@ -2,41 +2,34 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
-import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
-import { FancyBox } from "@/components/ui/fancy.box";
-import { getActiveUsers, getChannels } from "@/server/slack/core";
-import { getMockGreenhouseData } from "@/server/greenhouse/core";
-import slacklogo from "../../../../../../../public/slack-logo.png";
-import sintalogo from "../../../../../../../public/sintalogo.png";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuTrigger,
     DropdownMenuLabel,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { FancyMultiSelect } from "@/components/ui/fancy-multi-select";
+import { FancyBox } from "@/components/ui/fancy.box";
+import { Label } from "@/components/ui/label";
+import { getMockGreenhouseData } from "@/server/greenhouse/core";
+import { getActiveUsers, getChannels } from "@/server/slack/core";
 import {
-    HelpCircleIcon,
-    CheckCircle,
     AlertTriangle,
+    CheckCircle,
     Clock,
+    HelpCircleIcon,
     Loader2Icon,
 } from "lucide-react";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css"; // Import the bubble theme CSS
+import sintalogo from "../../../../../../../public/sintalogo.png";
+import slacklogo from "../../../../../../../public/slack-logo.png";
 
-import MessageButtons, {
-    type ButtonAction,
-    ButtonType,
-    UpdateActionType,
-} from "../../../hiringrooms/_components/message-buttons";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Card,
     CardContent,
@@ -44,14 +37,23 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { LinkActionType } from "../../_components/message-buttons";
-import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
-import TestResult from "./testResults";
-import { useSession } from "next-auth/react";
-import { postMessageToChannel } from "@/server/slack/core";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
+import { postMessageToChannel } from "@/server/slack/core";
+import { Cross1Icon } from "@radix-ui/react-icons";
+import { useSession } from "next-auth/react";
+import MessageButtons, {
+    type ButtonAction,
+    ButtonType,
+    UpdateActionType,
+} from "../../../hiringrooms/_components/message-buttons";
+import { LinkActionType } from "../../_components/message-buttons";
+import SlackFileUploader from "./slackFileUpload";
+import TestResult from "./testResults";
 const localStorageKey = "workflowActions";
-
+const MAXIMUM_SLACK_MESSAGE_ATTACHMENTS = 10;
 const isBrowser = typeof window !== "undefined";
 
 // Safe function to save action data to localStorage
@@ -98,15 +100,46 @@ const specialVariableOptions = [
     { value: "{{All}}", label: "All (Job Stages, Interviewers, Competencies)" },
 ];
 
+const triggerSpecificVariablesOptions = {
+    Interviews: [
+        {
+            value: "{{Interviewer Names}}",
+            label: "Interviewer Names",
+        },
+        {
+            value: "{{Interview Location}}",
+            label: "Interview Location",
+        },
+        {
+            value: "{{Video Conference URL}}",
+            label: "Video Conference URL",
+        },
+        {
+            value: "{{Interview Title}}",
+            label: "Interview Title",
+        },
+        {
+            value: "{{Interview Start Time}}",
+            label: "Interview Start Time",
+        },
+        {
+            value: "{{Interview End Time}}",
+            label: "Interview End Time",
+        },
+        { value: "{{Scorecard ids}}", label: "Scorecard IDs" },
+    ],
+};
+
 type Option = {
     value: string;
     label: string;
     source: "slack" | "greenhouse";
 };
 
-const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
-    onSaveActions,
-}) => {
+const Actions: React.FC<{
+    onSaveActions: (data: any) => void;
+    workflowId: string;
+}> = ({ onSaveActions, workflowId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [testButtonLoading, setTestButtonLoading] = useState(false);
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -122,11 +155,25 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
     const [activeTab, setActiveTab] = useState("message");
     const [testResult, setTestResult] = useState(null);
     const [openingText, setOpeningText] = useState("");
+    const [triggerObjectField, setTriggerObjectField] = useState(null);
+    const [uploadedFiles, setUploadedFiles] = useState<
+        {
+            name: string;
+            id: string;
+        }[]
+    >([]);
+    // const [uploadedFiles, setUploadedFiles] = useState<
+    //     {
+    //         name: string;
+    //         id: string;
+    //     }[]
+    // >([{ name: "coffee.png", id: "F07PJ2EMP2A" }]);
 
     const session = useSession();
 
     useEffect(() => {
         const actionData = getActionData();
+        // console.log("actionData", actionData);
         if (actionData) {
             if (actionData?.customMessageBody)
                 setCustomMessageBody(actionData?.customMessageBody);
@@ -138,8 +185,21 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 setSelectedRecipients(actionData?.recipients);
             if (actionData?.openingText)
                 setOpeningText(actionData?.openingText); // Load opening text
+            if (actionData?.uploadedFiles)
+                setUploadedFiles(actionData?.uploadedFiles);
         }
     }, []);
+
+    // Add some optional variables depending on the trigger
+    useEffect(() => {
+        const localTriggerConfig = localStorage.getItem("workflowTriggers");
+        if (localTriggerConfig) {
+            const parsedConfig = JSON.parse(localTriggerConfig);
+            const objectField = parsedConfig.objectField;
+            setTriggerObjectField(objectField);
+        }
+    }, []);
+
     useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
@@ -229,6 +289,7 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
                 messageButtons: buttons,
                 messageDelivery: "Group DM", // Replace with actual field if needed
                 customMessageBody,
+                uploadedFiles,
             };
 
             // Save to local storage
@@ -238,128 +299,146 @@ const Actions: React.FC<{ onSaveActions: (data: any) => void }> = ({
         }
     };
 
- // Instead of mapping inside the map, we construct the entire message outside the map.
-const handleTestConfiguration = async () => {
-  setTestResult(null);
-  setTestButtonLoading(true);
+    // Instead of mapping inside the map, we construct the entire message outside the map.
+    const handleTestConfiguration = async () => {
+        setTestResult(null);
+        setTestButtonLoading(true);
 
-  // Construct the message with all selected fields in one string
-  const messageBody = selectedFields
-      .map((field) => {
-          const fieldLabel = fields.find((f) => f.value === field)?.label;
-          return `*${fieldLabel}:* ${field}`; // No additional new lines, just one per field
-      })
-      .join('\n'); // Ensure each field appears on a new line
+        // Construct the message with all selected fields in one string
+        const messageBody = selectedFields
+            .map((field) => {
+                const fieldLabel = fields.find((f) => f.value === field)?.label;
+                return `*${fieldLabel}:* ${field}`; // No additional new lines, just one per field
+            })
+            .join("\n"); // Ensure each field appears on a new line
 
-  const payload = {
-      attachments: [
-          {
-              color: "#384ab4",
-              blocks: [
-                  // Opening text block as a header
-                  ...(openingText
-                      ? [
-                            {
-                                type: "header",
-                                block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
-                                text: {
-                                    type: "plain_text", // Header must use plain_text, not mrkdwn
-                                    text: openingText, // Add openingText here
-                                    emoji: true,
-                                },
-                            },
-                        ]
-                      : []),
+        const payload = {
+            attachments: [
+                {
+                    color: "#384ab4",
+                    blocks: [
+                        // Opening text block as a header
+                        ...(openingText
+                            ? [
+                                  {
+                                      type: "header",
+                                      block_id: `opening_text_${session.data?.user.id}_${Date.now()}`,
+                                      text: {
+                                          type: "plain_text", // Header must use plain_text, not mrkdwn
+                                          text: openingText, // Add openingText here
+                                          emoji: true,
+                                      },
+                                  },
+                              ]
+                            : []),
 
-                  // Message fields section
-                  {
-                      type: "section",
-                      text: {
-                          type: "mrkdwn",
-                          text: messageBody, // Insert the constructed message here
-                          verbatim: false,
-                      },
-                  },
+                        // Message fields section
+                        ...(messageBody
+                            ? [
+                                  {
+                                      type: "section",
+                                      text: {
+                                          type: "mrkdwn",
+                                          text: messageBody, // Insert the constructed message here
+                                          verbatim: false,
+                                      },
+                                  },
+                              ]
+                            : []),
 
-                  {
-                      type: "section",
-                      block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
-                      text: {
-                          type: "mrkdwn",
-                          text: convertHtmlToSlackMrkdwn(customMessageBody),
-                      },
-                  },
-                  // Buttons section (if applicable)
-                  ...(buttons.length > 0
-                      ? [
-                            {
-                                type: "actions",
-                                elements: buttons.map((item, index) => {
-                                    return {
-                                        type: "button",
-                                        ...(item.type ===
-                                            ButtonType.UpdateButton &&
-                                            item.updateType && {
-                                                action_id: item.updateType,
-                                                style:
-                                                    item.updateType ===
-                                                    UpdateActionType.MoveToNextStage
-                                                        ? "primary"
-                                                        : "danger",
-                                            }),
-                                        text: {
-                                            type: "plain_text",
-                                            text: item.label,
-                                            emoji: true,
-                                        },
-                                        ...(item.type ===
-                                            ButtonType.LinkButton &&
-                                            item.linkType ===
-                                                LinkActionType.Dynamic && {
-                                                action_id: item.action,
-                                            }),
-                                        ...(item.type ===
-                                            ButtonType.LinkButton &&
-                                            item.linkType ===
-                                                LinkActionType.Static && {
-                                                url: item.action,
-                                            }),
-                                    };
-                                }),
-                            },
-                        ]
-                      : []),
-              ],
-          },
-      ],
-  };
-
-  try {
-      await postMessageToChannel(session?.data?.user?.id, payload);
-      console.log("Test message sent successfully.");
-      setTestResult({
-          success: true,
-          status: 200,
-          message: `Status Code: 200`,
-          data: null,
-      });
-  } catch (error) {
-      console.error("Error occurred while sending test message:", error);
-      setTestResult({
-          success: false,
-          status: error.message.includes("HTTP error!")
-              ? error.message
-              : `Status: ${error.response?.status || "N/A"}`,
-          message: error.message.includes("HTTP error!")
-              ? error.message
-              : `Error: ${error.message}`,
-          data: null,
-      });
-  } finally {
-      setTestButtonLoading(false);
-  }
-};
-
+                        ...(customMessageBody
+                            ? [
+                                  {
+                                      type: "section",
+                                      block_id: `new_custom_test_message_block_${session.data?.user.id}_${Date.now()}`,
+                                      text: {
+                                          type: "mrkdwn",
+                                          text: convertHtmlToSlackMrkdwn(
+                                              customMessageBody ?? "",
+                                          ),
+                                      },
+                                  },
+                              ]
+                            : []),
+                        ...(uploadedFiles.length > 0
+                            ? uploadedFiles.map((file) => {
+                                  return {
+                                      type: "file",
+                                      external_id: file.id,
+                                      source: "remote",
+                                  };
+                              })
+                            : []),
+                        ...(buttons.length > 0
+                            ? [
+                                  {
+                                      type: "actions",
+                                      elements: buttons.map((item, index) => {
+                                          return {
+                                              type: "button",
+                                              ...(item.type ===
+                                                  ButtonType.UpdateButton &&
+                                                  item.updateType && {
+                                                      action_id:
+                                                          item.updateType,
+                                                      style:
+                                                          item.updateType ===
+                                                          UpdateActionType.MoveToNextStage
+                                                              ? "primary"
+                                                              : "danger",
+                                                  }),
+                                              text: {
+                                                  type: "plain_text",
+                                                  text: item.label,
+                                                  emoji: true,
+                                              },
+                                              ...(item.type ===
+                                                  ButtonType.LinkButton &&
+                                                  item.linkType ===
+                                                      LinkActionType.Dynamic && {
+                                                      action_id: item.action,
+                                                  }),
+                                              ...(item.type ===
+                                                  ButtonType.LinkButton &&
+                                                  item.linkType ===
+                                                      LinkActionType.Static && {
+                                                      url: item.action,
+                                                  }),
+                                          };
+                                      }),
+                                  },
+                              ]
+                            : []),
+                    ],
+                },
+            ],
+        };
+        // console.log("payload", JSON.stringify(payload));
+        try {
+            await postMessageToChannel(session?.data?.user?.id, payload);
+            console.log("Test message sent successfully.");
+            setTestResult({
+                success: true,
+                status: 200,
+                message: `Status Code: 200`,
+                data: null,
+            });
+        } catch (error) {
+            console.error("Error occurred while sending test message:", error);
+            setTestResult({
+                success: false,
+                status: error.message.includes("HTTP error!")
+                    ? error.message
+                    : `Status: ${error.response?.status || "N/A"}`,
+                message: error.message.includes("HTTP error!")
+                    ? error.message
+                    : `Error: ${error.message}`,
+                data: null,
+            });
+        } finally {
+            setTestButtonLoading(false);
+        }
+    };
 
     const getButtonStyle = (button: ButtonAction) => {
         switch (button.type) {
@@ -399,6 +478,22 @@ const handleTestConfiguration = async () => {
                 <AlertTriangle className="text-gray-500" size={iconSize} />
             );
         }
+    };
+
+    const handleSuccessfulFileUpload = (file: { id: string; name: string }) => {
+        setUploadedFiles((prev) => [...prev, file]);
+    };
+
+    const handleRemoveUploadedFile = (id: string) => {
+        setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+    };
+
+    const doesFileAlreadyExist = (name: string) => {
+        return uploadedFiles.filter((item) => item.name === name).length > 0;
+    };
+
+    const isMaximumAttachmentsCountReached = () => {
+        return uploadedFiles.length >= MAXIMUM_SLACK_MESSAGE_ATTACHMENTS;
     };
 
     return (
@@ -496,6 +591,32 @@ const handleTestConfiguration = async () => {
                                                 </DropdownMenuItem>
                                             ))}
                                         </DropdownMenuGroup>
+                                        {triggerSpecificVariablesOptions[
+                                            triggerObjectField
+                                        ]?.length > 0 && (
+                                            <>
+                                                <DropdownMenuLabel className="mt-2 text-xs font-semibold text-gray-500">
+                                                    "{triggerObjectField}"{" "}
+                                                    Variables
+                                                </DropdownMenuLabel>
+                                                <DropdownMenuGroup>
+                                                    {triggerSpecificVariablesOptions[
+                                                        triggerObjectField
+                                                    ].map((option) => (
+                                                        <DropdownMenuItem
+                                                            key={option.value}
+                                                            onClick={() =>
+                                                                handleVariableSelect(
+                                                                    option.value,
+                                                                )
+                                                            }
+                                                        >
+                                                            {option.label}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuGroup>
+                                            </>
+                                        )}
                                         <DropdownMenuLabel className="mt-2 text-xs font-semibold text-gray-500">
                                             Special Variables
                                         </DropdownMenuLabel>
@@ -604,6 +725,16 @@ const handleTestConfiguration = async () => {
                                     </div>
                                 )}
 
+                                {uploadedFiles.length > 0 && (
+                                    <div>
+                                        {uploadedFiles.map((file) => (
+                                            <div
+                                                key={file.id}
+                                                className="text-sm"
+                                            >{`{{${file.name}}}`}</div>
+                                        ))}
+                                    </div>
+                                )}
                                 {/* Buttons Section */}
                                 {buttons.length > 0 && (
                                     <div className="space-y-4">
@@ -665,6 +796,38 @@ const handleTestConfiguration = async () => {
                                 )
                             }
                         />
+                        <div className="my-4">
+                            <SlackFileUploader
+                                onSuccess={(data) =>
+                                    handleSuccessfulFileUpload(data)
+                                }
+                                workflowId={workflowId}
+                                doesFileAlreadyExist={doesFileAlreadyExist}
+                                isMaximumAttachmentsCountReached={
+                                    isMaximumAttachmentsCountReached
+                                }
+                            />
+                            {uploadedFiles.length > 0 &&
+                                uploadedFiles.map((file) => (
+                                    <div
+                                        key={file.id}
+                                        className="my-4 flex w-full flex-row items-center justify-between px-4"
+                                    >
+                                        <div className="max-w-[80%] overflow-clip">
+                                            {file.name}
+                                        </div>
+
+                                        <Cross1Icon
+                                            className="cursor-pointer hover:text-red-800"
+                                            onClick={() => {
+                                                handleRemoveUploadedFile(
+                                                    file.id,
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                        </div>
                     </TabsContent>
 
                     {/* Test & Recipients Tab */}

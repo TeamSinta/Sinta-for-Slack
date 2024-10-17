@@ -16,14 +16,17 @@ import { addGreenhouseSlackValue, matchUsers } from "@/lib/slack";
 import { getOrganizations } from "../actions/organization/queries";
 import { getAccessToken } from "../actions/slack/query";
 import { fetchGreenhouseUsers } from "../greenhouse/core";
-import { format, parseISO } from "date-fns";
-import { slackChannelsCreated } from "../db/schema";
 import { OpenAI } from "openai";
 import { env } from "@/env";
 import { combineGreenhouseRolesAndSlackUsers } from "@/app/api/cron/route";
 import { and, eq } from "drizzle-orm";
 import { membersToOrganizations } from "@/server/db/schema";
-import { convertHtmlToSlackMrkdwn } from "@/lib/utils";
+import {
+    convertHtmlToSlackMrkdwn,
+    formatListToString,
+    formatToReadableDate,
+} from "@/lib/utils";
+import { parseCustomMessageBody } from "@/utils/formatting";
 
 interface SlackChannel {
     id: string;
@@ -79,7 +82,8 @@ export async function getChannels(): Promise<
         }
     } catch (error) {
         console.error("Error fetching channels:", error);
-        return [];
+        // return [];
+        throw new Error(error ?? "Error fetching channels");
     }
 }
 
@@ -138,7 +142,6 @@ export async function getEmailsfromSlack(
         });
 
         if (!response.ok) {
-
             throw new Error("Failed to fetch users", response.statusText);
         }
 
@@ -165,6 +168,7 @@ interface WorkflowRecipient {
     openingText: string;
     messageFields: string[];
     messageButtons: { label: string; action: string }[];
+    uploadedFiles: { name: string; id: string }[];
 }
 
 export async function sendSlackNotification(
@@ -173,6 +177,7 @@ export async function sendSlackNotification(
     slackTeamID: string,
     subDomain: string,
     candidateDetails: Record<string, unknown>,
+    interviewDetails?: Record<string, unknown>,
 ): Promise<void> {
     const accessToken = await getAccessToken(slackTeamID);
     const allRecipients = workflowRecipient.recipients;
@@ -180,6 +185,7 @@ export async function sendSlackNotification(
     const customMessageBody = parseCustomMessageBody(
         workflowRecipient.customMessageBody,
         candidateDetails, // Pass candidate details here
+        interviewDetails,
     );
 
     for (const recipient of allRecipients) {
@@ -253,6 +259,15 @@ export async function sendSlackNotification(
                                         text: customMessageBody,
                                     },
                                 },
+                                ...(workflowRecipient.uploadedFiles?.length > 0
+                                    ? workflowRecipient.uploadedFiles.map(
+                                          (file) => ({
+                                              type: "file",
+                                              external_id: file.id,
+                                              source: "remote",
+                                          }),
+                                      )
+                                    : []),
                                 ...(workflowRecipient.messageButtons.length > 0
                                     ? [
                                           {
@@ -326,8 +341,8 @@ export async function sendSlackNotification(
                         .flat(), // Flatten the array of arrays
                 ],
             },
+            { id: "F07P92F2NMV" },
         ];
-
         const response = await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: {
@@ -342,9 +357,9 @@ export async function sendSlackNotification(
         });
 
         const data = await response.json();
-        console.log(data);
-        console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
-        console.log("Response Slack message sent:", response.status);
+        // console.log(data);
+        // console.log(JSON.stringify(blocks, null, 2)); // This logs the block structure you’re sending
+        // console.log("Response Slack message sent:", response.status);
         if (!response.ok) {
             const errorResponse = await response.text();
             console.error(
@@ -555,36 +570,8 @@ export async function sendSlackButtonNotification(
         });
 
         console.log("response slack message sent", response.status);
-        // console.log("response slack message skip sent sent");
-        // function prettyPrint(obj: any, depth = 2) {
-        //     return JSON.stringify(
-        //         obj,
-        //         (key, value) => {
-        //             if (
-        //                 depth !== 0 &&
-        //                 typeof value === "object" &&
-        //                 value !== null
-        //             ) {
-        //                 return value;
-        //             }wor
-        //             return value;
-        //         },
-        //         2,
-        //     );
-        // }
-
-        // console.log("attachments", prettyPrint(attachments));
-        // if (!response.ok) {
-        //     const errorResponse = await response.text();
-        //     console.error(
-        //         `Failed to post message to channel ${channel}: ${errorResponse}`,
-        //     );
-        // }
     }
     console.log("total recipients", allRecipients.length);
-
-    // console.log('total recipients',workflowRecipient.recipients)
-    // console.log('total recipients',workflowRecipient.recipients.length)
 }
 
 export async function getSlackUserIds(
@@ -643,134 +630,16 @@ export async function getSlackIdsOfGreenHouseUsers(
     );
     return slackIds;
 }
-export async function getSlackUsersFromRecipient(hiringroomRecipient: {
-    recipients: any[];
-}) {
-    const slackUsers: any[] = [];
-    hiringroomRecipient.recipients.forEach((recipient) => {
-        if (recipient.source == "slack") {
-            if (
-                recipient.value &&
-                recipient.label.startsWith("@") &&
-                !recipient.label.startsWith("#")
-            ) {
-                slackUsers.push(recipient.value);
-            } else {
-                console.log(
-                    "bad news - bad recipient - selected slack channel - recipient.value-",
-                    recipient.value,
-                );
-            }
-        }
-    });
-
-    return slackUsers;
-}
-
-export async function buildSlackChannelNameForJob(
-    slackChannelFormat: string,
-    job: any,
-): string {
-    try {
-        let channelName = slackChannelFormat;
-
-        // Parse the created_at date for job
-        const jobCreatedAt = parseISO(job.created_at);
-        const jobMonthText = format(jobCreatedAt, "MMMM"); // Full month name
-        const jobMonthNumber = format(jobCreatedAt, "MM"); // Month number
-        const jobMonthTextAbbreviated = format(jobCreatedAt, "MMM"); // Abbreviated month name
-        const jobDayNumber = format(jobCreatedAt, "dd"); // Day number
-        // Replace each placeholder with the corresponding value
-        channelName = channelName
-            .replaceAll("{{JOB_NAME}}", job.name)
-            .replaceAll("{{JOB_POST_DATE}}", jobMonthText)
-            .replaceAll("{{JOB_POST_MONTH_TEXT}}", jobMonthText)
-            .replaceAll("{{JOB_POST_MONTH_NUMBER}}", jobMonthNumber)
-            .replaceAll(
-                "{{JOB_POST_MONTH_TEXT_ABBREVIATED}}",
-                jobMonthTextAbbreviated,
-            )
-            .replaceAll("{{JOB_POST_DAY_NUMBER}}", jobDayNumber);
-        channelName = sanitizeChannelName(channelName);
-        return channelName;
-    } catch (e) {
-        console.log("errror in build salck channel - ", e);
-        const randomNumString = generateRandomSixDigitNumber();
-        throw new Error(
-            `Error saving ASKJFALSFJAS;KFGHJASFGKDslack chanenl created: ${e}`,
-        );
-        return "goooooooo-bucks-" + randomNumString;
-    }
-}
-export async function buildSlackChannelNameForCandidate(
-    slackChannelFormat: string,
-    candidate: any,
-): string {
-    let channelName = slackChannelFormat;
-    // Parse the created_at date for candidate
-    const candidateCreatedAt = parseISO(candidate.created_at);
-    const candidateMonthText = format(candidateCreatedAt, "MMMM"); // Full month name
-    const candidateMonthNumber = format(candidateCreatedAt, "MM"); // Month number
-    const candidateMonthTextAbbreviated = format(candidateCreatedAt, "MMM"); // Abbreviated month name
-    const candidateDayNumber = format(candidateCreatedAt, "dd"); // Day number
-
-    // Replace each placeholder with the corresponding value
-    channelName = channelName
-        .replaceAll(
-            "{{CANDIDATE_NAME}}",
-            candidate.first_name + " " + candidate.last_name,
-        )
-        .replaceAll("{{CANDIDATE_FIRST_NAME}}", candidate.first_name)
-        .replaceAll("{{CANDIDATE_LAST_NAME}}", candidate.last_name)
-        .replaceAll("{{CANDIDATE_CREATION_MONTH_TEXT}}", candidateMonthText)
-        .replaceAll("{{CANDIDATE_CREATION_MONTH_NUMBER}}", candidateMonthNumber)
-        .replaceAll(
-            "{{CANDIDATE_CREATION_MONTH_TEXT_ABBREVIATED}}",
-            candidateMonthTextAbbreviated,
-        )
-        .replaceAll("{{CANDIDATE_CREATION_DAY_NUMBER}}", candidateDayNumber)
-        .replaceAll("{{CANDIDATE_CREATION_DATE}}", candidateDayNumber);
-    candidate_creation_month_text_abbreviated;
-    channelName = sanitizeChannelName(channelName);
-    return channelName;
-}
-export async function saveSlackChannelCreatedToDB(
-    slackChannelId: any,
-    invitedUsers: any[],
-    channelName: string,
-    hiringroomId: any,
-    slackChannelFormat: any,
-) {
-    try {
-        console.log("hiringroomId - ", hiringroomId);
-        await db.insert(slackChannelsCreated).values({
-            name: channelName,
-            channelId: slackChannelId,
-            // createdBy: 'user_id', // Replace with actual user ID
-            // description: 'Channel description', // Optional
-            isArchived: false,
-            invitedUsers: invitedUsers,
-            hiringroomId: hiringroomId, // Replace with actual hiring room ID
-            channelFormat: slackChannelFormat, // Example format
-            createdAt: new Date(),
-            modifiedAt: new Date(), // Ensure this field is included
-        });
-    } catch (e) {
-        throw new Error(`Error saving slack chanenl created: ${e}`);
-    }
-    return "success";
-}
 
 export async function createSlackChannel(
     channelName: string,
     slackTeamId: string,
-) {
-    console.log("createSlackChannel - pre access token - ", slackTeamId);
-    console.log("createSlackChannel - pre fetch - ", channelName);
-
+): Promise<string | null> {
     const accessToken = await getAccessToken(slackTeamId);
 
     try {
+        console.log(`Creating Slack channel: ${channelName}`);
+
         const response = await fetch(
             "https://slack.com/api/conversations.create",
             {
@@ -784,26 +653,32 @@ export async function createSlackChannel(
                 }),
             },
         );
-        console.log("Name taken - ", channelName);
-        const data = await response.json();
-        if (!data.ok) {
-            console.log(data.error);
 
-            if (data.error == "name_taken") {
-                console.log("Name taken - ", channelName);
-                // throw new Error(`Error creating channel: ${data.error}`);
+        const data = await response.json();
+
+        if (!data.ok) {
+            console.error(`Slack API error: ${data.error}`);
+
+            if (data.error === "name_taken") {
+                console.warn(
+                    "Channel name already taken. Skipping channel creation.",
+                );
+                return null;
+            } else if (data.error === "internal_error") {
+                console.warn(
+                    "Slack returned an internal error. No further action required.",
+                );
+                return null; // Gracefully exit without retrying
+            } else {
+                throw new Error(`Error creating Slack channel: ${data.error}`);
             }
-            throw new Error(`Error creating channel: ${data.error}`);
         }
 
-        console.log("Channel created successfully:");
-        // console.log('Channel created successfully:', data);
-        return data.channel.id; // Return the channel ID for further use
+        console.log("Channel created successfully:", data.channel.id);
+        return data.channel.id;
     } catch (error) {
-        console.error(
-            "Error - createSlackChannel - creating Slack channel:",
-            error,
-        );
+        console.error("Error creating Slack channel:", error.message);
+        return null; // Return null in case of failure, to handle gracefully downstream
     }
 }
 
@@ -840,12 +715,6 @@ export async function inviteUsersToChannel(
         console.error("Error inviting users to Slack channel:", error);
     }
 }
-function sanitizeChannelName(name: string) {
-    return name
-        .toLowerCase() // convert to lowercase
-        .replace(/[^a-z0-9-_]/g, "-") // replace invalid characters with hyphens
-        .slice(0, 79); // ensure the name is less than 80 characters
-}
 
 export async function sendAndPinSlackMessage(
     channelId: string,
@@ -871,10 +740,10 @@ export async function sendAndPinSlackMessage(
     );
 
     const postMessageResult = await postMessageResponse.json();
-    console.log(
-        "sendAndPinSlackMessage - postMessageResult - ",
-        postMessageResult,
-    );
+    // console.log(
+    //     "sendAndPinSlackMessage - postMessageResult - ",
+    //     postMessageResult,
+    // );
 
     if (postMessageResult.ok) {
         const messageTimestamp = postMessageResult.ts;
@@ -899,10 +768,10 @@ export async function sendAndPinSlackMessage(
         );
 
         const pinMessageResult = await pinMessageResponse.json();
-        console.log(
-            "sendAndPinSlackMessage - pinMessageResult - ",
-            pinMessageResult,
-        );
+        // console.log(
+        //     "sendAndPinSlackMessage - pinMessageResult - ",
+        //     pinMessageResult,
+        // );
 
         if (!pinMessageResult.ok) {
             console.error(
@@ -1124,48 +993,52 @@ export async function postMessageToChannel(userId: string, body: any) {
             channel: slackUserId,
         }),
     });
+    // const resjson = await response.json();
+    // console.log("RESPONSE", resjson);
     if (!response.ok) throw new Error("Failed to post message");
 
     return true;
 }
 
-function parseCustomMessageBody(customMessageBody, candidateDetails) {
-    // Replace the placeholders with corresponding candidate details safely
-    let formattedMessage = customMessageBody;
+export async function archiveSlackChannel(
+    slackChannelID: string,
+    slackTeamID: string,
+) {
+    try {
+        // Ensure both slackChannelID, slackTeamID, and accessToken are provided
+        if (!slackChannelID || !slackTeamID) {
+            throw new Error(
+                "Slack channel ID, Slack team ID, or access token is missing.",
+            );
+        }
+        const accessToken = await getAccessToken(slackTeamID);
 
-    // Safely handle undefined candidate details using optional chaining (?.) and provide default values
-    formattedMessage = formattedMessage.replace(
-        /{{first_name}}/g,
-        candidateDetails?.first_name || "N/A",
-    );
-    formattedMessage = formattedMessage.replace(
-        /{{last_name}}/g,
-        candidateDetails?.last_name || "N/A",
-    );
-    formattedMessage = formattedMessage.replace(
-        /{{role_name}}/g,
-        candidateDetails?.title || "N/A",
-    );
-    formattedMessage = formattedMessage.replace(
-        /{{company}}/g,
-        candidateDetails?.company || "N/A",
-    );
-    formattedMessage = formattedMessage.replace(
-        /{{recruiter_name}}/g,
-        candidateDetails?.recruiter?.name || "N/A",
-    );
-    formattedMessage = formattedMessage.replace(
-        /{{coordinator_name}}/g,
-        candidateDetails?.coordinator?.name || "N/A",
-    );
-    formattedMessage = formattedMessage.replace(
-        /{{Job Stage}}/g,
-        candidateDetails?.applications?.[0]?.current_stage?.name || "N/A",
-    );
+        // Make the POST request to Slack's API for archiving the channel
+        const response = await fetch(
+            `https://slack.com/api/conversations.archive`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`, // Bearer token for Slack authentication
+                },
+                body: JSON.stringify({
+                    channel: slackChannelID, // Slack API expects the 'channel' parameter
+                }),
+            },
+        );
 
-    // Convert the HTML content to Slack markdown format
-    const slackFormattedMessage = convertHtmlToSlackMrkdwn(formattedMessage);
+        // Check the response to ensure successful archiving
+        const responseData = await response.json();
+        if (!responseData.ok) {
+            throw new Error(
+                `Failed to archive Slack channel: ${responseData.error}`,
+            );
+        }
 
-    // Return the final Slack-compatible message
-    return slackFormattedMessage;
+        console.log(`Slack channel ${slackChannelID} archived successfully.`);
+        return;
+    } catch (e) {
+        console.error("Error archiving Slack channel:", e.message);
+    }
 }

@@ -2,7 +2,12 @@
 // @ts-nocheck
 
 "use client";
-import { getEmailsfromSlack, getChannels } from "@/server/slack/core";
+import {
+    getEmailsfromSlack,
+    getChannels,
+    createSlackChannel,
+    inviteUsersToChannel,
+} from "@/server/slack/core";
 
 import { AssignmentsChannelTable } from "../_components/assignmentchannels-table";
 import { matchUsers } from "@/lib/slack";
@@ -18,11 +23,7 @@ import {
     fetchAllGreenhouseUsers,
     fetchCandidates,
 } from "@/server/greenhouse/core";
-import {
-    createSlackChannel,
-    inviteUsersToChannel,
-    saveSlackChannelCreatedToDB,
-} from "@/server/actions/assignments/mutations";
+import { saveSlackChannelCreatedToDB } from "@/server/actions/assignments/mutations";
 
 export function AssignmentsRoom({ assignmentsPromise }: any) {
     // export function AssignmentsRoom({ searchParams }: UsersPageProps) {
@@ -147,7 +148,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
 
             setRecruiterCounts(initialRecruiterCounts);
             setCoordinatorCounts(initialCoordinatorCounts);
-
 
             // const greenhouseUsers = await fetchAllGreenhouseUsers()
             // console.log('slackUsers users - ',slackUsers)
@@ -392,7 +392,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
     };
 
     const handleRecruiterChange = (candidateId, newRecruiterId) => {
-
         const updatedCandidates = candidates.map((candidate) => {
             if (candidate.id === candidateId) {
                 candidate.recruiter = recruiters.find(
@@ -409,7 +408,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         setRecruiterCounts(getRecruiterCounts(updatedCandidates));
     };
     const handleCoordinatorChange = (candidateId, newCoordinatorId) => {
-
         const updatedCandidates = candidates.map((candidate) => {
             if (candidate.id === candidateId) {
                 candidate.coordinator = coordinators.find(
@@ -484,7 +482,6 @@ export function AssignmentsRoom({ assignmentsPromise }: any) {
         // const updatedChannels = tmpAllSlackChannels.filter(c => c.id !== channel.id);
         const updatedChannels = tmpAllSlackChannels.map((chan) => {
             if (channel.id == chan.id) {
-
                 chan.is_archived = !chan.is_archived;
             }
             return chan;
