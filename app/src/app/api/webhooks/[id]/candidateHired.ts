@@ -38,7 +38,7 @@ export async function handleCandidateHired(data: any, orgID: string) {
     }
 
     // Step 4: Check if auto-archive action is enabled in the hiring room's actions
-    const autoArchiveEnabled = checkAutoArchiveAction(hiringRoom.actions);
+    const autoArchiveEnabled = checkAutoArchiveAction(hiringRoom.actions as any[]);
     console.log(autoArchiveEnabled, "autoArchiveEnabled")
 
     if (autoArchiveEnabled) {
