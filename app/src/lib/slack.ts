@@ -27,7 +27,10 @@ import {
     putGreenhouseUserSlackData,
 } from "@/server/actions/user/queries";
 import { getOrganizations } from "@/server/actions/organization/queries";
-import { getAccessToken, getOrgIdBySlackTeamId } from "@/server/actions/slack/query";
+import {
+    getAccessToken,
+    getOrgIdBySlackTeamId,
+} from "@/server/actions/slack/query";
 
 // Helper interfaces for better type checking
 interface ScheduledInterview {
@@ -184,10 +187,9 @@ export async function fetchSlackUserFromGreenhouseId(
     slackTeamId: string,
 ) {
     const accessToken = await getAccessToken(slackTeamId);
-    const orgId = await getOrgIdBySlackTeamId(slackTeamId)
+    const orgId = await getOrgIdBySlackTeamId(slackTeamId);
 
     const data = await getSlackUserFromGreenhouseId(greenhouseId);
-    console.log("DATA", data);
 
     // If there is data, we can return it directly, otherwise we need to create it
     if (data?.slackUserId) return data?.slackUserId;
