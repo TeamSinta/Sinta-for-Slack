@@ -14,9 +14,19 @@ import crypto from "crypto";
 import { env } from "@/env";
 // import { type Candidate } from "@/types/greenhouse";
 import { getEmailsfromSlack } from "@/server/slack/core";
-import { fetchGreenhouseUsers } from "@/server/greenhouse/core";
+import {
+    fetchGreenhouseUsers,
+    fetchGreenhouseUser,
+} from "@/server/greenhouse/core";
 import { getSubdomainByHiringRoomID } from "@/server/actions/hiringrooms/queries";
 import { parseCustomMessageBody } from "@/utils/formatting";
+import { db } from "@/server/db";
+import { greenhouseUsers } from "@/server/db/schema";
+import {
+    getSlackUserFromGreenhouseId,
+    putGreenhouseUserSlackData,
+} from "@/server/actions/user/queries";
+import { getOrganizations } from "@/server/actions/organization/queries";
 
 // Helper interfaces for better type checking
 interface ScheduledInterview {
@@ -167,6 +177,59 @@ export async function matchUsers(
 
     return userMapping;
 }
+
+export async function fetchSlackUserFromGreenhouseId(greenhouseId: string) {
+    const { currentOrg } = (await getOrganizations()) || {};
+    if (!currentOrg.slack_team_id) {
+        console.error("No Slack team ID available.");
+        return [];
+    }
+
+    const accessToken = await getAccessToken(currentOrg.slack_team_id);
+
+    const data = await getSlackUserFromGreenhouseId(greenhouseId);
+    console.log("DATA", data);
+
+    // If there is data, we can return it directly, otherwise we need to create it
+    if (data?.slackUserId) return data?.slackUserId;
+
+    const greenhouseUser = await fetchGreenhouseUser(greenhouseId);
+
+    if (!greenhouseUser) throw new Error("Greenhouse user not found");
+    if (!greenhouseUser.primary_email_address)
+        throw new Error("Greenhouse user email not found");
+
+    const response = await fetch(
+        "https://slack.com/api/users.lookupByEmail?email=" +
+            greenhouseUser.primary_email_address,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                // Authorization: `Bearer xoxe.xoxb-1-MS0yLTY5Nzc3NjAxMDM4OTEtNjk4ODUxNDAyODMyNy03MDAwMTU4MzUzOTQxLTc4OTg2NjQ0OTc5MjItMWNiNTExMmEwZTkzNzNmYTFlMWVmNGFmNjE3ZDg3NDk2MGUxNTY0N2Q4NGQxZWI3NzA1ZmUyZmI0YzhlZDNlNg`,
+                "Content-Type": "application/json",
+            },
+        },
+    );
+
+    if (!response.ok) throw new Error("Failed to get slack user");
+
+    const user = await response.json();
+
+    // Store the fetched data to the DB
+    const newUserData = {
+        organizationId: currentOrg.id,
+        // organizationId: "7020aa90-9e7c-4a74-ba36-05808550cf2e",
+        greenhouseId,
+        email: greenhouseUser.primary_email_address,
+        slackUserId: user.user?.id,
+        slackLookupAttempted: true,
+    };
+    await putGreenhouseUserSlackData(newUserData);
+
+    return newUserData.slackUserId;
+}
+
 export function addGreenhouseSlackValue(
     recipient: any,
     candidates: any,
