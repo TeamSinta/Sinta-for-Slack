@@ -51,7 +51,7 @@ async function sendSlackMessage(interview: any, workflow: any) {
     const filteredSlackDataWithMessage = await filterCandidatesDataForSlack(
         [candidate],
         workflow.recipient,
-        slackTeamID,
+        workflow.organizationId,
     );
 
     if (filteredSlackDataWithMessage.length > 0) {

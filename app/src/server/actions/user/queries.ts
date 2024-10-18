@@ -161,6 +161,5 @@ export async function putGreenhouseUserSlackData(data: {
     slackLookupAttempted: boolean;
 }) {
     const res = await db.insert(greenhouseUsers).values(data).execute();
-    console.log(res);
     return res;
 }

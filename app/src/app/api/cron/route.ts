@@ -20,7 +20,10 @@ import {
 import { NextResponse } from "next/server";
 import { getWorkflows } from "@/server/actions/workflows/queries";
 import { filterDataWithConditions } from "@/server/greenhouse/core";
-import { formatOpeningMessageSlack, matchUsers } from "@/lib/slack";
+import {
+    fetchSlackUserFromGreenhouseId,
+    formatOpeningMessageSlack,
+} from "@/lib/slack";
 import { customFetch } from "@/utils/fetch";
 import { getSlackTeamIDByHiringroomID } from "@/server/actions/slack/query";
 import {
@@ -28,7 +31,6 @@ import {
     processScheduledInterviews,
 } from "@/server/objectworkflows/queries";
 import { type WorkflowData } from "@/app/(app)/(user)/workflows/_components/columns";
-import { addGreenhouseSlackValue } from "@/lib/slack";
 import { getHiringrooms } from "@/server/actions/hiringrooms/queries";
 
 import { format, formatISO, parseISO } from "date-fns";
@@ -41,43 +43,28 @@ async function getAllCandidates() {
     const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
 }
 
-function getSlackUserIds(
-    hiringroom: { recipient: any[] },
-    candidates: any,
-    userMapping: any,
-) {
-    // function buildHiringRoomRecipients(hiringroom, candidates, userMapping){
-    hiringroom.recipient.map((recipient: any) => {
-        if (recipient.source === "greenhouse") {
-            return addGreenhouseSlackValue(recipient, candidates, userMapping);
-        }
-        return recipient;
-    });
-    const greenHouseAndSlackRecipients =
-        combineGreenhouseRolesAndSlackUsers(hiringroom);
-    return greenHouseAndSlackRecipients;
-}
-function getSlackIdsOfGreenHouseUsers(
-    hiring_room_recipient,
-    candidate,
-    userMapping,
-) {
+async function getSlackIdsOfGreenHouseUsers(hiring_room_recipient, candidate) {
     const slackIds = [];
 
     hiring_room_recipient.recipients.forEach((recipient) => {
         if (recipient.source == "greenhouse") {
             if (recipient.value.includes("ecruiter")) {
                 if (candidate.recruiter) {
-                    const slackId = userMapping[candidate.recruiter.id];
+                    const greenhouseId = candidate.recruiter.id.toString();
+                    const slackId =
+                        await fetchSlackUserFromGreenhouseId(greenhouseId);
                     if (slackId) {
-                        slackIds.push(slackId); //recipient.slackValue = slackId;
+                        slackIds.push(slackId);
                     }
                 }
             } else if (recipient.value.includes("oordinator")) {
                 if (candidate.coordinator) {
-                    const slackId = userMapping[candidate.coordinator.id];
+                    const greenhouseId = candidate.coordinator.id.toString();
+
+                    const slackId =
+                        await fetchSlackUserFromGreenhouseId(greenhouseId);
                     if (slackId) {
-                        slackIds.push(slackId); //recipient.slackValue = slackId;
+                        slackIds.push(slackId);
                     }
                 }
             }
@@ -194,10 +181,7 @@ export async function handleIndividualHiringroom(hiringroom: {
     const hiringroomId = hiringroom.id;
     const allJobs = await fetchJobsFromGreenhouse();
     const allCandidates = await fetchCandidates();
-    const greenhouseUsers = await fetchGreenhouseUsers();
     const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroomId);
-    const slackUsers = await getEmailsfromSlack(slackTeamID);
-    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
 
     if (hiringroom.objectField == "Candidates") {
         allCandidates.forEach(async (candidate) => {
@@ -213,11 +197,11 @@ export async function handleIndividualHiringroom(hiringroom: {
                 const slackUsersIds = getSlackUsersFromRecipient(
                     hiringroom.recipient,
                 );
-                const slackIdsOfGreenHouseUsers = getSlackIdsOfGreenHouseUsers(
-                    hiringroom.recipient,
-                    candidate,
-                    userMapping,
-                );
+                const slackIdsOfGreenHouseUsers =
+                    await getSlackIdsOfGreenHouseUsers(
+                        hiringroom.recipient,
+                        candidate,
+                    );
                 const slackUserIds = slackUsersIds.concat(
                     slackIdsOfGreenHouseUsers,
                 );
