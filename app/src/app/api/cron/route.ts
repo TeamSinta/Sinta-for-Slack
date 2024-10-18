@@ -43,35 +43,35 @@ async function getAllCandidates() {
     const data = await customFetch(candidateUrl); // Fetch data using custom fetch wrapper
 }
 
-async function getSlackIdsOfGreenHouseUsers(hiring_room_recipient, candidate) {
-    const slackIds = [];
+// async function getSlackIdsOfGreenHouseUsers(hiring_room_recipient, candidate) {
+//     const slackIds = [];
 
-    hiring_room_recipient.recipients.forEach((recipient) => {
-        if (recipient.source == "greenhouse") {
-            if (recipient.value.includes("ecruiter")) {
-                if (candidate.recruiter) {
-                    const greenhouseId = candidate.recruiter.id.toString();
-                    const slackId =
-                        await fetchSlackUserFromGreenhouseId(greenhouseId);
-                    if (slackId) {
-                        slackIds.push(slackId);
-                    }
-                }
-            } else if (recipient.value.includes("oordinator")) {
-                if (candidate.coordinator) {
-                    const greenhouseId = candidate.coordinator.id.toString();
+//     hiring_room_recipient.recipients.forEach((recipient) => {
+//         if (recipient.source == "greenhouse") {
+//             if (recipient.value.includes("ecruiter")) {
+//                 if (candidate.recruiter) {
+//                     const greenhouseId = candidate.recruiter.id.toString();
+//                     const slackId =
+//                         await fetchSlackUserFromGreenhouseId(greenhouseId);
+//                     if (slackId) {
+//                         slackIds.push(slackId);
+//                     }
+//                 }
+//             } else if (recipient.value.includes("oordinator")) {
+//                 if (candidate.coordinator) {
+//                     const greenhouseId = candidate.coordinator.id.toString();
 
-                    const slackId =
-                        await fetchSlackUserFromGreenhouseId(greenhouseId);
-                    if (slackId) {
-                        slackIds.push(slackId);
-                    }
-                }
-            }
-        }
-    });
-    return slackIds;
-}
+//                     const slackId =
+//                         await fetchSlackUserFromGreenhouseId(greenhouseId);
+//                     if (slackId) {
+//                         slackIds.push(slackId);
+//                     }
+//                 }
+//             }
+//         }
+//     });
+//     return slackIds;
+// }
 function getSlackUsersFromRecipient(hiringroomRecipient: {
     recipients: any[];
 }) {
@@ -172,124 +172,124 @@ function buildSlackChannelNameForCandidate(
     return channelName;
 }
 
-export async function handleIndividualHiringroom(hiringroom: {
-    id: any;
-    objectField: string;
-    slackChannelFormat: string;
-    recipient: { recipients: any[] };
-}) {
-    const hiringroomId = hiringroom.id;
-    const allJobs = await fetchJobsFromGreenhouse();
-    const allCandidates = await fetchCandidates();
-    const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroomId);
+// export async function handleIndividualHiringroom(hiringroom: {
+//     id: any;
+//     objectField: string;
+//     slackChannelFormat: string;
+//     recipient: { recipients: any[] };
+// }) {
+//     const hiringroomId = hiringroom.id;
+//     const allJobs = await fetchJobsFromGreenhouse();
+//     const allCandidates = await fetchCandidates();
+//     const slackTeamID = await getSlackTeamIDByHiringroomID(hiringroomId);
 
-    if (hiringroom.objectField == "Candidates") {
-        allCandidates.forEach(async (candidate) => {
-            const candidateFitsConditions = true; //check()
-            if (candidateFitsConditions) {
-                // create slack channel
-                const channelName = buildSlackChannelNameForCandidate(
-                    hiringroom.slackChannelFormat,
-                    candidate,
-                );
-                // const channelName = sanitizeChannelName(hiringroom.slackChannelFormat)
-                // const channelName = sanitizeChannelName(candidate.id + "-" + candidate.name)
-                const slackUsersIds = getSlackUsersFromRecipient(
-                    hiringroom.recipient,
-                );
-                const slackIdsOfGreenHouseUsers =
-                    await getSlackIdsOfGreenHouseUsers(
-                        hiringroom.recipient,
-                        candidate,
-                    );
-                const slackUserIds = slackUsersIds.concat(
-                    slackIdsOfGreenHouseUsers,
-                );
-                const messageText = "really good message text";
-                const channelId = await createSlackChannel(
-                    channelName,
-                    slackTeamID,
-                );
-                // does this mean successfully create NOW, not previously created?
-                if (channelId) {
-                    const invitedUsers = await inviteUsersToChannel(
-                        channelId,
-                        slackUserIds,
-                        slackTeamID,
-                    );
-                    const messageText = "Welcome to the new hiring room!";
-                    // await postMessageToSlackChannel(channelId, messageText, slackTeamID);
-                    await saveSlackChannelCreatedToDB(
-                        channelId,
-                        slackUserIds,
-                        channelName,
-                        hiringroomId,
-                        hiringroom.slackChannelFormat,
-                        candidate.id,
-                        candidate.applications[0].jobs[0].id,
-                    );
-                }
-            }
-        });
-    } else if (hiringroom.objectField == "Jobs") {
-        allJobs.forEach(async (job) => {
-            const jobFitsConditions = true;
-            // const jobFitsConditions = check()
-            if (jobFitsConditions) {
-                const channelName = buildSlackChannelNameForJob(
-                    hiringroom.slackChannelFormat,
-                    job,
-                );
+//     if (hiringroom.objectField == "Candidates") {
+//         allCandidates.forEach(async (candidate) => {
+//             const candidateFitsConditions = true; //check()
+//             if (candidateFitsConditions) {
+//                 // create slack channel
+//                 const channelName = buildSlackChannelNameForCandidate(
+//                     hiringroom.slackChannelFormat,
+//                     candidate,
+//                 );
+//                 // const channelName = sanitizeChannelName(hiringroom.slackChannelFormat)
+//                 // const channelName = sanitizeChannelName(candidate.id + "-" + candidate.name)
+//                 const slackUsersIds = getSlackUsersFromRecipient(
+//                     hiringroom.recipient,
+//                 );
+//                 const slackIdsOfGreenHouseUsers =
+//                     await getSlackIdsOfGreenHouseUsers(
+//                         hiringroom.recipient,
+//                         candidate,
+//                     );
+//                 const slackUserIds = slackUsersIds.concat(
+//                     slackIdsOfGreenHouseUsers,
+//                 );
+//                 const messageText = "really good message text";
+//                 const channelId = await createSlackChannel(
+//                     channelName,
+//                     slackTeamID,
+//                 );
+//                 // does this mean successfully create NOW, not previously created?
+//                 if (channelId) {
+//                     const invitedUsers = await inviteUsersToChannel(
+//                         channelId,
+//                         slackUserIds,
+//                         slackTeamID,
+//                     );
+//                     const messageText = "Welcome to the new hiring room!";
+//                     // await postMessageToSlackChannel(channelId, messageText, slackTeamID);
+//                     await saveSlackChannelCreatedToDB(
+//                         channelId,
+//                         slackUserIds,
+//                         channelName,
+//                         hiringroomId,
+//                         hiringroom.slackChannelFormat,
+//                         candidate.id,
+//                         candidate.applications[0].jobs[0].id,
+//                     );
+//                 }
+//             }
+//         });
+//     } else if (hiringroom.objectField == "Jobs") {
+//         allJobs.forEach(async (job) => {
+//             const jobFitsConditions = true;
+//             // const jobFitsConditions = check()
+//             if (jobFitsConditions) {
+//                 const channelName = buildSlackChannelNameForJob(
+//                     hiringroom.slackChannelFormat,
+//                     job,
+//                 );
 
-                const slackUsersIds = getSlackUsersFromRecipient(
-                    hiringroom.recipient,
-                );
-                const slackUserIds = slackUsersIds; // + slackIdsOfGreenHouseUsers
-                const channelId = await createSlackChannel(
-                    channelName,
-                    slackTeamID,
-                );
+//                 const slackUsersIds = getSlackUsersFromRecipient(
+//                     hiringroom.recipient,
+//                 );
+//                 const slackUserIds = slackUsersIds; // + slackIdsOfGreenHouseUsers
+//                 const channelId = await createSlackChannel(
+//                     channelName,
+//                     slackTeamID,
+//                 );
 
-                // does this mean successfully create NOW, not previously created?
-                if (channelId) {
-                    await inviteUsersToChannel(
-                        channelId,
-                        slackUserIds,
-                        slackTeamID,
-                    );
-                    const { messageBlocks } = await formatOpeningMessageSlack(
-                        hiringroom,
-                        slackTeamID,
-                    );
-                    await sendAndPinSlackMessage(
-                        channelId,
-                        slackTeamID,
-                        messageBlocks,
-                    );
+//                 // does this mean successfully create NOW, not previously created?
+//                 if (channelId) {
+//                     await inviteUsersToChannel(
+//                         channelId,
+//                         slackUserIds,
+//                         slackTeamID,
+//                     );
+//                     const { messageBlocks } = await formatOpeningMessageSlack(
+//                         hiringroom,
+//                         slackTeamID,
+//                     );
+//                     await sendAndPinSlackMessage(
+//                         channelId,
+//                         slackTeamID,
+//                         messageBlocks,
+//                     );
 
-                    const messageText = "Welcome to the new hiring room!";
+//                     const messageText = "Welcome to the new hiring room!";
 
-                    await saveSlackChannelCreatedToDB(
-                        channelId,
-                        slackUserIds,
-                        channelName,
-                        hiringroomId,
-                        hiringroom.slackChannelFormat,
-                        hiringroom.slackChannelFormat,
-                    );
-                }
-            }
-        });
-    }
-    return hiringroom;
-}
+//                     await saveSlackChannelCreatedToDB(
+//                         channelId,
+//                         slackUserIds,
+//                         channelName,
+//                         hiringroomId,
+//                         hiringroom.slackChannelFormat,
+//                         hiringroom.slackChannelFormat,
+//                     );
+//                 }
+//             }
+//         });
+//     }
+//     return hiringroom;
+// }
 
 export async function handleHiringrooms() {
     const hiringrooms: HiringRoom[] = await getHiringrooms();
     const hiringroomsLength = hiringrooms.length;
     if (hiringrooms.length > 0) {
         for (const hiringroom of hiringrooms) {
-            await handleIndividualHiringroom(hiringroom);
+            // await handleIndividualHiringroom(hiringroom);
         }
     }
     return hiringroomsLength;
