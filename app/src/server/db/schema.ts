@@ -294,6 +294,23 @@ export const organizations = createTable("organization", {
     greenhouse_secret_key: varchar("greenhouse_secret_key", { length: 255 }), // New column
 });
 
+const webhookStatus = pgEnum("status", ["Connected", "Disconnected"]);
+
+export const organization_webhooks = createTable("organization_webhooks", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    webhookType: varchar("webhookType", { length: 255 }).notNull(),
+    webhookEvent: varchar("webhookEvent", { length: 255 }).notNull(),
+    organizationId: varchar("organizationId")
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+    status: webhookStatus("status").default("Connected").notNull(),
+    lastUsed: timestamp("lastUsed", { mode: "date" }),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const organizationsInsertSchema = createInsertSchema(organizations);
 
 export const createOrgInsertSchema = createInsertSchema(organizations, {
@@ -319,7 +336,7 @@ export const membersToOrganizationsRoleEnum = pgEnum("org_member_role", [
     "Interviewer",
     "Recruiter",
     "Hiring Manager",
-    "Admin"
+    "Admin",
 ]);
 
 export const membersToOrganizations = createTable(
