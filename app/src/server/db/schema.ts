@@ -294,9 +294,9 @@ export const organizations = createTable("organization", {
     greenhouse_secret_key: varchar("greenhouse_secret_key", { length: 255 }), // New column
 });
 
-const webhookStatus = pgEnum("status", ["Connected", "Disconnected"]);
+export const webhookStatus = pgEnum("status", ["Connected", "Disconnected"]);
 
-export const organization_webhooks = createTable("organization_webhooks", {
+export const organizationWebhooks = createTable("organizationWebhooks", {
     id: varchar("id", { length: 255 })
         .notNull()
         .primaryKey()
@@ -310,6 +310,8 @@ export const organization_webhooks = createTable("organization_webhooks", {
     lastUsed: timestamp("lastUsed", { mode: "date" }),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
 });
+
+export type OrganizationWebhook = typeof organizationWebhooks.$inferSelect;
 
 export const organizationsInsertSchema = createInsertSchema(organizations);
 

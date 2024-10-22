@@ -51,9 +51,11 @@ const localStorageKeyName = "Workflow name";
 export function WorkflowBuilder({
     workflowId,
     edit,
+    activeWebhooks,
 }: {
     workflowId?: string;
     edit: boolean;
+    activeWebhooks: OrganizationWebhook[];
 }) {
     const [steps, setSteps] = useState([
         {
@@ -915,6 +917,7 @@ export function WorkflowBuilder({
                                                   )
                                                 : null
                                         }
+                                        activeWebhooks={activeWebhooks}
                                     />
                                 )}
                                 {selectedElement.type === "Action" && (

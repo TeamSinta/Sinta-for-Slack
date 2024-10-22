@@ -32,6 +32,19 @@ import GenericInput from "../../_components/generic-input";
 
 import { fetchStagesForJob } from "@/server/greenhouse/core";
 import { cleanObject } from "@/lib/utils";
+import { OrganizationWebhook } from "@/server/db/schema";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogCancel,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogTitle,
+    AlertDialogAction,
+    AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
+import { CrossCircledIcon } from "@radix-ui/react-icons";
 
 const localStorageKey = "workflowTriggers";
 
@@ -53,7 +66,14 @@ const fetchers = {
         ],
 };
 
-const TriggersComponent = ({ onSaveTrigger }) => {
+const TriggersComponent = ({
+    onSaveTrigger,
+    activeWebhooks,
+}: {
+    onSaveTrigger: any;
+    activeWebhooks: OrganizationWebhook[];
+}) => {
+    const router = useRouter();
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
 
@@ -64,6 +84,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
     const [showFullData, setShowFullData] = useState(false);
     const [pollingInterval, setPollingInterval] = useState("");
     const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
+    const [displayIntegrationModal, setDisplayIntegrationModal] =
+        useState(false);
     const handleFieldChange = (fieldKey, value) => {
         setSelectedEventData((prev) => ({
             ...prev,
@@ -83,6 +105,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 "Prepare Interview Kit",
                 "Schedule Reminder",
             ],
+            webhooks: [],
         },
         {
             title: "Offer Created",
@@ -96,20 +119,21 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 "Notify Approvers in Slack",
                 "Track Approval Status",
             ],
+            webhooks: ["Offer created"],
         },
-        {
-            title: "Candidates",
-            description: "Triggered for working with Candidates Object",
-            objectField: "Candidates",
-            apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
-            alertType: "timebased",
-            triggers: [
-                "Send Referral SLA Reminder to Recruiter",
-                "Send Active Candidates Reminder to Recruiter",
-                "Notify Recruiter via Slack",
-                "Take Action on Active Candidates in Closed Roles",
-            ],
-        },
+        // {
+        //     title: "Candidates",
+        //     description: "Triggered for working with Candidates Object",
+        //     objectField: "Candidates",
+        //     apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
+        //     alertType: "timebased",
+        //     triggers: [
+        //         "Send Referral SLA Reminder to Recruiter",
+        //         "Send Active Candidates Reminder to Recruiter",
+        //         "Notify Recruiter via Slack",
+        //         "Take Action on Active Candidates in Closed Roles",
+        //     ],
+        // },
         {
             title: "Stuck in Pipeline",
             objectField: "Candidates",
@@ -131,6 +155,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     dataType: "number",
                 },
             ],
+            webhooks: ["Candidate has changed stage"],
         },
         {
             title: "Interview Reminders",
@@ -166,6 +191,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     dataType: "number",
                 },
             ],
+            webhooks: [],
         },
         // Add more events as needed and update setSelectedEventData to handle the new fields
     ];
@@ -193,6 +219,17 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
     const handleEventChange = (eventTitle) => {
         const selected = events.find((event) => event.title === eventTitle);
+        if (
+            selected?.webhooks.filter(
+                (item) =>
+                    !activeWebhooks.some(
+                        (webhook) => webhook.webhookEvent === item,
+                    ),
+            ).length > 0
+        ) {
+            setDisplayIntegrationModal(true);
+            return;
+        }
         setSelectedEvent(selected);
         setSelectedJob(null);
         setSelectedEventData({});
@@ -321,6 +358,33 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
+            <AlertDialog
+                open={displayIntegrationModal}
+                onOpenChange={setDisplayIntegrationModal}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Missing Webhook Configuration
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Some configuration must be done to use this feature.
+                            Go to the integrations page to set up your webhook.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                router.push("/integrations/greenhouse-config");
+                            }}
+                        >
+                            Go to Integrations Page
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <div>
                 <div className="pt-2">
                     <div className="mb-4 flex items-center">
@@ -437,9 +501,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     value={event.title}
                                                 >
                                                     <div className="p-2">
-                                                        <p className="font-medium">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <p className="font-medium">
+                                                                {event.title}
+                                                            </p>
+                                                            {event.webhooks.filter(
+                                                                (item) =>
+                                                                    !activeWebhooks.some(
+                                                                        (
+                                                                            webhook,
+                                                                        ) =>
+                                                                            webhook.webhookEvent ===
+                                                                            item,
+                                                                    ),
+                                                            ).length === 0 ? (
+                                                                <CheckCircle
+                                                                    className="text-green-500 "
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                <CrossCircledIcon
+                                                                    className="text-red-500"
+                                                                    size={16}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-gray-500">
                                                             {event.description}
                                                         </p>
@@ -466,9 +552,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     value={event.title}
                                                 >
                                                     <div className="p-2">
-                                                        <p className="font-medium">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <p className="font-medium">
+                                                                {event.title}
+                                                            </p>
+                                                            {event.webhooks.filter(
+                                                                (item) =>
+                                                                    !activeWebhooks.some(
+                                                                        (
+                                                                            webhook,
+                                                                        ) =>
+                                                                            webhook.webhookEvent ===
+                                                                            item,
+                                                                    ),
+                                                            ).length === 0 ? (
+                                                                <CheckCircle
+                                                                    className="text-green-500 "
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                <CrossCircledIcon
+                                                                    className="text-red-500"
+                                                                    size={16}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-gray-500">
                                                             {event.description}
                                                         </p>

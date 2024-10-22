@@ -11,7 +11,6 @@ import { handleJobPostCreatedHiringRoom } from "./jobPostCreatedHiringRoom";
 import { handleCandidateHired } from "./candidateHired";
 import { handleStageChangeHiringRooms } from "./stageChangeHiringRooms";
 
-
 const eventHandlers: Record<string, any> = {
     candidate_stage_change: [
         handleStuckInStageWorkflows,
@@ -23,7 +22,7 @@ const eventHandlers: Record<string, any> = {
     job_approved: [handleJobApprovedHiringRooms],
     job_post_created: [handleJobPostCreatedHiringRoom],
     hire_candidate: [handleCandidateHired],
-    ping: [(data: any, orgID: string) => console.log('PING DATA', data) ]
+    ping: [(data: any, orgID: string) => console.log("PING DATA", data)],
 };
 
 // Webhook handler function for dynamic orgID route
