@@ -14,23 +14,10 @@ import { handleStageChangeHiringRooms } from "./stageChangeHiringRooms";
 import { db } from "@/server/db";
 import { organizationWebhooks } from "@/server/db/schema";
 
-const eventHandlers: Record<string, any> = {
-    candidate_stage_change: [
-        handleStuckInStageWorkflows,
-        handleStageChangeHiringRooms,
-    ],
-    offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
-    job_created: [handleJobCreated],
-    job_approved: [handleJobApprovedHiringRooms],
-    job_post_created: [handleJobPostCreatedHiringRoom],
-    hire_candidate: [handleCandidateHired],
-    ping: [handleConfirmWebhookConfiguration],
-};
-
-export async function handleConfirmWebhookConfiguration(
+async function handleConfirmWebhookConfiguration(
     data: any,
     orgId: string,
-) {
+): Promise<void> {
     const eventName: string = data?.payload?.event ?? "";
 
     const res = await db
@@ -49,7 +36,25 @@ export async function handleConfirmWebhookConfiguration(
             ],
             set: { status: "Connected" },
         });
+    return;
 }
+
+const eventHandlers: Record<
+    string,
+    ((data: any, orgId: string) => Promise<void>)[]
+> = {
+    candidate_stage_change: [
+        handleStuckInStageWorkflows,
+        handleStageChangeHiringRooms,
+    ],
+    offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
+    job_created: [handleJobCreated],
+    job_approved: [handleJobApprovedHiringRooms],
+    job_post_created: [handleJobPostCreatedHiringRoom],
+    hire_candidate: [handleCandidateHired],
+    ping: [handleConfirmWebhookConfiguration],
+};
+
 // Webhook handler function for dynamic orgID route
 export async function POST(
     req: NextRequest,
