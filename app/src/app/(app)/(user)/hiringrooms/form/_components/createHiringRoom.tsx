@@ -13,6 +13,7 @@ import { RecipientsStep } from "./create-receipients";
 import SummaryStep from "./view-summary";
 import { Condition } from "../../_components/new-hiringroomForm";
 import { ConditionInputValue } from "@/utils/conditions-options";
+import { OrganizationWebhook } from "@/server/db/schema";
 
 interface FormValues {
     name: string;
@@ -57,7 +58,11 @@ interface FormValues {
     }[];
 }
 
-export default function CreateHiringRoom() {
+export default function CreateHiringRoom({
+    activeWebhooks,
+}: {
+    activeWebhooks: OrganizationWebhook[];
+}) {
     const [currentStep, setCurrentStep] = useState("Details");
     const [formData, setFormData] = useState<FormValues>({
         name: "",
@@ -172,6 +177,7 @@ export default function CreateHiringRoom() {
                         initialConditions={formData.conditions}
                         initialEvent={{ alertType: formData.alertType }}
                         objectField={formData.objectField}
+                        activeWebhooks={activeWebhooks}
                     />
                 );
             case "Slack Configuration":

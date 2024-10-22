@@ -19,7 +19,6 @@ const eventHandlers: Record<string, any> = {
         handleStuckInStageWorkflows,
         handleStageChangeHiringRooms,
     ],
-    // interview_deleted: [handleInterviewDeleted],
     offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
     job_created: [handleJobCreated],
     job_approved: [handleJobApprovedHiringRooms],
@@ -50,7 +49,6 @@ export async function handleConfirmWebhookConfiguration(
             ],
             set: { status: "Connected" },
         });
-    console.log(res, "res");
 }
 // Webhook handler function for dynamic orgID route
 export async function POST(

@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 import { CrossCircledIcon } from "@radix-ui/react-icons";
+import MissingWebhookConfigModal from "@/components/MissingWebhookConfigModal";
 
 const localStorageKey = "workflowTriggers";
 
@@ -94,19 +95,19 @@ const TriggersComponent = ({
     };
 
     const events = [
-        {
-            title: "Interview Scheduled",
-            description: "Triggered when an interview is scheduled.",
-            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-            objectField: "Scheduled Interviews",
-            alertType: "Create/Update",
-            triggers: [
-                "Notify Interviewers",
-                "Prepare Interview Kit",
-                "Schedule Reminder",
-            ],
-            webhooks: [],
-        },
+        // {
+        //     title: "Interview Scheduled",
+        //     description: "Triggered when an interview is scheduled.",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        //     objectField: "Scheduled Interviews",
+        //     alertType: "Create/Update",
+        //     triggers: [
+        //         "Notify Interviewers",
+        //         "Prepare Interview Kit",
+        //         "Schedule Reminder",
+        //     ],
+        //     webhooks: [],
+        // },
         {
             title: "Offer Created",
             description:
@@ -119,7 +120,7 @@ const TriggersComponent = ({
                 "Notify Approvers in Slack",
                 "Track Approval Status",
             ],
-            webhooks: ["Offer created"],
+            webhooks: ["Offer Created"],
         },
         // {
         //     title: "Candidates",
@@ -358,32 +359,10 @@ const TriggersComponent = ({
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
-            <AlertDialog
+            <MissingWebhookConfigModal
                 open={displayIntegrationModal}
-                onOpenChange={setDisplayIntegrationModal}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Missing Webhook Configuration
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Some configuration must be done to use this feature.
-                            Go to the integrations page to set up your webhook.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() => {
-                                router.push("/integrations/greenhouse-config");
-                            }}
-                        >
-                            Go to Integrations Page
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                setOpen={setDisplayIntegrationModal}
+            />
 
             <div>
                 <div className="pt-2">

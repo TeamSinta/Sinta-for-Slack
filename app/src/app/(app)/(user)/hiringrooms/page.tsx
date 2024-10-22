@@ -2,7 +2,6 @@ import { AppPageShell } from "../../_components/page-shell";
 import { HiringroomsPageConfig } from "./_constants/page-config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
-import CreateHiringroomSheet from "./_components/new-hiringroomForm";
 import {
     getPaginatedHiringroomsByOrgQuery,
     getPaginatedHiringroomsExcludingUserQuery,
@@ -15,7 +14,6 @@ import {
     checkSlackTeamIdFilled,
 } from "@/server/actions/organization/queries";
 import { AlertIntegrationDialog } from "./alertIntergrationDialog";
-import { StageSelectionModal } from "./new/components/create-new-modal";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { siteUrls } from "@/config/urls";
