@@ -1,4 +1,5 @@
 // app/api/webhooks/greenhouse/[orgId]/route.ts
+"use server";
 import { NextRequest, NextResponse } from "next/server";
 import { verifySignature } from "@/lib/utils";
 import { getSecretKeyForOrg } from "@/server/actions/greenhouse/query";
@@ -10,6 +11,8 @@ import { handleJobApprovedHiringRooms } from "./jobApprovedHiringRooms";
 import { handleJobPostCreatedHiringRoom } from "./jobPostCreatedHiringRoom";
 import { handleCandidateHired } from "./candidateHired";
 import { handleStageChangeHiringRooms } from "./stageChangeHiringRooms";
+import { db } from "@/server/db";
+import { organizationWebhooks } from "@/server/db/schema";
 
 const eventHandlers: Record<string, any> = {
     candidate_stage_change: [
@@ -22,9 +25,33 @@ const eventHandlers: Record<string, any> = {
     job_approved: [handleJobApprovedHiringRooms],
     job_post_created: [handleJobPostCreatedHiringRoom],
     hire_candidate: [handleCandidateHired],
-    ping: [(data: any, orgID: string) => console.log("PING DATA", data)],
+    ping: [handleConfirmWebhookConfiguration],
 };
 
+export async function handleConfirmWebhookConfiguration(
+    data: any,
+    orgId: string,
+) {
+    const eventName: string = data?.payload?.event ?? "";
+
+    const res = await db
+        .insert(organizationWebhooks)
+        .values({
+            webhookEvent: eventName,
+            webhookType: "Greenhouse",
+            organizationId: orgId,
+            status: "Connected",
+        })
+        .onConflictDoUpdate({
+            target: [
+                organizationWebhooks.organizationId,
+                organizationWebhooks.webhookEvent,
+                organizationWebhooks.webhookType,
+            ],
+            set: { status: "Connected" },
+        });
+    console.log(res, "res");
+}
 // Webhook handler function for dynamic orgID route
 export async function POST(
     req: NextRequest,
