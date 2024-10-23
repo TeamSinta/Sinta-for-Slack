@@ -480,7 +480,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                             </CardContent>
                         </Card>
                         {/* Conditionally render the polling interval input if the event is time-based */}
-                        {isTimeBasedEventSelected && (
+                        {/* {isTimeBasedEventSelected && (
                             <Card className="mt-6 border border-gray-300 bg-gray-50 shadow-lg">
                                 <CardHeader className="rounded-t-lg bg-gray-100 p-4">
                                     <CardTitle>Polling Interval</CardTitle>
@@ -526,7 +526,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        {/* Helper Text */}
                                         <p className="mt-2 text-xs text-gray-500">
                                             The polling interval determines how
                                             frequently this time-based event
@@ -537,7 +536,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                     </div>
                                 </CardContent>
                             </Card>
-                        )}
+                        )} */}
                     </TabsContent>
 
                     {/* Trigger Tab */}
