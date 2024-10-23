@@ -80,18 +80,18 @@ const TriggersComponent = ({ onSaveTrigger }) => {
     };
 
     const events = [
-        {
-            title: "Interview Scheduled",
-            description: "Triggered when an interview is scheduled.",
-            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-            objectField: "Scheduled Interviews",
-            alertType: "Create/Update",
-            triggers: [
-                "Notify Interviewers",
-                "Prepare Interview Kit",
-                "Schedule Reminder",
-            ],
-        },
+        // {
+        //     title: "Interview Scheduled",
+        //     description: "Triggered when an interview is scheduled.",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        //     objectField: "Scheduled Interviews",
+        //     alertType: "Create/Update",
+        //     triggers: [
+        //         "Notify Interviewers",
+        //         "Prepare Interview Kit",
+        //         "Schedule Reminder",
+        //     ],
+        // },
         {
             title: "Offer Created",
             description:
