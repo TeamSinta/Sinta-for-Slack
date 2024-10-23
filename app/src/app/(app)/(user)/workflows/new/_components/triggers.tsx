@@ -1,15 +1,6 @@
 //@ts-nocheck
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Card,
     CardContent,
@@ -17,24 +8,29 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, AlertTriangle, Clock, PlugZap } from "lucide-react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import JobsDropdown from "../../_components/job-select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cleanObject, cn } from "@/lib/utils";
+import {
+    fetchJobsFromGreenhouse,
+    fetchStagesForJob,
+} from "@/server/greenhouse/core";
 import { customFetchTester } from "@/utils/fetch";
-import TestResult from "./testResults";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
+import { AlertTriangle, CheckCircle, Clock, PlugZap } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import GenericDropdown from "../../_components/generic-dropdown";
 import GenericInput from "../../_components/generic-input";
-import { cn } from "@/lib/utils";
-import {
-    fetchStagesForJob,
-    fetchJobsFromGreenhouse,
-} from "@/server/greenhouse/core";
-import { cleanObject } from "@/lib/utils";
+import TestResult from "./testResults";
 
 const localStorageKey = "workflowTriggers";
 
