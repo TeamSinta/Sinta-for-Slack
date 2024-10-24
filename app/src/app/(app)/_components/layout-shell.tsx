@@ -12,7 +12,7 @@ type AppLayoutProps = {
     sideNavIncludedIds?: string[];
     showOrgSwitcher?: boolean;
     isWorkflowBuilder?: boolean;
-    user?: User | null;
+    user: User | null;
     orgs: { currentOrg: Organization | null; userOrgs: Organization[] };
 };
 
