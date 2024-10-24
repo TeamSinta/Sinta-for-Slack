@@ -18,7 +18,7 @@ export async function handleOfferCreatedWorkflows(data: any, orgID: string) {
         "Offers",
         "Create/Update",
     );
-    console.log("data", data);
+    // console.log("data", data);
     const offerData = data.payload.offer;
 
     for (const workflow of workflows) {

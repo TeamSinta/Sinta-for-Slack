@@ -2,10 +2,10 @@
 
 import { getUser } from "@/server/auth";
 import { db } from "@/server/db";
-import { users } from "@/server/db/schema";
+import { greenhouseUsers, users } from "@/server/db/schema";
 import { adminProcedure } from "@/server/procedures";
 import { eachMonthOfInterval, format, startOfMonth, subMonths } from "date-fns";
-import { asc, count, desc, gt, ilike, inArray, or } from "drizzle-orm";
+import { asc, count, desc, gt, ilike, inArray, or, eq } from "drizzle-orm";
 import { unstable_noStore as noStore } from "next/cache";
 import { z } from "zod";
 import { getOrganizations } from "../organization/queries";
@@ -144,4 +144,22 @@ export async function getUsersCount() {
         usersCountByMonth,
         totalCount: total,
     };
+}
+
+export async function getSlackUserFromGreenhouseId(greenhouseId: string) {
+    const data = await db.query.greenhouseUsers.findFirst({
+        where: eq(greenhouseUsers.greenhouseId, greenhouseId),
+    });
+    return data;
+}
+
+export async function putGreenhouseUserSlackData(data: {
+    organizationId: string;
+    greenhouseId: string;
+    email: string;
+    slackUserId: string;
+    slackLookupAttempted: boolean;
+}) {
+    const res = await db.insert(greenhouseUsers).values(data).execute();
+    return res;
 }

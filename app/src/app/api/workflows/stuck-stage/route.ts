@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
                 await filterCandidatesDataForSlack(
                     [currentApplicationState.candidateDetails],
                     workflow.recipient,
-                    slackTeamID,
+                    workflow.organizationId,
                 );
 
             if (filteredSlackDataWithMessage.length > 0) {
