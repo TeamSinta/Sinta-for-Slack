@@ -14,7 +14,7 @@ export default function GlobalClickTracker() {
                 const target = event.target as HTMLElement;
 
                 if (target.tagName === "BUTTON" || target.tagName === "A") {
-                    console.log("CLICKED", target.innerText);
+                    // console.log("CLICKED", target.innerText);
                     const elementType = target.tagName.toLowerCase();
                     const elementText =
                         target.innerText || target.getAttribute("aria-label");

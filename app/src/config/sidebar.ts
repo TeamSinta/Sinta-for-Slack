@@ -69,12 +69,12 @@ export type SidebarNavItems = {
     items: NavItem[];
 };
 
-const navIds = {
-    admin: "admin",
-    general: "general",
-    org: "org",
-    resources: "resources",
-};
+enum navIds {
+    admin = "admin",
+    general = "general",
+    org = "org",
+    resources = "resources",
+}
 
 const navigation: SidebarNavItems[] = [
     {

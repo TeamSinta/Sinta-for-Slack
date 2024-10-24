@@ -4,6 +4,7 @@ import { Sidebar, SidebarLoading } from "@/app/(app)/_components/sidebar";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion"; // Import Framer Motion for transitions
 import { Suspense } from "react";
+import { Organization, User } from "@/server/db/schema";
 
 type AppLayoutProps = {
     children: React.ReactNode;
@@ -11,6 +12,8 @@ type AppLayoutProps = {
     sideNavIncludedIds?: string[];
     showOrgSwitcher?: boolean;
     isWorkflowBuilder?: boolean;
+    user: User | null;
+    orgs: { currentOrg: Organization | null; userOrgs: Organization[] };
 };
 
 /**
@@ -29,6 +32,8 @@ export function AppLayoutShell({
     sideNavIncludedIds,
     sideNavRemoveIds,
     showOrgSwitcher,
+    user,
+    orgs,
 }: AppLayoutProps) {
     const pathname = usePathname();
     let isWorkflowBuilder = false;
@@ -69,6 +74,8 @@ export function AppLayoutShell({
                             sidebarNavIncludeIds={sideNavIncludedIds}
                             sidebarNavRemoveIds={sideNavRemoveIds}
                             showOrgSwitcher={showOrgSwitcher}
+                            user={user}
+                            orgs={orgs}
                         />
                     </Suspense>
                 </motion.div>

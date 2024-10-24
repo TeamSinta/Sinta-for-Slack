@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { InferSelectModel, relations, sql } from "drizzle-orm";
 import {
     boolean,
     index,
@@ -529,6 +529,10 @@ export const feedbackSelectSchema = createSelectSchema(feedback, {
         .min(10, "Message is too short")
         .max(1000, "Message is too long"),
 });
+
+
+export type User = InferSelectModel<typeof users>;
+export type Organization = InferSelectModel<typeof organizations>;
 
 export const greenhouseUsers = createTable("greenhouse_users", {
     id: varchar("id", { length: 255 })
