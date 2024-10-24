@@ -1,5 +1,6 @@
 //@ts-nocheck
 
+import MissingWebhookConfigModal from "@/components/MissingWebhookConfigModal";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -18,34 +19,21 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cleanObject, cn } from "@/lib/utils";
+import { OrganizationWebhook } from "@/server/db/schema";
 import {
     fetchJobsFromGreenhouse,
     fetchStagesForJob,
 } from "@/server/greenhouse/core";
 import { customFetchTester } from "@/utils/fetch";
+import { CrossCircledIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle, Clock, PlugZap } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import GenericDropdown from "../../_components/generic-dropdown";
 import GenericInput from "../../_components/generic-input";
-import { fetchStagesForJob } from "@/server/greenhouse/core";
-import { cleanObject } from "@/lib/utils";
-import { OrganizationWebhook } from "@/server/db/schema";
-import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogCancel,
-    AlertDialogHeader,
-    AlertDialogFooter,
-    AlertDialogTitle,
-    AlertDialogAction,
-    AlertDialogDescription,
-} from "@/components/ui/alert-dialog";
-import { useRouter } from "next/navigation";
-import { CrossCircledIcon } from "@radix-ui/react-icons";
-import MissingWebhookConfigModal from "@/components/MissingWebhookConfigModal";
 import TestResult from "./testResults";
 
 const localStorageKey = "workflowTriggers";
