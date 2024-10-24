@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import {
     membersToOrganizations,
     orgRequests,
+    organizationWebhooks,
     organizations,
     userPreferences,
     workflows,
@@ -449,6 +450,20 @@ export async function getUserEmailBySlackIdAndTeamId(
     }
 
     return member.memberEmail;
+}
+
+export async function getOrganizationWebhooks(): Promise<
+    OrganizationWebhook[] | null
+> {
+    const { currentOrg } = await getOrganizations(); // Fetch the current organization context
+    if (!currentOrg) return null;
+    const webhooks = await db.query.organizationWebhooks.findMany({
+        where: and(
+            eq(organizationWebhooks.organizationId, currentOrg.id),
+            eq(organizationWebhooks.status, "Connected"),
+        ),
+    });
+    return webhooks;
 }
 
 export async function getOrgSlackTeamId(orgId: string) {

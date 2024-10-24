@@ -9,6 +9,7 @@ import {
     primaryKey,
     text,
     timestamp,
+    unique,
     varchar,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
@@ -293,6 +294,33 @@ export const organizations = createTable("organization", {
     greenhouse_subdomain: varchar("greenhouse_subdomain", { length: 255 }), // New column
     greenhouse_secret_key: varchar("greenhouse_secret_key", { length: 255 }), // New column
 });
+
+export const webhookStatus = pgEnum("status", ["Connected", "Disconnected"]);
+
+export const organizationWebhooks = createTable(
+    "organizationWebhooks",
+    {
+        id: varchar("id", { length: 255 })
+            .notNull()
+            .primaryKey()
+            .default(sql`gen_random_uuid()`),
+        webhookType: varchar("webhookType", { length: 255 }).notNull(),
+        webhookEvent: varchar("webhookEvent", { length: 255 }).notNull(),
+        organizationId: varchar("organizationId")
+            .notNull()
+            .references(() => organizations.id, { onDelete: "cascade" }),
+        status: webhookStatus("status").default("Connected").notNull(),
+        lastUsed: timestamp("lastUsed", { mode: "date" }),
+        createdAt: timestamp("createdAt", { mode: "date" })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => ({
+        unq: unique().on(t.organizationId, t.webhookEvent, t.webhookType),
+    }),
+);
+
+export type OrganizationWebhook = typeof organizationWebhooks.$inferSelect;
 
 export const organizationsInsertSchema = createInsertSchema(organizations);
 

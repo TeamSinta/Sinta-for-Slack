@@ -8,20 +8,39 @@ import { AppPageShell } from "@/app/(app)/_components/page-shell";
 import { Eye, EyeOff, Info, CheckCircle } from "lucide-react";
 import { addSecretKeyToOrg } from "@/server/actions/greenhouse/mutations"; // Import the secret key generation function
 import { siteUrls } from "@/config/urls"; // Import site URLs for building the webhook URL
-import { getOrganizations } from "@/server/actions/organization/queries"; // To get the org ID
+import {
+    getOrganizations,
+    getOrganizationWebhooks,
+} from "@/server/actions/organization/queries"; // To get the org ID
 import { checkIfSecretKeyExists } from "@/server/actions/greenhouse/query";
+import { OrganizationWebhook } from "@/server/db/schema";
+import { index } from "drizzle-orm/mysql-core";
+import { CrossCircledIcon } from "@radix-ui/react-icons";
 
+const allWebhooks = [
+    "Offer Approved",
+    "Offer Created",
+    "Job Post Created",
+    "Job Created",
+    "Job Approved",
+    "Candidate has changed stage",
+];
 export default function GreenhouseConfig() {
     const [secretKey, setSecretKey] = useState<string | null>(null);
     const [webhookUrl, setWebhookUrl] = useState<string | null>(null); // State to store generated webhook URL
     const [buttonVisible, setButtonVisible] = useState(true); // Button visibility state
     const [secretVisible, setSecretVisible] = useState(false); // For toggling secret visibility
     const [validated, setValidated] = useState(false); // Webhook validation status
+    const [activeWebhooks, setActiveWebhooks] = useState<OrganizationWebhook[]>(
+        [],
+    );
 
     // Check if a secret key exists when the component loads
     useEffect(() => {
-        const fetchSecretKeyStatus = async () => {
+        const fetchServerData = async () => {
             try {
+                const webhooks = (await getOrganizationWebhooks()) ?? [];
+                setActiveWebhooks(webhooks);
                 const { currentOrg } = await getOrganizations();
                 const orgID = currentOrg.id;
 
@@ -40,7 +59,7 @@ export default function GreenhouseConfig() {
             }
         };
 
-        fetchSecretKeyStatus();
+        fetchServerData();
     }, []); // Empty dependency array ensures this runs only on mount
 
     // Generate the secret key and dynamically generate the webhook URL (frontend only)
@@ -155,89 +174,42 @@ export default function GreenhouseConfig() {
                         <CardContent className="space-y-6 px-6">
                             {/* Webhook Status List */}
                             <div className="space-y-4">
-                                {/* Candidate has changed stage */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-base text-sm text-gray-700">
-                                        Webhook type
-                                    </span>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-xs font-medium text-gray-900">
-                                            Candidate has changed stage
+                                {allWebhooks.map((webhook, index) => (
+                                    <div
+                                        className="flex items-center justify-between"
+                                        key={index}
+                                    >
+                                        <span className="text-base text-sm text-gray-700">
+                                            Webhook type
                                         </span>
-                                        {validated ? (
-                                            <div className="flex items-center text-green-600">
-                                                <CheckCircle className="mr-1 h-5 w-5" />
-                                                <span className="text-xs">
-                                                    Validated
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center text-gray-400">
-                                                <CheckCircle className="mr-1 h-5 w-5" />
-                                                <span className="text-xs">
-                                                    Pending
-                                                </span>
-                                            </div>
-                                        )}
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs font-medium text-gray-900">
+                                                {webhook}
+                                            </span>
+                                            {activeWebhooks.find(
+                                                (item) =>
+                                                    item.webhookEvent ===
+                                                    webhook,
+                                            ) ? (
+                                                <div className="flex items-center text-green-600">
+                                                    <CheckCircle className="mr-1 h-5 w-5" />
+                                                    <span className="text-xs">
+                                                        Configured
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center text-gray-400">
+                                                    <CrossCircledIcon className="mr-1 h-5 w-5" />
+                                                    <span className="text-xs">
+                                                        Missing Configuration
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
 
-                                {/* Application updated */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-base text-sm text-gray-700">
-                                        Webhook type
-                                    </span>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-xs font-medium text-gray-900">
-                                            Application updated
-                                        </span>
-                                        {validated ? (
-                                            <div className="flex items-center text-green-600">
-                                                <CheckCircle className="mr-1 h-5 w-5" />
-                                                <span className="text-xs">
-                                                    Validated
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center text-gray-400">
-                                                <CheckCircle className="mr-1 h-5 w-5" />
-                                                <span className="text-xs">
-                                                    Pending
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Offer updated */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-base text-sm text-gray-700">
-                                        Webhook type
-                                    </span>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-xs font-medium text-gray-900">
-                                            Offer updated
-                                        </span>
-                                        {validated ? (
-                                            <div className="flex items-center text-green-600">
-                                                <CheckCircle className="mr-1 h-5 w-5" />
-                                                <span className="text-xs">
-                                                    Validated
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center text-gray-400">
-                                                <CheckCircle className="mr-1 h-5 w-5" />
-                                                <span className="text-xs">
-                                                    Pending
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Validate Button */}
-                                <div className="flex justify-end">
+                                {/* <div className="flex justify-end">
                                     <Button
                                         variant="secondary"
                                         size="sm"
@@ -246,7 +218,7 @@ export default function GreenhouseConfig() {
                                     >
                                         Validate
                                     </Button>
-                                </div>
+                                </div> */}
                             </div>
                         </CardContent>
                     </Card>
@@ -290,7 +262,10 @@ export default function GreenhouseConfig() {
                         <p className="text-sm text-gray-700">
                             If you encounter any issues, feel free to consult
                             the{" "}
-                            <a href="#" className="text-blue-600 underline">
+                            <a
+                                href="https://support.greenhouse.io/hc/en-us/articles/360005574531-Create-a-webhook"
+                                className="text-blue-600 underline"
+                            >
                                 Greenhouse Integration Guide
                             </a>
                             .

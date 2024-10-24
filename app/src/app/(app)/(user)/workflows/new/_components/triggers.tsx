@@ -1,5 +1,6 @@
 //@ts-nocheck
 
+import MissingWebhookConfigModal from "@/components/MissingWebhookConfigModal";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -18,14 +19,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cleanObject, cn } from "@/lib/utils";
+import { OrganizationWebhook } from "@/server/db/schema";
 import {
     fetchJobsFromGreenhouse,
     fetchStagesForJob,
 } from "@/server/greenhouse/core";
 import { customFetchTester } from "@/utils/fetch";
+import { CrossCircledIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle, Clock, PlugZap } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import GenericDropdown from "../../_components/generic-dropdown";
@@ -57,7 +61,14 @@ const fetchers = {
         ],
 };
 
-const TriggersComponent = ({ onSaveTrigger }) => {
+const TriggersComponent = ({
+    onSaveTrigger,
+    activeWebhooks,
+}: {
+    onSaveTrigger: any;
+    activeWebhooks: OrganizationWebhook[];
+}) => {
+    const router = useRouter();
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedEventData, setSelectedEventData] = useState({});
     const [activeTab, setActiveTab] = useState("event");
@@ -66,6 +77,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
     const [showFullData, setShowFullData] = useState(false);
     const [pollingInterval, setPollingInterval] = useState("");
     const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
+    const [displayIntegrationModal, setDisplayIntegrationModal] =
+        useState(false);
     const handleFieldChange = (fieldKey, value) => {
         if (fieldKey === "job") setSelectedEventData({ job: value });
         else
@@ -87,6 +100,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
         //         "Prepare Interview Kit",
         //         "Schedule Reminder",
         //     ],
+        //     webhooks: [],
         // },
         {
             title: "Offer Created",
@@ -100,7 +114,22 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 "Notify Approvers in Slack",
                 "Track Approval Status",
             ],
+            webhooks: ["Offer Created"],
         },
+
+        // {
+        //     title: "Candidates",
+        //     description: "Triggered for working with Candidates Object",
+        //     objectField: "Candidates",
+        //     apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
+        //     alertType: "timebased",
+        //     triggers: [
+        //         "Send Referral SLA Reminder to Recruiter",
+        //         "Send Active Candidates Reminder to Recruiter",
+        //         "Notify Recruiter via Slack",
+        //         "Take Action on Active Candidates in Closed Roles",
+        //     ],
+        // },
         {
             title: "Stuck in Pipeline",
             objectField: "Candidates",
@@ -130,6 +159,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     dataType: "number",
                 },
             ],
+            webhooks: ["Candidate has changed stage"],
         },
         {
             title: "Interview Reminders",
@@ -168,6 +198,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     dataType: "number",
                 },
             ],
+            webhooks: [],
         },
         // Add more events as needed and update setSelectedEventData to handle the new fields
     ];
@@ -195,6 +226,17 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
     const handleEventChange = (eventTitle) => {
         const selected = events.find((event) => event.title === eventTitle);
+        if (
+            selected?.webhooks.filter(
+                (item) =>
+                    !activeWebhooks.some(
+                        (webhook) => webhook.webhookEvent === item,
+                    ),
+            ).length > 0
+        ) {
+            setDisplayIntegrationModal(true);
+            return;
+        }
         setSelectedEvent(selected);
         setSelectedEventData({});
     };
@@ -317,6 +359,11 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
+            <MissingWebhookConfigModal
+                open={displayIntegrationModal}
+                setOpen={setDisplayIntegrationModal}
+            />
+
             <div>
                 <div className="pt-2">
                     <div className="mb-4 flex items-center">
@@ -433,9 +480,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     value={event.title}
                                                 >
                                                     <div className="p-2">
-                                                        <p className="font-medium">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <p className="font-medium">
+                                                                {event.title}
+                                                            </p>
+                                                            {event.webhooks.filter(
+                                                                (item) =>
+                                                                    !activeWebhooks.some(
+                                                                        (
+                                                                            webhook,
+                                                                        ) =>
+                                                                            webhook.webhookEvent ===
+                                                                            item,
+                                                                    ),
+                                                            ).length === 0 ? (
+                                                                <CheckCircle
+                                                                    className="text-green-500 "
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                <CrossCircledIcon
+                                                                    className="text-red-500"
+                                                                    size={16}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-gray-500">
                                                             {event.description}
                                                         </p>
@@ -462,9 +531,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     value={event.title}
                                                 >
                                                     <div className="p-2">
-                                                        <p className="font-medium">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <p className="font-medium">
+                                                                {event.title}
+                                                            </p>
+                                                            {event.webhooks.filter(
+                                                                (item) =>
+                                                                    !activeWebhooks.some(
+                                                                        (
+                                                                            webhook,
+                                                                        ) =>
+                                                                            webhook.webhookEvent ===
+                                                                            item,
+                                                                    ),
+                                                            ).length === 0 ? (
+                                                                <CheckCircle
+                                                                    className="text-green-500 "
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                <CrossCircledIcon
+                                                                    className="text-red-500"
+                                                                    size={16}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-gray-500">
                                                             {event.description}
                                                         </p>

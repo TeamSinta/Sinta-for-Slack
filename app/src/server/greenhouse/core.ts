@@ -165,7 +165,7 @@ interface Stage {
 }
 
 export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
-    console.log("JOB ID - ", jobId);
+    // console.log("JOB ID - ", jobId);
     try {
         const stages = (await customFetch(
             `https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`,
