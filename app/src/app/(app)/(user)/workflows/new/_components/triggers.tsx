@@ -97,19 +97,19 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 "Track Approval Status",
             ],
         },
-        {
-            title: "Candidates",
-            description: "Triggered for working with Candidates Object",
-            objectField: "Candidates",
-            apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
-            alertType: "timebased",
-            triggers: [
-                "Send Referral SLA Reminder to Recruiter",
-                "Send Active Candidates Reminder to Recruiter",
-                "Notify Recruiter via Slack",
-                "Take Action on Active Candidates in Closed Roles",
-            ],
-        },
+        // {
+        //     title: "Candidates",
+        //     description: "Triggered for working with Candidates Object",
+        //     objectField: "Candidates",
+        //     apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
+        //     alertType: "timebased",
+        //     triggers: [
+        //         "Send Referral SLA Reminder to Recruiter",
+        //         "Send Active Candidates Reminder to Recruiter",
+        //         "Notify Recruiter via Slack",
+        //         "Take Action on Active Candidates in Closed Roles",
+        //     ],
+        // },
         {
             title: "Stuck in Pipeline",
             objectField: "Candidates",
@@ -480,7 +480,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                             </CardContent>
                         </Card>
                         {/* Conditionally render the polling interval input if the event is time-based */}
-                        {isTimeBasedEventSelected && (
+                        {/* {isTimeBasedEventSelected && (
                             <Card className="mt-6 border border-gray-300 bg-gray-50 shadow-lg">
                                 <CardHeader className="rounded-t-lg bg-gray-100 p-4">
                                     <CardTitle>Polling Interval</CardTitle>
@@ -489,7 +489,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                         event should check for updates.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-4">
+                                {/* <CardContent className="p-4">
                                     <div className="space-y-4">
                                         <Label>Polling Interval</Label>
                                         <div className="flex space-x-4">
@@ -527,17 +527,17 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                             </Select>
                                         </div>
                                         {/* Helper Text */}
-                                        <p className="mt-2 text-xs text-gray-500">
+                                        {/* <p className="mt-2 text-xs text-gray-500">
                                             The polling interval determines how
                                             frequently this time-based event
                                             checks for new data. Choose a
                                             suitable interval depending on how
                                             often you expect updates.
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                        </p> */}
+                                    {/* </div>
+                                </CardContent> */}
+                            {/* </Card> */}
+                        {/* )} */}
                     </TabsContent>
 
                     {/* Trigger Tab */}

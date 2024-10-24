@@ -131,7 +131,7 @@ export function HiringroomsTable({
                                                 "PPP",
                                             )}
                                         </p>
-                                        <div className="pb-1 font-heading text-lg font-semibold leading-tight text-gray-800 dark:text-gray-100">
+                                        <div className="pb-1 font-heading text-md leading-tight text-gray-800 dark:text-gray-100">
                                             <span className="text-gray-500 dark:text-gray-400"></span>
                                             {hiringroom.name}
                                         </div>
