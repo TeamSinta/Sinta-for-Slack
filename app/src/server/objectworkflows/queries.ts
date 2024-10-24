@@ -28,6 +28,7 @@ interface Workflow {
     triggerConfig: {
         apiUrl: string;
     };
+    organizationId: string;
 }
 
 export async function processScheduledInterviews(
@@ -80,7 +81,7 @@ export async function processCandidates(
     const filteredSlackData = await filterCandidatesDataForSlack(
         filteredConditionsData,
         workflow.recipient,
-        slackTeamID,
+        workflow.orgId,
     );
     console.log("filteredSlackData", filteredSlackData);
     if (filteredSlackData.length > 0) {
