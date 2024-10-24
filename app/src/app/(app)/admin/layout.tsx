@@ -15,6 +15,7 @@ export default function AdminLayout({ children }: AppLayoutProps) {
             sideNavIncludedIds={sideNavIncludedIds}
             showOrgSwitcher={false}
         >
+            ADMIN LAYOUT
             {children}
         </AppLayoutShell>
     );

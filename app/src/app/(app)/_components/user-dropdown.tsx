@@ -38,7 +38,7 @@ type UserDropdownProps = {
 
 const userRoles = z.enum(usersRoleEnum.enumValues);
 
-export async function UserDropdown({ user }: UserDropdownProps) {
+export function UserDropdown({ user }: UserDropdownProps) {
     const navItems =
         user?.role === userRoles.Values.Admin ||
         user?.role === userRoles.Values["Super Admin"]

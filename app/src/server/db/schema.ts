@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { InferSelectModel, relations, sql } from "drizzle-orm";
 import {
     boolean,
     index,
@@ -319,7 +319,7 @@ export const membersToOrganizationsRoleEnum = pgEnum("org_member_role", [
     "Interviewer",
     "Recruiter",
     "Hiring Manager",
-    "Admin"
+    "Admin",
 ]);
 
 export const membersToOrganizations = createTable(
@@ -501,3 +501,6 @@ export const feedbackSelectSchema = createSelectSchema(feedback, {
         .min(10, "Message is too short")
         .max(1000, "Message is too long"),
 });
+
+export type User = InferSelectModel<typeof users>;
+export type Organization = InferSelectModel<typeof organizations>;
