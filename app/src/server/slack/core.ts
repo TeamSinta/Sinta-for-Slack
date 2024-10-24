@@ -12,7 +12,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { addGreenhouseSlackValue, matchUsers } from "@/lib/slack";
+import { fetchSlackUserFromGreenhouseId } from "@/lib/slack";
 import { getOrganizations } from "../actions/organization/queries";
 import { getAccessToken } from "../actions/slack/query";
 import { fetchGreenhouseUsers } from "../greenhouse/core";
@@ -382,11 +382,6 @@ export async function sendSlackButtonNotification(
         filteredConditionsData,
     );
 
-    const greenhouseUsers = await fetchGreenhouseUsers();
-    const slackUsers = await getEmailsfromSlack(slackTeamID);
-    const userMapping = await matchUsers(greenhouseUsers, slackUsers);
-
-    const accessToken = await getAccessToken(slackTeamID);
     const greenhouseRecipients = [];
     let hasGreenhouse = false;
     const greenhouseRoles = [];
@@ -401,23 +396,34 @@ export async function sendSlackButtonNotification(
         const candidates = filteredConditionsData;
         // console.log('filteredConditionsData - ',filteredConditionsData)
         // console.log('candidates - ',candidates)
-        candidates.forEach((cand) => {
-            greenhouseRoles.forEach((role) => {
-                if (role.includes("ecruiter") || role.includes("oordinator")) {
-                    if (userMapping[cand.recruiter.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.recruiter.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    } else if (userMapping[cand.coordinator.id]) {
-                        const newRecipient = {
-                            value: userMapping[cand.coordinator.id],
-                        };
-                        greenhouseRecipients.push(newRecipient);
-                    }
-                }
-            });
-        });
+        await Promise.all(
+            candidates.map(async (cand) => {
+                await Promise.all(
+                    greenhouseRoles.map(async (role) => {
+                        if (
+                            role.includes("ecruiter") ||
+                            role.includes("oordinator")
+                        ) {
+                            if (cand?.recruiter?.id) {
+                                const slackId =
+                                    await fetchSlackUserFromGreenhouseId(
+                                        cand.recruiter.id.toString(),
+                                        slackTeamID,
+                                    );
+                                greenhouseRecipients.push({ value: slackId });
+                            }
+                        } else if (cand?.coordinator?.id) {
+                            const slackId =
+                                await fetchSlackUserFromGreenhouseId(
+                                    cand.coordinator.id.toString(),
+                                    slackTeamID,
+                                );
+                            greenhouseRecipients.push({ value: slackId });
+                        }
+                    }),
+                );
+            }),
+        );
     }
     const allRecipients =
         workflowRecipient.recipients.concat(greenhouseRecipients);
@@ -574,22 +580,6 @@ export async function sendSlackButtonNotification(
     console.log("total recipients", allRecipients.length);
 }
 
-export async function getSlackUserIds(
-    hiringroom: { recipient: any[] },
-    candidates: any,
-    userMapping: any,
-) {
-    // function buildHiringRoomRecipients(hiringroom, candidates, userMapping){
-    hiringroom.recipient.map((recipient: any) => {
-        if (recipient.source === "greenhouse") {
-            return addGreenhouseSlackValue(recipient, candidates, userMapping);
-        }
-        return recipient;
-    });
-    const greenHouseAndSlackRecipients =
-        combineGreenhouseRolesAndSlackUsers(hiringroom);
-    return greenHouseAndSlackRecipients;
-}
 export async function getSlackIdsOfGreenHouseUsers(
     hiring_room_recipient: {
         reciepients: string | any[];
@@ -599,35 +589,43 @@ export async function getSlackIdsOfGreenHouseUsers(
         recruiter: { id: string | number };
         coordinator: { id: string | number };
     },
-    userMapping: Record<string, string>,
 ) {
     const slackIds: string[] = [];
     console.log(
         "hiring reciepieints  -",
         hiring_room_recipient.reciepients.length,
     );
-    hiring_room_recipient.recipients.forEach(
-        (recipient: { source: string; value: string | string[] }) => {
-            if (recipient.source == "greenhouse") {
-                if (recipient.value.includes("ecruiter")) {
-                    if (candidate.recruiter) {
-                        const slackId = userMapping[candidate.recruiter.id];
-                        if (slackId) {
-                            console.log("entered map");
-                            slackIds.push(slackId); //recipient.slackValue = slackId;
+    await Promise.all(
+        hiring_room_recipient.recipients.map(
+            async (recipient: { source: string; value: string | string[] }) => {
+                if (recipient.source === "greenhouse") {
+                    if (recipient.value.includes("ecruiter")) {
+                        if (candidate.recruiter) {
+                            const slackId =
+                                await fetchSlackUserFromGreenhouseId(
+                                    candidate.recruiter.id,
+                                );
+                            if (slackId) {
+                                console.log("entered map");
+                                slackIds.push(slackId);
+                            }
                         }
-                    }
-                } else if (recipient.value.includes("oordinator")) {
-                    if (candidate.coordinator) {
-                        const slackId = userMapping[candidate.coordinator.id];
-                        if (slackId) {
-                            slackIds.push(slackId); //recipient.slackValue = slackId;
+                    } else if (recipient.value.includes("oordinator")) {
+                        if (candidate.coordinator) {
+                            const slackId =
+                                await fetchSlackUserFromGreenhouseId(
+                                    candidate.coordinator.id,
+                                );
+                            if (slackId) {
+                                slackIds.push(slackId);
+                            }
                         }
                     }
                 }
-            }
-        },
+            },
+        ),
     );
+
     return slackIds;
 }
 

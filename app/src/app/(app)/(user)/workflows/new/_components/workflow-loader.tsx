@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import LoadingSpinner from "./loadingSprinner";
 import { WorkflowBuilder } from "./workflow-builder";
+import { OrganizationWebhook } from "@/server/db/schema";
 
 export default function WorkflowLoader({
     workflowId,
     edit,
+    activeWebhooks,
 }: {
     workflowId: string;
     edit: boolean;
+    activeWebhooks: OrganizationWebhook[];
 }) {
     const [isLoading, setIsLoading] = useState(true);
 
@@ -47,7 +50,11 @@ export default function WorkflowLoader({
                     transition={{ duration: 0.5 }}
                 >
                     <div className=" mx-10 mb-6  mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
-                        <WorkflowBuilder workflowId={workflowId} edit={edit} />
+                        <WorkflowBuilder
+                            workflowId={workflowId}
+                            edit={edit}
+                            activeWebhooks={activeWebhooks}
+                        />
                     </div>
                 </motion.div>
             )}

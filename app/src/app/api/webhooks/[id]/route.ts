@@ -1,4 +1,5 @@
 // app/api/webhooks/greenhouse/[orgId]/route.ts
+"use server";
 import { NextRequest, NextResponse } from "next/server";
 import { verifySignature } from "@/lib/utils";
 import { getSecretKeyForOrg } from "@/server/actions/greenhouse/query";
@@ -10,19 +11,48 @@ import { handleJobApprovedHiringRooms } from "./jobApprovedHiringRooms";
 import { handleJobPostCreatedHiringRoom } from "./jobPostCreatedHiringRoom";
 import { handleCandidateHired } from "./candidateHired";
 import { handleStageChangeHiringRooms } from "./stageChangeHiringRooms";
+import { db } from "@/server/db";
+import { organizationWebhooks } from "@/server/db/schema";
 
+async function handleConfirmWebhookConfiguration(
+    data: any,
+    orgId: string,
+): Promise<void> {
+    const eventName: string = data?.payload?.event ?? "";
 
-const eventHandlers: Record<string, any> = {
+    const res = await db
+        .insert(organizationWebhooks)
+        .values({
+            webhookEvent: eventName,
+            webhookType: "Greenhouse",
+            organizationId: orgId,
+            status: "Connected",
+        })
+        .onConflictDoUpdate({
+            target: [
+                organizationWebhooks.organizationId,
+                organizationWebhooks.webhookEvent,
+                organizationWebhooks.webhookType,
+            ],
+            set: { status: "Connected" },
+        });
+    return;
+}
+
+const eventHandlers: Record<
+    string,
+    ((data: any, orgId: string) => Promise<void>)[]
+> = {
     candidate_stage_change: [
         handleStuckInStageWorkflows,
         handleStageChangeHiringRooms,
     ],
-    // interview_deleted: [handleInterviewDeleted],
     offer_created: [handleOfferCreatedWorkflows, handleOfferCreatedHiringRooms],
     job_created: [handleJobCreated],
     job_approved: [handleJobApprovedHiringRooms],
     job_post_created: [handleJobPostCreatedHiringRoom],
     hire_candidate: [handleCandidateHired],
+    ping: [handleConfirmWebhookConfiguration],
 };
 
 // Webhook handler function for dynamic orgID route

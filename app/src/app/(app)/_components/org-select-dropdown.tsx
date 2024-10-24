@@ -37,11 +37,13 @@ export type UserOrgs = {
 type OrgSelectDropdownProps = {
     currentOrg: typeof organizations.$inferSelect;
     userOrgs: UserOrgs[];
+    setCurrentOrg: (orgId: string) => void;
 };
 
 export function OrgSelectDropdown({
     currentOrg,
     userOrgs,
+    setCurrentOrg,
 }: OrgSelectDropdownProps) {
     const router = useRouter();
     const session = useSession();
@@ -63,6 +65,7 @@ export function OrgSelectDropdown({
             router.refresh();
         });
         setIsPending(false);
+        setCurrentOrg(orgId);
     };
 
     const [modalOpen, setModalOpen] = useState<boolean>(false);

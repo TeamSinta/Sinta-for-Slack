@@ -22,8 +22,11 @@ import {
     CONDITIONS_OPTIONS,
     CONDITIONS_ATTRIBUTES_LOOKUP,
     getConditionFieldDataType,
-    DataType,
 } from "@/utils/conditions-options";
+import type { OrganizationWebhook } from "@/server/db/schema";
+import MissingWebhookConfigModal from "@/components/MissingWebhookConfigModal";
+import { CheckCircle } from "lucide-react";
+import { CrossCircledIcon } from "@radix-ui/react-icons";
 
 // Define candidate, job, and offer events
 const candidateEvents = [
@@ -32,12 +35,14 @@ const candidateEvents = [
         description: "Triggered when a candidate's stage changes.",
         alertType: "Candidate Stage Change",
         apiUrl: "/api/candidate-stage-change",
+        webhooks: ["Candidate has changed stage"],
     },
     {
         title: "Offer Created",
         description: "Triggered when an offer is created for a candidate.",
         alertType: "Offer Created",
         apiUrl: "/api/offer-created",
+        webhooks: ["Offer Created"],
     },
 ];
 
@@ -47,18 +52,21 @@ const jobEvents = [
         description: "Triggered when a job is approved.",
         alertType: "Job Approved",
         apiUrl: "/api/job-approved",
+        webhooks: ["Job Approved"],
     },
     {
         title: "Job Created",
         description: "Triggered when a job is created.",
         alertType: "Job Created",
         apiUrl: "/api/job-created",
+        webhooks: ["Job Created"],
     },
     {
         title: "Job Post Created",
         description: "Triggered when a job post is created.",
         alertType: "Job Post Created",
         apiUrl: "/api/job-post-created",
+        webhooks: ["Job Post Created"],
     },
 ];
 
@@ -68,6 +76,7 @@ const offerEvents = [
         description: "Triggered when an offer is approved.",
         alertType: "Offer Approved",
         apiUrl: "/api/offer-approved",
+        webhooks: ["Offer Approved"],
     },
 ];
 
@@ -85,11 +94,13 @@ export default function ConditionsStep({
     initialConditions,
     initialEvent, // Initial event prop for persistence
     objectField,
+    activeWebhooks,
 }: {
     onSaveConditions: (conditions: any[], event: { alertType: string }) => void;
     initialConditions: any[];
     initialEvent: { alertType: string }; // Event persistence
     objectField: string;
+    activeWebhooks: OrganizationWebhook[];
 }) {
     const [selectedEvent, setSelectedEvent] = useState(
         initialEvent
@@ -108,6 +119,8 @@ export default function ConditionsStep({
     const [fields, setFields] = useState<
         { field: string; description: string }[]
     >([]);
+    const [displayIntegrationModal, setDisplayIntegrationModal] =
+        useState(false);
 
     // Dynamically load events based on the objectField (Candidates, Jobs, Offer)
     const events =
@@ -136,6 +149,18 @@ export default function ConditionsStep({
     }, [conditions, selectedEvent]);
 
     const handleEventChange = (eventTitle: string) => {
+        const selected = events.find((event) => event.title === eventTitle);
+        if (
+            selected?.webhooks.filter(
+                (item) =>
+                    !activeWebhooks.some(
+                        (webhook) => webhook.webhookEvent === item,
+                    ),
+            ).length > 0
+        ) {
+            setDisplayIntegrationModal(true);
+            return;
+        }
         const event = events.find((e) => e.title === eventTitle);
         setSelectedEvent(event);
     };
@@ -200,6 +225,10 @@ export default function ConditionsStep({
 
     return (
         <div className="flex flex-col justify-between pt-2">
+            <MissingWebhookConfigModal
+                open={displayIntegrationModal}
+                setOpen={setDisplayIntegrationModal}
+            />
             {/* Event Selection */}
             <Card className="mb-4">
                 <CardHeader>
@@ -228,9 +257,29 @@ export default function ConditionsStep({
                                     value={event.title}
                                 >
                                     <div className="p-2">
-                                        <p className="font-medium">
-                                            {event.title}
-                                        </p>
+                                        <div className="flex flex-row items-center gap-2">
+                                            <p className="font-medium">
+                                                {event.title}
+                                            </p>
+                                            {event.webhooks.filter(
+                                                (item) =>
+                                                    !activeWebhooks.some(
+                                                        (webhook) =>
+                                                            webhook.webhookEvent ===
+                                                            item,
+                                                    ),
+                                            ).length === 0 ? (
+                                                <CheckCircle
+                                                    className="text-green-500 "
+                                                    size={16}
+                                                />
+                                            ) : (
+                                                <CrossCircledIcon
+                                                    className="text-red-500"
+                                                    size={16}
+                                                />
+                                            )}
+                                        </div>
                                         <p className="text-sm text-gray-500">
                                             {event.description}
                                         </p>

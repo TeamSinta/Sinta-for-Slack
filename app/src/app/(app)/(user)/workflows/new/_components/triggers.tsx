@@ -1,15 +1,7 @@
 //@ts-nocheck
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import MissingWebhookConfigModal from "@/components/MissingWebhookConfigModal";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Card,
     CardContent,
@@ -17,21 +9,32 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, AlertTriangle, Clock, PlugZap } from "lucide-react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import JobsDropdown from "../../_components/job-select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cleanObject, cn } from "@/lib/utils";
+import { OrganizationWebhook } from "@/server/db/schema";
+import {
+    fetchJobsFromGreenhouse,
+    fetchStagesForJob,
+} from "@/server/greenhouse/core";
 import { customFetchTester } from "@/utils/fetch";
-import TestResult from "./testResults";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { CrossCircledIcon } from "@radix-ui/react-icons";
+import { motion } from "framer-motion";
+import { AlertTriangle, CheckCircle, Clock, PlugZap } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import greenhouseLogo from "../../../../../../../public/greenhouselogo.png";
 import GenericDropdown from "../../_components/generic-dropdown";
 import GenericInput from "../../_components/generic-input";
-
-import { fetchStagesForJob } from "@/server/greenhouse/core";
-import { cleanObject } from "@/lib/utils";
+import TestResult from "./testResults";
 
 const localStorageKey = "workflowTriggers";
 
@@ -44,7 +47,12 @@ const getTriggerData = () => {
 };
 
 const fetchers = {
-    stage: async (jobId) => await fetchStagesForJob(jobId),
+    job: async () => await fetchJobsFromGreenhouse(),
+
+    stage: async (jobId) => {
+        if (!jobId) return [];
+        return await fetchStagesForJob(jobId);
+    },
     // candidates: async () => await fetchCandidates(),
     time: async () =>
         await [
@@ -53,10 +61,15 @@ const fetchers = {
         ],
 };
 
-const TriggersComponent = ({ onSaveTrigger }) => {
+const TriggersComponent = ({
+    onSaveTrigger,
+    activeWebhooks,
+}: {
+    onSaveTrigger: any;
+    activeWebhooks: OrganizationWebhook[];
+}) => {
+    const router = useRouter();
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [selectedJob, setSelectedJob] = useState(null);
-
     const [selectedEventData, setSelectedEventData] = useState({});
     const [activeTab, setActiveTab] = useState("event");
     const [isTesting, setIsTesting] = useState(false);
@@ -64,26 +77,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
     const [showFullData, setShowFullData] = useState(false);
     const [pollingInterval, setPollingInterval] = useState("");
     const [pollingTimeUnit, setPollingTimeUnit] = useState("minutes");
+    const [displayIntegrationModal, setDisplayIntegrationModal] =
+        useState(false);
     const handleFieldChange = (fieldKey, value) => {
-        setSelectedEventData((prev) => ({
-            ...prev,
-            [fieldKey]: value,
-        }));
+        if (fieldKey === "job") setSelectedEventData({ job: value });
+        else
+            setSelectedEventData((prev) => ({
+                ...prev,
+                [fieldKey]: value,
+            }));
     };
 
     const events = [
-        {
-            title: "Interview Scheduled",
-            description: "Triggered when an interview is scheduled.",
-            apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
-            objectField: "Scheduled Interviews",
-            alertType: "Create/Update",
-            triggers: [
-                "Notify Interviewers",
-                "Prepare Interview Kit",
-                "Schedule Reminder",
-            ],
-        },
+        // {
+        //     title: "Interview Scheduled",
+        //     description: "Triggered when an interview is scheduled.",
+        //     apiUrl: "https://harvest.greenhouse.io/v1/scheduled_interviews",
+        //     objectField: "Scheduled Interviews",
+        //     alertType: "Create/Update",
+        //     triggers: [
+        //         "Notify Interviewers",
+        //         "Prepare Interview Kit",
+        //         "Schedule Reminder",
+        //     ],
+        //     webhooks: [],
+        // },
         {
             title: "Offer Created",
             description:
@@ -96,20 +114,22 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 "Notify Approvers in Slack",
                 "Track Approval Status",
             ],
+            webhooks: ["Offer Created"],
         },
-        {
-            title: "Candidates",
-            description: "Triggered for working with Candidates Object",
-            objectField: "Candidates",
-            apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
-            alertType: "timebased",
-            triggers: [
-                "Send Referral SLA Reminder to Recruiter",
-                "Send Active Candidates Reminder to Recruiter",
-                "Notify Recruiter via Slack",
-                "Take Action on Active Candidates in Closed Roles",
-            ],
-        },
+
+        // {
+        //     title: "Candidates",
+        //     description: "Triggered for working with Candidates Object",
+        //     objectField: "Candidates",
+        //     apiUrl: ["https://harvest.greenhouse.io/v1/candidates"],
+        //     alertType: "timebased",
+        //     triggers: [
+        //         "Send Referral SLA Reminder to Recruiter",
+        //         "Send Active Candidates Reminder to Recruiter",
+        //         "Notify Recruiter via Slack",
+        //         "Take Action on Active Candidates in Closed Roles",
+        //     ],
+        // },
         {
             title: "Stuck in Pipeline",
             objectField: "Candidates",
@@ -117,7 +137,15 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             apiUrl: "https://harvest.greenhouse.io/v1/candidates",
             alertType: "stuck-in-stage",
             triggers: [],
+            triggersHeader: "Select Stuck in Pipeline Configuration",
+            triggersInfo:
+                "Select a job and then a stage to trigger the workflow. Then select the number of days to be considered stuck. ",
             fields: [
+                {
+                    label: "Greenhouse Job",
+                    value: "job",
+                    type: "dropdown",
+                },
                 {
                     label: "Stage",
                     value: "stage",
@@ -131,6 +159,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     dataType: "number",
                 },
             ],
+            webhooks: ["Candidate has changed stage"],
         },
         {
             title: "Interview Reminders",
@@ -143,6 +172,9 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 "Send a Reminder Before an Interview",
                 "Send a Reminder After an  Interview",
             ],
+            triggersHeader: "Select Interview Reminders Configuration",
+            triggersInfo:
+                "Select how long before or after an interview you'd like to recieve a reminder.",
             fields: [
                 {
                     label: "Time",
@@ -166,6 +198,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     dataType: "number",
                 },
             ],
+            webhooks: [],
         },
         // Add more events as needed and update setSelectedEventData to handle the new fields
     ];
@@ -180,9 +213,9 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                     event.alertType === workflowData.alertType,
             );
             setSelectedEvent(matchedEvent || null); // If no match, set to null
-            setSelectedJob(
-                (workflowData.triggerConfig?.processor as string) ?? null,
-            );
+            // setSelectedJob(
+            //     (workflowData.triggerConfig?.processor as string) ?? null,
+            // );
             setSelectedEventData((prevState) => ({
                 ...workflowData?.mainCondition,
             }));
@@ -193,13 +226,18 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
     const handleEventChange = (eventTitle) => {
         const selected = events.find((event) => event.title === eventTitle);
+        if (
+            selected?.webhooks.filter(
+                (item) =>
+                    !activeWebhooks.some(
+                        (webhook) => webhook.webhookEvent === item,
+                    ),
+            ).length > 0
+        ) {
+            setDisplayIntegrationModal(true);
+            return;
+        }
         setSelectedEvent(selected);
-        setSelectedJob(null);
-        setSelectedEventData({});
-    };
-
-    const handleJobChange = (jobId: string) => {
-        setSelectedJob(jobId);
         setSelectedEventData({});
     };
 
@@ -222,10 +260,10 @@ const TriggersComponent = ({ onSaveTrigger }) => {
             let triggerDescription = `${selectedEvent.title}`;
             if (
                 selectedEvent.title === "Stuck in Pipeline" &&
-                selectedJob &&
-                selectedEventData.stageLabel
+                selectedEventData.job &&
+                selectedEventData.stage
             ) {
-                triggerDescription += ` for ${selectedJob} in ${selectedEventData.stageLabel}`;
+                triggerDescription += ` for ${selectedEventData.job} in ${selectedEventData.stage}`;
             }
 
             const triggerData = {
@@ -237,10 +275,10 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                 pollingTimeUnit,
                 description: triggerDescription,
                 triggerConfig: {
-                    processor: selectedJob,
+                    processor: selectedEventData.job,
                     apiUrl: selectedEvent.apiUrl,
                 },
-                processor: selectedJob,
+                processor: selectedEventData.job,
                 mainCondition: cleanObject(selectedEventData),
             };
             saveTriggerData(triggerData);
@@ -321,6 +359,11 @@ const TriggersComponent = ({ onSaveTrigger }) => {
 
     return (
         <div className="conditions-sidebar flex h-full flex-col justify-between p-2">
+            <MissingWebhookConfigModal
+                open={displayIntegrationModal}
+                setOpen={setDisplayIntegrationModal}
+            />
+
             <div>
                 <div className="pt-2">
                     <div className="mb-4 flex items-center">
@@ -437,9 +480,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     value={event.title}
                                                 >
                                                     <div className="p-2">
-                                                        <p className="font-medium">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <p className="font-medium">
+                                                                {event.title}
+                                                            </p>
+                                                            {event.webhooks.filter(
+                                                                (item) =>
+                                                                    !activeWebhooks.some(
+                                                                        (
+                                                                            webhook,
+                                                                        ) =>
+                                                                            webhook.webhookEvent ===
+                                                                            item,
+                                                                    ),
+                                                            ).length === 0 ? (
+                                                                <CheckCircle
+                                                                    className="text-green-500 "
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                <CrossCircledIcon
+                                                                    className="text-red-500"
+                                                                    size={16}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-gray-500">
                                                             {event.description}
                                                         </p>
@@ -466,9 +531,31 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     value={event.title}
                                                 >
                                                     <div className="p-2">
-                                                        <p className="font-medium">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <p className="font-medium">
+                                                                {event.title}
+                                                            </p>
+                                                            {event.webhooks.filter(
+                                                                (item) =>
+                                                                    !activeWebhooks.some(
+                                                                        (
+                                                                            webhook,
+                                                                        ) =>
+                                                                            webhook.webhookEvent ===
+                                                                            item,
+                                                                    ),
+                                                            ).length === 0 ? (
+                                                                <CheckCircle
+                                                                    className="text-green-500 "
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                <CrossCircledIcon
+                                                                    className="text-red-500"
+                                                                    size={16}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-gray-500">
                                                             {event.description}
                                                         </p>
@@ -480,7 +567,7 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                             </CardContent>
                         </Card>
                         {/* Conditionally render the polling interval input if the event is time-based */}
-                        {isTimeBasedEventSelected && (
+                        {/* {isTimeBasedEventSelected && (
                             <Card className="mt-6 border border-gray-300 bg-gray-50 shadow-lg">
                                 <CardHeader className="rounded-t-lg bg-gray-100 p-4">
                                     <CardTitle>Polling Interval</CardTitle>
@@ -526,7 +613,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        {/* Helper Text */}
                                         <p className="mt-2 text-xs text-gray-500">
                                             The polling interval determines how
                                             frequently this time-based event
@@ -537,34 +623,30 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                     </div>
                                 </CardContent>
                             </Card>
-                        )}
+                        )} */}
                     </TabsContent>
 
                     {/* Trigger Tab */}
                     <TabsContent value="trigger" className="mt-4 py-1">
                         <Card className="mb-4">
                             <CardHeader>
-                                <CardTitle>
-                                    {selectedEvent?.title ===
-                                    "Stuck in Pipeline"
-                                        ? "Select Job and Stage"
-                                        : "Select Job"}
-                                </CardTitle>
-                                <CardDescription>
-                                    {selectedEvent?.title ===
-                                    "Stuck in Pipeline"
-                                        ? "Select a job and then a stage to trigger the workflow."
-                                        : "Select a job to trigger the workflow based on the selected event."}
-                                </CardDescription>
+                                {!selectedEvent?.fields ||
+                                selectedEvent?.fields?.length === 0 ? (
+                                    <CardTitle
+                                        className={cn("text-gray-300")}
+                                    ></CardTitle>
+                                ) : (
+                                    <CardTitle>
+                                        {selectedEvent?.triggersHeader}
+                                    </CardTitle>
+                                )}
+                                {selectedEvent?.triggerInfo && (
+                                    <CardDescription>
+                                        {selectedEvent.triggersInfo}
+                                    </CardDescription>
+                                )}
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {/* Show JobsDropdown for all events */}
-                                <JobsDropdown
-                                    onJobSelect={handleJobChange}
-                                    selectedJob={selectedJob}
-                                />
-
-                                {/* Additional StagesDropdown for "Stuck in Pipeline" */}
                                 {selectedEvent?.fields?.map((field, index) => {
                                     const fetcher = fetchers[field.value];
                                     if (field.type === "dropdown") {
@@ -575,7 +657,8 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                                     fetcher
                                                         ? () =>
                                                               fetcher(
-                                                                  selectedJob,
+                                                                  selectedEventData.job ??
+                                                                      "",
                                                               )
                                                         : null
                                                 }
@@ -617,35 +700,6 @@ const TriggersComponent = ({ onSaveTrigger }) => {
                                         );
                                     }
                                 })}
-                                {/* {selectedEvent?.title === "Stuck in Pipeline" &&
-                                    selectedJob && (
-                                        <>
-                                            <GenericDropdown
-                                                fetcher={async () =>
-                                                    await fetchStagesForJob(
-                                                        selectedJob,
-                                                    )
-                                                }
-                                                onItemSelect={handleStageChange}
-                                                selectedItem={
-                                                    selectedEventData.stageId
-                                                }
-                                                label="Stage"
-                                            />
-
-                                            {selectedEventData.stageId && (
-                                                <GenericInput
-                                                    label="For"
-                                                    value={
-                                                        selectedEventData.days
-                                                    }
-                                                    onChange={handleDaysChange}
-                                                    placeholder="Enter number of days"
-                                                    suffix="Days"
-                                                    type="number"
-                                                />
-                                            )}
-                                        </>)} */}
                             </CardContent>
                         </Card>
                     </TabsContent>

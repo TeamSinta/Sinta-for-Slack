@@ -43,7 +43,7 @@ export default async function Workflows({ searchParams }: UsersPageProps) {
     const workflowAllPromise = getPaginatedWorkflowsByOrgQuery(search);
     const workflowOrgPromise = getPaginatedWorkflowsExcludingUserQuery(search);
     const isEdit = searchParams.edit;
-    const workflowId = searchParams.workflowId as any;
+    const workflowId = searchParams.workflowId as string;
 
     return (
         <AppPageShell

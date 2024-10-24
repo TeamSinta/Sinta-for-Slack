@@ -81,9 +81,10 @@ export async function getMockGreenhouseData(): Promise<MockData> {
         const mockData: MockData = {
             recruiter: "{ Recruiter }",
             coordinator: "{ Coordinator }",
-            hiringTeam: "{ Hiring_Team }",
-            admin: "{ Admin }",
-            interviewer: "{ Interviewer }",
+            // We'll come back to this in the future!! (maybe)
+            // hiringTeam: "{ Hiring_Team }",
+            // admin: "{ Admin }",
+            // interviewer: "{ Interviewer }",
         };
 
         return mockData;
@@ -164,7 +165,7 @@ interface Stage {
 }
 
 export const fetchStagesForJob = async (jobId: string): Promise<Stage[]> => {
-    console.log("JOB ID - ", jobId);
+    // console.log("JOB ID - ", jobId);
     try {
         const stages = (await customFetch(
             `https://harvest.greenhouse.io/v1/jobs/${jobId}/stages`,
@@ -421,6 +422,18 @@ export async function fetchRejectReasons(): Promise<
     } catch (error) {
         console.error("Error fetching reject reasons: ", error);
         return [];
+    }
+}
+
+export async function fetchGreenhouseUser(userId: string) {
+    try {
+        const user = await customFetch(
+            `https://harvest.greenhouse.io/v1/users/${userId}`,
+        );
+        return user;
+    } catch (error) {
+        console.error("Error fetching Greenhouse user: ", error);
+        return null;
     }
 }
 

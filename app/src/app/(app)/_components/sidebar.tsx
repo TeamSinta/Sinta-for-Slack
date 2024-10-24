@@ -10,14 +10,19 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNav } from "@/app/(app)/_components/sidebar-nav";
 import { OrgSelectDropdown } from "@/app/(app)/_components/org-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAuthOrgs, getAuthUser } from "@/server/actions/user/queries";
-import { User } from "next-auth";
-import { organizations } from "@/server/db/schema";
+import { getAuthOrgs } from "@/server/actions/user/queries";
+import {
+    User as dbUser,
+    Organization,
+    organizations,
+} from "@/server/db/schema";
 
 type SideNavProps = {
     sidebarNavIncludeIds?: string[];
     sidebarNavRemoveIds?: string[];
     showOrgSwitcher?: boolean;
+    user: dbUser | null;
+    orgs: { currentOrg: Organization | null; userOrgs: Organization[] };
 };
 
 // This is the correct type for organization objects
@@ -28,6 +33,24 @@ export type UserOrgs = {
     items: Org[];
 };
 
+function sortOrganizations(orgs: Organization[], user: dbUser | null) {
+    if (!user)
+        return ["My Orgs", "Shared Orgs"].map((heading) => ({
+            heading,
+            items: [],
+        }));
+
+    return [
+        {
+            heading: "My Orgs",
+            items: orgs.filter((org) => org.ownerId === user?.id),
+        },
+        {
+            heading: "Shared Orgs",
+            items: orgs.filter((org) => org.ownerId !== user?.id),
+        },
+    ];
+}
 /*
  * Client-side Sidebar component
  */
@@ -35,36 +58,22 @@ export function Sidebar({
     sidebarNavIncludeIds,
     sidebarNavRemoveIds,
     showOrgSwitcher = true,
+    user,
+    orgs,
 }: SideNavProps) {
-    const [user, setUser] = useState<User | null>(null);
-    const [currentOrg, setCurrentOrg] = useState<Org | null>(null); // Use Org type instead of OrgSelectDropdownProps
-    const [userOrgs, setUserOrgs] = useState<UserOrgs[]>([]); // Correct type for userOrgs
+    const [currentOrg, setCurrentOrg] = useState<Org | null>(orgs.currentOrg); // Use Org type instead of OrgSelectDropdownProps
+    const [userOrgs, setUserOrgs] = useState<UserOrgs[]>(
+        sortOrganizations(orgs.userOrgs, user),
+    ); // Correct type for userOrgs
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchSidebarData = async () => {
             try {
-                const user = await getAuthUser();
                 const { currentOrg, userOrgs } = await getAuthOrgs();
+                const mappedUserOrgs = sortOrganizations(userOrgs, user);
 
-                setUser(user);
                 setCurrentOrg(currentOrg);
-
-                const mappedUserOrgs: UserOrgs[] = [
-                    {
-                        heading: "My Orgs",
-                        items: userOrgs.filter(
-                            (org) => org.ownerId === user?.id,
-                        ),
-                    },
-                    {
-                        heading: "Shared Orgs",
-                        items: userOrgs.filter(
-                            (org) => org.ownerId !== user?.id,
-                        ),
-                    },
-                ];
-
                 setUserOrgs(mappedUserOrgs);
             } catch (error) {
                 console.error("Failed to fetch sidebar data", error);
@@ -75,24 +84,6 @@ export function Sidebar({
 
         fetchSidebarData();
     }, []);
-
-    const myOrgs =
-        userOrgs.find((orgGroup) => orgGroup.heading === "My Orgs")?.items ||
-        [];
-    const sharedOrgs =
-        userOrgs.find((orgGroup) => orgGroup.heading === "Shared Orgs")
-            ?.items || [];
-
-    const urgOrgsData: UserOrgs[] = [
-        {
-            heading: "My Orgs",
-            items: myOrgs,
-        },
-        {
-            heading: "Shared Orgs",
-            items: sharedOrgs,
-        },
-    ];
 
     if (isLoading) {
         return <SidebarLoading showOrgSwitcher={showOrgSwitcher} />;
@@ -119,8 +110,14 @@ export function Sidebar({
             {showOrgSwitcher && currentOrg && (
                 <div className="py-2">
                     <OrgSelectDropdown
-                        userOrgs={urgOrgsData}
+                        userOrgs={userOrgs}
                         currentOrg={currentOrg} // Only pass if not null
+                        setCurrentOrg={(orgId) => {
+                            setCurrentOrg(
+                                orgs.userOrgs.find((org) => org.id === orgId) ??
+                                    null,
+                            );
+                        }}
                     />
                 </div>
             )}
