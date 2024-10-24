@@ -450,3 +450,10 @@ export async function getUserEmailBySlackIdAndTeamId(
 
     return member.memberEmail;
 }
+
+export async function getOrgSlackTeamId(orgId: string) {
+    const res = await db.query.organizations.findFirst({
+        where: eq(organizations.id, orgId),
+    });
+    return res?.slack_team_id;
+}

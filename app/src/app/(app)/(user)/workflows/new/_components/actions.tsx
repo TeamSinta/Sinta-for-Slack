@@ -223,21 +223,22 @@ const Actions: React.FC<{
                         value: greenhouseData.coordinator,
                         source: "greenhouse",
                     },
-                    {
-                        label: ` ${greenhouseData.hiringTeam}`,
-                        value: greenhouseData.hiringTeam,
-                        source: "greenhouse",
-                    },
-                    {
-                        label: ` ${greenhouseData.admin}`,
-                        value: greenhouseData.admin,
-                        source: "greenhouse",
-                    },
-                    {
-                        label: ` ${greenhouseData.interviewer}`,
-                        value: greenhouseData.interviewer,
-                        source: "greenhouse",
-                    },
+                    // We'll come back to this in the future!! (maybe)
+                    // {
+                    //     label: ` ${greenhouseData.hiringTeam}`,
+                    //     value: greenhouseData.hiringTeam,
+                    //     source: "greenhouse",
+                    // },
+                    // {
+                    //     label: ` ${greenhouseData.admin}`,
+                    //     value: greenhouseData.admin,
+                    //     source: "greenhouse",
+                    // },
+                    // {
+                    //     label: ` ${greenhouseData.interviewer}`,
+                    //     value: greenhouseData.interviewer,
+                    //     source: "greenhouse",
+                    // },
                 ];
                 setOptions(combinedOptions);
             } catch (error) {

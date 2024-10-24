@@ -319,7 +319,7 @@ export const membersToOrganizationsRoleEnum = pgEnum("org_member_role", [
     "Interviewer",
     "Recruiter",
     "Hiring Manager",
-    "Admin"
+    "Admin",
 ]);
 
 export const membersToOrganizations = createTable(
@@ -500,4 +500,24 @@ export const feedbackSelectSchema = createSelectSchema(feedback, {
         .string()
         .min(10, "Message is too short")
         .max(1000, "Message is too long"),
+});
+
+export const greenhouseUsers = createTable("greenhouse_users", {
+    id: varchar("id", { length: 255 })
+        .notNull()
+        .primaryKey()
+        .default(sql`gen_random_uuid()`),
+    organizationId: varchar("organizationId", { length: 255 })
+        .notNull()
+        .references(() => organizations.id, { onDelete: "cascade" }),
+
+    greenhouseId: varchar("greenhouseId", { length: 255 }).notNull(), // Greenhouse unique identifier
+    email: varchar("email", { length: 255 }).notNull(), // Email address
+    slackUserId: varchar("slack_user_id", { length: 255 }), // Slack User ID, may be null initially
+
+    slackLookupAttempted: boolean("slack_lookup_attempted")
+        .default(false)
+        .notNull(), // Keep track if Slack lookup was attempted
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow().notNull(),
 });

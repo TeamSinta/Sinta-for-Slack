@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "build": "next build",
-        "db:push": "drizzle-kit push --force",
+        "db:push": "drizzle-kit push",
         "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
         "dev": "next dev",
         "dev:turbo": "next dev --turbo",
