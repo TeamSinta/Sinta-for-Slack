@@ -49,7 +49,7 @@ export default function GreenhouseConfig() {
                 if (response.exists) {
                     if (response.secretKey) {
                         setSecretKey(response.secretKey); // Load the existing secret key
-                        const generatedWebhookUrl = `${siteUrls.teamsinta}api/webhooks/${orgID}`;
+                        const generatedWebhookUrl = `${siteUrls.teamsinta}/api/webhooks/${orgID}`;
                         setWebhookUrl(generatedWebhookUrl); // Set the webhook URL
                     }
                     setButtonVisible(false); // Hide the button if the key exists
