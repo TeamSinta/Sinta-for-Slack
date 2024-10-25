@@ -206,7 +206,7 @@ function NavLink({
                 });
             }}
         >
-            <Icon className={cn("flex-shrink-0")} />
+            <Icon className={cn("flex-shrink-0 w-4 h-4")} />
             <span className="truncate">{label}</span>
         </Link>
     );
